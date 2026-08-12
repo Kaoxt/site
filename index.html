@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#070912" />
+  <meta name="description" content="Build and export a custom Nuvio home collection." />
+  <title>Nuvio Collection Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="#" class="brand" aria-label="Nuvio Collection Studio home">
+        <span class="brand-mark" aria-hidden="true">
+          <span class="brand-play"></span>
+        </span>
+        <span>
+          <strong>Nuvio</strong>
+          <small>Collection Studio</small>
+        </span>
+      </a>
+
+      <nav class="top-nav" aria-label="Main navigation">
+        <button class="nav-button active" data-view="library">Library</button>
+        <button class="nav-button" data-view="builder">My Setup</button>
+        <button class="nav-button" data-view="help">Guide</button>
+      </nav>
+
+      <div class="header-actions">
+        <button class="icon-button" id="importButton" title="Import JSON" aria-label="Import JSON">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 15v4h14v-4"/></svg>
+        </button>
+        <button class="primary small" id="sendButton">Send to Nuvio</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="libraryView">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="dot"></span> YOUR PERSONAL NUVIO COLLECTION</div>
+        <h1>Build a home screen that feels <span>made for you.</span></h1>
+        <p>Browse your collection, choose the folders you want, reorder them, then export a clean Nuvio-ready JSON file.</p>
+        <div class="hero-actions">
+          <button class="primary" id="quickBuildButton">Quick Build</button>
+          <button class="secondary" id="selectAllButton">Select Everything</button>
+        </div>
+      </div>
+
+      <div class="hero-panel" aria-label="Collection summary">
+        <div class="orb-wrap">
+          <div class="orb"><span class="brand-play large"></span></div>
+        </div>
+        <div class="mini-stats">
+          <div><strong id="statSelected">0</strong><span>Selected folders</span></div>
+          <div><strong id="statCategories">0</strong><span>Categories</span></div>
+          <div><strong id="statSources">0</strong><span>Sources</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="toolbar" id="toolbar">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg>
+        <input id="searchInput" type="search" placeholder="Search categories and folders…" autocomplete="off" />
+      </div>
+      <div class="filter-scroll" id="filterBar" aria-label="Collection filters"></div>
+      <div class="toolbar-right">
+        <select id="sortSelect" aria-label="Sort collections">
+          <option value="featured">Featured</option>
+          <option value="az">A–Z</option>
+          <option value="selected">Selected first</option>
+        </select>
+        <button class="secondary compact" id="clearButton">Clear</button>
+      </div>
+    </section>
+
+    <section class="content-section" id="collectionLibrary">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow muted">COLLECTION LIBRARY</div>
+          <h2>Choose what appears in Nuvio</h2>
+        </div>
+        <p id="resultsLabel">Showing all collections</p>
+      </div>
+      <div class="collection-grid" id="collectionGrid"></div>
+      <div class="empty-state hidden" id="emptyState">
+        <div class="empty-icon">⌕</div>
+        <h3>No matches found</h3>
+        <p>Try a different search or filter.</p>
+      </div>
+    </section>
+
+    <section class="builder-section hidden" id="builderView">
+      <div class="builder-header">
+        <div>
+          <div class="eyebrow"><span class="dot"></span> YOUR CURRENT SETUP</div>
+          <h1>Arrange your Nuvio home</h1>
+          <p>Drag categories into the order you want. Only selected folders are included in the exported JSON.</p>
+        </div>
+        <div class="builder-actions">
+          <button class="secondary" id="resetOrderButton">Reset Order</button>
+          <button class="primary" id="exportButton">Export JSON</button>
+        </div>
+      </div>
+      <div class="builder-layout">
+        <div class="builder-list" id="builderList"></div>
+        <aside class="export-card">
+          <div class="export-icon">↗</div>
+          <h3>Ready to export</h3>
+          <p>Your file is generated entirely in the browser. Nothing is uploaded by this starter site.</p>
+          <div class="export-stats">
+            <span><strong id="exportCategories">0</strong> categories</span>
+            <span><strong id="exportFolders">0</strong> folders</span>
+          </div>
+          <button class="primary full" id="exportButtonAside">Download Nuvio JSON</button>
+          <button class="secondary full" id="copyJsonButton">Copy JSON</button>
+        </aside>
+      </div>
+    </section>
+
+    <section class="guide-section hidden" id="helpView">
+      <div class="guide-hero">
+        <div class="eyebrow"><span class="dot"></span> HOW IT WORKS</div>
+        <h1>Three steps. No clutter.</h1>
+      </div>
+      <div class="steps-grid">
+        <article><span>01</span><h3>Choose folders</h3><p>Use search, filters, or Quick Build to select the rows you want on your Nuvio home screen.</p></article>
+        <article><span>02</span><h3>Arrange the setup</h3><p>Open My Setup and drag categories into your preferred order. Your choices autosave on this device.</p></article>
+        <article><span>03</span><h3>Export or connect</h3><p>Download the JSON now. The Send to Nuvio button is ready for your final API adapter when you provide the exact schema.</p></article>
+      </div>
+      <div class="data-card">
+        <div>
+          <h3>Edit your collection data</h3>
+          <p>All starter categories live in <code>collection-data.js</code>. Replace titles, sources, artwork URLs, and Nuvio-specific fields without redesigning the site.</p>
+        </div>
+        <button class="secondary" id="downloadSampleButton">Download Sample Data</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="brand footer-brand"><span class="brand-mark"><span class="brand-play"></span></span><span><strong>Nuvio</strong><small>Collection Studio</small></span></div>
+      <p>Static-site starter • GitHub Pages ready</p>
+    </div>
+  </footer>
+
+  <input type="file" id="fileInput" accept="application/json,.json" hidden />
+
+  <div class="modal-backdrop hidden" id="quickBuildModal" role="dialog" aria-modal="true" aria-labelledby="quickBuildTitle">
+    <div class="modal">
+      <button class="modal-close" data-close="quickBuildModal" aria-label="Close">×</button>
+      <div class="modal-kicker">QUICK BUILD</div>
+      <h2 id="quickBuildTitle">What do you want on your home screen?</h2>
+      <p>Pick a few interests and we’ll turn on matching folders. You can fine-tune everything afterward.</p>
+      <div class="choice-group">
+        <h4>What do you watch?</h4>
+        <div class="choice-row" data-choice="watch">
+          <button data-value="movies">Movies</button>
+          <button data-value="tv">TV Shows</button>
+          <button data-value="both" class="selected">Both</button>
+        </div>
+      </div>
+      <div class="choice-group">
+        <h4>Choose interests</h4>
+        <div class="choice-row multi" id="interestChoices">
+          <button data-value="trending" class="selected">Trending</button>
+          <button data-value="anime">Anime</button>
+          <button data-value="networks">TV Networks</button>
+          <button data-value="classics">Classics</button>
+          <button data-value="scifi">Sci-Fi</button>
+          <button data-value="horror">Horror</button>
+          <button data-value="documentary">Documentaries</button>
+          <button data-value="family">Family</button>
+        </div>
+      </div>
+      <button class="primary full" id="applyQuickBuild">Build My Setup</button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop hidden" id="sendModal" role="dialog" aria-modal="true" aria-labelledby="sendTitle">
+    <div class="modal send-modal">
+      <button class="modal-close" data-close="sendModal" aria-label="Close">×</button>
+      <div class="modal-kicker">NUVIO CONNECTION</div>
+      <h2 id="sendTitle">Direct push is ready for the final adapter.</h2>
+      <p>This starter does not ask for or store your Nuvio credentials. Export already works; once your exact current collection schema is plugged in, this button can push directly from the browser.</p>
+      <div class="connection-note">
+        <span>✓</span><div><strong>Safe by default</strong><p>No login credentials are collected in this starter build.</p></div>
+      </div>
+      <div class="modal-actions-row">
+        <button class="secondary" data-close="sendModal">Keep Editing</button>
+        <button class="primary" id="sendExportInstead">Export JSON Instead</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="collection-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
