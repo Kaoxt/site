@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="icon" href="/favicon.ico?v=3" sizes="any" />
+  <link rel="shortcut icon" href="/favicon.ico?v=3" type="image/x-icon" />
+  <meta name="theme-color" content="#050608" />
+  <title>Wizard | The Kollection</title>
+  <meta name="description" content="Guided Nuvio setup for The Kollection with AIOMetadata and personalized Bingecat recommendations." />
+  <link rel="stylesheet" href="wizard/styles.css" />
+  <link rel="stylesheet" href="shared.css" />
+  <script src="components.js" defer></script>
+</head>
+<body>
+  <main class="page">
+    <div id="site-nav" aria-label="Site navigation"></div>
+
+    <section class="wizard-hero">
+      <div class="eyebrow"><span class="eyebrow-dot"></span> Guided Nuvio setup</div>
+      <h1>Install The Kollection.</h1>
+      <p>Set up AIOMetadata, connect your personal Bingecat recommendations, and install the complete collection into your Nuvio profile.</p>
+      <div class="wizard-meta">
+        <span>Runs in your browser</span>
+        <span class="meta-dot" aria-hidden="true"></span>
+        <span>Your Nuvio password is not stored</span>
+      </div>
+    </section>
+
+    <section class="wizard-frame" aria-label="The Kollection setup wizard">
+      <div class="wizard-toolbar">
+        <div>
+          <span class="toolbar-label">SETUP WIZARD</span>
+          <strong>Personalize your install</strong>
+        </div>
+        <button class="ghost small" id="resetBtn" type="button">Start over</button>
+      </div>
+
+      <div class="shell">
+        <aside class="sidebar" aria-label="Setup progress">
+          <div class="sidebar-copy">
+            <span class="sidebar-kicker">YOUR INSTALL</span>
+            <h2>Everything you need, in order.</h2>
+            <p>The wizard prepares the add-ons first, then personalizes and syncs The Kollection to the profile you choose.</p>
+          </div>
+          <nav id="stepNav" class="steps"></nav>
+          <div class="security-note">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2"></path><path d="M5.5 10h13v10h-13z"></path><path d="M12 14v2.5"></path></svg>
+            <div><strong>Private by design</strong><span>Credentials and API keys stay in this browser session while the wizard runs.</span></div>
+          </div>
+        </aside>
+
+        <section class="content">
+          <div class="mobile-progress"><span id="mobileStepText"></span><div><i id="mobileProgressBar"></i></div></div>
+          <div id="alertHost" aria-live="polite"></div>
+          <div id="panelHost"></div>
+        </section>
+      </div>
+    </section>
+
+    <div id="site-footer"></div>
+  </main>
+
+  <template id="loadingTemplate">
+    <div class="loading"><span class="spinner"></span><span class="loading-text">Working…</span></div>
+  </template>
+
+  <script src="wizard/config.js"></script>
+  <script src="wizard/wizard.js"></script>
+</body>
+</html>
