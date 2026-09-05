@@ -405,30 +405,52 @@ body.light .theme-toggle .icon-moon { display: block !important; }
   stroke-linejoin: round !important;
 }
 
+/* GitHub + Buy me a coffee — side by side */
 .menu-community {
   margin-top: 8px !important;
-  padding-top: 8px !important;
+  padding: 13px 6px 5px !important;
   border-top: 1px solid rgba(255,255,255,.08) !important;
-  display: grid !important;
-  gap: 2px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 18px !important;
+  width: 100% !important;
 }
 
 .menu-community a {
-  min-height: 46px !important;
-  padding: 0 13px !important;
-  border-radius: 15px !important;
-  display: flex !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  display: inline-flex !important;
   align-items: center !important;
-  gap: 12px !important;
-  color: #8f98ff !important;
-  font-size: 14px !important;
-  font-weight: 650 !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
+  gap: 7px !important;
+  color: #818cf8 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: -.01em !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
   text-decoration: none !important;
+  transition: color .18s ease, opacity .18s ease, transform .18s ease !important;
 }
 
 .menu-community a:hover {
-  color: #b4b8ff !important;
-  background: rgba(99,102,241,.10) !important;
+  color: #a5b4fc !important;
+  background: transparent !important;
+  opacity: 1 !important;
+  transform: translateY(-1px) !important;
+}
+
+.menu-community svg {
+  width: 18px !important;
+  height: 18px !important;
+  flex: 0 0 18px !important;
 }
 
 .menu-community .github-icon {
