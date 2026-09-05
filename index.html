@@ -212,6 +212,9 @@
 
     .latest-update {
       width: min(620px, calc(100% - 28px));
+      color: inherit;
+      text-decoration: none;
+      cursor: pointer;
       margin: 28px auto 0;
       min-height: 76px;
       padding: 13px 17px;
@@ -229,6 +232,11 @@
       text-align: left;
       backdrop-filter: blur(16px) saturate(1.15);
       -webkit-backdrop-filter: blur(16px) saturate(1.15);
+    }
+
+    .latest-update:focus-visible {
+      outline: 2px solid #a5b4fc;
+      outline-offset: 3px;
     }
 
     .latest-update-copy {
@@ -1024,7 +1032,7 @@
     }
 
   </style>
-  <link rel="stylesheet" href="shared.css?v=20260905-navfix6" />
+  <link rel="stylesheet" href="shared.css" />
   <script src="components.js" defer></script>
 </head>
 <body>
@@ -1060,7 +1068,7 @@
       </div>
       <div class="microcopy">Responsive • TV-first • Mobile-ready • No framework required</div>
 
-      <aside class="latest-update" aria-label="Latest Kollection update">
+      <a class="latest-update" href="news.html" aria-label="Read the latest Kollection update">
         <div class="latest-update-copy">
           <div class="latest-update-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24">
@@ -1075,7 +1083,7 @@
           </div>
         </div>
         <div class="version-badge">v2.5.0</div>
-      </aside>
+      </a>
     </section>
     <section id="collection" class="showcase-wrap" aria-label="The Kollection preview">
       <div class="ambient"></div>
