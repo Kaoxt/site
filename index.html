@@ -232,6 +232,28 @@
       text-align: left;
       backdrop-filter: blur(16px) saturate(1.15);
       -webkit-backdrop-filter: blur(16px) saturate(1.15);
+      transform: translateY(0);
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-drag: none;
+      user-select: none;
+      touch-action: manipulation;
+      will-change: transform;
+    }
+
+    .latest-update:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.05),
+        0 22px 56px rgba(0,0,0,.22);
+    }
+
+    .latest-update:active,
+    .latest-update.is-pressed {
+      transform: translateY(2px) scale(.992);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.025),
+        0 10px 28px rgba(0,0,0,.16);
     }
 
     .latest-update:focus-visible {
@@ -1056,13 +1078,19 @@
       <h1>Transform Your Nuvio<br>Experience</h1>
       <p>A cinematic home for your Nuvio collection — customizable and designed to your liking.</p>
       <div class="actions">
-        <a class="btn btn-primary" href="https://nuvio.tv/community-collections/kaoxt-collection" target="_blank" rel="noopener">
+        <a class="btn btn-primary" href="wizard.html">
           <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 3v12"></path>
-            <path d="m7.5 10.5 4.5 4.5 4.5-4.5"></path>
-            <path d="M5 20h14"></path>
+            <path d="M4 7h10"></path>
+            <path d="M18 7h2"></path>
+            <circle cx="16" cy="7" r="2"></circle>
+            <path d="M4 12h5"></path>
+            <path d="M13 12h7"></path>
+            <circle cx="11" cy="12" r="2"></circle>
+            <path d="M4 17h2"></path>
+            <path d="M10 17h10"></path>
+            <circle cx="8" cy="17" r="2"></circle>
           </svg>
-          <span>Install Collection</span>
+          <span>Set Up Collection</span>
         </a>
         <a class="btn btn-secondary" href="https://nuvio.tv/#get" target="_blank" rel="noopener">
           <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -1110,5 +1138,20 @@
     </section>
     <div id="site-footer"></div>
   </main>
+  <script>
+    (() => {
+      const updateCard = document.querySelector('.latest-update');
+      if (!updateCard) return;
+
+      const press = () => updateCard.classList.add('is-pressed');
+      const release = () => updateCard.classList.remove('is-pressed');
+
+      updateCard.addEventListener('pointerdown', press);
+      updateCard.addEventListener('pointerup', release);
+      updateCard.addEventListener('pointercancel', release);
+      updateCard.addEventListener('pointerleave', release);
+      window.addEventListener('blur', release);
+    })();
+  </script>
 </body>
 </html>
