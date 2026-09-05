@@ -327,13 +327,31 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      isolation: isolate;
+      overflow: visible;
     }
     .showcase-card img {
+      position: relative;
+      z-index: 1;
       width: 100%;
       height: auto;
       display: block;
       object-fit: contain;
       filter: drop-shadow(0 26px 80px rgba(0,0,0,.42));
+    }
+
+    /* The current showcase is one flattened WebP. Counter-rotate only the phone
+       area so the TV stays level while the phone reads perfectly upright. */
+    .showcase-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: url("showcase-middle.webp") center / 100% 100% no-repeat;
+      clip-path: inset(7% 0 2% 65% round 8px);
+      transform: rotate(-1deg);
+      transform-origin: 82.5% 55%;
     }
     .tv {
       position: relative; width: min(94%, 1540px); margin: 0 auto; padding: 16px 16px 24px;
@@ -366,7 +384,7 @@
       background: linear-gradient(180deg, #202228 0%, #090a0d 100%); border-radius: 42px;
       border: 1px solid rgba(255,255,255,.10);
       box-shadow: 0 30px 78px rgba(0,0,0,.62), inset 0 1px 0 rgba(255,255,255,.10);
-      transform: rotate(1deg); z-index: 4; overflow: hidden;
+      transform: rotate(0deg); z-index: 4; overflow: hidden;
     }
     .phone::before {
       content: ""; position: absolute; inset: 1px; border-radius: 40px;
@@ -436,6 +454,11 @@
       }
       .showcase-wrap { margin-top: 18px; padding-bottom: 0; margin-bottom: 0; }
       .showcase-card { width: 100%; }
+      .showcase-card::after {
+        clip-path: inset(7% 0 2% 65% round 6px);
+        transform: rotate(-1deg);
+        transform-origin: 82.5% 55%;
+      }
       .caption { margin-top: 24px; }
       .caption h2 { font-size: 38px; }
       .footer { margin-top: 65px; align-items: flex-start; flex-direction: column; }
