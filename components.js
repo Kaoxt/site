@@ -37,27 +37,6 @@
     return meta;
   };
 
-  const ensureFavicon = () => {
-    const href = assetUrl('favicon.ico');
-    let icon = document.querySelector('link[rel="icon"]');
-    if (!icon) {
-      icon = document.createElement('link');
-      icon.rel = 'icon';
-      document.head.appendChild(icon);
-    }
-    icon.type = 'image/x-icon';
-    icon.href = href;
-
-    let shortcut = document.querySelector('link[rel="shortcut icon"]');
-    if (!shortcut) {
-      shortcut = document.createElement('link');
-      shortcut.rel = 'shortcut icon';
-      document.head.appendChild(shortcut);
-    }
-    shortcut.type = 'image/x-icon';
-    shortcut.href = href;
-  };
-
   const updateThemeButtons = (theme) => {
     const isLight = theme === 'light';
     const label = isLight ? 'Switch to dark mode' : 'Switch to light mode';
@@ -165,7 +144,6 @@
   };
 
   const init = async () => {
-    ensureFavicon();
     applyTheme(readTheme(), false); // Dark when there is no saved user choice.
 
     const navTarget = document.getElementById('site-nav');
