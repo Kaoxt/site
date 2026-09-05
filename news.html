@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0b0c" />
+  <meta name="description" content="Latest Nuvio news and release updates for The Kollection." />
+  <title>News | The Kollection</title>
+  <style>
+    :root {
+      --bg: #0b0b0c;
+      --panel: #151516;
+      --panel-2: #1a1a1c;
+      --text: #f4f4f5;
+      --muted: #9b9b9f;
+      --line: rgba(255,255,255,.115);
+      --line-soft: rgba(255,255,255,.075);
+      --button: #f2f2f4;
+      --button-text: #151517;
+      --max: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Product Sans", "Google Sans", "Inter", "SF Pro Display",
+                   -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; }
+
+    .page {
+      width: min(calc(100% - 30px), 1500px);
+      margin: 0 auto;
+      padding: 18px 0 70px;
+    }
+
+    .nav {
+      min-height: 70px;
+      border: 1px solid var(--line);
+      background: rgba(22,22,23,.94);
+      backdrop-filter: blur(22px) saturate(1.18);
+      -webkit-backdrop-filter: blur(22px) saturate(1.18);
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 10px 9px 20px;
+      position: sticky;
+      top: 14px;
+      z-index: 20;
+      box-shadow: 0 16px 50px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.035);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      font-size: 22px;
+      font-weight: 760;
+      letter-spacing: -.03em;
+    }
+
+    .brand-mark {
+      width: 34px;
+      aspect-ratio: 1;
+      border-radius: 11px;
+      background:
+        radial-gradient(circle at 62% 35%, rgba(255,255,255,.95) 0 3px, transparent 4px),
+        linear-gradient(140deg, #2dd4ff 0%, #7c3aed 47%, #ff3bd4 100%);
+      position: relative;
+      box-shadow: 0 0 28px rgba(124,58,237,.25);
+    }
+    .brand-mark::before {
+      content: "";
+      position: absolute;
+      left: 11px;
+      top: 8px;
+      width: 0;
+      height: 0;
+      border-top: 8px solid transparent;
+      border-bottom: 8px solid transparent;
+      border-left: 13px solid #fff;
+    }
+
+    .nav-actions { display: flex; align-items: center; gap: 6px; }
+    .nav-icon,
+    .menu {
+      width: 50px;
+      height: 50px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: #efeff1;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: background .18s ease, transform .18s ease;
+    }
+    .nav-icon:hover,
+    .menu:hover { background: rgba(255,255,255,.07); transform: scale(1.03); }
+    .nav-icon { font-size: 23px; }
+
+    .menu span,
+    .menu span::before {
+      content: "";
+      display: block;
+      width: 17px;
+      height: 2px;
+      border-radius: 99px;
+      background: #f1f1f1;
+    }
+    .menu span::before { transform: translateY(6px); }
+
+    .menu-wrap { position: relative; }
+    .menu-dropdown {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 11px);
+      width: 220px;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(20,20,21,.98);
+      box-shadow: 0 26px 70px rgba(0,0,0,.5);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-7px) scale(.985);
+      transform-origin: top right;
+      transition: .18s ease;
+    }
+    .menu-wrap.open .menu-dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+    }
+    .menu-dropdown a {
+      min-height: 46px;
+      padding: 0 14px;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #c9c9cc;
+      font-size: 14px;
+      font-weight: 650;
+    }
+    .menu-dropdown a:hover,
+    .menu-dropdown a.active { background: rgba(255,255,255,.075); color: #fff; }
+    .menu-dropdown small { color: #77787d; font-size: 11px; letter-spacing: .06em; }
+
+    .news-shell {
+      width: min(calc(100% - 36px), var(--max));
+      margin: 0 auto;
+      padding-top: clamp(62px, 8vw, 105px);
+    }
+
+    .news-heading {
+      margin: 0 0 30px;
+      padding-bottom: 26px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #9d9da1;
+      font-size: 12px;
+      font-weight: 750;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+    .kicker::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3cc8ff, #995dff);
+      box-shadow: 0 0 15px rgba(92,98,255,.55);
+    }
+    .news-heading h1 {
+      margin: 11px 0 6px;
+      font-size: clamp(38px, 5vw, 64px);
+      line-height: 1;
+      letter-spacing: -.05em;
+      font-weight: 720;
+    }
+    .news-heading p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .release {
+      padding: 30px 0 48px;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .release:first-child { padding-top: 10px; }
+
+    .release-tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 13px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      color: #b7b7bb;
+      background: rgba(255,255,255,.018);
+      font-size: 13px;
+      font-weight: 650;
+      margin-bottom: 20px;
+    }
+
+    .release h2 {
+      margin: 0;
+      font-size: clamp(31px, 4vw, 45px);
+      line-height: 1.03;
+      letter-spacing: -.04em;
+      font-weight: 720;
+    }
+    .release-meta {
+      margin-top: 14px;
+      color: #8c8c91;
+      font-size: 14px;
+    }
+    .release-summary,
+    .release-details {
+      max-width: 1060px;
+      color: #a6a6aa;
+      font-size: clamp(16px, 1.6vw, 20px);
+      line-height: 1.58;
+    }
+    .release-summary { margin: 26px 0 0; }
+    .release-details {
+      margin: 18px 0 0;
+      white-space: pre-line;
+      display: none;
+      color: #929297;
+      font-size: 16px;
+    }
+    .release.expanded .release-details { display: block; }
+
+    .release-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 34px;
+    }
+    .btn {
+      min-height: 54px;
+      padding: 0 24px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: #f2f2f3;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 720;
+      cursor: pointer;
+      transition: transform .18s ease, background .18s ease;
+    }
+    .btn:hover { transform: translateY(-1px); background: rgba(255,255,255,.055); }
+    .btn.primary { background: var(--button); color: var(--button-text); border-color: transparent; }
+
+    .loading {
+      color: #85858a;
+      padding: 22px 0 70px;
+      font-size: 14px;
+    }
+
+    footer {
+      width: min(calc(100% - 36px), var(--max));
+      margin: 55px auto 0;
+      color: #65656a;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      font-size: 13px;
+    }
+
+    body.light {
+      --bg: #f2f2f3;
+      --panel: #fff;
+      --panel-2: #f7f7f8;
+      --text: #151517;
+      --muted: #69696e;
+      --line: rgba(0,0,0,.12);
+      --line-soft: rgba(0,0,0,.08);
+      --button: #151517;
+      --button-text: #fff;
+    }
+    body.light .nav { background: rgba(248,248,249,.93); }
+    body.light .menu span,
+    body.light .menu span::before { background: #19191b; }
+    body.light .nav-icon,
+    body.light .menu { color: #19191b; }
+    body.light .menu-dropdown { background: rgba(250,250,250,.98); }
+    body.light .menu-dropdown a:hover,
+    body.light .menu-dropdown a.active { background: rgba(0,0,0,.055); color: #111; }
+
+    @media (max-width: 700px) {
+      .page { width: min(calc(100% - 18px), 100%); padding-top: 9px; }
+      .nav { min-height: 60px; padding: 7px 7px 7px 14px; top: 8px; }
+      .brand { font-size: 17px; gap: 8px; }
+      .brand-mark { width: 29px; border-radius: 9px; }
+      .brand-mark::before {
+        left: 10px; top: 7px;
+        border-top-width: 7px; border-bottom-width: 7px; border-left-width: 11px;
+      }
+      .nav-icon, .menu { width: 44px; height: 44px; }
+      .news-shell { width: min(calc(100% - 22px), var(--max)); padding-top: 55px; }
+      .news-heading { margin-bottom: 18px; }
+      .release { padding: 27px 0 38px; }
+      .release h2 { font-size: 31px; }
+      .release-summary { font-size: 17px; margin-top: 22px; }
+      .release-actions { gap: 10px; margin-top: 28px; }
+      .btn { min-height: 50px; padding-inline: 19px; }
+      footer { width: min(calc(100% - 22px), var(--max)); flex-direction: column; }
+    }
+
+    /* Current Kollection dock/header overrides */
+    .brand { display: inline-flex; align-items: center; min-width: 0; flex: 1; }
+    .brand img {
+      display: block;
+      height: clamp(40px, 3.3vw, 58px);
+      width: auto;
+      max-width: min(72vw, 760px);
+      object-fit: contain;
+      background: transparent;
+    }
+    .nav-actions { display: flex; align-items: center; gap: 0; }
+    .menu {
+      width: 28px;
+      height: 24px;
+      border-radius: 0;
+      background: transparent;
+      padding: 0;
+    }
+    .menu:hover { background: transparent; transform: translateY(-1px); }
+    .menu span,
+    .menu span::before,
+    .menu span::after {
+      content: "";
+      display: block;
+      width: 18px;
+      height: 2px;
+      border-radius: 99px;
+      background: #f1f1f1;
+      position: relative;
+    }
+    .menu span::before { position: absolute; top: -6px; left: 0; transform: none; }
+    .menu span::after { position: absolute; top: 6px; left: 0; }
+    @media (max-width: 700px) {
+      .brand img { height: 34px; max-width: 78vw; }
+      .menu { width: 24px; height: 22px; }
+    }
+
+  
+
+    /* Brand + navigation polish */
+    .nav {
+      align-items: center !important;
+    }
+
+    .brand {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 10px !important;
+      min-width: 0 !important;
+      flex: 1 1 auto !important;
+      color: #f7f7f8 !important;
+      font-size: initial !important;
+      font-weight: initial !important;
+      letter-spacing: initial !important;
+    }
+
+    .brand img,
+    .brand-mark {
+      display: none !important;
+    }
+
+    .brand-play {
+      width: 30px;
+      height: 30px;
+      flex: 0 0 30px;
+      display: block;
+      color: #6366f1;
+      fill: currentColor;
+      filter: drop-shadow(0 0 10px rgba(99,102,241,.18));
+    }
+
+    .brand-text {
+      display: block;
+      color: #f7f7f8;
+      font-size: 24px;
+      line-height: 1;
+      font-weight: 600;
+      letter-spacing: -.035em;
+      white-space: nowrap;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+    }
+
+    .menu-wrap {
+      position: relative !important;
+      display: grid !important;
+      place-items: center !important;
+      flex: 0 0 52px !important;
+      width: 52px;
+      height: 52px;
+    }
+
+    .menu {
+      position: relative;
+      width: 46px !important;
+      height: 46px !important;
+      min-width: 46px;
+      min-height: 46px;
+      padding: 0 !important;
+      margin: 0 !important;
+      border: 0 !important;
+      border-radius: 50% !important;
+      background: transparent !important;
+      color: #f3f3f6 !important;
+      display: grid !important;
+      place-items: center !important;
+      cursor: pointer;
+      opacity: .96;
+      transform: none !important;
+      transition: background .18s ease, transform .18s ease, box-shadow .18s ease !important;
+    }
+
+    .menu:hover {
+      background: rgba(255,255,255,.055) !important;
+      transform: scale(1.03) !important;
+    }
+
+    .menu span,
+    .menu span::before,
+    .menu span::after {
+      content: "";
+      position: absolute !important;
+      left: 50% !important;
+      top: 50% !important;
+      width: 18px !important;
+      height: 2px !important;
+      margin: 0 !important;
+      border: 0 !important;
+      border-radius: 999px !important;
+      background: #f3f3f6 !important;
+      transform-origin: center !important;
+      transition: transform .18s ease, opacity .18s ease, background .18s ease !important;
+    }
+
+    .menu span {
+      transform: translate(-50%, -50%) !important;
+    }
+
+    .menu span::before {
+      transform: translate(-50%, -7px) !important;
+    }
+
+    .menu span::after {
+      transform: translate(-50%, 5px) !important;
+    }
+
+    .menu-wrap.open .menu {
+      width: 50px !important;
+      height: 50px !important;
+      background: #2a2a2c !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+    }
+
+    .menu-wrap.open .menu:hover {
+      background: #303033 !important;
+    }
+
+    .menu-wrap.open .menu span {
+      background: transparent !important;
+    }
+
+    .menu-wrap.open .menu span::before {
+      background: #f7f7f8 !important;
+      transform: translate(-50%, -50%) rotate(45deg) !important;
+    }
+
+    .menu-wrap.open .menu span::after {
+      background: #f7f7f8 !important;
+      transform: translate(-50%, -50%) rotate(-45deg) !important;
+    }
+
+    .menu-dropdown {
+      right: 0 !important;
+      top: calc(100% + 13px) !important;
+    }
+
+    @media (max-width: 700px) {
+      .brand { gap: 8px !important; }
+      .brand-play {
+        width: 25px;
+        height: 25px;
+        flex-basis: 25px;
+      }
+      .brand-text {
+        font-size: 18px;
+        letter-spacing: -.03em;
+      }
+      .menu-wrap {
+        width: 48px;
+        height: 48px;
+        flex-basis: 48px !important;
+      }
+      .menu {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px;
+        min-height: 44px;
+      }
+      .menu-wrap.open .menu {
+        width: 46px !important;
+        height: 46px !important;
+      }
+    }
+
+  
+
+    /* Icon navigation + centered community links */
+    .menu-dropdown {
+      width: 258px !important;
+      padding: 10px !important;
+    }
+
+    .menu-dropdown .menu-link {
+      min-height: 50px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 12px;
+    }
+
+    .menu-dropdown .menu-link .nav-item-icon {
+      width: 19px;
+      height: 19px;
+      flex: 0 0 19px;
+      color: #a7a7ad;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: color .18s ease, transform .18s ease;
+    }
+
+    .menu-dropdown .menu-link:hover .nav-item-icon,
+    .menu-dropdown .menu-link.active .nav-item-icon {
+      color: #818cf8;
+    }
+
+    .menu-dropdown .menu-link:hover .nav-item-icon {
+      transform: translateX(1px);
+    }
+
+    .menu-community {
+      margin-top: 8px;
+      padding: 13px 6px 5px;
+      border-top: 1px solid rgba(255,255,255,.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+    }
+
+    .menu-community a {
+      min-height: 0 !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      color: #818cf8 !important;
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center !important;
+      gap: 7px;
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      letter-spacing: -.01em;
+      white-space: nowrap;
+      opacity: .94;
+      transition: opacity .18s ease, transform .18s ease !important;
+    }
+
+    .menu-community a:hover {
+      opacity: 1;
+      transform: translateY(-1px);
+      color: #a5b4fc !important;
+    }
+
+    .menu-community svg {
+      width: 17px;
+      height: 17px;
+      flex: 0 0 17px;
+      color: currentColor;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .menu-community .github-icon {
+      fill: currentColor;
+      stroke: none;
+    }
+
+    body.light .menu-community {
+      border-top-color: rgba(0,0,0,.08);
+    }
+
+    body.light .menu-community a {
+      color: #4f46e5 !important;
+    }
+
+    @media (max-width: 700px) {
+      .menu-dropdown {
+        width: 246px !important;
+      }
+      .menu-community {
+        gap: 15px;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="nav">
+      <a class="brand" href="index.html" aria-label="The Kollection home">
+        <svg class="brand-play" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+          <path d="M9.2 5.6c0-1.45 1.57-2.36 2.83-1.64l13.1 7.54c1.29.74 1.29 2.6 0 3.34l-13.1 7.54c-1.26.72-2.83-.19-2.83-1.64V5.6Z" />
+        </svg>
+        <span class="brand-text">The Kollection</span>
+      </a>
+      <div class="nav-actions">
+        <div class="menu-wrap" id="menuWrap">
+          <button class="menu" id="menuButton" type="button" aria-label="Open navigation menu" aria-haspopup="true" aria-expanded="false">
+            <span aria-hidden="true"></span>
+          </button>
+          <nav class="menu-dropdown" aria-label="Site navigation">
+          <a class="menu-link" href="index.html">
+            <svg class="nav-item-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11.2 12 4l8.5 7.2"></path><path d="M6.5 10.5V20h11v-9.5"></path><path d="M9.5 20v-5.5h5V20"></path></svg>
+            <span>Home</span>
+          </a>
+          <a class="menu-link active" href="news.html">
+            <svg class="nav-item-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h11.5A2.5 2.5 0 0 1 19 7v12H7.5A2.5 2.5 0 0 1 5 16.5z"></path><path d="M19 8h1.5v8.5A2.5 2.5 0 0 1 18 19"></path><path d="M8.5 8.5h7"></path><path d="M8.5 12h7"></path><path d="M8.5 15.5h4.5"></path></svg>
+            <span>News</span>
+          </a>
+          <a class="menu-link" href="https://nuvio.tv" target="_blank" rel="noopener">
+            <svg class="nav-item-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5h5v5"></path><path d="m11 13 8-8"></path><path d="M19 13v5.5A1.5 1.5 0 0 1 17.5 20h-12A1.5 1.5 0 0 1 4 18.5v-12A1.5 1.5 0 0 1 5.5 5H11"></path></svg>
+            <span>Open Nuvio</span>
+          </a>
+          <div class="menu-community" aria-label="Community links">
+            <a href="https://github.com/Kaoxt/The-Kollection" target="_blank" rel="noopener" aria-label="The Kollection on GitHub">
+              <svg class="github-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .7a11.3 11.3 0 0 0-3.57 22c.57.1.77-.25.77-.55v-2.2c-3.14.69-3.8-1.34-3.8-1.34-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.69.08-.69 1.13.08 1.72 1.16 1.72 1.16 1 1.72 2.63 1.22 3.27.93.1-.73.39-1.22.71-1.5-2.5-.29-5.13-1.25-5.13-5.58 0-1.23.44-2.24 1.16-3.03-.12-.28-.5-1.43.11-2.98 0 0 .95-.3 3.1 1.16A10.7 10.7 0 0 1 12 6.05c.96 0 1.92.13 2.82.38 2.15-1.46 3.1-1.16 3.1-1.16.61 1.55.23 2.7.11 2.98.72.79 1.16 1.8 1.16 3.03 0 4.34-2.63 5.29-5.14 5.57.4.35.76 1.04.76 2.1v3.2c0 .3.2.66.78.55A11.3 11.3 0 0 0 12 .7Z"></path></svg>
+              <span>GitHub</span>
+            </a>
+            <a href="https://ko-fi.com/kaoxt" target="_blank" rel="noopener" aria-label="Buy me a coffee on Ko-fi">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h12v5.5A5.5 5.5 0 0 1 11.5 19H10a5 5 0 0 1-5-5z"></path><path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17"></path><path d="M8 5.5c.8-.5.8-1.1 0-1.7"></path><path d="M12 5.5c.8-.5.8-1.1 0-1.7"></path></svg>
+              <span>Buy me a coffee</span>
+            </a>
+          </div>
+        </nav>
+        </div>
+      </div>
+    </header>
+
+    <section class="news-shell">
+      <header class="news-heading">
+        <div class="kicker">Nuvio release feed</div>
+        <h1>News</h1>
+        <p>Latest Android TV and Smart TV releases, in one clean feed.</p>
+      </header>
+      <div id="releaseFeed" aria-live="polite">
+        <div class="loading">Loading latest release notes…</div>
+      </div>
+    </section>
+
+    <footer>
+      <span>© The Kollection</span>
+      <span>Release data from the public Nuvio GitHub repositories</span>
+    </footer>
+  </main>
+
+  <script>
+    (() => {
+      const menuWrap = document.getElementById('menuWrap');
+      const menuButton = document.getElementById('menuButton');
+      const feed = document.getElementById('releaseFeed');
+
+      const setMenu = (open) => {
+        menuWrap.classList.toggle('open', open);
+        menuButton.setAttribute('aria-expanded', String(open));
+      };
+      menuButton.addEventListener('click', (event) => {
+        event.stopPropagation();
+        setMenu(!menuWrap.classList.contains('open'));
+      });
+      document.addEventListener('click', (event) => {
+        if (!menuWrap.contains(event.target)) setMenu(false);
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') setMenu(false);
+      });
+
+      const fallback = [
+        {
+          product: 'NuvioTV',
+          title: 'Beta 0.9.0',
+          tag: '0.9.0-beta',
+          date: 'Sep 4, 2026',
+          summary: 'Future beta releases: the 0.9.x releases will be the final beta versions before the stable release. Once stable is available, future beta builds will be published as prereleases.',
+          details: 'Improvements & Fixes\n\nSidebar styling and back-navigation fixes, playback and subtitle improvements, search suggestion fixes, profile history isolation, image decoding controls, crash fixes, and additional localization updates.',
+          url: 'https://github.com/NuvioMedia/NuvioTV/releases/tag/0.9.0-beta'
+        },
+        {
+          product: 'NuvioWeb',
+          title: '1.0.6',
+          tag: '1.0.6',
+          date: 'Sep 4, 2026',
+          summary: 'Aligned Smart TV playback with Android TV, including post-play recommendations, next-episode and trailer playback, metadata, player preferences, subtitle positioning, localized UI, and richer diagnostics.',
+          details: 'This release also improves plugin execution and playback stability across Tizen and webOS, preserves library and watched state more reliably, and makes startup update detection more resilient on slower TV boots.',
+          url: 'https://github.com/NuvioMedia/NuvioTVSmart/releases/tag/1.0.6'
+        },
+        {
+          product: 'NuvioWeb',
+          title: '1.0.5',
+          tag: '1.0.5',
+          date: 'Sep 2, 2026',
+          summary: 'Improvements and fixes across Smart TV plugin execution, provider error containment, synchronization, search, remote navigation, and platform compatibility.',
+          details: 'The update focuses on stability across Tizen and webOS while keeping the Smart TV experience aligned with Android TV behavior.',
+          url: 'https://github.com/NuvioMedia/NuvioTVSmart/releases/tag/1.0.5'
+        },
+        {
+          product: 'NuvioWeb',
+          title: '1.0.4',
+          tag: '1.0.4',
+          date: 'Sep 2026',
+          summary: 'Smart TV refinements focused on playback consistency, navigation, sync behavior, and packaging across supported television platforms.',
+          details: 'Open the release on GitHub for the complete changelog and downloadable platform builds.',
+          url: 'https://github.com/NuvioMedia/NuvioTVSmart/releases/tag/1.0.4'
+        }
+      ];
+
+      const cleanMarkdown = (value = '') => value
+        .replace(/```[\s\S]*?```/g, '')
+        .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+        .replace(/^#{1,6}\s+/gm, '')
+        .replace(/^>\s?/gm, '')
+        .replace(/^[-*+]\s+/gm, '• ')
+        .replace(/\*\*|__|`/g, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+
+      const summarize = (text, limit = 300) => {
+        const oneLine = text.replace(/\s+/g, ' ').trim();
+        if (oneLine.length <= limit) return oneLine;
+        return oneLine.slice(0, limit).replace(/\s+\S*$/, '') + '…';
+      };
+
+      const formatDate = (iso) => new Intl.DateTimeFormat('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric'
+      }).format(new Date(iso));
+
+      const normalizeRelease = (release, product) => {
+        const details = cleanMarkdown(release.body || 'Open this release on GitHub for the complete changelog.');
+        let title = release.name || release.tag_name || 'Release';
+        if (product === 'NuvioTV' && /0\.9\.0/.test(title) && !/^Beta/i.test(title)) title = 'Beta 0.9.0';
+        return {
+          product,
+          title,
+          tag: release.tag_name || '',
+          date: formatDate(release.published_at || release.created_at),
+          summary: summarize(details, 330),
+          details,
+          url: release.html_url
+        };
+      };
+
+      const render = (items) => {
+        feed.innerHTML = '';
+        items.forEach((item) => {
+          const article = document.createElement('article');
+          article.className = 'release';
+
+          const tag = document.createElement('div');
+          tag.className = 'release-tag';
+          tag.textContent = item.product;
+
+          const h2 = document.createElement('h2');
+          h2.textContent = item.title;
+
+          const meta = document.createElement('div');
+          meta.className = 'release-meta';
+          meta.textContent = [item.tag, item.date].filter(Boolean).join(' · ');
+
+          const summary = document.createElement('p');
+          summary.className = 'release-summary';
+          summary.textContent = item.summary;
+
+          const details = document.createElement('div');
+          details.className = 'release-details';
+          details.textContent = item.details;
+
+          const actions = document.createElement('div');
+          actions.className = 'release-actions';
+
+          const show = document.createElement('button');
+          show.type = 'button';
+          show.className = 'btn primary';
+          show.textContent = 'Show more';
+          show.addEventListener('click', () => {
+            const expanded = article.classList.toggle('expanded');
+            show.textContent = expanded ? 'Show less' : 'Show more';
+          });
+
+          const github = document.createElement('a');
+          github.className = 'btn';
+          github.href = item.url;
+          github.target = '_blank';
+          github.rel = 'noopener';
+          github.textContent = 'Open on GitHub';
+
+          actions.append(show, github);
+          article.append(tag, h2, meta, summary, details, actions);
+          feed.appendChild(article);
+        });
+      };
+
+      const repositories = [
+        { repo: 'NuvioMedia/NuvioTV', product: 'NuvioTV' },
+        { repo: 'NuvioMedia/NuvioTVSmart', product: 'NuvioWeb' }
+      ];
+
+      Promise.all(repositories.map(async ({ repo, product }) => {
+        const response = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=4`, {
+          headers: { 'Accept': 'application/vnd.github+json' }
+        });
+        if (!response.ok) throw new Error(`GitHub request failed: ${response.status}`);
+        const releases = await response.json();
+        return releases.map((release) => ({
+          ...normalizeRelease(release, product),
+          sortDate: new Date(release.published_at || release.created_at).getTime()
+        }));
+      }))
+        .then((groups) => groups.flat().sort((a, b) => b.sortDate - a.sortDate).slice(0, 7))
+        .then(render)
+        .catch(() => render(fallback));
+    })();
+  </script>
+</body>
+</html>
