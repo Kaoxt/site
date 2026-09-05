@@ -273,18 +273,34 @@ body.light .theme-toggle .icon-moon { display: block !important; }
 }
 
 .menu-wrap.open .menu {
+  /* Match the closed button geometry so the X/circle cannot jump or overflow. */
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  min-height: 42px !important;
   background: rgba(255,255,255,.115) !important;
 }
 
 .menu .menu-glyph {
+  /* Reset the older inline .menu span rules completely.
+     Those rules set top/left:50%, which pushed the hamburger down/right. */
   position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
   width: 18px !important;
   height: 14px !important;
+  margin: 0 !important;
+  padding: 0 !important;
   display: block !important;
   background: transparent !important;
   border: 0 !important;
   border-radius: 0 !important;
   transform: none !important;
+  line-height: 0 !important;
+  font-size: 0 !important;
 }
 
 .menu .menu-glyph::before,
@@ -636,6 +652,13 @@ body.light .site-footer {
   }
 
   .menu {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+  }
+
+  .menu-wrap.open .menu {
     width: 40px !important;
     height: 40px !important;
     min-width: 40px !important;
