@@ -702,3 +702,160 @@ body.light .site-footer {
     transition: none !important;
   }
 }
+
+/* ============================================================
+   FINAL NAV GEOMETRY — authoritative shared header sizing
+   Matches the slimmer reference layout.
+   ============================================================ */
+
+.nav {
+  height: 62px !important;
+  min-height: 62px !important;
+  max-height: 62px !important;
+  padding: 5px 12px 5px 18px !important;
+  gap: 9px !important;
+}
+
+.nav .brand {
+  height: 100% !important;
+  min-width: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  overflow: hidden !important;
+}
+
+.nav .brand img {
+  display: block !important;
+  width: auto !important;
+  height: 22px !important;
+  max-height: 22px !important;
+  max-width: min(68vw, 520px) !important;
+  object-fit: contain !important;
+  object-position: left center !important;
+}
+
+.nav-actions {
+  gap: 2px !important;
+}
+
+.theme-toggle {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+  flex-basis: 38px !important;
+}
+
+.theme-icon {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.menu-wrap {
+  width: 40px !important;
+  height: 40px !important;
+  flex: 0 0 40px !important;
+}
+
+.menu,
+.menu-wrap.open .menu {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+}
+
+/* Keep the two community links on one line. */
+.menu-community {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 18px !important;
+}
+
+.menu-community a {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+}
+
+@media (max-width: 899px) {
+  .nav {
+    height: 62px !important;
+    min-height: 62px !important;
+    max-height: 62px !important;
+    padding: 5px 10px 5px 16px !important;
+  }
+
+  .nav .brand img {
+    height: 22px !important;
+    max-height: 22px !important;
+  }
+
+  .theme-toggle {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    flex-basis: 38px !important;
+  }
+
+  .menu-wrap {
+    width: 40px !important;
+    height: 40px !important;
+    flex-basis: 40px !important;
+  }
+
+  .menu,
+  .menu-wrap.open .menu {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .nav {
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+    padding: 4px 8px 4px 14px !important;
+    gap: 5px !important;
+  }
+
+  .nav .brand img {
+    height: 18px !important;
+    max-height: 18px !important;
+    max-width: 72vw !important;
+  }
+
+  .theme-toggle {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    flex-basis: 34px !important;
+  }
+
+  .theme-icon {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .menu-wrap {
+    width: 36px !important;
+    height: 36px !important;
+    flex-basis: 36px !important;
+  }
+
+  .menu,
+  .menu-wrap.open .menu {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+  }
+}
