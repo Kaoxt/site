@@ -340,19 +340,14 @@
       filter: drop-shadow(0 26px 80px rgba(0,0,0,.42));
     }
 
-    /* The current showcase is one flattened WebP. Counter-rotate only the phone
-       area so the TV stays level while the phone reads perfectly upright. */
     .showcase-card::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      z-index: 2;
-      pointer-events: none;
-      background: url("showcase-middle.webp") center / 100% 100% no-repeat;
-      clip-path: inset(7% 0 2% 65% round 8px);
-      transform: rotate(-1deg);
-      transform-origin: 82.5% 55%;
+      content: none !important;
+      display: none !important;
     }
+
+    /* Render the current showcase-middle.webp exactly as supplied.
+       Do not duplicate, clip, or rotate part of the flattened image; doing so
+       can create a broken/offset TV bezel where the overlay meets the source. */
     .tv {
       position: relative; width: min(94%, 1540px); margin: 0 auto; padding: 16px 16px 24px;
       border-radius: 34px; background: linear-gradient(180deg, #2a2b31 0%, #15161a 38%, #0b0b0e 100%);
@@ -454,11 +449,6 @@
       }
       .showcase-wrap { margin-top: 18px; padding-bottom: 0; margin-bottom: 0; }
       .showcase-card { width: 100%; }
-      .showcase-card::after {
-        clip-path: inset(7% 0 2% 65% round 6px);
-        transform: rotate(-1deg);
-        transform-origin: 82.5% 55%;
-      }
       .caption { margin-top: 24px; }
       .caption h2 { font-size: 38px; }
       .footer { margin-top: 65px; align-items: flex-start; flex-direction: column; }
@@ -1111,7 +1101,7 @@
     <section id="collection" class="showcase-wrap" aria-label="The Kollection preview">
       <div class="ambient"></div>
       <div class="showcase-card">
-        <img src="showcase-middle.webp" alt="The Kollection TV and phone preview" />
+        <img src="showcase-middle.webp?v=4" alt="The Kollection TV and phone preview" />
       </div>
     </section>
     <section class="caption">
