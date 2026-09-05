@@ -144,12 +144,34 @@ body {
   display: flex !important;
   align-items: center !important;
   justify-content: flex-end !important;
-  gap: 2px !important;
+  gap: 4px !important;
   flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: auto !important;
+  position: static !important;
+  inset: auto !important;
+  margin: 0 0 0 auto !important;
+  padding: 0 !important;
+  transform: none !important;
+}
+
+.nav-actions > * {
+  flex-shrink: 0 !important;
 }
 
 /* Theme control */
 .theme-toggle {
+  position: static !important;
+  inset: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  float: none !important;
+  align-self: center !important;
+  margin: 0 !important;
   width: 42px !important;
   height: 42px !important;
   min-width: 42px !important;
@@ -201,6 +223,13 @@ body.light .theme-toggle .icon-moon { display: block !important; }
 /* Mobile menu: fixed square geometry keeps the open-state circle centered on the X. */
 .menu-wrap {
   position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  float: none !important;
+  align-self: center !important;
   width: 46px !important;
   height: 46px !important;
   flex: 0 0 46px !important;
@@ -213,6 +242,12 @@ body.light .theme-toggle .icon-moon { display: block !important; }
 .menu {
   position: relative !important;
   inset: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  float: none !important;
+  align-self: center !important;
   width: 42px !important;
   height: 42px !important;
   min-width: 42px !important;
@@ -550,7 +585,17 @@ body.light .site-footer {
 
 @media (max-width: 899px) {
   .desktop-nav { display: none !important; }
-  .nav-actions { display: flex !important; }
+  .nav .brand {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+  }
+  .nav-actions {
+    display: flex !important;
+    width: auto !important;
+    margin-left: auto !important;
+    justify-content: flex-end !important;
+  }
   .menu-wrap { display: grid !important; }
   .desktop-theme-toggle { display: none !important; }
   .mobile-theme-toggle { display: inline-grid !important; }
