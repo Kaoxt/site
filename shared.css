@@ -1593,3 +1593,113 @@ html.force-large-compact-nav body #site-nav .menu-wrap.open .menu-line:nth-child
   top: 7px !important;
 }
 
+/* ==================== FINAL NAV SIZE + POSITION TWEAK ====================
+   Slightly smaller in both desktop and compact/tablet views,
+   and move the whole navigation dock upward by 2px.
+*/
+
+/* All views: move nav 2px closer to the top */
+#site-nav {
+  transform: translateY(-2px) !important;
+}
+
+/* Desktop / landscape */
+html:not(.force-compact-nav) body #site-nav .nav {
+  height: 60px !important;
+  min-height: 60px !important;
+  max-height: 60px !important;
+  padding: 5px 13px 5px 17px !important;
+}
+
+html:not(.force-compact-nav) body #site-nav .nav .brand img {
+  height: 21px !important;
+  max-height: 21px !important;
+}
+
+html:not(.force-compact-nav) body #site-nav .theme-toggle {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+}
+
+html:not(.force-compact-nav) body #site-nav .theme-icon {
+  width: 21px !important;
+  height: 21px !important;
+}
+
+/* Compact / phone */
+html.force-compact-nav:not(.force-large-compact-nav) body #site-nav .nav {
+  height: 58px !important;
+  min-height: 58px !important;
+  max-height: 58px !important;
+  padding: 5px 11px 5px 15px !important;
+}
+
+html.force-compact-nav:not(.force-large-compact-nav) body #site-nav .nav .brand img {
+  height: 21px !important;
+  max-height: 21px !important;
+}
+
+html.force-compact-nav:not(.force-large-compact-nav) body #site-nav .theme-toggle {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  flex-basis: 40px !important;
+}
+
+html.force-compact-nav:not(.force-large-compact-nav) body #site-nav .menu-wrap {
+  width: 42px !important;
+  height: 42px !important;
+  flex-basis: 42px !important;
+}
+
+html.force-compact-nav:not(.force-large-compact-nav) body #site-nav .menu,
+html.force-compact-nav:not(.force-large-compact-nav) body #site-nav .menu-wrap.open .menu {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+}
+
+/* Large tablet portrait compact view */
+html.force-large-compact-nav body #site-nav .nav {
+  height: 72px !important;
+  min-height: 72px !important;
+  max-height: 72px !important;
+  padding: 7px 15px 7px 19px !important;
+}
+
+html.force-large-compact-nav body #site-nav .nav .brand img {
+  height: 27px !important;
+  max-height: 27px !important;
+}
+
+html.force-large-compact-nav body #site-nav .theme-toggle {
+  width: 46px !important;
+  height: 46px !important;
+  min-width: 46px !important;
+  min-height: 46px !important;
+  flex-basis: 46px !important;
+}
+
+html.force-large-compact-nav body #site-nav .theme-icon {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+html.force-large-compact-nav body #site-nav .menu-wrap {
+  width: 48px !important;
+  height: 48px !important;
+  flex: 0 0 48px !important;
+}
+
+html.force-large-compact-nav body #site-nav .menu,
+html.force-large-compact-nav body #site-nav .menu-wrap.open .menu {
+  width: 46px !important;
+  height: 46px !important;
+  min-width: 46px !important;
+  min-height: 46px !important;
+}
+
