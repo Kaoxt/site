@@ -547,6 +547,105 @@
       }
     }
 
+
+    /* EXACT SET UP COLLECTION INTRO MATCH */
+    .faq-shell {
+      width: 100% !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .faq-hero {
+      width: 100% !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: clamp(64px, 8vw, 118px) 0 46px !important;
+      text-align: left !important;
+    }
+
+    .faq-kicker {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      min-height: 0 !important;
+      padding: 7px 11px !important;
+      margin: 0 0 24px !important;
+      border: 1px solid rgba(255,255,255,.10) !important;
+      border-radius: 999px !important;
+      background: rgba(255,255,255,.035) !important;
+      color: #d6d5db !important;
+      box-shadow: none !important;
+      font-size: 13px !important;
+      line-height: 1 !important;
+      font-weight: 650 !important;
+      letter-spacing: .015em !important;
+      text-transform: none !important;
+    }
+
+    .faq-kicker::before {
+      content: "" !important;
+      width: 7px !important;
+      height: 7px !important;
+      flex: 0 0 7px !important;
+      border-radius: 99px !important;
+      background: linear-gradient(135deg, #56aaff, #9d4edd) !important;
+      box-shadow: 0 0 18px rgba(86,170,255,.45) !important;
+    }
+
+    .faq-hero h1 {
+      margin: 0 !important;
+      max-width: 1040px !important;
+      font-family: "Inter", "Google Sans", "Product Sans", system-ui, sans-serif !important;
+      font-size: clamp(48px, 4.65vw, 76px) !important;
+      line-height: 1.02 !important;
+      letter-spacing: -.045em !important;
+      font-weight: 600 !important;
+      text-align: left !important;
+      text-wrap: balance;
+    }
+
+    .faq-hero p {
+      width: min(980px, 100%) !important;
+      max-width: 980px !important;
+      margin: 24px 0 0 !important;
+      color: var(--muted) !important;
+      font-family: "Inter", "Google Sans", "Product Sans", system-ui, sans-serif !important;
+      font-size: clamp(18px, 1.35vw, 22px) !important;
+      line-height: 1.55 !important;
+      letter-spacing: -.015em !important;
+      font-weight: 400 !important;
+      text-align: left !important;
+    }
+
+    body.light .faq-kicker {
+      color: #484b52 !important;
+      border-color: rgba(0,0,0,.10) !important;
+      background: rgba(255,255,255,.72) !important;
+      box-shadow: 0 6px 24px rgba(17,24,39,.04) !important;
+    }
+
+    @media (max-width: 700px) {
+      .faq-hero {
+        padding: 54px 2px 34px !important;
+      }
+      .faq-kicker {
+        margin-bottom: 20px !important;
+        font-size: 12px !important;
+      }
+      .faq-hero h1 {
+        font-size: clamp(40px, 11vw, 56px) !important;
+        line-height: 1.04 !important;
+      }
+      .faq-hero p {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-top: 20px !important;
+        font-size: 17px !important;
+        line-height: 1.52 !important;
+      }
+    }
+
   </style>
   <link rel="stylesheet" href="shared.css" />
   <script src="components.js" defer></script>
