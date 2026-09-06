@@ -225,8 +225,8 @@
     const footerTarget = document.getElementById('site-footer');
 
     const tasks = [];
-    if (navTarget) tasks.push(loadFragment('nav.html', navTarget));
-    if (footerTarget) tasks.push(loadFragment('footer.html', footerTarget));
+    if (navTarget) tasks.push(loadFragment('nav.html?v=20260906-1', navTarget));
+    if (footerTarget) tasks.push(loadFragment('footer.html?v=20260906-1', footerTarget));
     if (tasks.length) await Promise.allSettled(tasks);
 
     setActiveNav();
