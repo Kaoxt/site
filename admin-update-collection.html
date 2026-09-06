@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <link rel="icon" href="/favicon.ico?v=3" sizes="any" />
+  <link rel="shortcut icon" href="/favicon.ico?v=3" type="image/x-icon" />
+  <meta name="theme-color" content="#050608" />
+  <title>Admin | The Kollection</title>
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="stylesheet" href="admin/admin.css" />
+  <script src="components.js" defer></script>
+  <script src="set-up-collection/config.js"></script>
+  <script src="nuvio-auth/nuvio-auth.js"></script>
+  <script src="admin/admin.js" defer></script>
+</head>
+<body>
+  <main class="page admin-page">
+    <div id="site-nav" aria-label="Site navigation"></div>
+
+    <section class="admin-hero">
+      <div class="admin-eyebrow"><span></span> Private collection updater</div>
+      <h1>The Kollection Admin</h1>
+      <p>Your Nuvio identity unlocks the updater. If you are already connected to Nuvio through Set Up Collection, this page uses the same secure Kollection session.</p>
+    </section>
+
+    <section class="auth-shell" id="authShell" aria-labelledby="authHeading">
+      <header class="admin-shell-head">
+        <div>
+          <div class="kicker">NUVIO ACCOUNT</div>
+          <h2 id="authHeading">Administrator sign in</h2>
+        </div>
+        <div class="auth-state" id="authState">Checking session…</div>
+      </header>
+
+      <div id="authMessage" class="admin-message" hidden></div>
+
+      <div class="auth-loading" id="authLoading">
+        <span class="auth-spinner"></span>
+        <span>Checking your Kollection session…</span>
+      </div>
+
+      <div class="nuvio-admin-login" id="loginPanel" hidden>
+        <div class="nuvio-admin-login-copy">
+          <h3>Continue with Nuvio</h3>
+          <p>Nuvio opens in a separate window so you can approve The Kollection. If you are already signed in on nuvio.tv, Nuvio can use that existing session.</p>
+        </div>
+        <div class="nuvio-admin-login-actions">
+          <button id="continueNuvioButton" class="button-primary" type="button">Continue with Nuvio</button>
+          <span class="nuvio-admin-status" id="nuvioAdminStatus" aria-live="polite"></span>
+        </div>
+      </div>
+
+      <div class="signed-in-card" id="signedInCard" hidden>
+        <div class="signed-in-avatar" id="signedInAvatar">N</div>
+        <div class="signed-in-copy">
+          <span>Signed in with Nuvio</span>
+          <strong id="signedInEmail"></strong>
+          <small id="signedInRole"></small>
+        </div>
+        <button id="signOutButton" class="button-secondary" type="button">Sign out</button>
+      </div>
+    </section>
+
+    <section class="admin-shell" id="updaterShell" aria-labelledby="updateHeading" hidden>
+      <header class="admin-shell-head">
+        <div>
+          <div class="kicker">ADMIN</div>
+          <h2 id="updateHeading">Publish a runtime update</h2>
+        </div>
+        <div class="repo-badge">Kaoxt / site</div>
+      </header>
+
+      <div id="adminMessage" class="admin-message" hidden></div>
+
+      <div class="upload-grid">
+        <article class="upload-card" id="nuvioCard">
+          <div class="upload-number">1</div>
+          <div class="upload-copy">
+            <h3>Nuvio collection JSON</h3>
+            <p>Export the latest collection after adding, removing, or reorganizing folders.</p>
+            <div class="file-controls">
+              <label class="file-button" for="nuvioFile">Choose Nuvio JSON</label>
+              <input id="nuvioFile" type="file" accept="application/json,.json" hidden />
+              <span id="nuvioFileName" class="file-name">No file selected</span>
+            </div>
+            <div id="nuvioStats" class="file-stats" hidden></div>
+          </div>
+        </article>
+
+        <article class="upload-card" id="aioCard">
+          <div class="upload-number">2</div>
+          <div class="upload-copy">
+            <h3>AIOMetadata JSON</h3>
+            <p>Export your latest AIOMetadata configuration after adding or changing catalogs.</p>
+            <div class="file-controls">
+              <label class="file-button" for="aioFile">Choose AIOMetadata JSON</label>
+              <input id="aioFile" type="file" accept="application/json,.json" hidden />
+              <span id="aioFileName" class="file-name">No file selected</span>
+            </div>
+            <div id="aioStats" class="file-stats" hidden></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="privacy-note">
+        <strong>Private values are scrubbed before publishing.</strong>
+        <span>AIOMetadata API keys, session ID, and config hash are not written to the public runtime files. Your GitHub token stays server-side in Cloudflare.</span>
+      </div>
+
+      <div class="admin-fields single-admin-field">
+        <label class="admin-field" for="commitMessage">
+          <span>Update note <em>optional</em></span>
+          <input id="commitMessage" type="text" maxlength="100" placeholder="Update The Kollection runtime" />
+          <small>This becomes the GitHub commit message.</small>
+        </label>
+      </div>
+
+      <div class="validation-panel" id="validationPanel" hidden>
+        <div class="validation-title">Ready to publish</div>
+        <div id="validationSummary" class="validation-summary"></div>
+      </div>
+
+      <label class="confirm-row">
+        <input id="confirmPublish" type="checkbox" />
+        <span>I understand this replaces the production runtime files used by Set Up Collection.</span>
+      </label>
+
+      <div class="admin-actions">
+        <button id="validateButton" class="button-secondary" type="button">Validate files</button>
+        <button id="publishButton" class="button-primary" type="button" disabled>Publish runtime update</button>
+      </div>
+
+      <div id="publishResult" class="publish-result" hidden></div>
+    </section>
+
+    <section class="what-updates" id="whatUpdates" hidden>
+      <h2>What this updates</h2>
+      <div class="update-files">
+        <div><code>runtime/database.kaoxt.js</code><span>Your folders, sections, artwork, and collection sources.</span></div>
+        <div><code>runtime/kaoxt-aio-catalogs.json</code><span>Your current AIOMetadata catalog definitions.</span></div>
+        <div><code>runtime/kaoxt-aio-base-config.json</code><span>Your sanitized AIOMetadata defaults without personal keys.</span></div>
+        <div><code>runtime/runtime-info.json</code><span>Counts and timestamp for troubleshooting.</span></div>
+      </div>
+    </section>
+
+    <div id="site-footer"></div>
+  </main>
+</body>
+</html>

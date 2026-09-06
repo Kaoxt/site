@@ -143,6 +143,76 @@
     });
   };
 
+  const ensureStylesheet = (filename) => {
+    const href = assetUrl(filename);
+    const found = [...document.querySelectorAll('link[rel="stylesheet"]')]
+      .some((link) => {
+        try { return new URL(link.href, window.location.href).href === href; }
+        catch (_) { return false; }
+      });
+
+    if (found) return;
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    document.head.appendChild(link);
+  };
+
+  const ensureScript = (filename) => {
+    const src = assetUrl(filename);
+
+    const existing = [...document.scripts].find((script) => {
+      try { return new URL(script.src, window.location.href).href === src; }
+      catch (_) { return false; }
+    });
+
+    if (existing) {
+      if (existing.dataset.loaded === 'true' || existing.readyState === 'complete') {
+        return Promise.resolve();
+      }
+
+      return new Promise((resolve, reject) => {
+        existing.addEventListener('load', resolve, { once: true });
+        existing.addEventListener('error', reject, { once: true });
+        // Scripts placed in normal HTML may already have executed before this listener is attached.
+        setTimeout(resolve, 0);
+      });
+    }
+
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.async = true;
+      script.addEventListener('load', () => {
+        script.dataset.loaded = 'true';
+        resolve();
+      }, { once: true });
+      script.addEventListener('error', reject, { once: true });
+      document.head.appendChild(script);
+    });
+  };
+
+  const initNuvioAccount = async () => {
+    if (!document.querySelector('.nav')) return;
+
+    ensureStylesheet('nuvio-auth/nav-account.css');
+
+    try {
+      if (!window.KollectionNuvioAuth) {
+        await ensureScript('nuvio-auth/nuvio-auth.js');
+      }
+
+      if (!window.KollectionNavAccount) {
+        await ensureScript('nuvio-auth/nav-account.js');
+      }
+
+      await window.KollectionNavAccount?.init?.();
+    } catch (error) {
+      console.warn('[The Kollection] Could not initialize the Nuvio navigation account.', error);
+    }
+  };
+
   const init = async () => {
     applyTheme(readTheme(), false); // Dark when there is no saved user choice.
 
@@ -158,6 +228,7 @@
     bindThemeButtons();
     bindMenu();
     applyTheme(readTheme(), false);
+    await initNuvioAccount();
   };
 
   if (document.readyState === 'loading') {
