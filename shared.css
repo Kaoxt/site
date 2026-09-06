@@ -18,10 +18,10 @@ body {
 
 .nav {
   width: 100% !important;
-  height: 70px !important;
-  min-height: 70px !important;
-  max-height: 70px !important;
-  padding: 8px 14px 8px 20px !important;
+  height: 62px !important;
+  min-height: 62px !important;
+  max-height: 62px !important;
+  padding: 5px 14px 5px 18px !important;
   border: 1px solid rgba(255,255,255,.12) !important;
   border-radius: 999px !important;
   background: rgba(18,18,20,.90) !important;
@@ -55,9 +55,9 @@ body {
 .nav .brand img {
   display: block !important;
   width: auto !important;
-  height: 28px !important;
-  max-height: 28px !important;
-  max-width: min(68vw, 620px) !important;
+  height: 22px !important;
+  max-height: 22px !important;
+  max-width: min(68vw, 520px) !important;
   object-fit: contain !important;
   object-position: left center !important;
   background: transparent !important;
@@ -621,17 +621,17 @@ body.light .site-footer {
 
 @media (max-width: 700px) {
   .nav {
-    height: 60px !important;
-    min-height: 60px !important;
-    max-height: 60px !important;
-    padding: 7px 9px 7px 14px !important;
-    gap: 7px !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+    padding: 4px 10px 4px 14px !important;
+    gap: 9px !important;
   }
 
   .nav .brand img {
-    height: 22px !important;
-    max-height: 22px !important;
-    max-width: 64vw !important;
+    height: 18px !important;
+    max-height: 18px !important;
+    max-width: 72vw !important;
   }
 
   .theme-toggle {
@@ -895,6 +895,41 @@ body.light .menu-community a {
 @media (max-width: 700px) {
   .menu-community {
     gap: 15px !important;
+  }
+}
+
+/* ==================== APPROVED SLIM NAV — AUTHORITATIVE FINAL OVERRIDE ====================
+   Keep this at the end of shared.css. It prevents older page rules from enlarging
+   the navigation dock or The Kollection banner logo.
+*/
+.nav {
+  height: 62px !important;
+  min-height: 62px !important;
+  max-height: 62px !important;
+  padding: 5px 14px 5px 18px !important;
+  gap: 12px !important;
+}
+
+.nav .brand img {
+  height: 22px !important;
+  max-height: 22px !important;
+  width: auto !important;
+  max-width: min(68vw, 520px) !important;
+}
+
+@media (max-width: 700px) {
+  .nav {
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+    padding: 4px 10px 4px 14px !important;
+    gap: 9px !important;
+  }
+
+  .nav .brand img {
+    height: 18px !important;
+    max-height: 18px !important;
+    max-width: 72vw !important;
   }
 }
 
