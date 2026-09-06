@@ -1,0 +1,17 @@
+# The Kollection — frequently updated shared assets
+# Force browsers/CDN to revalidate these files so custom-domain updates appear promptly.
+
+/shared.css
+  Cache-Control: no-cache, max-age=0, must-revalidate
+
+/components.js
+  Cache-Control: no-cache, max-age=0, must-revalidate
+
+/nav.html
+  Cache-Control: no-cache, max-age=0, must-revalidate
+
+/footer.html
+  Cache-Control: no-cache, max-age=0, must-revalidate
+
+/favicon.ico
+  Cache-Control: no-cache, max-age=0, must-revalidate
