@@ -119,7 +119,7 @@
 
     .faq-list {
       width: 100%;
-      border-top: 1px solid var(--line);
+      border-top: 0;
     }
 
     .faq-item {
@@ -225,6 +225,118 @@
       border-radius: 12px;
     }
 
+
+    .faq-search-wrap {
+      width: 100%;
+      min-height: 76px;
+      margin: 0 0 12px;
+      padding: 0 2px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: #73747c;
+    }
+
+    .faq-search-icon {
+      width: 25px;
+      height: 25px;
+      flex: 0 0 25px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .faq-search {
+      width: 100%;
+      min-width: 0;
+      padding: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: #f1f1f4;
+      font: inherit;
+      font-size: clamp(18px, 1.65vw, 24px);
+      line-height: 1.2;
+      font-weight: 560;
+      letter-spacing: -.02em;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .faq-search::placeholder {
+      color: #6e7078;
+      opacity: 1;
+    }
+
+    .faq-search::-webkit-search-cancel-button {
+      filter: invert(1);
+      opacity: .5;
+      cursor: pointer;
+    }
+
+    .faq-search-wrap:focus-within {
+      border-bottom-color: rgba(129,140,248,.65);
+      color: #9fa6ff;
+    }
+
+    .faq-search-empty {
+      padding: 24px 2px 32px;
+      color: var(--muted);
+      font-size: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .faq-summary-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      flex: 0 0 auto;
+    }
+
+    .faq-link {
+      width: 36px;
+      height: 36px;
+      flex: 0 0 36px;
+      border-radius: 50%;
+      display: inline-grid;
+      place-items: center;
+      color: #777983;
+      text-decoration: none;
+      opacity: .78;
+      transition: color .18s ease, background .18s ease, opacity .18s ease, transform .18s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .faq-link svg {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .faq-link:hover,
+    .faq-link:focus-visible {
+      color: #aeb2ff;
+      background: rgba(99,102,241,.10);
+      opacity: 1;
+      transform: translateY(-1px);
+      outline: none;
+    }
+
+    .faq-item:target {
+      scroll-margin-top: 28px;
+    }
+
+    .faq-item:target summary {
+      color: #fff;
+    }
+
     body.light {
       --bg: #f4f5f7;
       --panel: rgba(255,255,255,.75);
@@ -258,6 +370,31 @@
     body.light .faq-item[open] .faq-plus::before,
     body.light .faq-item[open] .faq-plus::after { background: #5a55dc; }
     body.light .faq-answer a { color: #5148cf; text-decoration-color: rgba(81,72,207,.28); }
+    body.light .faq-search-wrap {
+      color: #777a82;
+    }
+    body.light .faq-search {
+      color: #202126;
+    }
+    body.light .faq-search::placeholder {
+      color: #7b7e86;
+    }
+    body.light .faq-search::-webkit-search-cancel-button {
+      filter: none;
+    }
+    body.light .faq-search-wrap:focus-within {
+      border-bottom-color: rgba(79,70,229,.5);
+      color: #5148cf;
+    }
+    body.light .faq-link {
+      color: #777a82;
+    }
+    body.light .faq-link:hover,
+    body.light .faq-link:focus-visible {
+      color: #5148cf;
+      background: rgba(79,70,229,.08);
+    }
+
     body.light .faq-kicker {
       color: #555860;
       border-color: rgba(0,0,0,.10);
@@ -298,6 +435,21 @@
         line-height: 1.52;
       }
 
+      .faq-search-wrap {
+        min-height: 66px;
+        gap: 13px;
+      }
+
+      .faq-search-icon {
+        width: 22px;
+        height: 22px;
+        flex-basis: 22px;
+      }
+
+      .faq-search {
+        font-size: 18px;
+      }
+
       .faq-item summary {
         min-height: 82px;
         padding: 21px 0;
@@ -307,6 +459,21 @@
       .faq-question {
         font-size: 19px;
         line-height: 1.3;
+      }
+
+      .faq-summary-actions {
+        gap: 6px;
+      }
+
+      .faq-link {
+        width: 32px;
+        height: 32px;
+        flex-basis: 32px;
+      }
+
+      .faq-link svg {
+        width: 18px;
+        height: 18px;
       }
 
       .faq-plus {
@@ -341,6 +508,24 @@
         <h1 id="faq-title">Frequently<br>Asked Questions</h1>
         <p>Find answers about collections, AIOmetadata, Bingecat, AIOstreams, and more.</p>
       </header>
+
+      <div class="faq-search-wrap" role="search">
+        <svg class="faq-search-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="6.5"></circle>
+          <path d="m16 16 4 4"></path>
+        </svg>
+        <input
+          id="faqSearch"
+          class="faq-search"
+          type="search"
+          inputmode="search"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="Search every FAQ"
+          aria-label="Search frequently asked questions"
+        />
+      </div>
+      <div class="faq-search-empty" id="faqSearchEmpty" hidden>No FAQs match your search.</div>
 
       <div class="faq-list">
         <details class="faq-item">
@@ -425,6 +610,16 @@
 
         <details class="faq-item">
           <summary>
+            <span class="faq-question">Can I install this cool collection without the set up guide?</span>
+            <span class="faq-plus" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-answer">
+            <p>Yes. If you prefer to set everything up manually, you can use the collection files and configuration resources available in <a href="https://github.com/Kaoxt/The-Kollection" target="_blank" rel="noopener">The Kollection GitHub repository</a>. The Set Up Collection guide is the easier option because it walks you through the required pieces and helps automate the setup, but it is not the only way to install the collection.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>
             <span class="faq-question">What is AIOStreams?</span>
             <span class="faq-plus" aria-hidden="true"></span>
           </summary>
@@ -501,7 +696,49 @@
   <script>
     (() => {
       const items = [...document.querySelectorAll('.faq-item')];
+      const search = document.getElementById('faqSearch');
+      const empty = document.getElementById('faqSearchEmpty');
+
+      const makeId = (text) => text
+        .toLowerCase()
+        .replace(/['’]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
       items.forEach((item) => {
+        const summary = item.querySelector('summary');
+        const question = item.querySelector('.faq-question');
+        const plus = item.querySelector('.faq-plus');
+
+        if (!item.id && question) item.id = makeId(question.textContent);
+
+        if (summary && plus && !summary.querySelector('.faq-summary-actions')) {
+          const actions = document.createElement('span');
+          actions.className = 'faq-summary-actions';
+
+          const permalink = document.createElement('a');
+          permalink.className = 'faq-link';
+          permalink.href = `#${item.id}`;
+          permalink.setAttribute('aria-label', `Link to: ${question?.textContent || 'FAQ question'}`);
+          permalink.setAttribute('title', 'Link to this question');
+          permalink.innerHTML = `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M10.2 13.8a4.2 4.2 0 0 0 5.94 0l2.66-2.66a4.2 4.2 0 0 0-5.94-5.94l-1.52 1.52"></path>
+              <path d="M13.8 10.2a4.2 4.2 0 0 0-5.94 0L5.2 12.86a4.2 4.2 0 1 0 5.94 5.94l1.52-1.52"></path>
+            </svg>`;
+
+          permalink.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            item.open = true;
+            history.pushState(null, '', `#${item.id}`);
+            item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          });
+
+          plus.replaceWith(actions);
+          actions.append(permalink, plus);
+        }
+
         item.addEventListener('toggle', () => {
           if (!item.open) return;
           items.forEach((other) => {
@@ -509,6 +746,35 @@
           });
         });
       });
+
+      const openFromHash = () => {
+        if (!location.hash) return;
+        const item = document.getElementById(location.hash.slice(1));
+        if (item?.classList.contains('faq-item')) {
+          item.open = true;
+          requestAnimationFrame(() => item.scrollIntoView({ block: 'center' }));
+        }
+      };
+
+      const runSearch = () => {
+        const query = (search?.value || '').trim().toLowerCase();
+        let matches = 0;
+
+        items.forEach((item) => {
+          const haystack = item.textContent.toLowerCase();
+          const match = !query || haystack.includes(query);
+          item.hidden = !match;
+          if (match) matches += 1;
+          if (query && !match) item.open = false;
+        });
+
+        if (empty) empty.hidden = matches !== 0;
+      };
+
+      search?.addEventListener('input', runSearch);
+      search?.addEventListener('search', runSearch);
+      window.addEventListener('hashchange', openFromHash);
+      openFromHash();
     })();
   </script>
 </body>
