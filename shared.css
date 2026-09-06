@@ -1133,3 +1133,114 @@ body .faq-answer {
   }
 }
 
+/* ==================== TABLET HAMBURGER BREAKPOINT — FINAL ====================
+   Firefox on Android tablets can use a portrait CSS viewport around 900–1000px,
+   which is wider than the old 899px mobile breakpoint. Switch to the compact
+   hamburger navigation by viewport width instead of relying on orientation.
+*/
+@media (max-width: 1100px) {
+  .desktop-nav {
+    display: none !important;
+  }
+
+  .nav-actions {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    width: auto !important;
+    margin-left: auto !important;
+  }
+
+  .desktop-theme-toggle {
+    display: none !important;
+  }
+
+  .mobile-theme-toggle {
+    display: inline-grid !important;
+  }
+
+  .menu-wrap {
+    display: grid !important;
+    width: 42px !important;
+    height: 42px !important;
+    flex: 0 0 42px !important;
+  }
+
+  .menu {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+  }
+
+  .menu-wrap.open .menu {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+  }
+
+  .theme-toggle {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    flex-basis: 40px !important;
+  }
+
+  .theme-icon {
+    width: 21px !important;
+    height: 21px !important;
+  }
+
+  .nav {
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+    padding: 4px 10px 4px 14px !important;
+    gap: 9px !important;
+  }
+
+  .nav .brand {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin-right: auto !important;
+  }
+
+  .nav .brand img {
+    height: 18px !important;
+    max-height: 18px !important;
+    width: auto !important;
+    max-width: 72vw !important;
+  }
+
+  .menu-dropdown {
+    width: min(258px, calc(100vw - 20px)) !important;
+    top: calc(100% + 10px) !important;
+  }
+}
+
+/* Above the tablet breakpoint, always restore the desktop navigation. */
+@media (min-width: 1101px) {
+  .desktop-nav {
+    display: flex !important;
+  }
+
+  .nav-actions {
+    display: none !important;
+  }
+
+  .menu-wrap {
+    display: none !important;
+  }
+
+  .desktop-theme-toggle {
+    display: inline-grid !important;
+  }
+
+  .mobile-theme-toggle {
+    display: none !important;
+  }
+}
+
