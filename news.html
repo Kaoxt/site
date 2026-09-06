@@ -344,7 +344,6 @@
       .release-summary { font-size: 17px; margin-top: 22px; }
       .release-actions { gap: 10px; margin-top: 28px; }
       .btn { min-height: 50px; padding-inline: 19px; }
-      footer { width: min(calc(100% - 22px), var(--max)); flex-direction: column; }
     }
 
     /* Current Kollection dock/header overrides */
@@ -1107,6 +1106,23 @@
     }
   </style>
 
+
+  <style id="news-footer-cleanup">
+    #site-footer::after,
+    #site-footer .site-footer::after,
+    main.page::after,
+    body::after {
+      content: none !important;
+      display: none !important;
+    }
+
+    #site-footer .site-footer {
+      display: block !important;
+      width: 100% !important;
+      max-width: none !important;
+    }
+  </style>
+
   <script src="components.js" defer></script>
 </head>
 <body>
@@ -1195,4 +1211,3 @@ The complete release files and setup resources are available on GitHub.
   </script>
 </body>
 </html>
-€

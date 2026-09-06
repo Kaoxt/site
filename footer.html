@@ -10,7 +10,9 @@
 
 
   .site-footer::after,
-  #site-footer::after {
+  #site-footer::after,
+  .site-footer-main::after,
+  .site-footer-bottom::after {
     content: none !important;
     display: none !important;
   }
@@ -23,10 +25,10 @@
     width: 100%;
   }
 
-  .site-footer-brand { min-width: 0; padding-top: 1px; --tagline-text-offset: 64px; }
+  .site-footer-brand { min-width: 0; padding-top: 1px; }
   .site-footer-logo { display: inline-flex; align-items: center; width: min(100%, 290px); text-decoration: none; }
   .site-footer-logo img { display: block; width: 100%; height: auto; max-height: 54px; object-fit: contain; object-position: left center; }
-  .site-footer-tagline { margin: 18px 0 0; margin-left: var(--tagline-text-offset); color: #73737a; font-size: 15px; line-height: 1.38; letter-spacing: -.012em; font-weight: 500; }
+  .site-footer-tagline { width: min(100%, 290px); margin: 18px 0 0; text-align: center; color: #73737a; font-size: 15px; line-height: 1.38; letter-spacing: -.012em; font-weight: 500; }
   .site-footer-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: clamp(28px, 4vw, 58px); min-width: 0; }
   .site-footer-column { min-width: 0; }
   .site-footer-column h3 { margin: 0 0 24px; color: #f0f0f2; font-size: 18px; line-height: 1.1; font-weight: 760; letter-spacing: -.02em; }
@@ -34,16 +36,35 @@
   .site-footer-column a { color: #77777e; font-size: 15px; line-height: 1.25; font-weight: 500; text-decoration: none; white-space: nowrap; transition: color .18s ease; }
   .site-footer-column a:hover { color: #c9c7ff; }
 
+
+  .site-footer-bottom {
+    width: 100%;
+    margin-top: 48px;
+    padding-top: 28px;
+    border-top: 1px solid rgba(255,255,255,.055);
+    text-align: center;
+  }
+
+  .site-footer-copyright {
+    margin: 0;
+    color: #5f6067;
+    font-size: 13px;
+    line-height: 1.4;
+    font-weight: 500;
+    letter-spacing: -.01em;
+  }
+
   @media (max-width: 900px) and (min-width: 621px) {
     .site-footer { margin-top: 86px; padding: 34px 0 48px; }
     .site-footer-main { grid-template-columns: minmax(240px, 40%) minmax(0, 1fr); column-gap: 28px; }
     .site-footer-logo { width: min(100%, 250px); }
     .site-footer-logo img { max-height: 46px; }
-    .site-footer-tagline { margin-top: 18px; margin-left: 54px; font-size: 13px; line-height: 1.32; white-space: nowrap; }
+    .site-footer-tagline { width: min(100%, 250px); margin-top: 18px; margin-left: 0; text-align: center; font-size: 13px; line-height: 1.32; white-space: nowrap; }
     .site-footer-links { column-gap: 20px; align-self: start; }
     .site-footer-column h3 { margin-bottom: 18px; font-size: 15px; }
     .site-footer-column nav { gap: 14px; }
     .site-footer-column a { font-size: 13px; }
+    .site-footer-bottom { margin-top: 40px; padding-top: 24px; }
   }
 
   @media (max-width: 620px) {
@@ -51,15 +72,16 @@
     .site-footer-main { grid-template-columns: 1fr; row-gap: 34px; }
     .site-footer-logo { width: min(78vw, 245px); }
     .site-footer-logo img { max-height: 46px; }
-    .site-footer-tagline { margin-top: 16px; margin-left: 48px; font-size: 15px; line-height: 1.34; }
+    .site-footer-tagline { width: min(78vw, 245px); margin-top: 16px; margin-left: 0; text-align: center; font-size: 15px; line-height: 1.34; }
     .site-footer-links { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 16px; }
     .site-footer-column h3 { margin-bottom: 17px; font-size: 15px; }
     .site-footer-column nav { gap: 12px; }
     .site-footer-column a { font-size: 13px; white-space: normal; }
+    .site-footer-bottom { margin-top: 34px; padding-top: 22px; }
+    .site-footer-copyright { font-size: 12px; }
   }
 
   @media (max-width: 430px) {
-    .site-footer-tagline { margin-left: 42px; }
     .site-footer-links { grid-template-columns: 1fr; row-gap: 32px; }
     .site-footer-column h3 { margin-bottom: 16px; }
   }
@@ -102,5 +124,9 @@
         </nav>
       </div>
     </div>
+  </div>
+
+  <div class="site-footer-bottom">
+    <p class="site-footer-copyright">&copy; 2026 The Kollection</p>
   </div>
 </footer>
