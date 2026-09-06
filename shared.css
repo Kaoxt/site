@@ -1044,3 +1044,92 @@ body .faq-answer {
   }
 }
 
+/* ==================== TABLET PORTRAIT NAV FIX ====================
+   Firefox on Android tablets can report a CSS viewport wider than the old
+   899px breakpoint even while the device is physically in portrait mode.
+   In portrait, use the same compact navigation treatment as mobile.
+   Landscape keeps the normal desktop navigation.
+*/
+@media (orientation: portrait) and (max-width: 1400px) {
+  .desktop-nav {
+    display: none !important;
+  }
+
+  .nav-actions {
+    display: flex !important;
+    width: auto !important;
+    margin-left: auto !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+  }
+
+  .desktop-theme-toggle {
+    display: none !important;
+  }
+
+  .mobile-theme-toggle {
+    display: inline-grid !important;
+  }
+
+  .menu-wrap {
+    display: grid !important;
+    width: 42px !important;
+    height: 42px !important;
+    flex: 0 0 42px !important;
+  }
+
+  .menu {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+  }
+
+  .menu-wrap.open .menu {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+  }
+
+  .theme-toggle {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    flex-basis: 40px !important;
+  }
+
+  .theme-icon {
+    width: 21px !important;
+    height: 21px !important;
+  }
+
+  .nav {
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+    padding: 4px 10px 4px 14px !important;
+    gap: 9px !important;
+  }
+
+  .nav .brand {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin-right: auto !important;
+  }
+
+  .nav .brand img {
+    height: 18px !important;
+    max-height: 18px !important;
+    width: auto !important;
+    max-width: 72vw !important;
+  }
+
+  .menu-dropdown {
+    width: min(258px, calc(100vw - 20px)) !important;
+    top: calc(100% + 10px) !important;
+  }
+}
+
