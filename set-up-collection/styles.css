@@ -653,4 +653,47 @@ body.light .collection-section-choice.selected .collection-section-check::after{
   .collection-section-grid{grid-template-columns:1fr}
   .collection-section-choice{min-height:78px;padding:15px}
 }
-I
+
+/* Step 2 — simplified Nuvio authentication form */
+.nuvio-auth-shell{
+  width:min(100%,680px);
+  margin:0 auto;
+  padding:2px 0 0;
+}
+.nuvio-auth-tabs{
+  justify-content:center;
+  margin-bottom:26px;
+}
+.nuvio-auth-fields{
+  width:min(100%,560px);
+  margin:0 auto;
+}
+.nuvio-auth-fields .field{
+  margin-bottom:18px;
+}
+.nuvio-auth-fields .field:last-of-type{
+  margin-bottom:0;
+}
+.nuvio-auth-note{
+  display:block;
+  width:min(100%,560px);
+  margin:12px auto 0;
+  color:var(--muted);
+  font-size:13.5px;
+  line-height:1.5;
+}
+.nuvio-auth-actions{
+  width:min(100%,560px);
+  margin:26px auto 0;
+}
+.nuvio-auth-actions .btn,
+.nuvio-auth-actions .ghost{
+  flex:0 0 auto;
+}
+
+@media (max-width:700px){
+  .nuvio-auth-shell{width:100%}
+  .nuvio-auth-tabs{justify-content:flex-start;margin-bottom:22px}
+  .nuvio-auth-fields,.nuvio-auth-actions{width:100%}
+  .nuvio-auth-note{width:100%;font-size:13px}
+}

@@ -786,16 +786,18 @@
       </div>
       <div class="card">
         ${!logged ? `
-          <div class="setup-tabs" role="tablist" aria-label="Nuvio account action">
-            <button class="setup-tab ${!signup ? 'active' : ''}" id="signinTab" type="button">Sign in</button>
-            <button class="setup-tab ${signup ? 'active' : ''}" id="signupTab" type="button">Create account</button>
-          </div>
-          <div class="grid-2 auth-grid">
-            <div class="field"><label for="email">Nuvio email</label><input id="email" type="email" autocomplete="username" value="${esc(state.nuvioEmail)}" placeholder="you@example.com"></div>
-            <div class="field"><label for="password">Nuvio password</label><input id="password" type="password" autocomplete="${signup ? 'new-password' : 'current-password'}" placeholder="Enter your password"></div>
-          </div>
-          ${signup ? `<div class="field"><label for="confirmPassword">Confirm password</label><input id="confirmPassword" type="password" autocomplete="new-password" placeholder="Enter the password again"><small>If Nuvio requires email confirmation, finish that step and then return here to sign in.</small></div>` : ''}
-          <div class="actions"><button class="ghost" id="backBtn">Back</button><button class="btn" id="${signup ? 'signupBtn' : 'loginBtn'}">${signup ? 'Create Nuvio account' : 'Sign in to Nuvio'}</button></div>` : `
+          <div class="nuvio-auth-shell">
+            <div class="setup-tabs nuvio-auth-tabs" role="tablist" aria-label="Nuvio account action">
+              <button class="setup-tab ${!signup ? 'active' : ''}" id="signinTab" type="button">Sign in</button>
+              <button class="setup-tab ${signup ? 'active' : ''}" id="signupTab" type="button">Create account</button>
+            </div>
+            <div class="nuvio-auth-fields">
+              <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="username" value="${esc(state.nuvioEmail)}" placeholder="you@example.com"></div>
+              <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="${signup ? 'new-password' : 'current-password'}" placeholder="${signup ? 'At least 8 characters' : 'Enter your password'}"></div>
+              ${signup ? `<small class="nuvio-auth-note">If Nuvio requires email confirmation, finish that step and then return here to sign in.</small>` : ''}
+            </div>
+            <div class="actions nuvio-auth-actions"><button class="ghost" id="backBtn">Back</button><button class="btn" id="${signup ? 'signupBtn' : 'loginBtn'}">${signup ? 'Create account' : 'Sign in'}</button></div>
+          </div>` : `
           <div class="callout good">Signed in successfully. Choose the Nuvio profile to configure.</div>
           <div class="field profile-field" style="margin-top:18px">
             <label for="profile">Nuvio profile</label>
@@ -823,11 +825,9 @@
           try {
             const email = $('#email').value.trim();
             const password = $('#password').value;
-            const confirm = $('#confirmPassword').value;
             state.nuvioEmail = email;
             if (!email || !password) throw new Error('Enter an email and password.');
-            if (password.length < 6) throw new Error('Use a password with at least six characters.');
-            if (password !== confirm) throw new Error('The passwords do not match.');
+            if (password.length < 8) throw new Error('Use a password with at least eight characters.');
             loading('Creating your Nuvio account…');
             const result = await nuvioSignup(email, password);
             if (result.signedIn) {
