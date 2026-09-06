@@ -170,30 +170,38 @@
     .kicker {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      color: #9d9da1;
-      font-size: 12px;
-      font-weight: 750;
-      letter-spacing: .09em;
-      text-transform: uppercase;
+      gap: 10px;
+      min-height: 42px;
+      padding: 0 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      background: rgba(255,255,255,.028);
+      color: #c7c7cc;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+      font-size: 14px;
+      font-weight: 650;
+      line-height: 1;
+      letter-spacing: -.01em;
+      text-transform: none;
     }
     .kicker::before {
       content: "";
-      width: 7px;
-      height: 7px;
+      width: 8px;
+      height: 8px;
+      flex: 0 0 8px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #3cc8ff, #995dff);
-      box-shadow: 0 0 15px rgba(92,98,255,.55);
+      background: linear-gradient(135deg, #56aaff 0%, #8b5cf6 58%, #d86cff 100%);
+      box-shadow: 0 0 14px rgba(99,102,241,.42);
     }
     .news-heading h1 {
-      margin: 11px 0 6px;
+      margin: 38px 0 0;
       font-size: clamp(38px, 5vw, 64px);
       line-height: 1;
       letter-spacing: -.05em;
       font-weight: 720;
     }
     .news-heading p {
-      margin: 0;
+      margin: 24px 0 0;
       color: var(--muted);
       font-size: 16px;
     }
@@ -306,6 +314,12 @@
     body.light .menu-dropdown { background: rgba(250,250,250,.98); }
     body.light .menu-dropdown a:hover,
     body.light .menu-dropdown a.active { background: rgba(0,0,0,.055); color: #111; }
+    body.light .kicker {
+      color: #555860;
+      border-color: rgba(0,0,0,.10);
+      background: rgba(255,255,255,.72);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.85);
+    }
 
     @media (max-width: 700px) {
       .page { width: min(calc(100% - 18px), 100%); padding-top: 9px; }
@@ -319,6 +333,12 @@
       .nav-icon, .menu { width: 44px; height: 44px; }
       .news-shell { width: min(calc(100% - 22px), var(--max)); padding-top: 55px; }
       .news-heading { margin-bottom: 18px; }
+      .kicker {
+        min-height: 38px;
+        padding: 0 14px;
+        font-size: 13px;
+      }
+      .news-heading h1 { margin-top: 30px; }
       .release { padding: 27px 0 38px; }
       .release h2 { font-size: 31px; }
       .release-summary { font-size: 17px; margin-top: 22px; }
@@ -948,7 +968,7 @@
     }
 
   </style>
-  <link rel="stylesheet" href="shared.css?v=20260905-navfix6" />
+  <link rel="stylesheet" href="shared.css" />
   <script src="components.js" defer></script>
 </head>
 <body>
