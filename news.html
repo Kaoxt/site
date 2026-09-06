@@ -967,195 +967,22 @@
       }
     }
 
-
-    /* Match the Set Up Collection intro geometry exactly:
-       chip, title, and description all share the same left edge. */
-    .news-shell {
-      width: 100% !important;
-      max-width: none !important;
-      margin: 0 !important;
-      padding: clamp(68px, 7vw, 112px) 0 0 !important;
-    }
-
-    .news-heading {
-      width: min(100%, 1180px) !important;
-      max-width: 1180px !important;
-      margin: 0 !important;
-      padding: 0 0 clamp(46px, 5vw, 70px) !important;
-      border-bottom: 0 !important;
-      text-align: left !important;
-    }
-
-    .kicker {
-      margin: 0 0 38px !important;
-      align-self: flex-start !important;
-    }
-
-    .news-heading h1 {
-      margin: 0 !important;
-      text-align: left !important;
-    }
-
-    .news-heading p {
-      width: min(100%, 980px) !important;
-      max-width: 980px !important;
-      margin: 24px 0 0 !important;
-      text-align: left !important;
-    }
-
-    @media (max-width: 700px) {
-      .news-shell {
-        padding-top: 54px !important;
-      }
-
-      .news-heading {
-        padding-bottom: 38px !important;
-      }
-
-      .kicker {
-        margin-bottom: 30px !important;
-      }
-
-      .news-heading p {
-        margin-top: 20px !important;
-      }
-    }
-
-
-    /* EXACT SET UP COLLECTION INTRO MATCH */
-    .news-shell {
-      width: 100% !important;
-      max-width: none !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-
-    .news-heading {
-      width: 100% !important;
-      max-width: none !important;
-      margin: 0 !important;
-      padding: clamp(64px, 8vw, 118px) 0 46px !important;
-      border: 0 !important;
-      text-align: left !important;
-    }
-
-    .news-heading .kicker {
-      display: inline-flex !important;
-      align-items: center !important;
-      gap: 8px !important;
-      min-height: 0 !important;
-      padding: 7px 11px !important;
-      margin: 0 0 24px !important;
-      border: 1px solid rgba(255,255,255,.10) !important;
-      border-radius: 999px !important;
-      background: rgba(255,255,255,.035) !important;
-      color: #d6d5db !important;
-      box-shadow: none !important;
-      font-size: 13px !important;
-      line-height: 1 !important;
-      font-weight: 650 !important;
-      letter-spacing: .015em !important;
-      text-transform: none !important;
-    }
-
-    .news-heading .kicker::before {
-      content: "" !important;
-      width: 7px !important;
-      height: 7px !important;
-      flex: 0 0 7px !important;
-      border-radius: 99px !important;
-      background: linear-gradient(135deg, #56aaff, #9d4edd) !important;
-      box-shadow: 0 0 18px rgba(86,170,255,.45) !important;
-    }
-
-    .news-heading h1 {
-      margin: 0 !important;
-      max-width: 1040px !important;
-      font-family: "Inter", "Google Sans", "Product Sans", system-ui, sans-serif !important;
-      font-size: clamp(48px, 4.65vw, 76px) !important;
-      line-height: 1.02 !important;
-      letter-spacing: -.045em !important;
-      font-weight: 600 !important;
-      text-align: left !important;
-      text-wrap: balance;
-    }
-
-    .news-heading p {
-      width: min(980px, 100%) !important;
-      max-width: 980px !important;
-      margin: 24px 0 0 !important;
-      color: var(--muted) !important;
-      font-family: "Inter", "Google Sans", "Product Sans", system-ui, sans-serif !important;
-      font-size: clamp(18px, 1.35vw, 22px) !important;
-      line-height: 1.55 !important;
-      letter-spacing: -.015em !important;
-      font-weight: 400 !important;
-      text-align: left !important;
-    }
-
-    body.light .news-heading .kicker {
-      color: #484b52 !important;
-      border-color: rgba(0,0,0,.10) !important;
-      background: rgba(255,255,255,.72) !important;
-      box-shadow: 0 6px 24px rgba(17,24,39,.04) !important;
-    }
-
-    @media (max-width: 700px) {
-      .news-heading {
-        padding: 54px 2px 34px !important;
-      }
-      .news-heading .kicker {
-        margin-bottom: 20px !important;
-        font-size: 12px !important;
-      }
-      .news-heading h1 {
-        font-size: clamp(40px, 11vw, 56px) !important;
-        line-height: 1.04 !important;
-      }
-      .news-heading p {
-        width: 100% !important;
-        max-width: 100% !important;
-        margin-top: 20px !important;
-        font-size: 17px !important;
-        line-height: 1.52 !important;
-      }
-    }
-
   </style>
   <link rel="stylesheet" href="shared.css" />
 
-  <style id="setup-exact-page-intro-fix">
-    /*
-      Make News/FAQ use the exact same hero geometry as Set Up Collection.
-      This block intentionally comes AFTER shared.css so older page rules
-      cannot add extra top/margin spacing.
-    */
-
-    .news-shell,
-    .faq-shell {
+  <style id="true-setup-hero-match">
+    /* Same geometry and typography as /set-up-collection */
+    .setup-hero.page-intro {
       width: 100% !important;
-      max-width: none !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-
-    .news-heading,
-    .faq-hero {
-      width: 100% !important;
-      max-width: none !important;
       margin: 0 !important;
       padding: clamp(64px, 8vw, 118px) 0 46px !important;
-      border: 0 !important;
       text-align: left !important;
     }
 
-    /* Exact Set Up Collection eyebrow/pill */
-    .news-heading .kicker,
-    .faq-hero .faq-kicker {
+    .setup-hero.page-intro .eyebrow {
       display: inline-flex !important;
       align-items: center !important;
       gap: 8px !important;
-      min-height: 0 !important;
       padding: 7px 11px !important;
       margin: 0 0 24px !important;
       border: 1px solid rgba(255,255,255,.10) !important;
@@ -1163,28 +990,23 @@
       background: rgba(255,255,255,.035) !important;
       color: #d6d5db !important;
       font-size: 13px !important;
-      line-height: 1 !important;
+      line-height: normal !important;
       font-weight: 650 !important;
       letter-spacing: .015em !important;
       text-transform: none !important;
       box-shadow: none !important;
     }
 
-    .news-heading .kicker::before,
-    .faq-hero .faq-kicker::before {
-      content: "" !important;
-      display: block !important;
+    .setup-hero.page-intro .eyebrow-dot {
       width: 7px !important;
       height: 7px !important;
       flex: 0 0 7px !important;
       border-radius: 99px !important;
-      background: linear-gradient(135deg, #56aaff, #9d4edd) !important;
+      background: linear-gradient(135deg, var(--blue, #56aaff), #9d4edd) !important;
       box-shadow: 0 0 18px rgba(86,170,255,.45) !important;
     }
 
-    /* Exact current Set Up Collection title scale */
-    .news-heading h1,
-    .faq-hero h1 {
+    .setup-hero.page-intro h1 {
       margin: 0 !important;
       max-width: 1040px !important;
       font-family: "Inter", "Google Sans", "Product Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
@@ -1195,9 +1017,7 @@
       text-align: left !important;
     }
 
-    /* Exact current Set Up Collection description scale */
-    .news-heading > p,
-    .faq-hero > p {
+    .setup-hero.page-intro > p {
       width: min(980px, 100%) !important;
       max-width: 980px !important;
       margin: 24px 0 0 !important;
@@ -1210,44 +1030,44 @@
       text-align: left !important;
     }
 
-    body.light .news-heading .kicker,
-    body.light .faq-hero .faq-kicker {
+    /* Content begins after the same hero block instead of adding its own top gap. */
+    .news-shell.page-body,
+    .faq-shell.page-body {
+      width: 100% !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    body.light .setup-hero.page-intro .eyebrow {
       color: #484b52 !important;
       border-color: rgba(0,0,0,.10) !important;
       background: rgba(255,255,255,.72) !important;
       box-shadow: 0 6px 24px rgba(17,24,39,.04) !important;
     }
 
-    /* This is the breakpoint visible in your Pixel Tablet screenshots.
-       Set Up Collection uses 58px here, not the larger clamp value. */
     @media (max-width: 900px) {
-      .news-heading,
-      .faq-hero {
+      .setup-hero.page-intro {
         padding-top: 58px !important;
       }
     }
 
-    /* Exact Set Up Collection phone geometry */
     @media (max-width: 700px) {
-      .news-heading,
-      .faq-hero {
+      .setup-hero.page-intro {
         padding: 54px 2px 34px !important;
       }
 
-      .news-heading .kicker,
-      .faq-hero .faq-kicker {
+      .setup-hero.page-intro .eyebrow {
         margin-bottom: 20px !important;
         font-size: 12px !important;
       }
 
-      .news-heading h1,
-      .faq-hero h1 {
+      .setup-hero.page-intro h1 {
         font-size: clamp(40px, 11vw, 56px) !important;
         line-height: 1.04 !important;
       }
 
-      .news-heading > p,
-      .faq-hero > p {
+      .setup-hero.page-intro > p {
         width: 100% !important;
         max-width: 100% !important;
         margin-top: 20px !important;
@@ -1264,13 +1084,13 @@
     <div id="site-nav" aria-label="Site navigation"></div>
 
 
-    <section class="news-shell">
-      <header class="news-heading">
-        <div class="kicker">The Kollection updates</div>
-        <h1>News</h1>
-        <p>Latest release news and collection updates.</p>
-      </header>
+    <header class="setup-hero page-intro" aria-labelledby="news-title">
+      <div class="eyebrow"><span class="eyebrow-dot"></span>The Kollection updates</div>
+      <h1 id="news-title">News</h1>
+      <p>Latest release news and collection updates.</p>
+    </header>
 
+    <section class="news-shell page-body">
       <div id="releaseFeed">
         <article class="release" id="kollection-250">
           <div class="release-tag">The Kollection</div>
