@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-
 /* The Kollection — shared navigation, theme and component overrides */
 
 html {
@@ -10,23 +8,55 @@ body {
   transition: background-color .22s ease, color .22s ease;
 }
 
-/* Keep the navigation dock dark in both modes so the existing white logo remains readable. */
+/* Keep the navigation dock dark in both modes so the existing white logo remains readable.
+   The dock stays visible while scrolling, similar to Nuvio.tv. */
 #site-nav {
-  position: relative;
-  z-index: 60;
+  position: sticky !important;
+  top: 8px !important;
+  z-index: 1000 !important;
+}
+
+/* Nuvio-style soft color wash behind the navigation + opening text.
+   It belongs to the page background, so it does not cover or tint the controls. */
+.page {
+  position: relative !important;
+  isolation: isolate !important;
+  padding-top: 16px !important;
+}
+
+.page::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -92px;
+  left: 50%;
+  width: 100vw;
+  height: 560px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 2%, rgba(79,70,229,.22) 0%, rgba(79,70,229,.09) 28%, transparent 62%),
+    radial-gradient(ellipse at 18% 8%, rgba(14,165,233,.12) 0%, transparent 46%),
+    radial-gradient(ellipse at 82% 10%, rgba(139,92,246,.13) 0%, transparent 48%);
+  filter: blur(10px);
+  opacity: .95;
+}
+
+body.light .page::before {
+  opacity: .28;
 }
 
 .nav {
   width: 100% !important;
-  height: 62px !important;
-  min-height: 62px !important;
-  max-height: 62px !important;
-  padding: 5px 14px 5px 18px !important;
+  height: 70px !important;
+  min-height: 70px !important;
+  max-height: 70px !important;
+  padding: 8px 14px 8px 20px !important;
   border: 1px solid rgba(255,255,255,.12) !important;
   border-radius: 999px !important;
-  background: rgba(18,18,20,.90) !important;
+  background: linear-gradient(180deg, rgba(24,24,28,.92), rgba(15,16,19,.90)) !important;
   color: #f4f4f6 !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 18px 60px rgba(0,0,0,.22) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 18px 60px rgba(0,0,0,.24), 0 0 74px rgba(79,70,229,.08) !important;
   backdrop-filter: blur(22px) saturate(1.22) !important;
   -webkit-backdrop-filter: blur(22px) saturate(1.22) !important;
   display: flex !important;
@@ -55,9 +85,9 @@ body {
 .nav .brand img {
   display: block !important;
   width: auto !important;
-  height: 22px !important;
-  max-height: 22px !important;
-  max-width: min(68vw, 520px) !important;
+  height: 28px !important;
+  max-height: 28px !important;
+  max-width: min(68vw, 620px) !important;
   object-fit: contain !important;
   object-position: left center !important;
   background: transparent !important;
@@ -407,30 +437,52 @@ body.light .theme-toggle .icon-moon { display: block !important; }
   stroke-linejoin: round !important;
 }
 
+/* GitHub + Buy me a coffee — side by side */
 .menu-community {
   margin-top: 8px !important;
-  padding-top: 8px !important;
+  padding: 13px 6px 5px !important;
   border-top: 1px solid rgba(255,255,255,.08) !important;
-  display: grid !important;
-  gap: 2px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 18px !important;
+  width: 100% !important;
 }
 
 .menu-community a {
-  min-height: 46px !important;
-  padding: 0 13px !important;
-  border-radius: 15px !important;
-  display: flex !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  display: inline-flex !important;
   align-items: center !important;
-  gap: 12px !important;
-  color: #8f98ff !important;
-  font-size: 14px !important;
-  font-weight: 650 !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
+  gap: 7px !important;
+  color: #818cf8 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: -.01em !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
   text-decoration: none !important;
+  transition: color .18s ease, opacity .18s ease, transform .18s ease !important;
 }
 
 .menu-community a:hover {
-  color: #b4b8ff !important;
-  background: rgba(99,102,241,.10) !important;
+  color: #a5b4fc !important;
+  background: transparent !important;
+  opacity: 1 !important;
+  transform: translateY(-1px) !important;
+}
+
+.menu-community svg {
+  width: 18px !important;
+  height: 18px !important;
+  flex: 0 0 18px !important;
 }
 
 .menu-community .github-icon {
@@ -620,18 +672,26 @@ body.light .site-footer {
 }
 
 @media (max-width: 700px) {
+  .page {
+    padding-top: 8px !important;
+  }
+
+  #site-nav {
+    top: 8px !important;
+  }
+
   .nav {
-    height: 52px !important;
-    min-height: 52px !important;
-    max-height: 52px !important;
-    padding: 4px 10px 4px 14px !important;
-    gap: 9px !important;
+    height: 60px !important;
+    min-height: 60px !important;
+    max-height: 60px !important;
+    padding: 7px 9px 7px 14px !important;
+    gap: 7px !important;
   }
 
   .nav .brand img {
-    height: 18px !important;
-    max-height: 18px !important;
-    max-width: 72vw !important;
+    height: 22px !important;
+    max-height: 22px !important;
+    max-width: 64vw !important;
   }
 
   .theme-toggle {
@@ -682,1226 +742,3 @@ body.light .site-footer {
     transition: none !important;
   }
 }
-
-/* ==================== SITE-WIDE TYPOGRAPHY + PAGE INTRO ALIGNMENT ====================
-   Use the same clean Inter typography across every Kollection page. Page titles and
-   their introductory copy are left aligned and share one consistent size scale.
-*/
-html,
-body,
-button,
-input,
-select,
-textarea,
-summary {
-  font-family: "Inter", "Google Sans", "Product Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-}
-
-/* Home stays centered. Only the typography scale changes here. */
-.hero {
-  text-align: center !important;
-}
-.hero h1,
-.hero > h1 {
-  margin: 0 auto !important;
-  max-width: 1040px !important;
-  font-size: clamp(48px, 4.65vw, 76px) !important;
-  line-height: 1.02 !important;
-  letter-spacing: -.045em !important;
-  font-weight: 600 !important;
-  text-wrap: balance;
-}
-.hero > p {
-  width: min(980px, 92%) !important;
-  margin: 24px auto 0 !important;
-  max-width: 980px !important;
-  color: var(--muted) !important;
-  font-size: clamp(18px, 1.35vw, 22px) !important;
-  line-height: 1.55 !important;
-  letter-spacing: -.015em !important;
-  font-weight: 400 !important;
-}
-.hero .eyebrow {
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-/* News */
-.news-heading {
-  text-align: left !important;
-}
-.news-heading h1 {
-  margin: 12px 0 0 !important;
-  max-width: 1040px !important;
-  font-size: clamp(48px, 4.65vw, 76px) !important;
-  line-height: 1.02 !important;
-  letter-spacing: -.045em !important;
-  font-weight: 600 !important;
-  text-wrap: balance;
-}
-.news-heading p {
-  max-width: 980px !important;
-  margin: 24px 0 0 !important;
-  font-size: clamp(18px, 1.35vw, 22px) !important;
-  line-height: 1.55 !important;
-  letter-spacing: -.015em !important;
-  font-weight: 400 !important;
-}
-
-/* FAQ */
-.faq-hero {
-  text-align: left !important;
-  max-width: 1180px !important;
-}
-.faq-hero h1 {
-  margin: 0 !important;
-  max-width: 1040px !important;
-  font-size: clamp(48px, 4.65vw, 76px) !important;
-  line-height: 1.02 !important;
-  letter-spacing: -.045em !important;
-  font-weight: 600 !important;
-  text-wrap: balance;
-}
-.faq-hero p {
-  max-width: 980px !important;
-  margin: 24px 0 0 !important;
-  font-size: clamp(18px, 1.35vw, 22px) !important;
-  line-height: 1.55 !important;
-  letter-spacing: -.015em !important;
-  font-weight: 400 !important;
-}
-
-/* Set Up Collection */
-.setup-hero {
-  text-align: left !important;
-}
-.setup-hero h1 {
-  margin: 0 !important;
-  max-width: 1040px !important;
-  font-size: clamp(48px, 4.65vw, 76px) !important;
-  line-height: 1.02 !important;
-  letter-spacing: -.045em !important;
-  font-weight: 600 !important;
-  text-wrap: balance;
-}
-.setup-hero > p {
-  width: min(980px, 100%) !important;
-  max-width: 980px !important;
-  margin: 24px 0 0 !important;
-  font-size: clamp(18px, 1.35vw, 22px) !important;
-  line-height: 1.55 !important;
-  letter-spacing: -.015em !important;
-  font-weight: 400 !important;
-}
-.setup-hero .eyebrow,
-.setup-hero .setup-meta {
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  justify-content: flex-start !important;
-}
-
-@media (max-width: 700px) {
-  .hero h1,
-  .hero > h1,
-  .news-heading h1,
-  .faq-hero h1,
-  .setup-hero h1 {
-    font-size: clamp(40px, 11vw, 56px) !important;
-    line-height: 1.04 !important;
-  }
-
-  .hero > p {
-    width: 96% !important;
-    max-width: 980px !important;
-    margin: 20px auto 0 !important;
-    font-size: 17px !important;
-    line-height: 1.52 !important;
-  }
-
-  .news-heading p,
-  .faq-hero p,
-  .setup-hero > p {
-    width: 100% !important;
-    max-width: 100% !important;
-    margin-top: 20px !important;
-    font-size: 17px !important;
-    line-height: 1.52 !important;
-  }
-}
-
-/* ==================== SET UP COLLECTION DESKTOP HERO GAP ====================
-   Keep the desktop gap below the navigation closer to the compact mobile spacing.
-   Mobile/tablet rules below 901px remain unchanged.
-*/
-@media (min-width: 901px) {
-  .setup-hero {
-    padding-top: 58px !important;
-  }
-}
-
-/* ==================== NAV COMMUNITY LINKS — APPROVED INLINE FORMAT ====================
-   Keep GitHub and Buy me a coffee side-by-side in the expanded mobile menu.
-*/
-.menu-community {
-  margin-top: 8px !important;
-  padding: 13px 6px 5px !important;
-  border-top: 1px solid rgba(255,255,255,.08) !important;
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 18px !important;
-}
-
-.menu-community a {
-  min-height: 0 !important;
-  padding: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  color: #818cf8 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 7px !important;
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  letter-spacing: -.01em !important;
-  white-space: nowrap !important;
-  opacity: .94 !important;
-  flex: 0 0 auto !important;
-}
-
-.menu-community a:hover {
-  opacity: 1 !important;
-  transform: translateY(-1px) !important;
-  color: #a5b4fc !important;
-  background: transparent !important;
-}
-
-.menu-community svg {
-  width: 17px !important;
-  height: 17px !important;
-  flex: 0 0 17px !important;
-}
-
-body.light .menu-community {
-  border-top-color: rgba(0,0,0,.08) !important;
-}
-
-body.light .menu-community a {
-  color: #4f46e5 !important;
-}
-
-@media (max-width: 700px) {
-  .menu-community {
-    gap: 15px !important;
-  }
-}
-
-/* ==================== APPROVED SLIM NAV — AUTHORITATIVE FINAL OVERRIDE ====================
-   Keep this at the end of shared.css. It prevents older page rules from enlarging
-   the navigation dock or The Kollection banner logo.
-*/
-.nav {
-  height: 62px !important;
-  min-height: 62px !important;
-  max-height: 62px !important;
-  padding: 5px 14px 5px 18px !important;
-  gap: 12px !important;
-}
-
-.nav .brand img {
-  height: 22px !important;
-  max-height: 22px !important;
-  width: auto !important;
-  max-width: min(68vw, 520px) !important;
-}
-
-@media (max-width: 700px) {
-  .nav {
-    height: 52px !important;
-    min-height: 52px !important;
-    max-height: 52px !important;
-    padding: 4px 10px 4px 14px !important;
-    gap: 9px !important;
-  }
-
-  .nav .brand img {
-    height: 18px !important;
-    max-height: 18px !important;
-    max-width: 72vw !important;
-  }
-}
-
-/* ==================== NAV LINK UNDERLINE FIX ====================
-   FAQ has page-level anchor styling; keep every navigation link clean.
-*/
-#site-nav .nav a,
-#site-nav .desktop-nav a,
-#site-nav .menu-dropdown a,
-#site-nav .menu-community a {
-  text-decoration: none !important;
-  text-decoration-line: none !important;
-}
-
-/* ==================== FIXED PAGE CONTENT TYPOGRAPHY ====================
-   Desktop uses the same content font sizes as mobile instead of scaling up.
-   Navigation sizing is intentionally not changed here.
-*/
-
-/* Main page titles */
-body .hero h1,
-body .hero > h1,
-body .setup-hero h1,
-body .setup-hero.page-intro h1,
-body .news-heading h1,
-body .faq-hero h1 {
-  font-size: 56px !important;
-  line-height: 1.04 !important;
-}
-
-/* Main page descriptions */
-body .hero > p,
-body .setup-hero > p,
-body .setup-hero.page-intro > p,
-body .news-heading > p,
-body .faq-hero > p {
-  font-size: 17px !important;
-  line-height: 1.52 !important;
-}
-
-/* Home page content */
-body .latest-update-title {
-  font-size: 13px !important;
-}
-
-body .latest-update-label {
-  font-size: 10px !important;
-}
-
-body .version-badge {
-  font-size: 12px !important;
-}
-
-body .caption h2 {
-  font-size: 38px !important;
-  line-height: 1.04 !important;
-}
-
-body .caption p {
-  font-size: 16px !important;
-  line-height: 1.55 !important;
-}
-
-/* News content */
-body .release h2 {
-  font-size: 31px !important;
-  line-height: 1.03 !important;
-}
-
-body .release-summary {
-  font-size: 17px !important;
-  line-height: 1.58 !important;
-}
-
-body .release-details {
-  font-size: 16px !important;
-  line-height: 1.58 !important;
-}
-
-body .release-meta {
-  font-size: 14px !important;
-}
-
-body .release-tag {
-  font-size: 13px !important;
-}
-
-/* FAQ content */
-body .faq-search {
-  font-size: 18px !important;
-}
-
-body .faq-question {
-  font-size: 19px !important;
-}
-
-body .faq-answer {
-  font-size: 16px !important;
-  line-height: 1.65 !important;
-}
-
-/* Keep the smallest-phone title responsive so it does not overflow,
-   but never let desktop grow larger than the mobile/tablet size. */
-@media (max-width: 520px) {
-  body .hero h1,
-  body .hero > h1,
-  body .setup-hero h1,
-  body .setup-hero.page-intro h1,
-  body .news-heading h1,
-  body .faq-hero h1 {
-    font-size: clamp(40px, 11vw, 56px) !important;
-  }
-}
-
-/* ==================== TABLET PORTRAIT NAV FIX ====================
-   Firefox on Android tablets can report a CSS viewport wider than the old
-   899px breakpoint even while the device is physically in portrait mode.
-   In portrait, use the same compact navigation treatment as mobile.
-   Landscape keeps the normal desktop navigation.
-*/
-@media (orientation: portrait) and (max-width: 1400px) {
-  .desktop-nav {
-    display: none !important;
-  }
-
-  .nav-actions {
-    display: flex !important;
-    width: auto !important;
-    margin-left: auto !important;
-    justify-content: flex-end !important;
-    align-items: center !important;
-  }
-
-  .desktop-theme-toggle {
-    display: none !important;
-  }
-
-  .mobile-theme-toggle {
-    display: inline-grid !important;
-  }
-
-  .menu-wrap {
-    display: grid !important;
-    width: 42px !important;
-    height: 42px !important;
-    flex: 0 0 42px !important;
-  }
-
-  .menu {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
-  }
-
-  .menu-wrap.open .menu {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
-  }
-
-  .theme-toggle {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
-    flex-basis: 40px !important;
-  }
-
-  .theme-icon {
-    width: 21px !important;
-    height: 21px !important;
-  }
-
-  .nav {
-    height: 52px !important;
-    min-height: 52px !important;
-    max-height: 52px !important;
-    padding: 4px 10px 4px 14px !important;
-    gap: 9px !important;
-  }
-
-  .nav .brand {
-    flex: 1 1 0 !important;
-    width: auto !important;
-    min-width: 0 !important;
-    margin-right: auto !important;
-  }
-
-  .nav .brand img {
-    height: 18px !important;
-    max-height: 18px !important;
-    width: auto !important;
-    max-width: 72vw !important;
-  }
-
-  .menu-dropdown {
-    width: min(258px, calc(100vw - 20px)) !important;
-    top: calc(100% + 10px) !important;
-  }
-}
-
-/* ==================== TABLET HAMBURGER BREAKPOINT — FINAL ====================
-   Firefox on Android tablets can use a portrait CSS viewport around 900–1000px,
-   which is wider than the old 899px mobile breakpoint. Switch to the compact
-   hamburger navigation by viewport width instead of relying on orientation.
-*/
-@media (max-width: 1100px) {
-  .desktop-nav {
-    display: none !important;
-  }
-
-  .nav-actions {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    width: auto !important;
-    margin-left: auto !important;
-  }
-
-  .desktop-theme-toggle {
-    display: none !important;
-  }
-
-  .mobile-theme-toggle {
-    display: inline-grid !important;
-  }
-
-  .menu-wrap {
-    display: grid !important;
-    width: 42px !important;
-    height: 42px !important;
-    flex: 0 0 42px !important;
-  }
-
-  .menu {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
-  }
-
-  .menu-wrap.open .menu {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
-  }
-
-  .theme-toggle {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
-    flex-basis: 40px !important;
-  }
-
-  .theme-icon {
-    width: 21px !important;
-    height: 21px !important;
-  }
-
-  .nav {
-    height: 52px !important;
-    min-height: 52px !important;
-    max-height: 52px !important;
-    padding: 4px 10px 4px 14px !important;
-    gap: 9px !important;
-  }
-
-  .nav .brand {
-    flex: 1 1 0 !important;
-    width: auto !important;
-    min-width: 0 !important;
-    margin-right: auto !important;
-  }
-
-  .nav .brand img {
-    height: 18px !important;
-    max-height: 18px !important;
-    width: auto !important;
-    max-width: 72vw !important;
-  }
-
-  .menu-dropdown {
-    width: min(258px, calc(100vw - 20px)) !important;
-    top: calc(100% + 10px) !important;
-  }
-}
-
-/* Above the tablet breakpoint, always restore the desktop navigation. */
-@media (min-width: 1101px) {
-  .desktop-nav {
-    display: flex !important;
-  }
-
-  .nav-actions {
-    display: none !important;
-  }
-
-  .menu-wrap {
-    display: none !important;
-  }
-
-  .desktop-theme-toggle {
-    display: inline-grid !important;
-  }
-
-  .mobile-theme-toggle {
-    display: none !important;
-  }
-}
-
-/* ==================== JS-FORCED COMPACT NAV ====================
-   components.js adds html.force-compact-nav on touch devices in portrait.
-   Higher specificity here beats older page-level desktop-nav rules.
-*/
-html.force-compact-nav body #site-nav .desktop-nav {
-  display: none !important;
-}
-
-html.force-compact-nav body #site-nav .nav-actions {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-end !important;
-  width: auto !important;
-  margin-left: auto !important;
-}
-
-html.force-compact-nav body #site-nav .desktop-theme-toggle {
-  display: none !important;
-}
-
-html.force-compact-nav body #site-nav .mobile-theme-toggle {
-  display: inline-grid !important;
-}
-
-html.force-compact-nav body #site-nav .menu-wrap {
-  display: grid !important;
-  width: 42px !important;
-  height: 42px !important;
-  flex: 0 0 42px !important;
-}
-
-html.force-compact-nav body #site-nav .menu {
-  width: 40px !important;
-  height: 40px !important;
-  min-width: 40px !important;
-  min-height: 40px !important;
-}
-
-html.force-compact-nav body #site-nav .theme-toggle {
-  width: 40px !important;
-  height: 40px !important;
-  min-width: 40px !important;
-  min-height: 40px !important;
-  flex-basis: 40px !important;
-}
-
-html.force-compact-nav body #site-nav .nav {
-  height: 52px !important;
-  min-height: 52px !important;
-  max-height: 52px !important;
-  padding: 4px 10px 4px 14px !important;
-  gap: 9px !important;
-}
-
-html.force-compact-nav body #site-nav .nav .brand {
-  flex: 1 1 0 !important;
-  width: auto !important;
-  min-width: 0 !important;
-  margin-right: auto !important;
-}
-
-html.force-compact-nav body #site-nav .nav .brand img {
-  height: 18px !important;
-  max-height: 18px !important;
-  width: auto !important;
-  max-width: 72vw !important;
-}
-
-html.force-compact-nav body #site-nav .menu-dropdown {
-  width: min(258px, calc(100vw - 20px)) !important;
-  top: calc(100% + 10px) !important;
-}
-
-/* ==================== PORTRAIT COMPACT NAV SIZE — FINAL ====================
-   Keep the hamburger layout in portrait, but make the dock and Kollection
-   banner visibly larger than the previous 52px / 18px compact sizing.
-*/
-html.force-compact-nav body #site-nav .nav {
-  height: 60px !important;
-  min-height: 60px !important;
-  max-height: 60px !important;
-  padding: 6px 12px 6px 16px !important;
-  gap: 10px !important;
-}
-
-html.force-compact-nav body #site-nav .nav .brand img {
-  height: 22px !important;
-  max-height: 22px !important;
-  width: auto !important;
-  max-width: 74vw !important;
-}
-
-html.force-compact-nav body #site-nav .theme-toggle {
-  width: 42px !important;
-  height: 42px !important;
-  min-width: 42px !important;
-  min-height: 42px !important;
-  flex-basis: 42px !important;
-}
-
-html.force-compact-nav body #site-nav .theme-icon {
-  width: 22px !important;
-  height: 22px !important;
-}
-
-html.force-compact-nav body #site-nav .menu-wrap {
-  width: 44px !important;
-  height: 44px !important;
-  flex-basis: 44px !important;
-}
-
-html.force-compact-nav body #site-nav .menu,
-html.force-compact-nav body #site-nav .menu-wrap.open .menu {
-  width: 42px !important;
-  height: 42px !important;
-  min-width: 42px !important;
-  min-height: 42px !important;
-}
-
-/* Ordinary phone/mobile breakpoint: use the same larger compact proportions. */
-@media (max-width: 899px) {
-  #site-nav .nav {
-    height: 60px !important;
-    min-height: 60px !important;
-    max-height: 60px !important;
-    padding: 6px 12px 6px 16px !important;
-    gap: 10px !important;
-  }
-
-  #site-nav .nav .brand img {
-    height: 22px !important;
-    max-height: 22px !important;
-    width: auto !important;
-    max-width: 74vw !important;
-  }
-
-  #site-nav .theme-toggle {
-    width: 42px !important;
-    height: 42px !important;
-    min-width: 42px !important;
-    min-height: 42px !important;
-    flex-basis: 42px !important;
-  }
-
-  #site-nav .menu-wrap {
-    width: 44px !important;
-    height: 44px !important;
-    flex-basis: 44px !important;
-  }
-
-  #site-nav .menu,
-  #site-nav .menu-wrap.open .menu {
-    width: 42px !important;
-    height: 42px !important;
-    min-width: 42px !important;
-    min-height: 42px !important;
-  }
-}
-
-/* ==================== TABLET PORTRAIT NAV — LARGER FINAL SIZE ====================
-   The previous compact dock was already about 60px tall, so the change was too
-   subtle on a portrait tablet. Give tablet portrait its own clearly larger
-   proportions while leaving phone sizing compact.
-*/
-@media (min-width: 701px) {
-  html.force-compact-nav body #site-nav .nav {
-    height: 72px !important;
-    min-height: 72px !important;
-    max-height: 72px !important;
-    padding: 8px 15px 8px 20px !important;
-    gap: 12px !important;
-  }
-
-  html.force-compact-nav body #site-nav .nav .brand img {
-    height: 28px !important;
-    max-height: 28px !important;
-    width: auto !important;
-    max-width: 72vw !important;
-  }
-
-  html.force-compact-nav body #site-nav .theme-toggle {
-    width: 46px !important;
-    height: 46px !important;
-    min-width: 46px !important;
-    min-height: 46px !important;
-    flex-basis: 46px !important;
-  }
-
-  html.force-compact-nav body #site-nav .theme-icon {
-    width: 24px !important;
-    height: 24px !important;
-  }
-
-  html.force-compact-nav body #site-nav .menu-wrap {
-    width: 48px !important;
-    height: 48px !important;
-    flex: 0 0 48px !important;
-  }
-
-  html.force-compact-nav body #site-nav .menu,
-  html.force-compact-nav body #site-nav .menu-wrap.open .menu {
-    width: 46px !important;
-    height: 46px !important;
-    min-width: 46px !important;
-    min-height: 46px !important;
-  }
-
-  html.force-compact-nav body #site-nav .menu .menu-glyph {
-    width: 20px !important;
-    height: 16px !important;
-  }
-
-  html.force-compact-nav body #site-nav .menu .menu-line {
-    width: 20px !important;
-    height: 2px !important;
-  }
-
-  html.force-compact-nav body #site-nav .menu .menu-line:nth-child(1) {
-    top: 0 !important;
-  }
-
-  html.force-compact-nav body #site-nav .menu .menu-line:nth-child(2) {
-    top: 7px !important;
-  }
-
-  html.force-compact-nav body #site-nav .menu .menu-line:nth-child(3) {
-    top: 14px !important;
-  }
-
-  html.force-compact-nav body #site-nav .menu-wrap.open .menu-line:nth-child(1),
-  html.force-compact-nav body #site-nav .menu-wrap.open .menu-line:nth-child(3) {
-    top: 7px !important;
-  }
-}
-
-/* Phones keep the compact proportions instead of inheriting the tablet size. */
-@media (max-width: 700px) {
-  html.force-compact-nav body #site-nav .nav {
-    height: 60px !important;
-    min-height: 60px !important;
-    max-height: 60px !important;
-    padding: 6px 12px 6px 16px !important;
-  }
-
-  html.force-compact-nav body #site-nav .nav .brand img {
-    height: 22px !important;
-    max-height: 22px !important;
-  }
-
-  html.force-compact-nav body #site-nav .theme-toggle {
-    width: 42px !important;
-    height: 42px !important;
-    min-width: 42px !important;
-    min-height: 42px !important;
-    flex-basis: 42px !important;
-  }
-
-  html.force-compact-nav body #site-nav .menu-wrap {
-    width: 44px !important;
-    height: 44px !important;
-    flex-basis: 44px !important;
-  }
-
-  html.force-compact-nav body #site-nav .menu,
-  html.force-compact-nav body #site-nav .menu-wrap.open .menu {
-    width: 42px !important;
-    height: 42px !important;
-    min-width: 42px !important;
-    min-height: 42px !important;
-  }
-}
-
-/* ==================== LARGE TABLET PORTRAIT COMPACT NAV — FINAL ====================
-   This class is applied by components.js using the physical screen short edge,
-   not the CSS viewport. That makes it work in Firefox "Desktop site" mode.
-*/
-html.force-large-compact-nav body #site-nav .nav {
-  height: 76px !important;
-  min-height: 76px !important;
-  max-height: 76px !important;
-  padding: 8px 16px 8px 20px !important;
-  gap: 12px !important;
-}
-
-html.force-large-compact-nav body #site-nav .nav .brand {
-  min-width: 0 !important;
-  flex: 1 1 auto !important;
-}
-
-html.force-large-compact-nav body #site-nav .nav .brand img {
-  height: 29px !important;
-  max-height: 29px !important;
-  width: auto !important;
-  max-width: 72vw !important;
-}
-
-html.force-large-compact-nav body #site-nav .theme-toggle {
-  width: 48px !important;
-  height: 48px !important;
-  min-width: 48px !important;
-  min-height: 48px !important;
-  flex-basis: 48px !important;
-}
-
-html.force-large-compact-nav body #site-nav .theme-icon {
-  width: 25px !important;
-  height: 25px !important;
-}
-
-html.force-large-compact-nav body #site-nav .menu-wrap {
-  width: 50px !important;
-  height: 50px !important;
-  flex: 0 0 50px !important;
-}
-
-html.force-large-compact-nav body #site-nav .menu,
-html.force-large-compact-nav body #site-nav .menu-wrap.open .menu {
-  width: 48px !important;
-  height: 48px !important;
-  min-width: 48px !important;
-  min-height: 48px !important;
-}
-
-html.force-large-compact-nav body #site-nav .menu .menu-glyph {
-  width: 21px !important;
-  height: 16px !important;
-}
-
-html.force-large-compact-nav body #site-nav .menu .menu-line {
-  width: 21px !important;
-}
-
-html.force-large-compact-nav body #site-nav .menu .menu-line:nth-child(1) {
-  top: 0 !important;
-}
-
-html.force-large-compact-nav body #site-nav .menu .menu-line:nth-child(2) {
-  top: 7px !important;
-}
-
-html.force-large-compact-nav body #site-nav .menu .menu-line:nth-child(3) {
-  top: 14px !important;
-}
-
-html.force-large-compact-nav body #site-nav .menu-wrap.open .menu-line:nth-child(1),
-html.force-large-compact-nav body #site-nav .menu-wrap.open .menu-line:nth-child(3) {
-  top: 7px !important;
-}
-
-/* ==================== FINAL NAV SIZE + POSITION TWEAK ====================
-   Slightly smaller in both desktop and compact/tablet views,
-   and move the whole navigation dock upward by 2px.
-*/
-
-/* All views: move nav 2px closer to the top */
-#site-nav {
-  transform: translateY(-2px) !important;
-}
-
-/* Desktop / landscape */
-html:not(.force-compact-nav) body #site-nav .nav {
-  height: 60px !important;
-  min-height: 60px !important;
-  max-height: 60px !important;
-  padding: 5px 13px 5px 17px !important;
-}
-
-html:not(.force-compact-nav) body #site-nav .nav .brand img {
-  height: 21px !important;
-  max-height: 21px !important;
-}
-
-html:not(.force-compact-nav) body #site-nav .theme-toggle {
-  width: 40px !important;
-  height: 40px !important;
-  min-width: 40px !important;
-  min-height: 40px !important;
-}
-
-html:not(.force-compact-nav) body #site-nav .theme-icon {
-  width: 21px !important;
-  height: 21px !important;
-}
-
-/* Compact / phone */
-html.force-compact-nav:not(.force-large-compact-nav) body #site-nav .nav {
-  height: 58px !important;
-  min-height: 58px !important;
-  max-height: 58px !important;
-  padding: 5px 11px 5px 15px !important;
-}
-
-html.force-compact-nav:not(.force-large-compact-nav) body #site-nav .nav .brand img {
-  height: 21px !important;
-  max-height: 21px !important;
-}
-
-html.force-compact-nav:not(.force-large-compact-nav) body #site-nav .theme-toggle {
-  width: 40px !important;
-  height: 40px !important;
-  min-width: 40px !important;
-  min-height: 40px !important;
-  flex-basis: 40px !important;
-}
-
-html.force-compact-nav:not(.force-large-compact-nav) body #site-nav .menu-wrap {
-  width: 42px !important;
-  height: 42px !important;
-  flex-basis: 42px !important;
-}
-
-html.force-compact-nav:not(.force-large-compact-nav) body #site-nav .menu,
-html.force-compact-nav:not(.force-large-compact-nav) body #site-nav .menu-wrap.open .menu {
-  width: 40px !important;
-  height: 40px !important;
-  min-width: 40px !important;
-  min-height: 40px !important;
-}
-
-/* Large tablet portrait compact view */
-html.force-large-compact-nav body #site-nav .nav {
-  height: 72px !important;
-  min-height: 72px !important;
-  max-height: 72px !important;
-  padding: 7px 15px 7px 19px !important;
-}
-
-html.force-large-compact-nav body #site-nav .nav .brand img {
-  height: 27px !important;
-  max-height: 27px !important;
-}
-
-html.force-large-compact-nav body #site-nav .theme-toggle {
-  width: 46px !important;
-  height: 46px !important;
-  min-width: 46px !important;
-  min-height: 46px !important;
-  flex-basis: 46px !important;
-}
-
-html.force-large-compact-nav body #site-nav .theme-icon {
-  width: 24px !important;
-  height: 24px !important;
-}
-
-html.force-large-compact-nav body #site-nav .menu-wrap {
-  width: 48px !important;
-  height: 48px !important;
-  flex: 0 0 48px !important;
-}
-
-html.force-large-compact-nav body #site-nav .menu,
-html.force-large-compact-nav body #site-nav .menu-wrap.open .menu {
-  width: 46px !important;
-  height: 46px !important;
-  min-width: 46px !important;
-  min-height: 46px !important;
-}
-
-/* ==================== CROSS-BROWSER COMPACT NAV — SINGLE SIZE ====================
-   Chrome and Firefox must use exactly the same geometry whenever the hamburger
-   navigation is active. Do not size the dock from screen/viewport heuristics.
-*/
-#site-nav {
-  transform: translateY(-2px) !important;
-}
-
-html.force-compact-nav body #site-nav .nav {
-  height: 68px !important;
-  min-height: 68px !important;
-  max-height: 68px !important;
-  padding: 7px 14px 7px 18px !important;
-  gap: 11px !important;
-}
-
-html.force-compact-nav body #site-nav .nav .brand {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
-  margin-right: auto !important;
-}
-
-html.force-compact-nav body #site-nav .nav .brand img {
-  height: 25px !important;
-  max-height: 25px !important;
-  width: auto !important;
-  max-width: 72vw !important;
-}
-
-html.force-compact-nav body #site-nav .theme-toggle {
-  width: 44px !important;
-  height: 44px !important;
-  min-width: 44px !important;
-  min-height: 44px !important;
-  flex-basis: 44px !important;
-}
-
-html.force-compact-nav body #site-nav .theme-icon {
-  width: 23px !important;
-  height: 23px !important;
-}
-
-html.force-compact-nav body #site-nav .menu-wrap {
-  width: 46px !important;
-  height: 46px !important;
-  flex: 0 0 46px !important;
-}
-
-html.force-compact-nav body #site-nav .menu,
-html.force-compact-nav body #site-nav .menu-wrap.open .menu {
-  width: 44px !important;
-  height: 44px !important;
-  min-width: 44px !important;
-  min-height: 44px !important;
-}
-
-/* Keep desktop/landscape slightly slimmer, as previously approved. */
-html:not(.force-compact-nav) body #site-nav .nav {
-  height: 60px !important;
-  min-height: 60px !important;
-  max-height: 60px !important;
-  padding: 5px 13px 5px 17px !important;
-}
-
-html:not(.force-compact-nav) body #site-nav .nav .brand img {
-  height: 21px !important;
-  max-height: 21px !important;
-}
-
-/* ==================== CROSS-BROWSER COMPACT NAV — MEDIUM SIZE ====================
-   Slightly larger than the previous 68px / 25px setting while keeping
-   Chrome and Firefox identical.
-*/
-html.force-compact-nav body #site-nav .nav {
-  height: 72px !important;
-  min-height: 72px !important;
-  max-height: 72px !important;
-  padding: 7px 15px 7px 19px !important;
-  gap: 12px !important;
-}
-
-html.force-compact-nav body #site-nav .nav .brand img {
-  height: 27px !important;
-  max-height: 27px !important;
-  width: auto !important;
-  max-width: 72vw !important;
-}
-
-html.force-compact-nav body #site-nav .theme-toggle {
-  width: 46px !important;
-  height: 46px !important;
-  min-width: 46px !important;
-  min-height: 46px !important;
-  flex-basis: 46px !important;
-}
-
-html.force-compact-nav body #site-nav .theme-icon {
-  width: 24px !important;
-  height: 24px !important;
-}
-
-html.force-compact-nav body #site-nav .menu-wrap {
-  width: 48px !important;
-  height: 48px !important;
-  flex: 0 0 48px !important;
-}
-
-html.force-compact-nav body #site-nav .menu,
-html.force-compact-nav body #site-nav .menu-wrap.open .menu {
-  width: 46px !important;
-  height: 46px !important;
-  min-width: 46px !important;
-  min-height: 46px !important;
-}
-
-/* ==================== NUVIO NAV SIZE MATCH — FINAL ====================
-   Match the visual proportions of nuvio.tv:
-   - portrait/compact dock ≈ 64px tall with a ~30px wordmark
-   - desktop/landscape dock ≈ 68px tall with a ~30px wordmark
-   Keep the existing Kollection width/layout, hamburger behavior and -2px offset.
-*/
-#site-nav {
-  transform: translateY(-2px) !important;
-}
-
-/* Portrait / hamburger layout */
-html.force-compact-nav body #site-nav .nav {
-  height: 64px !important;
-  min-height: 64px !important;
-  max-height: 64px !important;
-  padding: 6px 13px 6px 17px !important;
-  gap: 10px !important;
-}
-
-html.force-compact-nav body #site-nav .nav .brand {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
-  margin-right: auto !important;
-}
-
-html.force-compact-nav body #site-nav .nav .brand img {
-  height: 30px !important;
-  max-height: 30px !important;
-  width: auto !important;
-  max-width: 72vw !important;
-}
-
-html.force-compact-nav body #site-nav .theme-toggle {
-  width: 44px !important;
-  height: 44px !important;
-  min-width: 44px !important;
-  min-height: 44px !important;
-  flex-basis: 44px !important;
-}
-
-html.force-compact-nav body #site-nav .theme-icon {
-  width: 23px !important;
-  height: 23px !important;
-}
-
-html.force-compact-nav body #site-nav .menu-wrap {
-  width: 46px !important;
-  height: 46px !important;
-  flex: 0 0 46px !important;
-}
-
-html.force-compact-nav body #site-nav .menu,
-html.force-compact-nav body #site-nav .menu-wrap.open .menu {
-  width: 44px !important;
-  height: 44px !important;
-  min-width: 44px !important;
-  min-height: 44px !important;
-}
-
-/* Desktop / landscape */
-html:not(.force-compact-nav) body #site-nav .nav {
-  height: 68px !important;
-  min-height: 68px !important;
-  max-height: 68px !important;
-  padding: 6px 14px 6px 19px !important;
-  gap: 11px !important;
-}
-
-html:not(.force-compact-nav) body #site-nav .nav .brand img {
-  height: 30px !important;
-  max-height: 30px !important;
-  width: auto !important;
-  max-width: min(68vw, 560px) !important;
-}
-
-html:not(.force-compact-nav) body #site-nav .theme-toggle {
-  width: 42px !important;
-  height: 42px !important;
-  min-width: 42px !important;
-  min-height: 42px !important;
-}
-
-html:not(.force-compact-nav) body #site-nav .theme-icon {
-  width: 22px !important;
-  height: 22px !important;
-}
-
