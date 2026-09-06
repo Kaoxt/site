@@ -15,11 +15,11 @@ body {
   position: sticky;
   top: 14px;
   z-index: 1000;
-  width: min(calc(100vw - 28px), 1760px);
-  max-width: calc(100vw - 28px);
-  margin-left: 50%;
-  margin-right: 0;
-  transform: translateX(-50%);
+  width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  transform: none;
   box-sizing: border-box;
 }
 
@@ -1012,17 +1012,49 @@ body.light .hero::before {
   opacity: .24 !important;
 }
 
-
-/* ==================== VIEWPORT-CENTERED NAV SAFETY ====================
-   Keep the floating dock centered in Chrome, Brave and Firefox regardless
-   of page-container width or compact/desktop navigation mode.
+/* ==================== STABLE GLASS NAV COMPOSITOR FIX ====================
+   Avoid combining a transformed sticky wrapper with backdrop-filter.
+   Mobile Chromium and Firefox can intermittently composite that combination
+   into a narrowed/offset layer after zooming, resizing or tab restoration.
 */
+html,
+body {
+  max-width: 100% !important;
+  overflow-x: clip !important;
+}
+
+body .page {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
 html body #site-nav,
 html.force-compact-nav body #site-nav,
 html.force-large-compact-nav body #site-nav {
-  width: min(calc(100vw - 28px), 1760px) !important;
-  max-width: calc(100vw - 28px) !important;
-  margin-left: 50% !important;
-  margin-right: 0 !important;
-  transform: translateX(-50%) !important;
+  position: sticky !important;
+  top: 14px !important;
+  left: auto !important;
+  right: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  transform: none !important;
+  translate: none !important;
+  scale: none !important;
+  rotate: none !important;
+  will-change: auto !important;
+  isolation: isolate !important;
 }
+
+/* Keep the requested glass look, but don't promote the sticky wrapper itself
+   through transforms. The blur remains on the inner nav surface only. */
+html body #site-nav .nav {
+  transform: none !important;
+  will-change: auto !important;
+  background:
+    linear-gradient(180deg, rgba(28,28,31,.78), rgba(13,13,16,.70)) !important;
+  backdrop-filter: blur(24px) saturate(1.24) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.24) !important;
+}
+
