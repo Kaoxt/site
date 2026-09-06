@@ -1,0 +1,17 @@
+{
+  "name": "The Kollection Set Up Collection",
+  "page": "set-up-collection.html",
+  "assetDirectory": "set-up-collection",
+  "mainScript": "set-up-collection/set-up-collection.js",
+  "aiometadataTemplateVersion": "2.16.5",
+  "midnightCatalogLimit": 500,
+  "nuvioAccountCreation": true,
+  "nuvioProfileCreation": true,
+  "customAiometadataJson": true,
+  "bingecatOptional": true,
+  "navigationEntry": false,
+  "notes": "Uses the existing shared site navigation/theme; Set Up Collection is intentionally not listed in navigation.",
+  "customizableCollectionSections": true,
+  "setupSteps": 8,
+  "collectionSelectionScope": "top-level The Kollection sections generated from live pack"
+}

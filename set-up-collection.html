@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="icon" href="/favicon.ico?v=3" sizes="any" />
+  <link rel="shortcut icon" href="/favicon.ico?v=3" type="image/x-icon" />
+  <meta name="theme-color" content="#050608" />
+  <title>Set Up Collection | The Kollection</title>
+  <meta name="description" content="Set up The Kollection for Nuvio with AIOMetadata and optional personalized Bingecat recommendations." />
+  <link rel="stylesheet" href="set-up-collection/styles.css" />
+  <link rel="stylesheet" href="shared.css" />
+  <script src="components.js" defer></script>
+</head>
+<body>
+  <main class="page">
+    <div id="site-nav" aria-label="Site navigation"></div>
+
+    <section class="setup-hero">
+      <div class="eyebrow"><span class="eyebrow-dot"></span> Guided Nuvio setup</div>
+      <h1>Set Up The Kollection</h1>
+      <p>Set up AIOMetadata, optionally connect your personal Bingecat recommendations, and add only the collection sections you want to your Nuvio profile.</p>
+      <div class="setup-meta">
+        <span>Runs in your browser</span>
+        <span class="meta-dot" aria-hidden="true"></span>
+        <span>Your Nuvio password is not stored</span>
+      </div>
+    </section>
+
+    <section class="setup-frame" aria-label="Set Up The Kollection">
+      <div class="setup-toolbar">
+        <div>
+          <span class="toolbar-label">SET UP COLLECTION</span>
+          <strong>Personalize your setup</strong>
+        </div>
+        <button class="ghost small" id="resetBtn" type="button">Start over</button>
+      </div>
+
+      <div class="shell">
+        <aside class="sidebar" aria-label="Setup progress">
+          <div class="sidebar-copy">
+            <span class="sidebar-kicker">YOUR SETUP</span>
+            <h2>Everything you need, in order.</h2>
+            <p>The setup prepares the add-ons first, then personalizes and syncs The Kollection to the profile you choose.</p>
+          </div>
+          <nav id="stepNav" class="steps"></nav>
+          <div class="security-note">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2"></path><path d="M5.5 10h13v10h-13z"></path><path d="M12 14v2.5"></path></svg>
+            <div><strong>Private by design</strong><span>Credentials and API keys stay in this browser session while setup runs.</span></div>
+          </div>
+        </aside>
+
+        <section class="content">
+          <div class="mobile-progress"><span id="mobileStepText"></span><div><i id="mobileProgressBar"></i></div></div>
+          <div id="alertHost" aria-live="polite"></div>
+          <div id="panelHost"></div>
+        </section>
+      </div>
+    </section>
+
+    <div id="site-footer"></div>
+  </main>
+
+  <template id="loadingTemplate">
+    <div class="loading"><span class="spinner"></span><span class="loading-text">Working…</span></div>
+  </template>
+
+  <script src="set-up-collection/config.js"></script>
+  <script src="set-up-collection/set-up-collection.js"></script>
+</body>
+</html>
