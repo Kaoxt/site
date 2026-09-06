@@ -26,6 +26,8 @@
     addonProfileId: null,
     nuvioAuthMode: 'signin',
     nuvioEmail: '',
+    nuvioSessionRestored: false,
+    nuvioDeviceLoginBusy: false,
     profileCreateOpen: false,
     addons: [],
     existingCollections: [],
@@ -159,6 +161,111 @@
     };
   }
 
+  async function persistNuvioSession(tokenResponse) {
+    try {
+      if (window.KollectionNuvioAuth?.connectTokenResponse) {
+        await window.KollectionNuvioAuth.connectTokenResponse(tokenResponse);
+      }
+    } catch (error) {
+      console.warn('Could not create shared Kollection Nuvio session:', error);
+    }
+  }
+
+  async function restoreNuvioSession() {
+    if (state.nuvioSessionRestored || !window.KollectionNuvioAuth?.getAccessToken) return Boolean(state.token);
+    state.nuvioSessionRestored = true;
+
+    try {
+      const session = await window.KollectionNuvioAuth.getAccessToken();
+      if (!session?.authenticated || !session?.accessToken) return false;
+
+      state.token = session.accessToken;
+      state.userId = session.user?.id || null;
+      state.nuvioEmail = session.user?.email || state.nuvioEmail || '';
+      state.profiles = await getProfiles();
+
+      if (state.profiles.length) {
+        const preferredId = storedActiveProfileId();
+        const selected =
+          state.profiles.find(p => p.id === preferredId) ||
+          state.profiles.find(p => p.id === state.profileId) ||
+          state.profiles[0];
+        state.profileId = selected.id;
+        state.profileName = selected.name;
+        state.addonProfileId = selected.usesPrimaryAddons ? 1 : selected.id;
+        rememberActiveProfile(selected);
+      }
+
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function finishSharedNuvioLogin() {
+    const session = await window.KollectionNuvioAuth.getAccessToken();
+    if (!session?.authenticated || !session?.accessToken) {
+      throw new Error('Nuvio approved the login, but The Kollection could not restore the session.');
+    }
+
+    state.token = session.accessToken;
+    state.userId = session.user?.id || null;
+    state.nuvioEmail = session.user?.email || state.nuvioEmail || '';
+    state.nuvioSessionRestored = true;
+    state.profiles = await getProfiles();
+
+    if (!state.profiles.length) {
+      throw new Error('No Nuvio profiles were returned.');
+    }
+
+    const preferredId = storedActiveProfileId();
+    const first = state.profiles.find(p => p.id === preferredId) || state.profiles[0];
+    state.profileId = first.id;
+    state.profileName = first.name;
+    state.addonProfileId = first.usesPrimaryAddons ? 1 : first.id;
+    rememberActiveProfile(first);
+  }
+
+  function profileStorageKey() {
+    return `kollection-nuvio-profile-id:${String(state.userId || 'default')}`;
+  }
+
+  function storedActiveProfileId() {
+    try {
+      const id = Number(localStorage.getItem(profileStorageKey()));
+      return Number.isFinite(id) && id >= 1 ? id : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function rememberActiveProfile(profile) {
+    if (!profile?.id) return;
+    try {
+      localStorage.setItem(profileStorageKey(), String(profile.id));
+    } catch {}
+    window.dispatchEvent(new CustomEvent('kollection:nuvio-profile-changed', {
+      detail: { profileId: profile.id, profileName: profile.name || '' },
+    }));
+  }
+
+  async function signOutKollectionNuvio() {
+    try {
+      await window.KollectionNuvioAuth?.signOut?.();
+    } catch {}
+
+    state.token = null;
+    state.userId = null;
+    state.profiles = [];
+    state.profileId = null;
+    state.profileName = null;
+    state.addonProfileId = null;
+    state.nuvioEmail = '';
+    state.nuvioSessionRestored = true;
+    state.backup = null;
+    window.dispatchEvent(new CustomEvent('kollection:nuvio-session-changed'));
+  }
+
   async function nuvioLogin(email, password) {
     const res = await fetch(`${CFG.nuvioApiBase}/auth/v1/token?grant_type=password`, {
       method: 'POST',
@@ -172,6 +279,8 @@
     }
     state.token = body.access_token;
     state.userId = body.user?.id || null;
+    state.nuvioEmail = body.user?.email || email || state.nuvioEmail;
+    await persistNuvioSession(body);
   }
 
 
@@ -189,6 +298,8 @@
     if (body?.access_token) {
       state.token = body.access_token;
       state.userId = body.user?.id || null;
+      state.nuvioEmail = body.user?.email || email || state.nuvioEmail;
+      await persistNuvioSession(body);
       return { signedIn: true };
     }
     return { signedIn: false };
@@ -771,21 +882,39 @@
         </div>
         <div class="actions right"><button class="btn" id="startBtn">Start setup</button></div>
       </div>`);
-    $('#startBtn').onclick = () => setStep(1);
+    $('#startBtn').onclick = async () => {
+      if (!state.token) await restoreNuvioSession();
+      setStep(1);
+    };
   }
 
   function renderNuvio() {
     const logged = Boolean(state.token);
     const signup = state.nuvioAuthMode === 'signup';
     const profileOptions = state.profiles.map(p => `<option value="${p.id}" ${p.id === state.profileId ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
-    host.innerHTML = panel('STEP 2 · NUVIO', 'Connect your Nuvio account',
-      'Sign in or create an account, then choose the profile that should receive The Kollection during setup.',
+    const accountLabel = state.nuvioEmail ? esc(state.nuvioEmail) : 'Nuvio account';
+
+    host.innerHTML = panel('STEP 2 · NUVIO', logged ? 'Your Nuvio account is connected' : 'Connect your Nuvio account',
+      logged
+        ? 'Choose the profile that should receive The Kollection. Your Kollection login can also be used by the private admin page when the account is authorized.'
+        : 'Continue with Nuvio for the easiest sign-in. If you are already signed in on nuvio.tv, Nuvio can use that existing session when you approve The Kollection.',
       `<div class="nuvio-account-banner">
         <div class="nuvio-account-art"><img src="set-up-collection/assets/nuvio-account.webp" alt="Nuvio logo"></div>
-        <div class="nuvio-account-copy"><span>NUVIO</span><h3>Your Nuvio Account</h3><p>Sign in, create an account, and choose or create the profile you want to configure.</p></div>
+        <div class="nuvio-account-copy"><span>NUVIO</span><h3>Your Nuvio Account</h3><p>${logged ? `Connected as ${accountLabel}.` : 'Connect once, then use the same Kollection session across Set Up Collection and the admin page.'}</p></div>
+        ${logged ? `<button class="ghost nuvio-signout-btn" id="nuvioSignOutBtn" type="button">Sign out</button>` : ''}
       </div>
       <div class="card">
         ${!logged ? `
+          <div class="nuvio-device-card">
+            <div class="nuvio-device-copy">
+              <span class="nuvio-device-kicker">RECOMMENDED</span>
+              <h3>Continue with Nuvio</h3>
+              <p>Open Nuvio, approve The Kollection, and this page will sign you in automatically. Your Nuvio password never passes through kollection.tv.</p>
+            </div>
+            <button class="btn nuvio-device-btn" id="nuvioContinueBtn" type="button">Continue with Nuvio</button>
+            <div class="nuvio-device-status" id="nuvioDeviceStatus" aria-live="polite"></div>
+          </div>
+          <div class="nuvio-auth-divider"><span>or use email</span></div>
           <div class="nuvio-auth-shell">
             <div class="setup-tabs nuvio-auth-tabs" role="tablist" aria-label="Nuvio account action">
               <button class="setup-tab ${!signup ? 'active' : ''}" id="signinTab" type="button">Sign in</button>
@@ -798,7 +927,10 @@
             </div>
             <div class="actions nuvio-auth-actions"><button class="ghost" id="backBtn">Back</button><button class="btn" id="${signup ? 'signupBtn' : 'loginBtn'}">${signup ? 'Create account' : 'Sign in'}</button></div>
           </div>` : `
-          <div class="callout good">Signed in successfully. Choose the Nuvio profile to configure.</div>
+          <div class="nuvio-connected-card">
+            <div class="nuvio-connected-mark">✓</div>
+            <div><span>Signed in with Nuvio</span><strong>${accountLabel}</strong><small>The sign-in/create-account form is hidden because this browser already has a Kollection Nuvio session.</small></div>
+          </div>
           <div class="field profile-field" style="margin-top:18px">
             <label for="profile">Nuvio profile</label>
             <div class="profile-control-row">
@@ -816,10 +948,56 @@
       </div>`);
 
     $('#backBtn').onclick = () => setStep(0);
+
     if (!logged) {
-      const rememberEmail = () => { const el = $('#email'); if (el) state.nuvioEmail = el.value.trim(); };
-      $('#signinTab').onclick = () => { rememberEmail(); state.nuvioAuthMode = 'signin'; renderNuvio(); };
-      $('#signupTab').onclick = () => { rememberEmail(); state.nuvioAuthMode = 'signup'; renderNuvio(); };
+      const rememberEmail = () => {
+        const email = $('#email');
+        if (email) state.nuvioEmail = email.value.trim();
+      };
+
+      $('#nuvioContinueBtn').onclick = async () => {
+        if (state.nuvioDeviceLoginBusy) return;
+        state.nuvioDeviceLoginBusy = true;
+
+        const button = $('#nuvioContinueBtn');
+        const status = $('#nuvioDeviceStatus');
+        button.disabled = true;
+        button.textContent = 'Opening Nuvio…';
+
+        try {
+          await window.KollectionNuvioAuth.continueWithNuvio({
+            deviceName: 'The Kollection',
+            onStatus(message) {
+              if (status) status.textContent = message;
+            },
+          });
+
+          if (status) status.textContent = 'Nuvio approved. Loading your profiles…';
+          await finishSharedNuvioLogin();
+          state.nuvioDeviceLoginBusy = false;
+          renderNuvio();
+          alert('Signed in with Nuvio.', 'success');
+        } catch (error) {
+          state.nuvioDeviceLoginBusy = false;
+          if (button) {
+            button.disabled = false;
+            button.textContent = 'Continue with Nuvio';
+          }
+          if (status) status.textContent = error.message || 'Could not sign in with Nuvio.';
+        }
+      };
+
+      $('#signinTab').onclick = () => {
+        rememberEmail();
+        state.nuvioAuthMode = 'signin';
+        renderNuvio();
+      };
+      $('#signupTab').onclick = () => {
+        rememberEmail();
+        state.nuvioAuthMode = 'signup';
+        renderNuvio();
+      };
+
       if (signup) {
         $('#signupBtn').onclick = async () => {
           try {
@@ -828,8 +1006,10 @@
             state.nuvioEmail = email;
             if (!email || !password) throw new Error('Enter an email and password.');
             if (password.length < 8) throw new Error('Use a password with at least eight characters.');
+
             loading('Creating your Nuvio account…');
             const result = await nuvioSignup(email, password);
+
             if (result.signedIn) {
               state.profiles = await getProfiles();
               if (!state.profiles.length) throw new Error('The account was created, but no Nuvio profile was returned yet. Open Nuvio once, then return and sign in here.');
@@ -837,6 +1017,7 @@
               state.profileId = first.id;
               state.profileName = first.name;
               state.addonProfileId = first.usesPrimaryAddons ? 1 : first.id;
+              rememberActiveProfile(first);
               renderNuvio();
               alert('Nuvio account created and signed in.', 'success');
             } else {
@@ -844,7 +1025,10 @@
               renderNuvio();
               alert('Nuvio account created. If you received a verification email, confirm it and then sign in here.', 'success');
             }
-          } catch (e) { renderNuvio(); alert(e.message, 'error'); }
+          } catch (e) {
+            renderNuvio();
+            alert(e.message, 'error');
+          }
         };
       } else {
         $('#loginBtn').onclick = async () => {
@@ -853,20 +1037,32 @@
             const password = $('#password').value;
             state.nuvioEmail = email;
             if (!email || !password) throw new Error('Enter the Nuvio email and password.');
+
             loading('Signing in and loading Nuvio profiles…');
             await nuvioLogin(email, password);
             state.profiles = await getProfiles();
             if (!state.profiles.length) throw new Error('No Nuvio profiles were returned.');
+
             state.profileId = state.profiles[0].id;
             state.profileName = state.profiles[0].name;
             state.addonProfileId = state.profiles[0].usesPrimaryAddons ? 1 : state.profiles[0].id;
+            rememberActiveProfile(state.profiles[0]);
             renderNuvio();
             alert('Signed in to Nuvio.', 'success');
-          } catch (e) { renderNuvio(); alert(e.message, 'error'); }
+          } catch (e) {
+            renderNuvio();
+            alert(e.message, 'error');
+          }
         };
       }
       return;
     }
+
+    $('#nuvioSignOutBtn').onclick = async () => {
+      await signOutKollectionNuvio();
+      renderNuvio();
+      alert('Signed out of The Kollection. Your Nuvio website/app session was not changed.', 'success');
+    };
 
     $('#profile').onchange = e => {
       const p = state.profiles.find(x => x.id === Number(e.target.value));
@@ -875,10 +1071,20 @@
       state.profileName = p.name;
       state.addonProfileId = p.usesPrimaryAddons ? 1 : p.id;
       state.backup = null;
+      rememberActiveProfile(p);
     };
-    $('#newProfileBtn').onclick = () => { state.profileCreateOpen = !state.profileCreateOpen; renderNuvio(); };
+
+    $('#newProfileBtn').onclick = () => {
+      state.profileCreateOpen = !state.profileCreateOpen;
+      renderNuvio();
+    };
+
     if (state.profileCreateOpen) {
-      $('#cancelProfileBtn').onclick = () => { state.profileCreateOpen = false; renderNuvio(); };
+      $('#cancelProfileBtn').onclick = () => {
+        state.profileCreateOpen = false;
+        renderNuvio();
+      };
+
       $('#createProfileBtn').onclick = async () => {
         try {
           const name = $('#newProfileName').value.trim();
@@ -886,11 +1092,16 @@
           const inherit = $('#inheritPrimary').checked;
           loading('Creating the Nuvio profile…');
           const created = await createNuvioProfile(name, inherit);
+          rememberActiveProfile(created);
           renderNuvio();
           alert(`${created.name} is ready and selected.`, 'success');
-        } catch (e) { renderNuvio(); alert(e.message, 'error'); }
+        } catch (e) {
+          renderNuvio();
+          alert(e.message, 'error');
+        }
       };
     }
+
     $('#nextBtn').onclick = () => setStep(2);
   }
 
@@ -1190,16 +1401,28 @@
 
   $('#resetBtn').onclick = () => {
     if (!confirm('Start over? This clears this browser-tab setup session. It does not undo changes already synced to Nuvio.')) return;
+    const authSnapshot = {
+      token: state.token,
+      userId: state.userId,
+      profiles: state.profiles,
+      profileId: state.profileId,
+      profileName: state.profileName,
+      addonProfileId: state.addonProfileId,
+      nuvioEmail: state.nuvioEmail,
+      nuvioSessionRestored: state.nuvioSessionRestored,
+    };
     Object.assign(state, {
       step: 0,
-      token: null,
-      userId: null,
-      profiles: [],
-      profileId: null,
-      profileName: null,
-      addonProfileId: null,
+      token: authSnapshot.token,
+      userId: authSnapshot.userId,
+      profiles: authSnapshot.profiles,
+      profileId: authSnapshot.profileId,
+      profileName: authSnapshot.profileName,
+      addonProfileId: authSnapshot.addonProfileId,
       nuvioAuthMode: 'signin',
-      nuvioEmail: '',
+      nuvioEmail: authSnapshot.nuvioEmail,
+      nuvioSessionRestored: authSnapshot.nuvioSessionRestored,
+      nuvioDeviceLoginBusy: false,
       profileCreateOpen: false,
       addons: [],
       existingCollections: [],
@@ -1231,5 +1454,30 @@
     setStep(0);
   };
 
-  render();
+  window.addEventListener('kollection:nuvio-signed-out', () => {
+    state.token = null;
+    state.userId = null;
+    state.profiles = [];
+    state.profileId = null;
+    state.profileName = null;
+    state.addonProfileId = null;
+    state.nuvioEmail = '';
+    state.nuvioSessionRestored = true;
+    state.backup = null;
+    if (state.step === 1) renderNuvio();
+  });
+
+  window.addEventListener('kollection:nuvio-signed-in', async () => {
+    state.nuvioSessionRestored = false;
+    const restored = await restoreNuvioSession();
+    if (restored && state.step === 1) renderNuvio();
+  });
+
+  async function initialize() {
+    render();
+    const restored = await restoreNuvioSession();
+    if (restored && state.step === 1) renderNuvio();
+  }
+
+  initialize();
 })();
