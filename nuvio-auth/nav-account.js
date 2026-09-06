@@ -6,21 +6,19 @@
   const DEFAULT_API_BASE = 'https://api.nuvio.tv';
   const DEFAULT_PUBLISHABLE_KEY = 'sb_publishable_1Clq8rlTVACkdcZuqr6_AD__xUUC_EN';
   const PROFILE_KEY_PREFIX = 'kollection-nuvio-profile-id:';
+  const GITHUB_URL = 'https://github.com/Kaoxt/The-Kollection';
+  const COFFEE_URL = 'https://ko-fi.com/kaoxt';
+  const SETUP_URL = '/set-up-collection';
 
   let initialized = false;
+  let refreshing = false;
   let currentSession = null;
   let currentProfile = null;
-  let desktopSlot = null;
-  let mobileSlot = null;
+  let currentProfiles = [];
   let avatarCatalogPromise = null;
-  let refreshing = false;
 
   const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;',
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
   }[ch]));
 
   const config = () => {
@@ -35,31 +33,51 @@
 
   const readStoredProfileId = (userId) => {
     try {
-      const raw = localStorage.getItem(profileStorageKey(userId));
-      const id = Number(raw);
-      return Number.isFinite(id) && id >= 1 ? id : null;
+      const value = Number(localStorage.getItem(profileStorageKey(userId)));
+      return Number.isFinite(value) && value >= 1 ? value : null;
     } catch {
       return null;
     }
   };
 
   const writeStoredProfileId = (userId, profileId) => {
-    try {
-      localStorage.setItem(profileStorageKey(userId), String(profileId));
-    } catch {}
+    try { localStorage.setItem(profileStorageKey(userId), String(profileId)); } catch {}
   };
 
   const clearStoredProfileId = (userId) => {
-    try {
-      localStorage.removeItem(profileStorageKey(userId));
-    } catch {}
+    try { localStorage.removeItem(profileStorageKey(userId)); } catch {}
   };
+
+  const githubIcon = () => `
+    <svg viewBox="0 0 24 24" aria-hidden="true" class="nuvio-social-svg github">
+      <path d="M12 .7a11.3 11.3 0 0 0-3.57 22c.57.1.77-.25.77-.55v-2.2c-3.14.69-3.8-1.34-3.8-1.34-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.69.08-.69 1.13.08 1.72 1.16 1.72 1.16 1 1.72 2.63 1.22 3.27.93.1-.73.39-1.22.71-1.5-2.5-.29-5.13-1.25-5.13-5.58 0-1.23.44-2.24 1.16-3.03-.12-.28-.5-1.43.11-2.98 0 0 .95-.3 3.1 1.16A10.7 10.7 0 0 1 12 6.05c.96 0 1.92.13 2.82.38 2.15-1.46 3.1-1.16 3.1-1.16.61 1.55.23 2.7.11 2.98.72.79 1.16 1.8 1.16 3.03 0 4.34-2.63 5.29-5.14 5.57.4.35.76 1.04.76 2.1v3.2c0 .3.2.66.78.55A11.3 11.3 0 0 0 12 .7Z"></path>
+    </svg>`;
+
+  const coffeeIcon = () => `
+    <svg viewBox="0 0 24 24" aria-hidden="true" class="nuvio-social-svg coffee">
+      <path d="M5 8h12v5.5A5.5 5.5 0 0 1 11.5 19H10a5 5 0 0 1-5-5z"></path>
+      <path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17"></path>
+      <path d="M8 5.5c.8-.5.8-1.1 0-1.7"></path>
+      <path d="M12 5.5c.8-.5.8-1.1 0-1.7"></path>
+    </svg>`;
+
+  const setupIcon = () => `
+    <svg viewBox="0 0 24 24" aria-hidden="true" class="nuvio-row-icon">
+      <path d="M4 7h10"></path><path d="M18 7h2"></path><circle cx="16" cy="7" r="2"></circle>
+      <path d="M4 12h5"></path><path d="M13 12h7"></path><circle cx="11" cy="12" r="2"></circle>
+      <path d="M4 17h2"></path><path d="M10 17h10"></path><circle cx="8" cy="17" r="2"></circle>
+    </svg>`;
+
+  const loginIcon = () => `
+    <svg viewBox="0 0 24 24" aria-hidden="true" class="nuvio-row-icon">
+      <path d="M10 5H6.5A2.5 2.5 0 0 0 4 7.5v9A2.5 2.5 0 0 0 6.5 19H10"></path>
+      <path d="M14 8l4 4-4 4"></path><path d="M8.5 12H18"></path>
+    </svg>`;
 
   const normalizeAvatarUrl = (value) => {
     const raw = String(value || '').trim();
     if (!raw) return '';
     if (/^https?:\/\//i.test(raw)) return raw;
-
     const { apiBase } = config();
     if (raw.startsWith('/')) return `${apiBase}${raw}`;
     return `${apiBase}/storage/v1/object/public/avatars/${raw.replace(/^\/+/, '')}`;
@@ -71,13 +89,8 @@
       apikey: publishableKey,
       'Content-Type': 'application/json',
       Accept: 'application/json',
+      Authorization: anonymous ? `Bearer ${publishableKey}` : `Bearer ${accessToken}`,
     };
-
-    if (anonymous) {
-      headers.Authorization = `Bearer ${publishableKey}`;
-    } else {
-      headers.Authorization = `Bearer ${accessToken}`;
-    }
 
     const res = await fetch(`${apiBase}/rest/v1/rpc/${name}`, {
       method: 'POST',
@@ -94,7 +107,6 @@
   async function getProfiles(accessToken) {
     const data = await rpc('sync_pull_profiles', {}, accessToken);
     const rows = Array.isArray(data) ? data : (data?.profiles || []);
-
     return rows.map((p) => {
       const id = Number(p.profile_index ?? p.id);
       return {
@@ -119,9 +131,7 @@
   async function resolveAvatar(profile) {
     const direct = normalizeAvatarUrl(profile?.avatarUrl);
     if (direct) return direct;
-
     if (!profile?.avatarId) return '';
-
     const catalog = await getAvatarCatalog();
     const match = catalog.find((item) => String(item?.id || '') === String(profile.avatarId));
     return normalizeAvatarUrl(match?.storage_path || match?.storagePath || '');
@@ -142,135 +152,184 @@
     return `<span class="nuvio-nav-avatar ${sizeClass}"><img src="${esc(avatarUrl)}" alt="" referrerpolicy="no-referrer"></span>`;
   }
 
-  function ensureSlots() {
-    const desktopNav = document.querySelector('.desktop-nav');
-    const desktopTheme = document.querySelector('.desktop-theme-toggle');
-    const community = document.querySelector('.menu-community');
+  const closeMobileMenu = () => {
+    const wrap = document.getElementById('menuWrap');
+    const button = document.getElementById('menuButton');
+    if (!wrap || !button) return;
+    wrap.classList.remove('open');
+    button.setAttribute('aria-expanded', 'false');
+    button.setAttribute('aria-label', 'Open navigation menu');
+  };
 
-    if (desktopNav && !document.getElementById('nuvioDesktopAccount')) {
-      desktopSlot = document.createElement('div');
-      desktopSlot.id = 'nuvioDesktopAccount';
-      desktopSlot.className = 'nuvio-desktop-account-slot';
-
-      if (desktopTheme && desktopTheme.parentNode === desktopNav) {
-        desktopNav.insertBefore(desktopSlot, desktopTheme);
-      } else {
-        desktopNav.appendChild(desktopSlot);
-      }
-    } else {
-      desktopSlot = document.getElementById('nuvioDesktopAccount');
-    }
-
-    if (community && !document.getElementById('nuvioMobileAccount')) {
-      mobileSlot = document.createElement('div');
-      mobileSlot.id = 'nuvioMobileAccount';
-      mobileSlot.className = 'nuvio-mobile-account-slot';
-      community.parentNode.insertBefore(mobileSlot, community);
-    } else {
-      mobileSlot = document.getElementById('nuvioMobileAccount');
-    }
+  function slots() {
+    return {
+      desktop: document.getElementById('nuvioDesktopAccount'),
+      mobile: document.getElementById('nuvioMobileAccount'),
+    };
   }
 
   function closeDesktopPopover() {
-    desktopSlot?.querySelector('.nuvio-desktop-account-wrap')?.classList.remove('open');
-    desktopSlot?.querySelector('.nuvio-desktop-profile-button')?.setAttribute('aria-expanded', 'false');
+    const { desktop } = slots();
+    desktop?.querySelector('.nuvio-desktop-account-wrap')?.classList.remove('open');
+    desktop?.querySelector('.nuvio-desktop-profile-button')?.setAttribute('aria-expanded', 'false');
   }
 
   async function signIn(statusTarget) {
     if (!window.KollectionNuvioAuth?.continueWithNuvio) {
-      window.location.href = '/set-up-collection';
+      window.location.href = SETUP_URL;
       return;
     }
 
-    const status = statusTarget || null;
-
     try {
+      if (statusTarget) statusTarget.textContent = 'Opening Nuvio…';
       await window.KollectionNuvioAuth.continueWithNuvio({
         deviceName: 'The Kollection',
         onStatus(message) {
-          if (status) status.textContent = message;
+          if (statusTarget) statusTarget.textContent = message;
         },
       });
-
       window.dispatchEvent(new CustomEvent('kollection:nuvio-signed-in'));
       await refresh();
     } catch (error) {
-      if (status) status.textContent = error.message || 'Could not sign in with Nuvio.';
+      if (statusTarget) statusTarget.textContent = error?.message || 'Could not sign in with Nuvio.';
     }
   }
 
   async function signOut() {
     const userId = currentSession?.user?.id;
-
-    try {
-      await window.KollectionNuvioAuth?.signOut?.();
-    } catch {}
-
+    try { await window.KollectionNuvioAuth?.signOut?.(); } catch {}
     if (userId) clearStoredProfileId(userId);
-
     currentSession = null;
     currentProfile = null;
+    currentProfiles = [];
     closeDesktopPopover();
     window.dispatchEvent(new CustomEvent('kollection:nuvio-signed-out'));
     await refresh();
   }
 
-  async function renderSignedOut() {
-    if (desktopSlot) {
-      desktopSlot.innerHTML = `
-        <button class="nuvio-desktop-signin-button" type="button" data-nuvio-signin-desktop aria-label="Sign in with Nuvio">
-          <span class="nuvio-mini-n">N</span>
-          <span>Sign in</span>
-        </button>`;
-      desktopSlot.querySelector('[data-nuvio-signin-desktop]')?.addEventListener('click', () => signIn());
+  async function selectProfile(profileId, keepDesktopOpen = false) {
+    const profile = currentProfiles.find((item) => item.id === Number(profileId));
+    if (!profile || !currentSession) return;
+
+    currentProfile = profile;
+    writeStoredProfileId(currentSession.user?.id, profile.id);
+
+    await renderSignedIn(currentSession, currentProfiles, profile);
+
+    if (keepDesktopOpen) {
+      const { desktop } = slots();
+      const wrap = desktop?.querySelector('.nuvio-desktop-account-wrap');
+      const button = desktop?.querySelector('.nuvio-desktop-profile-button');
+      wrap?.classList.add('open');
+      button?.setAttribute('aria-expanded', 'true');
     }
 
-    if (mobileSlot) {
-      mobileSlot.innerHTML = `
-        <section class="nuvio-mobile-account signed-out" aria-label="Nuvio account">
-          <div class="nuvio-mobile-account-head">
-            <span class="nuvio-mobile-account-label">NUVIO ACCOUNT</span>
-            <strong>Not signed in</strong>
-            <small>Connect your Nuvio account to use Set Up Collection.</small>
-          </div>
-          <button class="nuvio-mobile-signin-button" type="button" data-nuvio-signin-mobile>Continue with Nuvio</button>
-          <span class="nuvio-mobile-login-status" data-nuvio-mobile-status aria-live="polite"></span>
-        </section>`;
+    window.dispatchEvent(new CustomEvent('kollection:nuvio-profile-changed', {
+      detail: { profileId: profile.id, profile },
+    }));
+  }
 
-      const status = mobileSlot.querySelector('[data-nuvio-mobile-status]');
-      mobileSlot.querySelector('[data-nuvio-signin-mobile]')?.addEventListener('click', () => signIn(status));
+  function socialLink(url, label, icon, compact = false) {
+    return `<a class="nuvio-social-link ${compact ? 'compact' : ''}" href="${url}" target="_blank" rel="noopener" aria-label="${esc(label)}">${icon}<span>${esc(label)}</span></a>`;
+  }
+
+  async function renderSignedOut() {
+    const { desktop, mobile } = slots();
+
+    if (desktop) {
+      desktop.innerHTML = `
+        <div class="nuvio-desktop-guest-actions">
+          ${socialLink(GITHUB_URL, 'GitHub', githubIcon(), true)}
+          ${socialLink(COFFEE_URL, 'Buy me a coffee', coffeeIcon(), true)}
+          <button class="nuvio-desktop-signin-button" type="button" data-nuvio-signin-desktop>
+            <span>Log in</span>
+          </button>
+        </div>`;
+      desktop.querySelector('[data-nuvio-signin-desktop]')?.addEventListener('click', () => signIn());
+    }
+
+    if (mobile) {
+      mobile.innerHTML = `
+        <div class="nuvio-mobile-guest">
+          <button class="nuvio-mobile-login-row" type="button" data-nuvio-signin-mobile>
+            ${loginIcon()}
+            <span>Log in</span>
+          </button>
+          <span class="nuvio-mobile-login-status" data-nuvio-mobile-status aria-live="polite"></span>
+          <div class="nuvio-mobile-bottom-row signed-out">
+            <div class="nuvio-mobile-socials">
+              ${socialLink(GITHUB_URL, 'GitHub', githubIcon())}
+              ${socialLink(COFFEE_URL, 'Buy me a coffee', coffeeIcon())}
+            </div>
+          </div>
+        </div>`;
+      const status = mobile.querySelector('[data-nuvio-mobile-status]');
+      mobile.querySelector('[data-nuvio-signin-mobile]')?.addEventListener('click', () => signIn(status));
     }
   }
 
-  async function renderSignedIn(session, profile, avatarUrl) {
-    const profileName = profile?.name || 'Nuvio profile';
-    const email = session?.user?.email || '';
+  async function renderSignedIn(session, profiles, activeProfile) {
+    const { desktop, mobile } = slots();
+    const avatarPairs = await Promise.all(profiles.map(async (profile) => [
+      profile.id,
+      await resolveAvatar(profile).catch(() => ''),
+    ]));
+    const avatars = new Map(avatarPairs);
+    const activeAvatar = avatars.get(activeProfile.id) || '';
 
-    if (desktopSlot) {
-      desktopSlot.innerHTML = `
+    const desktopProfileRows = profiles.map((profile) => {
+      const active = profile.id === activeProfile.id;
+      return `
+        <button class="nuvio-desktop-profile-option ${active ? 'active' : ''}"
+                type="button"
+                data-profile-id="${profile.id}"
+                aria-current="${active ? 'true' : 'false'}">
+          ${avatarMarkup(profile, avatars.get(profile.id) || '', 'option')}
+          <span>${esc(profile.name)}</span>
+        </button>`;
+    }).join('');
+
+    if (desktop) {
+      desktop.innerHTML = `
         <div class="nuvio-desktop-account-wrap">
           <button class="nuvio-desktop-profile-button" type="button" aria-haspopup="true" aria-expanded="false">
-            ${avatarMarkup(profile, avatarUrl, 'desktop')}
-            <span class="nuvio-desktop-profile-name">${esc(profileName)}</span>
+            ${avatarMarkup(activeProfile, activeAvatar, 'desktop')}
+            <span class="nuvio-desktop-profile-name">${esc(activeProfile.name)}</span>
             <svg class="nuvio-profile-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"></path></svg>
           </button>
+
           <div class="nuvio-desktop-account-popover">
             <div class="nuvio-desktop-popover-user">
-              ${avatarMarkup(profile, avatarUrl, 'popover')}
+              ${avatarMarkup(activeProfile, activeAvatar, 'popover')}
               <div>
-                <span>Current profile</span>
-                <strong>${esc(profileName)}</strong>
-                ${email ? `<small>${esc(email)}</small>` : ''}
+                <strong>${esc(activeProfile.name)}</strong>
+                <small>Active profile</small>
               </div>
             </div>
-            <a class="nuvio-account-setup-link" href="/set-up-collection">Set Up Collection</a>
+
+            <div class="nuvio-desktop-section-label">PROFILES</div>
+            <div class="nuvio-desktop-profile-list">${desktopProfileRows}</div>
+
+            <div class="nuvio-desktop-menu-divider"></div>
+
+            <a class="nuvio-desktop-menu-row" href="${SETUP_URL}">
+              ${setupIcon()}
+              <span class="nuvio-row-copy">
+                <strong>Set Up Collection</strong>
+                <small>Configure this Nuvio profile</small>
+              </span>
+            </a>
+
+            ${socialLink(GITHUB_URL, 'GitHub', githubIcon())}
+            ${socialLink(COFFEE_URL, 'Buy me a coffee', coffeeIcon())}
+
+            <div class="nuvio-desktop-menu-divider bottom"></div>
             <button class="nuvio-account-signout-button" type="button" data-nuvio-signout-desktop>Sign out</button>
           </div>
         </div>`;
 
-      const wrap = desktopSlot.querySelector('.nuvio-desktop-account-wrap');
-      const button = desktopSlot.querySelector('.nuvio-desktop-profile-button');
-
+      const wrap = desktop.querySelector('.nuvio-desktop-account-wrap');
+      const button = desktop.querySelector('.nuvio-desktop-profile-button');
       button?.addEventListener('click', (event) => {
         event.stopPropagation();
         const open = !wrap.classList.contains('open');
@@ -278,27 +337,61 @@
         button.setAttribute('aria-expanded', String(open));
       });
 
-      desktopSlot.querySelector('[data-nuvio-signout-desktop]')?.addEventListener('click', signOut);
+      desktop.querySelectorAll('[data-profile-id]').forEach((buttonEl) => {
+        buttonEl.addEventListener('click', async (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          await selectProfile(buttonEl.dataset.profileId, true);
+        });
+      });
+
+      desktop.querySelector('[data-nuvio-signout-desktop]')?.addEventListener('click', signOut);
     }
 
-    if (mobileSlot) {
-      mobileSlot.innerHTML = `
+    if (mobile) {
+      const chips = profiles.map((profile) => {
+        const active = profile.id === activeProfile.id;
+        return `
+          <button class="nuvio-mobile-profile-chip ${active ? 'active' : ''}"
+                  type="button"
+                  data-mobile-profile-id="${profile.id}"
+                  aria-current="${active ? 'true' : 'false'}">
+            ${avatarMarkup(profile, avatars.get(profile.id) || '', 'chip')}
+            <span>${esc(profile.name)}</span>
+          </button>`;
+      }).join('');
+
+      mobile.innerHTML = `
         <section class="nuvio-mobile-account signed-in" aria-label="Nuvio account">
-          <div class="nuvio-mobile-profile-row">
-            ${avatarMarkup(profile, avatarUrl, 'mobile')}
-            <div class="nuvio-mobile-profile-copy">
-              <span>Current profile</span>
-              <strong>${esc(profileName)}</strong>
-              ${email ? `<small>${esc(email)}</small>` : ''}
+          <div class="nuvio-mobile-current-profile">
+            ${avatarMarkup(activeProfile, activeAvatar, 'mobile')}
+            <div>
+              <strong>${esc(activeProfile.name)}</strong>
+              <small>Active profile</small>
             </div>
           </div>
-          <div class="nuvio-mobile-account-actions">
-            <a href="/set-up-collection">Set Up Collection</a>
-            <button type="button" data-nuvio-signout-mobile>Sign out</button>
+
+          ${profiles.length > 1 ? `
+            <div class="nuvio-mobile-switch-label">Switch profile</div>
+            <div class="nuvio-mobile-profile-chips">${chips}</div>
+          ` : ''}
+
+          <div class="nuvio-mobile-bottom-row">
+            <div class="nuvio-mobile-socials">
+              ${socialLink(GITHUB_URL, 'GitHub', githubIcon())}
+              ${socialLink(COFFEE_URL, 'Buy me a coffee', coffeeIcon())}
+            </div>
+            <button class="nuvio-mobile-signout-button" type="button" data-nuvio-signout-mobile>Sign out</button>
           </div>
         </section>`;
 
-      mobileSlot.querySelector('[data-nuvio-signout-mobile]')?.addEventListener('click', signOut);
+      mobile.querySelectorAll('[data-mobile-profile-id]').forEach((buttonEl) => {
+        buttonEl.addEventListener('click', async () => {
+          await selectProfile(buttonEl.dataset.mobileProfileId, false);
+        });
+      });
+
+      mobile.querySelector('[data-nuvio-signout-mobile]')?.addEventListener('click', signOut);
     }
   }
 
@@ -307,58 +400,56 @@
     refreshing = true;
 
     try {
-      ensureSlots();
+      const { desktop, mobile } = slots();
+      if (!desktop && !mobile) return;
 
       const session = await window.KollectionNuvioAuth?.getSession?.().catch(() => null);
       currentSession = session?.authenticated ? session : null;
 
       if (!currentSession) {
         currentProfile = null;
+        currentProfiles = [];
         await renderSignedOut();
         return;
       }
 
-      const tokenData = await window.KollectionNuvioAuth.getAccessToken().catch(() => null);
+      const tokenData = await window.KollectionNuvioAuth?.getAccessToken?.().catch(() => null);
       if (!tokenData?.authenticated || !tokenData?.accessToken) {
         currentSession = null;
         currentProfile = null;
+        currentProfiles = [];
         await renderSignedOut();
         return;
       }
 
-      const profiles = await getProfiles(tokenData.accessToken).catch(() => []);
-      if (!profiles.length) {
-        const fallbackProfile = {
+      currentProfiles = await getProfiles(tokenData.accessToken).catch(() => []);
+      if (!currentProfiles.length) {
+        currentProfiles = [{
           id: 1,
-          name: currentSession.user?.email ? 'Nuvio' : 'Profile',
+          name: 'Nuvio',
           avatarColor: '#1E88E5',
           avatarId: null,
           avatarUrl: null,
-        };
-        currentProfile = fallbackProfile;
-        await renderSignedIn(currentSession, fallbackProfile, '');
-        return;
+        }];
       }
 
       const storedId = readStoredProfileId(currentSession.user?.id);
-      currentProfile = profiles.find((p) => p.id === storedId) || profiles[0];
+      currentProfile = currentProfiles.find((profile) => profile.id === storedId) || currentProfiles[0];
       writeStoredProfileId(currentSession.user?.id, currentProfile.id);
 
-      const avatarUrl = await resolveAvatar(currentProfile).catch(() => '');
-      await renderSignedIn(currentSession, currentProfile, avatarUrl);
+      await renderSignedIn(currentSession, currentProfiles, currentProfile);
     } finally {
       refreshing = false;
     }
   }
 
   async function init() {
-    ensureSlots();
-
     if (!initialized) {
       initialized = true;
 
       document.addEventListener('click', (event) => {
-        if (desktopSlot && !desktopSlot.contains(event.target)) closeDesktopPopover();
+        const { desktop } = slots();
+        if (desktop && !desktop.contains(event.target)) closeDesktopPopover();
       });
 
       document.addEventListener('keydown', (event) => {
@@ -369,7 +460,6 @@
         if (event.key?.startsWith(PROFILE_KEY_PREFIX)) refresh();
       });
 
-      window.addEventListener('kollection:nuvio-profile-changed', refresh);
       window.addEventListener('kollection:nuvio-signed-in', refresh);
       window.addEventListener('kollection:nuvio-session-changed', refresh);
     }
@@ -380,5 +470,6 @@
   window.KollectionNavAccount = Object.freeze({
     init,
     refresh,
+    getSelectedProfile: () => currentProfile,
   });
 })();
