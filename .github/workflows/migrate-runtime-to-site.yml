@@ -1,0 +1,60 @@
+name: Move Kollection Runtime Into Site
+
+on:
+  push:
+    paths:
+      - '.github/workflows/migrate-runtime-to-site.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  migrate-runtime:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Kaoxt/site
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create runtime folder from my Kollection repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p runtime
+
+          curl -fL --retry 3 --retry-delay 2             'https://raw.githubusercontent.com/Kaoxt/The-Kollection/main/runtime/database.kaoxt.js'             -o runtime/database.kaoxt.js
+
+          curl -fL --retry 3 --retry-delay 2             'https://raw.githubusercontent.com/Kaoxt/The-Kollection/main/runtime/kaoxt-aio-catalogs.json'             -o runtime/kaoxt-aio-catalogs.json
+
+          curl -fL --retry 3 --retry-delay 2             'https://raw.githubusercontent.com/Kaoxt/The-Kollection/main/runtime/kaoxt-aio-base-config.json'             -o runtime/kaoxt-aio-base-config.json
+
+      - name: Validate runtime files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s runtime/database.kaoxt.js
+          test -s runtime/kaoxt-aio-catalogs.json
+          test -s runtime/kaoxt-aio-base-config.json
+          grep -q 'window.NUVIO_DATABASE' runtime/database.kaoxt.js
+          python -m json.tool runtime/kaoxt-aio-catalogs.json >/dev/null
+          python -m json.tool runtime/kaoxt-aio-base-config.json >/dev/null
+
+      - name: Commit runtime files to Kaoxt/site
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          git add runtime/
+
+          if git diff --cached --quiet; then
+            echo 'Runtime files are already present.'
+            exit 0
+          fi
+
+          git commit -m 'Add Kollection runtime to site repo'
+          git push
