@@ -15,10 +15,11 @@ body {
   position: sticky;
   top: 14px;
   z-index: 1000;
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-  transform: none;
+  width: min(calc(100vw - 28px), 1760px);
+  max-width: calc(100vw - 28px);
+  margin-left: 50%;
+  margin-right: 0;
+  transform: translateX(-50%);
   box-sizing: border-box;
 }
 
@@ -988,18 +989,18 @@ body .faq-answer {
   z-index: 0 !important;
   pointer-events: none !important;
   left: 50% !important;
-  top: -150px !important;
-  width: min(1280px, 122vw) !important;
-  height: 500px !important;
+  top: -125px !important;
+  width: min(1220px, 118vw) !important;
+  height: 470px !important;
   transform: translateX(-50%) !important;
   background:
-    radial-gradient(ellipse at 27% 30%, rgba(0,130,255,.24), transparent 45%),
-    radial-gradient(ellipse at 72% 25%, rgba(82,55,255,.25), transparent 46%),
-    radial-gradient(ellipse at 53% 55%, rgba(132,55,255,.12), transparent 50%) !important;
-  filter: blur(18px) !important;
-  opacity: .88 !important;
-  -webkit-mask-image: linear-gradient(to bottom, #000 8%, #000 62%, transparent 100%) !important;
-  mask-image: linear-gradient(to bottom, #000 8%, #000 62%, transparent 100%) !important;
+    radial-gradient(ellipse at 50% 28%, rgba(61,72,106,.14), transparent 58%),
+    radial-gradient(ellipse at 28% 34%, rgba(35,70,103,.07), transparent 55%),
+    radial-gradient(ellipse at 73% 32%, rgba(78,67,108,.06), transparent 56%) !important;
+  filter: blur(30px) !important;
+  opacity: .62 !important;
+  -webkit-mask-image: linear-gradient(to bottom, #000 6%, #000 54%, transparent 100%) !important;
+  mask-image: linear-gradient(to bottom, #000 6%, #000 54%, transparent 100%) !important;
 }
 
 .hero > * {
@@ -1009,4 +1010,19 @@ body .faq-answer {
 
 body.light .hero::before {
   opacity: .24 !important;
+}
+
+
+/* ==================== VIEWPORT-CENTERED NAV SAFETY ====================
+   Keep the floating dock centered in Chrome, Brave and Firefox regardless
+   of page-container width or compact/desktop navigation mode.
+*/
+html body #site-nav,
+html.force-compact-nav body #site-nav,
+html.force-large-compact-nav body #site-nav {
+  width: min(calc(100vw - 28px), 1760px) !important;
+  max-width: calc(100vw - 28px) !important;
+  margin-left: 50% !important;
+  margin-right: 0 !important;
+  transform: translateX(-50%) !important;
 }
