@@ -22,9 +22,7 @@
   const writeTheme = (theme) => {
     try {
       localStorage.setItem(THEME_KEY, theme);
-    } catch (_) {
-      // Storage can be blocked in strict/privacy contexts. The theme still works for the current page.
-    }
+    } catch (_) {}
   };
 
   const ensureThemeMeta = () => {
@@ -143,78 +141,79 @@
     });
   };
 
-  const ensureStylesheet = (filename) => {
-    const href = assetUrl(filename);
-    const found = [...document.querySelectorAll('link[rel="stylesheet"]')]
-      .some((link) => {
-        try { return new URL(link.href, window.location.href).href === href; }
-        catch (_) { return false; }
-      });
-
-    if (found) return;
-
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = href;
-    document.head.appendChild(link);
+  /*
+    Firefox Android tablet fix:
+    "Desktop site" can expose a desktop-sized CSS viewport even while the
+    physical device is portrait. Use the visual viewport + touch capability
+    and then force the compact nav with inline !important styles.
+  */
+  const getViewport = () => {
+    const vv = window.visualViewport;
+    return {
+      width: vv?.width || window.innerWidth || document.documentElement.clientWidth,
+      height: vv?.height || window.innerHeight || document.documentElement.clientHeight
+    };
   };
 
-  const ensureScript = (filename) => {
-    const src = assetUrl(filename);
+  const isTouchDevice = () =>
+    (navigator.maxTouchPoints || 0) > 0 ||
+    window.matchMedia?.('(pointer: coarse)').matches === true;
 
-    const existing = [...document.scripts].find((script) => {
-      try { return new URL(script.src, window.location.href).href === src; }
-      catch (_) { return false; }
-    });
+  const isPortraitDevice = () => {
+    const type = screen.orientation?.type || '';
+    if (type.startsWith('portrait')) return true;
 
-    if (existing) {
-      if (existing.dataset.loaded === 'true' || existing.readyState === 'complete') {
-        return Promise.resolve();
-      }
+    const { width, height } = getViewport();
+    if (height > width) return true;
 
-      return new Promise((resolve, reject) => {
-        existing.addEventListener('load', resolve, { once: true });
-        existing.addEventListener('error', reject, { once: true });
-        // Scripts placed in normal HTML may already have executed before this listener is attached.
-        setTimeout(resolve, 0);
-      });
-    }
-
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = src;
-      script.async = true;
-      script.addEventListener('load', () => {
-        script.dataset.loaded = 'true';
-        resolve();
-      }, { once: true });
-      script.addEventListener('error', reject, { once: true });
-      document.head.appendChild(script);
-    });
+    // Final fallback for browsers that virtualize the layout viewport.
+    return (screen.height || 0) > (screen.width || 0);
   };
 
-  const initNuvioAccount = async () => {
-    if (!document.querySelector('.nav')) return;
+  const setImportantDisplay = (element, value) => {
+    if (!element) return;
+    if (value == null) element.style.removeProperty('display');
+    else element.style.setProperty('display', value, 'important');
+  };
 
-    ensureStylesheet('nuvio-auth/nav-account.css');
+  const syncResponsiveNav = () => {
+    const { width } = getViewport();
+    const compact = width <= 899 || (isTouchDevice() && isPortraitDevice());
 
-    try {
-      if (!window.KollectionNuvioAuth) {
-        await ensureScript('nuvio-auth/nuvio-auth.js');
-      }
+    document.documentElement.classList.toggle('force-compact-nav', compact);
 
-      if (!window.KollectionNavAccount) {
-        await ensureScript('nuvio-auth/nav-account.js');
-      }
+    const desktopNav = document.querySelector('#site-nav .desktop-nav');
+    const navActions = document.querySelector('#site-nav .nav-actions');
+    const menuWrap = document.querySelector('#site-nav .menu-wrap');
+    const desktopTheme = document.querySelector('#site-nav .desktop-theme-toggle');
+    const mobileTheme = document.querySelector('#site-nav .mobile-theme-toggle');
 
-      await window.KollectionNavAccount?.init?.();
-    } catch (error) {
-      console.warn('[The Kollection] Could not initialize the Nuvio navigation account.', error);
+    if (compact) {
+      setImportantDisplay(desktopNav, 'none');
+      setImportantDisplay(navActions, 'flex');
+      setImportantDisplay(menuWrap, 'grid');
+      setImportantDisplay(desktopTheme, 'none');
+      setImportantDisplay(mobileTheme, 'inline-grid');
+    } else {
+      // Remove the inline override and let shared.css control desktop layout.
+      [desktopNav, navActions, menuWrap, desktopTheme, mobileTheme].forEach((el) => {
+        if (el) el.style.removeProperty('display');
+      });
     }
+  };
+
+  const bindResponsiveNav = () => {
+    if (window.__kollectionResponsiveNavBound) return;
+    window.__kollectionResponsiveNavBound = true;
+
+    window.addEventListener('resize', syncResponsiveNav, { passive: true });
+    window.addEventListener('orientationchange', syncResponsiveNav, { passive: true });
+    window.visualViewport?.addEventListener('resize', syncResponsiveNav, { passive: true });
+    screen.orientation?.addEventListener?.('change', syncResponsiveNav);
   };
 
   const init = async () => {
-    applyTheme(readTheme(), false); // Dark when there is no saved user choice.
+    applyTheme(readTheme(), false);
 
     const navTarget = document.getElementById('site-nav');
     const footerTarget = document.getElementById('site-footer');
@@ -227,8 +226,9 @@
     setActiveNav();
     bindThemeButtons();
     bindMenu();
+    bindResponsiveNav();
+    syncResponsiveNav();
     applyTheme(readTheme(), false);
-    await initNuvioAccount();
   };
 
   if (document.readyState === 'loading') {
@@ -237,3 +237,4 @@
     init();
   }
 })();
+Nt

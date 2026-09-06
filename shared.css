@@ -1244,3 +1244,76 @@ body .faq-answer {
   }
 }
 
+/* ==================== JS-FORCED COMPACT NAV ====================
+   components.js adds html.force-compact-nav on touch devices in portrait.
+   Higher specificity here beats older page-level desktop-nav rules.
+*/
+html.force-compact-nav body #site-nav .desktop-nav {
+  display: none !important;
+}
+
+html.force-compact-nav body #site-nav .nav-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  width: auto !important;
+  margin-left: auto !important;
+}
+
+html.force-compact-nav body #site-nav .desktop-theme-toggle {
+  display: none !important;
+}
+
+html.force-compact-nav body #site-nav .mobile-theme-toggle {
+  display: inline-grid !important;
+}
+
+html.force-compact-nav body #site-nav .menu-wrap {
+  display: grid !important;
+  width: 42px !important;
+  height: 42px !important;
+  flex: 0 0 42px !important;
+}
+
+html.force-compact-nav body #site-nav .menu {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+}
+
+html.force-compact-nav body #site-nav .theme-toggle {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  flex-basis: 40px !important;
+}
+
+html.force-compact-nav body #site-nav .nav {
+  height: 52px !important;
+  min-height: 52px !important;
+  max-height: 52px !important;
+  padding: 4px 10px 4px 14px !important;
+  gap: 9px !important;
+}
+
+html.force-compact-nav body #site-nav .nav .brand {
+  flex: 1 1 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  margin-right: auto !important;
+}
+
+html.force-compact-nav body #site-nav .nav .brand img {
+  height: 18px !important;
+  max-height: 18px !important;
+  width: auto !important;
+  max-width: 72vw !important;
+}
+
+html.force-compact-nav body #site-nav .menu-dropdown {
+  width: min(258px, calc(100vw - 20px)) !important;
+  top: calc(100% + 10px) !important;
+}
+
