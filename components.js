@@ -213,75 +213,38 @@
   };
 
   /*
-    Firefox Android tablet fix:
-    "Desktop site" can expose a desktop-sized CSS viewport even while the
-    physical device is portrait. Use the visual viewport + touch capability
-    and then force the compact nav with inline !important styles.
+    Responsive navigation is CSS-driven. This JS mirrors the exact same media
+    query only so nav-account.css can use .force-compact-nav. Pinch zoom and
+    visual viewport changes do not drive navigation layout anymore.
   */
-  const getViewport = () => {
-    const vv = window.visualViewport;
-    return {
-      width: vv?.width || window.innerWidth || document.documentElement.clientWidth,
-      height: vv?.height || window.innerHeight || document.documentElement.clientHeight
-    };
-  };
+  const COMPACT_NAV_QUERY = '(max-width: 1100px), (orientation: portrait) and (max-width: 1400px)';
+  let compactNavMedia = null;
 
-  const isTouchDevice = () =>
-    (navigator.maxTouchPoints || 0) > 0 ||
-    window.matchMedia?.('(pointer: coarse)').matches === true;
-
-  const isPortraitDevice = () => {
-    const type = screen.orientation?.type || '';
-    if (type.startsWith('portrait')) return true;
-
-    const { width, height } = getViewport();
-    if (height > width) return true;
-
-    // Final fallback for browsers that virtualize the layout viewport.
-    return (screen.height || 0) > (screen.width || 0);
-  };
-
-  const setImportantDisplay = (element, value) => {
-    if (!element) return;
-    if (value == null) element.style.removeProperty('display');
-    else element.style.setProperty('display', value, 'important');
+  const clearResponsiveInlineDisplays = () => {
+    [
+      document.querySelector('#site-nav .desktop-nav'),
+      document.querySelector('#site-nav .nav-actions'),
+      document.querySelector('#site-nav .menu-wrap'),
+      document.querySelector('#site-nav .desktop-theme-toggle'),
+      document.querySelector('#site-nav .mobile-theme-toggle'),
+    ].forEach((element) => element?.style.removeProperty('display'));
   };
 
   const syncResponsiveNav = () => {
-    const { width } = getViewport();
-    const compact = width <= 899 || (isTouchDevice() && isPortraitDevice());
-
-    document.documentElement.classList.toggle('force-compact-nav', compact);
+    if (!compactNavMedia) compactNavMedia = window.matchMedia(COMPACT_NAV_QUERY);
+    document.documentElement.classList.toggle('force-compact-nav', compactNavMedia.matches);
     document.documentElement.classList.remove('force-large-compact-nav');
-
-    const desktopNav = document.querySelector('#site-nav .desktop-nav');
-    const navActions = document.querySelector('#site-nav .nav-actions');
-    const menuWrap = document.querySelector('#site-nav .menu-wrap');
-    const desktopTheme = document.querySelector('#site-nav .desktop-theme-toggle');
-    const mobileTheme = document.querySelector('#site-nav .mobile-theme-toggle');
-
-    if (compact) {
-      setImportantDisplay(desktopNav, 'none');
-      setImportantDisplay(navActions, 'flex');
-      setImportantDisplay(menuWrap, 'grid');
-      setImportantDisplay(desktopTheme, 'none');
-      setImportantDisplay(mobileTheme, 'inline-grid');
-    } else {
-      // Remove the inline override and let shared.css control desktop layout.
-      [desktopNav, navActions, menuWrap, desktopTheme, mobileTheme].forEach((el) => {
-        if (el) el.style.removeProperty('display');
-      });
-    }
+    clearResponsiveInlineDisplays();
   };
 
   const bindResponsiveNav = () => {
     if (window.__kollectionResponsiveNavBound) return;
     window.__kollectionResponsiveNavBound = true;
 
-    window.addEventListener('resize', syncResponsiveNav, { passive: true });
+    compactNavMedia = window.matchMedia(COMPACT_NAV_QUERY);
+    if (compactNavMedia.addEventListener) compactNavMedia.addEventListener('change', syncResponsiveNav);
+    else compactNavMedia.addListener?.(syncResponsiveNav);
     window.addEventListener('orientationchange', syncResponsiveNav, { passive: true });
-    window.visualViewport?.addEventListener('resize', syncResponsiveNav, { passive: true });
-    screen.orientation?.addEventListener?.('change', syncResponsiveNav);
   };
 
   const init = async () => {
@@ -291,8 +254,8 @@
     const footerTarget = document.getElementById('site-footer');
 
     const tasks = [];
-    if (navTarget) tasks.push(loadFragment('nav.html?v=20260906-3', navTarget));
-    if (footerTarget) tasks.push(loadFragment('footer.html?v=20260906-3', footerTarget));
+    if (navTarget) tasks.push(loadFragment('nav.html?v=20260906-5', navTarget));
+    if (footerTarget) tasks.push(loadFragment('footer.html?v=20260906-5', footerTarget));
     if (tasks.length) await Promise.allSettled(tasks);
 
     setActiveNav();
