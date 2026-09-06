@@ -1516,3 +1516,80 @@ html.force-compact-nav body #site-nav .menu-wrap.open .menu {
   }
 }
 
+/* ==================== LARGE TABLET PORTRAIT COMPACT NAV — FINAL ====================
+   This class is applied by components.js using the physical screen short edge,
+   not the CSS viewport. That makes it work in Firefox "Desktop site" mode.
+*/
+html.force-large-compact-nav body #site-nav .nav {
+  height: 76px !important;
+  min-height: 76px !important;
+  max-height: 76px !important;
+  padding: 8px 16px 8px 20px !important;
+  gap: 12px !important;
+}
+
+html.force-large-compact-nav body #site-nav .nav .brand {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+html.force-large-compact-nav body #site-nav .nav .brand img {
+  height: 29px !important;
+  max-height: 29px !important;
+  width: auto !important;
+  max-width: 72vw !important;
+}
+
+html.force-large-compact-nav body #site-nav .theme-toggle {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  flex-basis: 48px !important;
+}
+
+html.force-large-compact-nav body #site-nav .theme-icon {
+  width: 25px !important;
+  height: 25px !important;
+}
+
+html.force-large-compact-nav body #site-nav .menu-wrap {
+  width: 50px !important;
+  height: 50px !important;
+  flex: 0 0 50px !important;
+}
+
+html.force-large-compact-nav body #site-nav .menu,
+html.force-large-compact-nav body #site-nav .menu-wrap.open .menu {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+}
+
+html.force-large-compact-nav body #site-nav .menu .menu-glyph {
+  width: 21px !important;
+  height: 16px !important;
+}
+
+html.force-large-compact-nav body #site-nav .menu .menu-line {
+  width: 21px !important;
+}
+
+html.force-large-compact-nav body #site-nav .menu .menu-line:nth-child(1) {
+  top: 0 !important;
+}
+
+html.force-large-compact-nav body #site-nav .menu .menu-line:nth-child(2) {
+  top: 7px !important;
+}
+
+html.force-large-compact-nav body #site-nav .menu .menu-line:nth-child(3) {
+  top: 14px !important;
+}
+
+html.force-large-compact-nav body #site-nav .menu-wrap.open .menu-line:nth-child(1),
+html.force-large-compact-nav body #site-nav .menu-wrap.open .menu-line:nth-child(3) {
+  top: 7px !important;
+}
+

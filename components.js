@@ -177,10 +177,23 @@
   };
 
   const syncResponsiveNav = () => {
-    const { width } = getViewport();
-    const compact = width <= 899 || (isTouchDevice() && isPortraitDevice());
+    const { width, height } = getViewport();
+    const touch = isTouchDevice();
+    const portrait = isPortraitDevice();
+    const compact = width <= 899 || (touch && portrait);
+
+    /*
+      Firefox "Desktop site" on Android tablets can report a phone-sized CSS
+      viewport even on a large physical tablet. Detect the actual screen's short
+      edge separately so tablet portrait can use a larger compact dock.
+    */
+    const screenWidth = Number(window.screen?.width) || width;
+    const screenHeight = Number(window.screen?.height) || height;
+    const screenShortEdge = Math.min(screenWidth, screenHeight);
+    const largeTabletPortrait = compact && touch && portrait && screenShortEdge >= 600;
 
     document.documentElement.classList.toggle('force-compact-nav', compact);
+    document.documentElement.classList.toggle('force-large-compact-nav', largeTabletPortrait);
 
     const desktopNav = document.querySelector('#site-nav .desktop-nav');
     const navActions = document.querySelector('#site-nav .nav-actions');
@@ -237,4 +250,3 @@
     init();
   }
 })();
-Nt
