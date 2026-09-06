@@ -1772,3 +1772,49 @@ html:not(.force-compact-nav) body #site-nav .nav .brand img {
   max-height: 21px !important;
 }
 
+/* ==================== CROSS-BROWSER COMPACT NAV — MEDIUM SIZE ====================
+   Slightly larger than the previous 68px / 25px setting while keeping
+   Chrome and Firefox identical.
+*/
+html.force-compact-nav body #site-nav .nav {
+  height: 72px !important;
+  min-height: 72px !important;
+  max-height: 72px !important;
+  padding: 7px 15px 7px 19px !important;
+  gap: 12px !important;
+}
+
+html.force-compact-nav body #site-nav .nav .brand img {
+  height: 27px !important;
+  max-height: 27px !important;
+  width: auto !important;
+  max-width: 72vw !important;
+}
+
+html.force-compact-nav body #site-nav .theme-toggle {
+  width: 46px !important;
+  height: 46px !important;
+  min-width: 46px !important;
+  min-height: 46px !important;
+  flex-basis: 46px !important;
+}
+
+html.force-compact-nav body #site-nav .theme-icon {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+html.force-compact-nav body #site-nav .menu-wrap {
+  width: 48px !important;
+  height: 48px !important;
+  flex: 0 0 48px !important;
+}
+
+html.force-compact-nav body #site-nav .menu,
+html.force-compact-nav body #site-nav .menu-wrap.open .menu {
+  width: 46px !important;
+  height: 46px !important;
+  min-width: 46px !important;
+  min-height: 46px !important;
+}
+
