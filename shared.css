@@ -829,3 +829,13 @@ summary {
   }
 }
 
+/* ==================== SET UP COLLECTION DESKTOP HERO GAP ====================
+   Keep the desktop gap below the navigation closer to the compact mobile spacing.
+   Mobile/tablet rules below 901px remain unchanged.
+*/
+@media (min-width: 901px) {
+  .setup-hero {
+    padding-top: 58px !important;
+  }
+}
+
