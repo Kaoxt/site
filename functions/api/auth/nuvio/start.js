@@ -109,4 +109,5 @@ export async function onRequestPost(context) {
 }
 
 export function onRequestGet() {
-  return json({ error: 'POST onlyrror(errpo o si 
+  return json({ error: 'POST only.' }, 405);
+}
