@@ -933,3 +933,114 @@ body.light .menu-community a {
   }
 }
 
+/* ==================== NAV LINK UNDERLINE FIX ====================
+   FAQ has page-level anchor styling; keep every navigation link clean.
+*/
+#site-nav .nav a,
+#site-nav .desktop-nav a,
+#site-nav .menu-dropdown a,
+#site-nav .menu-community a {
+  text-decoration: none !important;
+  text-decoration-line: none !important;
+}
+
+/* ==================== FIXED PAGE CONTENT TYPOGRAPHY ====================
+   Desktop uses the same content font sizes as mobile instead of scaling up.
+   Navigation sizing is intentionally not changed here.
+*/
+
+/* Main page titles */
+body .hero h1,
+body .hero > h1,
+body .setup-hero h1,
+body .setup-hero.page-intro h1,
+body .news-heading h1,
+body .faq-hero h1 {
+  font-size: 56px !important;
+  line-height: 1.04 !important;
+}
+
+/* Main page descriptions */
+body .hero > p,
+body .setup-hero > p,
+body .setup-hero.page-intro > p,
+body .news-heading > p,
+body .faq-hero > p {
+  font-size: 17px !important;
+  line-height: 1.52 !important;
+}
+
+/* Home page content */
+body .latest-update-title {
+  font-size: 13px !important;
+}
+
+body .latest-update-label {
+  font-size: 10px !important;
+}
+
+body .version-badge {
+  font-size: 12px !important;
+}
+
+body .caption h2 {
+  font-size: 38px !important;
+  line-height: 1.04 !important;
+}
+
+body .caption p {
+  font-size: 16px !important;
+  line-height: 1.55 !important;
+}
+
+/* News content */
+body .release h2 {
+  font-size: 31px !important;
+  line-height: 1.03 !important;
+}
+
+body .release-summary {
+  font-size: 17px !important;
+  line-height: 1.58 !important;
+}
+
+body .release-details {
+  font-size: 16px !important;
+  line-height: 1.58 !important;
+}
+
+body .release-meta {
+  font-size: 14px !important;
+}
+
+body .release-tag {
+  font-size: 13px !important;
+}
+
+/* FAQ content */
+body .faq-search {
+  font-size: 18px !important;
+}
+
+body .faq-question {
+  font-size: 19px !important;
+}
+
+body .faq-answer {
+  font-size: 16px !important;
+  line-height: 1.65 !important;
+}
+
+/* Keep the smallest-phone title responsive so it does not overflow,
+   but never let desktop grow larger than the mobile/tablet size. */
+@media (max-width: 520px) {
+  body .hero h1,
+  body .hero > h1,
+  body .setup-hero h1,
+  body .setup-hero.page-intro h1,
+  body .news-heading h1,
+  body .faq-hero h1 {
+    font-size: clamp(40px, 11vw, 56px) !important;
+  }
+}
+
