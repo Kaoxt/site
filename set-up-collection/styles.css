@@ -347,11 +347,11 @@ body.light .mobile-progress > div { background:rgba(0,0,0,.08); }
 /* Step 2 — Nuvio account banner */
 .nuvio-account-banner{
   display:grid;
-  grid-template-columns:112px minmax(0,1fr);
+  grid-template-columns:64px minmax(0,1fr);
   align-items:center;
-  gap:22px;
+  gap:16px;
   margin:0 0 18px;
-  padding:18px 22px 18px 16px;
+  padding:16px 18px;
   border:1px solid var(--line-soft);
   border-radius:22px;
   background:linear-gradient(135deg,rgba(36,173,232,.075),rgba(125,82,247,.065) 55%,rgba(216,70,240,.035));
@@ -359,21 +359,21 @@ body.light .mobile-progress > div { background:rgba(0,0,0,.08); }
   overflow:hidden;
 }
 .nuvio-account-art{
-  width:96px;
-  height:96px;
+  width:64px;
+  height:64px;
   display:grid;
   place-items:center;
-  border-radius:22px;
-  overflow:hidden;
-  background:rgba(0,0,0,.18);
+  overflow:visible;
+  background:transparent;
 }
 .nuvio-account-art img{
   display:block;
-  width:100%;
-  height:100%;
+  width:64px;
+  height:auto;
+  max-height:64px;
   object-fit:contain;
   object-position:center;
-  transform:scale(1.06);
+  background:transparent;
 }
 .nuvio-account-copy{min-width:0}
 .nuvio-account-copy>span{display:block;color:#8fa0ff;font-size:11px;font-weight:850;letter-spacing:.14em;margin-bottom:6px}
@@ -459,8 +459,9 @@ body.light .mobile-progress > div { background:rgba(0,0,0,.08); }
   .actions .action-group .btn,.actions .action-group .ghost{width:auto}
   .setup-tabs{gap:4px;margin-bottom:20px}
   .setup-tab{min-height:46px;padding-inline:18px;font-size:14.5px}
-  .nuvio-account-banner{grid-template-columns:78px minmax(0,1fr);gap:14px;padding:14px;border-radius:19px}
-  .nuvio-account-art{width:72px;height:72px;border-radius:17px}
+  .nuvio-account-banner{grid-template-columns:52px minmax(0,1fr);gap:12px;padding:14px;border-radius:19px}
+  .nuvio-account-art{width:52px;height:52px}
+  .nuvio-account-art img{width:52px;max-height:52px}
   .nuvio-account-copy>span{font-size:10px}
   .nuvio-account-copy h3{font-size:24px}
   .nuvio-account-copy p{font-size:13.5px;line-height:1.45}
@@ -478,7 +479,7 @@ body.light .setup-tab{color:#747780}
 body.light .setup-tab:hover{color:#25262a;background:rgba(0,0,0,.035)}
 body.light .setup-tab.active{background:#17181c;color:#fff;box-shadow:0 10px 25px rgba(17,24,39,.10)}
 body.light .nuvio-account-banner{border-color:rgba(0,0,0,.08);background:linear-gradient(135deg,rgba(36,173,232,.08),rgba(125,82,247,.07) 55%,rgba(216,70,240,.04))}
-body.light .nuvio-account-art{background:rgba(12,13,16,.96)}
+body.light .nuvio-account-art{background:transparent}
 body.light .nuvio-account-copy h3{color:#202126}
 body.light .nuvio-account-copy p{color:#686b73}
 body.light .profile-create-card,body.light .file-picker-wrap{border-color:rgba(0,0,0,.08);background:rgba(255,255,255,.55)}

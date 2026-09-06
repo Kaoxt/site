@@ -781,7 +781,7 @@
     host.innerHTML = panel('STEP 2 · NUVIO', 'Connect your Nuvio account',
       'Sign in or create an account, then choose the profile that should receive The Kollection during setup.',
       `<div class="nuvio-account-banner">
-        <div class="nuvio-account-art"><img src="set-up-collection/assets/nuvio-account.png" alt="Nuvio logo"></div>
+        <div class="nuvio-account-art"><img src="set-up-collection/assets/nuvio-account.webp" alt="Nuvio logo"></div>
         <div class="nuvio-account-copy"><span>NUVIO</span><h3>Your Nuvio Account</h3><p>Sign in, create an account, and choose or create the profile you want to configure.</p></div>
       </div>
       <div class="card">
