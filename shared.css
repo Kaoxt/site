@@ -2077,3 +2077,184 @@ html.force-compact-nav body #site-nav .menu-wrap.open .menu {
   min-height: 40px !important;
 }
 
+/* ==========================================================================
+   NUVIO-STYLE GLASS + STICKY NAV — AUTHORITATIVE FINAL BLOCK
+   Keeps the current Kollection navigation/content structure, but matches the
+   Nuvio reference more closely: tighter top gap, glass/blur surface, sticky
+   scrolling, and one deterministic size across Chrome + Firefox.
+   ========================================================================== */
+
+/* Match Nuvio's small gap between the browser viewport and the dock. */
+.page {
+  padding-top: 14px !important;
+}
+
+/* Follow the visitor as they scroll. */
+html body #site-nav {
+  position: sticky !important;
+  top: 14px !important;
+  z-index: 1000 !important;
+  transform: none !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Glass surface. The reduced alpha is intentional so content remains visible
+   through the dock while scrolling, as on Nuvio. */
+html body #site-nav .nav {
+  border: 1px solid rgba(255,255,255,.14) !important;
+  background:
+    linear-gradient(180deg, rgba(31,31,33,.74), rgba(15,15,17,.64)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.055),
+    0 10px 34px rgba(0,0,0,.30) !important;
+  backdrop-filter: blur(28px) saturate(1.34) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(1.34) !important;
+}
+
+/* Portrait / tablet / hamburger layout.
+   This rule DOES NOT depend on JS browser detection, so Firefox and Chrome
+   render the same dock geometry. */
+@media (max-width: 1100px) {
+  html body #site-nav .nav,
+  html.force-compact-nav body #site-nav .nav,
+  html.force-large-compact-nav body #site-nav .nav {
+    height: 64px !important;
+    min-height: 64px !important;
+    max-height: 64px !important;
+    padding: 6px 10px 6px 15px !important;
+    gap: 8px !important;
+  }
+
+  html body #site-nav .nav .brand,
+  html.force-compact-nav body #site-nav .nav .brand,
+  html.force-large-compact-nav body #site-nav .nav .brand {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin-right: auto !important;
+  }
+
+  html body #site-nav .nav .brand img,
+  html.force-compact-nav body #site-nav .nav .brand img,
+  html.force-large-compact-nav body #site-nav .nav .brand img {
+    height: 27px !important;
+    max-height: 27px !important;
+    width: auto !important;
+    max-width: 72vw !important;
+  }
+
+  html body #site-nav .theme-toggle,
+  html.force-compact-nav body #site-nav .theme-toggle,
+  html.force-large-compact-nav body #site-nav .theme-toggle {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    flex-basis: 42px !important;
+  }
+
+  html body #site-nav .theme-icon,
+  html.force-compact-nav body #site-nav .theme-icon,
+  html.force-large-compact-nav body #site-nav .theme-icon {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  html body #site-nav .menu-wrap,
+  html.force-compact-nav body #site-nav .menu-wrap,
+  html.force-large-compact-nav body #site-nav .menu-wrap {
+    width: 42px !important;
+    height: 42px !important;
+    flex: 0 0 42px !important;
+  }
+
+  html body #site-nav .menu,
+  html body #site-nav .menu-wrap.open .menu,
+  html.force-compact-nav body #site-nav .menu,
+  html.force-compact-nav body #site-nav .menu-wrap.open .menu,
+  html.force-large-compact-nav body #site-nav .menu,
+  html.force-large-compact-nav body #site-nav .menu-wrap.open .menu {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+  }
+
+  html body #site-nav .menu .menu-glyph {
+    width: 18px !important;
+    height: 14px !important;
+  }
+
+  html body #site-nav .menu .menu-line {
+    width: 18px !important;
+    height: 2px !important;
+  }
+}
+
+/* Desktop / landscape. Keep the same pill-like Nuvio proportions without
+   making the banner oversized. */
+@media (min-width: 1101px) {
+  html body #site-nav .nav,
+  html:not(.force-compact-nav) body #site-nav .nav {
+    height: 62px !important;
+    min-height: 62px !important;
+    max-height: 62px !important;
+    padding: 6px 12px 6px 18px !important;
+    gap: 9px !important;
+  }
+
+  html body #site-nav .nav .brand img,
+  html:not(.force-compact-nav) body #site-nav .nav .brand img {
+    height: 25px !important;
+    max-height: 25px !important;
+    width: auto !important;
+    max-width: min(68vw, 540px) !important;
+  }
+}
+
+/* Light mode keeps the frosted effect instead of turning the dock opaque. */
+body.light #site-nav .nav {
+  border-color: rgba(255,255,255,.16) !important;
+  background:
+    linear-gradient(180deg, rgba(27,27,29,.76), rgba(14,14,16,.66)) !important;
+}
+
+/* ==========================================================================
+   HOME HERO AURORA
+   Restores the soft blue/indigo/purple glow behind the main title. It starts
+   high enough to blend into the area under the floating navigation.
+   ========================================================================== */
+.hero {
+  position: relative !important;
+  isolation: isolate !important;
+}
+
+.hero::before {
+  content: "" !important;
+  position: absolute !important;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  left: 50% !important;
+  top: -150px !important;
+  width: min(1280px, 122vw) !important;
+  height: 500px !important;
+  transform: translateX(-50%) !important;
+  background:
+    radial-gradient(ellipse at 27% 30%, rgba(0,130,255,.24), transparent 45%),
+    radial-gradient(ellipse at 72% 25%, rgba(82,55,255,.25), transparent 46%),
+    radial-gradient(ellipse at 53% 55%, rgba(132,55,255,.12), transparent 50%) !important;
+  filter: blur(18px) !important;
+  opacity: .88 !important;
+  -webkit-mask-image: linear-gradient(to bottom, #000 8%, #000 62%, transparent 100%) !important;
+  mask-image: linear-gradient(to bottom, #000 8%, #000 62%, transparent 100%) !important;
+}
+
+.hero > * {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+body.light .hero::before {
+  opacity: .24 !important;
+}

@@ -76,6 +76,77 @@
     }
   };
 
+
+  const ensureStylesheet = (filename) => {
+    const href = assetUrl(filename);
+    const exists = [...document.styleSheets].some((sheet) => {
+      try { return sheet.href === href; } catch { return false; }
+    }) || [...document.querySelectorAll('link[rel="stylesheet"]')].some((link) => link.href === href);
+
+    if (exists) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    document.head.appendChild(link);
+  };
+
+  const loadScriptOnce = (filename, globalCheck) => new Promise((resolve, reject) => {
+    if (typeof globalCheck === 'function' && globalCheck()) {
+      resolve(true);
+      return;
+    }
+
+    const src = assetUrl(filename);
+    const existing = [...document.scripts].find((script) => script.src === src);
+
+    if (existing) {
+      const done = () => {
+        if (!globalCheck || globalCheck()) resolve(true);
+        else reject(new Error(`${filename} loaded without its expected global.`));
+      };
+
+      if (existing.dataset.kollectionLoaded === 'true') {
+        done();
+        return;
+      }
+
+      existing.addEventListener('load', done, { once: true });
+      existing.addEventListener('error', () => reject(new Error(`Could not load ${filename}.`)), { once: true });
+
+      setTimeout(() => {
+        if (typeof globalCheck === 'function' && globalCheck()) resolve(true);
+      }, 0);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = src;
+    script.async = false;
+    script.addEventListener('load', () => {
+      script.dataset.kollectionLoaded = 'true';
+      if (!globalCheck || globalCheck()) resolve(true);
+      else reject(new Error(`${filename} loaded without its expected global.`));
+    }, { once: true });
+    script.addEventListener('error', () => reject(new Error(`Could not load ${filename}.`)), { once: true });
+    document.head.appendChild(script);
+  });
+
+  const prepareNuvioNavigation = async () => {
+    ensureStylesheet('nuvio-auth/nav-account.css');
+
+    if (!window.KollectionNuvioAuth) {
+      await loadScriptOnce('nuvio-auth/nuvio-auth.js', () => Boolean(window.KollectionNuvioAuth));
+    }
+
+    if (!window.KollectionNavAccount) {
+      await loadScriptOnce('nuvio-auth/nav-account.js', () => Boolean(window.KollectionNavAccount));
+    }
+
+    window.KollectionNavAccount?.init?.().catch?.((error) => {
+      console.warn('[The Kollection] Nuvio navigation could not initialize.', error);
+    });
+  };
+
   const resolvePage = () => {
     const path = window.location.pathname.replace(/\/+$/, '');
     const last = (path.split('/').pop() || '').toLowerCase();
@@ -125,8 +196,8 @@
       setOpen(!wrap.classList.contains('open'));
     });
 
-    wrap.querySelectorAll('.menu-dropdown a').forEach((link) => {
-      link.addEventListener('click', () => setOpen(false));
+    wrap.addEventListener('click', (event) => {
+      if (event.target.closest('.menu-dropdown a')) setOpen(false);
     });
 
     document.addEventListener('click', (event) => {
@@ -180,11 +251,6 @@
     const { width } = getViewport();
     const compact = width <= 899 || (isTouchDevice() && isPortraitDevice());
 
-    /*
-      Use one compact-nav state for every browser. Firefox and Chrome report
-      tablet screen/viewport dimensions differently, so browser-specific
-      "large compact" detection caused the navigation to render at two sizes.
-    */
     document.documentElement.classList.toggle('force-compact-nav', compact);
     document.documentElement.classList.remove('force-large-compact-nav');
 
@@ -225,8 +291,8 @@
     const footerTarget = document.getElementById('site-footer');
 
     const tasks = [];
-    if (navTarget) tasks.push(loadFragment('nav.html?v=20260906-1', navTarget));
-    if (footerTarget) tasks.push(loadFragment('footer.html?v=20260906-1', footerTarget));
+    if (navTarget) tasks.push(loadFragment('nav.html?v=20260906-3', navTarget));
+    if (footerTarget) tasks.push(loadFragment('footer.html?v=20260906-3', footerTarget));
     if (tasks.length) await Promise.allSettled(tasks);
 
     setActiveNav();
@@ -235,6 +301,10 @@
     bindResponsiveNav();
     syncResponsiveNav();
     applyTheme(readTheme(), false);
+
+    prepareNuvioNavigation().catch((error) => {
+      console.warn('[The Kollection] Nuvio account navigation unavailable.', error);
+    });
   };
 
   if (document.readyState === 'loading') {
