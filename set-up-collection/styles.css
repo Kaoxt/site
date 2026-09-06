@@ -380,9 +380,10 @@ body.light .mobile-progress > div { background:rgba(0,0,0,.08); }
 .nuvio-account-copy h3{margin:0;color:#f7f7f8;font-size:clamp(24px,2.3vw,34px);line-height:1.08;letter-spacing:-.035em}
 .nuvio-account-copy p{margin:9px 0 0;color:var(--muted);font-size:15px;line-height:1.55;max-width:650px}
 
-.profile-picker{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end}
-.profile-picker .field{margin:0}
-.new-profile-btn{min-height:58px;padding-inline:22px}
+.profile-field{margin-bottom:0}
+.profile-control-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+.profile-control-row select{margin:0}
+.new-profile-btn{min-height:56px;height:56px;padding-inline:20px;white-space:nowrap}
 .profile-create-card{
   margin-top:16px;
   padding:20px;
@@ -401,6 +402,50 @@ body.light .mobile-progress > div { background:rgba(0,0,0,.08); }
 .toggle-row>span{display:grid;gap:4px}
 .toggle-row b{font-size:15px;line-height:1.35}
 .toggle-row small{color:var(--muted);font-size:13.5px;line-height:1.5}
+
+/* Step 3 — API key controls */
+.field-label-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.field-label-row label{margin:0;min-width:0}
+.get-key-link{
+  flex:0 0 auto;
+  min-height:34px;
+  padding:0 13px;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--line-soft);
+  background:rgba(255,255,255,.035);
+  color:#b9bcff;
+  font-size:12px;
+  font-weight:760;
+  text-decoration:none;
+  transition:background .18s ease,color .18s ease,border-color .18s ease,transform .18s ease;
+}
+.get-key-link:hover{background:rgba(99,102,241,.10);border-color:rgba(129,140,248,.26);color:#d7d9ff;transform:translateY(-1px)}
+.secret-input-wrap{position:relative;display:flex;align-items:center}
+.secret-input-wrap input{padding-right:50px}
+.key-visibility-toggle{
+  position:absolute;
+  right:8px;
+  top:50%;
+  transform:translateY(-50%);
+  width:38px;
+  height:38px;
+  border:0;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  background:transparent;
+  color:#8f9097;
+  cursor:pointer;
+  transition:background .18s ease,color .18s ease;
+}
+.key-visibility-toggle:hover{background:rgba(255,255,255,.055);color:#f0f0f3}
+.key-visibility-toggle svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.key-visibility-toggle .eye-closed{display:none}
+.key-visibility-toggle.revealed .eye-open{display:none}
+.key-visibility-toggle.revealed .eye-closed{display:block}
 
 /* Step 3 — local JSON selection */
 .file-picker-wrap{
@@ -465,13 +510,20 @@ body.light .mobile-progress > div { background:rgba(0,0,0,.08); }
   .nuvio-account-copy>span{font-size:10px}
   .nuvio-account-copy h3{font-size:24px}
   .nuvio-account-copy p{font-size:13.5px;line-height:1.45}
-  .profile-picker{grid-template-columns:1fr}
-  .new-profile-btn{width:100%}
+  .profile-control-row{grid-template-columns:minmax(0,1fr) auto;gap:8px}
+  .new-profile-btn{width:auto;min-height:56px;height:56px;padding-inline:15px}
+  .field-label-row{gap:8px}
+  .get-key-link{min-height:32px;padding-inline:11px;font-size:11.5px}
   .profile-create-card{padding:17px}
   .file-picker-wrap{grid-template-columns:1fr;align-items:stretch}
   .file-picker{width:100%}
   .hero-check b{font-size:16px}.hero-check span{font-size:14px}
   .summary-item b{font-size:15.5px}.summary-item span{font-size:13.5px}
+}
+
+@media (max-width:520px){
+  .profile-control-row{grid-template-columns:1fr}
+  .new-profile-btn{justify-self:start;height:42px;min-height:42px}
 }
 
 /* Light-theme variants for the new setup controls. */
@@ -484,6 +536,10 @@ body.light .nuvio-account-copy h3{color:#202126}
 body.light .nuvio-account-copy p{color:#686b73}
 body.light .profile-create-card,body.light .file-picker-wrap{border-color:rgba(0,0,0,.08);background:rgba(255,255,255,.55)}
 body.light .toggle-row b{color:#202126}body.light .toggle-row small{color:#686b73}
+body.light .get-key-link{color:#4f46e5;background:rgba(79,70,229,.05);border-color:rgba(79,70,229,.12)}
+body.light .get-key-link:hover{color:#3730a3;background:rgba(79,70,229,.09);border-color:rgba(79,70,229,.20)}
+body.light .key-visibility-toggle{color:#777b84}
+body.light .key-visibility-toggle:hover{background:rgba(0,0,0,.045);color:#202126}
 body.light .file-picker{color:#202126;background:rgba(255,255,255,.7);border-color:rgba(0,0,0,.10)}
 body.light .file-picker:hover{background:#fff}
 body.light .file-status b{color:#202126}body.light .file-status span{color:#686b73}
@@ -597,3 +653,4 @@ body.light .collection-section-choice.selected .collection-section-check::after{
   .collection-section-grid{grid-template-columns:1fr}
   .collection-section-choice{min-height:78px;padding:15px}
 }
+I

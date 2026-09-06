@@ -797,9 +797,13 @@
           ${signup ? `<div class="field"><label for="confirmPassword">Confirm password</label><input id="confirmPassword" type="password" autocomplete="new-password" placeholder="Enter the password again"><small>If Nuvio requires email confirmation, finish that step and then return here to sign in.</small></div>` : ''}
           <div class="actions"><button class="ghost" id="backBtn">Back</button><button class="btn" id="${signup ? 'signupBtn' : 'loginBtn'}">${signup ? 'Create Nuvio account' : 'Sign in to Nuvio'}</button></div>` : `
           <div class="callout good">Signed in successfully. Choose the Nuvio profile to configure.</div>
-          <div class="profile-picker" style="margin-top:18px">
-            <div class="field"><label for="profile">Nuvio profile</label><select id="profile">${profileOptions}</select><small>If a secondary profile uses Primary add-ons, add-ons are installed on Profile 1 while collections stay on the selected profile.</small></div>
-            <button class="ghost new-profile-btn" id="newProfileBtn" type="button">New profile</button>
+          <div class="field profile-field" style="margin-top:18px">
+            <label for="profile">Nuvio profile</label>
+            <div class="profile-control-row">
+              <select id="profile">${profileOptions}</select>
+              <button class="ghost new-profile-btn" id="newProfileBtn" type="button">New profile</button>
+            </div>
+            <small>If a secondary profile uses Primary add-ons, add-ons are installed on Profile 1 while collections stay on the selected profile.</small>
           </div>
           ${state.profileCreateOpen ? `<div class="profile-create-card">
             <div class="field"><label for="newProfileName">Profile name</label><input id="newProfileName" type="text" maxlength="40" placeholder="New profile"></div>
@@ -907,10 +911,25 @@
             <input class="visually-hidden" id="aiFile" type="file" accept=".json,application/json">
             <div class="file-status">${state.aiCustomFileName ? `<b>${esc(state.aiCustomFileName)}</b><span>${state.aiCustomCatalogLibrary.length} catalogs found</span>` : '<span>No file selected yet.</span>'}</div>
           </div>
-          <div class="field"><label for="mdblist">MDBList API key <span class="optional">(only if missing from the file)</span></label><input id="mdblist" type="password" value="${esc(state.mdblistKey)}" placeholder="Optional override" autocomplete="off"><small>Your file is processed locally. If it already contains an MDBList key, you can leave this blank.</small></div>
-          <div class="field"><label for="tmdb">TMDB API key <span class="optional">(optional override)</span></label><input id="tmdb" type="password" value="${esc(state.tmdbKey)}" placeholder="Optional TMDB v3 key" autocomplete="off"></div>` : `
-          <div class="field"><label for="mdblist">MDBList API key</label><input id="mdblist" type="password" value="${esc(state.mdblistKey)}" placeholder="Your MDBList API key" autocomplete="off"><small>Required for the built-in setup. The key is used only while creating your AIOMetadata configuration.</small></div>
-          <div class="field"><label for="tmdb">TMDB API key <span class="optional">(optional)</span></label><input id="tmdb" type="password" value="${esc(state.tmdbKey)}" placeholder="Optional TMDB v3 key" autocomplete="off"><small>Optional; it can improve metadata resolution.</small></div>`}
+          <div class="field api-key-field">
+            <div class="field-label-row"><label for="mdblist">MDBList API key <span class="optional">(only if missing from the file)</span></label><a class="get-key-link" href="https://mdblist.com/preferences/" target="_blank" rel="noopener">Get Key</a></div>
+            <div class="secret-input-wrap"><input id="mdblist" type="password" value="${esc(state.mdblistKey)}" placeholder="Optional override" autocomplete="off"><button class="key-visibility-toggle" type="button" data-target="mdblist" aria-label="Show MDBList API key" title="Show API key"><svg class="eye-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg><svg class="eye-closed" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 18 18"></path><path d="M10.6 6.2A10.7 10.7 0 0 1 12 6c6 0 9.5 6 9.5 6a16.1 16.1 0 0 1-3 3.7"></path><path d="M6.1 6.1C3.8 7.7 2.5 12 2.5 12s3.5 6 9.5 6c1 0 2-.2 2.8-.4"></path></svg></button></div>
+            <small>Your file is processed locally. If it already contains an MDBList key, you can leave this blank.</small>
+          </div>
+          <div class="field api-key-field">
+            <div class="field-label-row"><label for="tmdb">TMDB API key <span class="optional">(optional override)</span></label><a class="get-key-link" href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">Get Key</a></div>
+            <div class="secret-input-wrap"><input id="tmdb" type="password" value="${esc(state.tmdbKey)}" placeholder="Optional TMDB v3 key" autocomplete="off"><button class="key-visibility-toggle" type="button" data-target="tmdb" aria-label="Show TMDB API key" title="Show API key"><svg class="eye-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg><svg class="eye-closed" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 18 18"></path><path d="M10.6 6.2A10.7 10.7 0 0 1 12 6c6 0 9.5 6 9.5 6a16.1 16.1 0 0 1-3 3.7"></path><path d="M6.1 6.1C3.8 7.7 2.5 12 2.5 12s3.5 6 9.5 6c1 0 2-.2 2.8-.4"></path></svg></button></div>
+          </div>` : `
+          <div class="field api-key-field">
+            <div class="field-label-row"><label for="mdblist">MDBList API key</label><a class="get-key-link" href="https://mdblist.com/preferences/" target="_blank" rel="noopener">Get Key</a></div>
+            <div class="secret-input-wrap"><input id="mdblist" type="password" value="${esc(state.mdblistKey)}" placeholder="Your MDBList API key" autocomplete="off"><button class="key-visibility-toggle" type="button" data-target="mdblist" aria-label="Show MDBList API key" title="Show API key"><svg class="eye-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg><svg class="eye-closed" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 18 18"></path><path d="M10.6 6.2A10.7 10.7 0 0 1 12 6c6 0 9.5 6 9.5 6a16.1 16.1 0 0 1-3 3.7"></path><path d="M6.1 6.1C3.8 7.7 2.5 12 2.5 12s3.5 6 9.5 6c1 0 2-.2 2.8-.4"></path></svg></button></div>
+            <small>Required for the built-in setup. The key is used only while creating your AIOMetadata configuration.</small>
+          </div>
+          <div class="field api-key-field">
+            <div class="field-label-row"><label for="tmdb">TMDB API key <span class="optional">(optional)</span></label><a class="get-key-link" href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">Get Key</a></div>
+            <div class="secret-input-wrap"><input id="tmdb" type="password" value="${esc(state.tmdbKey)}" placeholder="Optional TMDB v3 key" autocomplete="off"><button class="key-visibility-toggle" type="button" data-target="tmdb" aria-label="Show TMDB API key" title="Show API key"><svg class="eye-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg><svg class="eye-closed" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 18 18"></path><path d="M10.6 6.2A10.7 10.7 0 0 1 12 6c6 0 9.5 6 9.5 6a16.1 16.1 0 0 1-3 3.7"></path><path d="M6.1 6.1C3.8 7.7 2.5 12 2.5 12s3.5 6 9.5 6c1 0 2-.2 2.8-.4"></path></svg></button></div>
+            <small>Optional; it can improve metadata resolution.</small>
+          </div>`}
         <div class="field"><label for="aiHost">AIOMetadata host</label><select id="aiHost">${hostOptions}</select><small>Midnight allows up to 500 catalogs in each configuration. If needed, Set Up Collection can split the required catalogs across more than one configuration.</small></div>
         ${custom ? `<div class="callout">The uploaded file supplies your AIOMetadata preferences and matching catalog definitions. Any required The Kollection catalog missing from your file falls back to the built-in catalog definition.</div>` : ''}
         <div class="actions"><button class="ghost" id="backBtn">Back</button><button class="btn" id="nextBtn">Continue to Bingecat</button></div>
@@ -920,6 +939,18 @@
     $('#customTab').onclick = () => { state.aiSetupMode = 'custom'; state.backup = null; renderAi(); };
     $('#mdblist').oninput = e => { state.mdblistKey = e.target.value.trim(); state.backup = null; };
     $('#tmdb').oninput = e => { state.tmdbKey = e.target.value.trim(); state.backup = null; };
+    $$('.key-visibility-toggle').forEach(button => {
+      button.onclick = () => {
+        const input = document.getElementById(button.dataset.target);
+        if (!input) return;
+        const revealing = input.type === 'password';
+        input.type = revealing ? 'text' : 'password';
+        button.classList.toggle('revealed', revealing);
+        const provider = button.dataset.target === 'mdblist' ? 'MDBList' : 'TMDB';
+        button.setAttribute('aria-label', `${revealing ? 'Hide' : 'Show'} ${provider} API key`);
+        button.title = `${revealing ? 'Hide' : 'Show'} API key`;
+      };
+    });
     $('#aiHost').onchange = e => { state.aiHostPreference = e.target.value; state.backup = null; };
     if (custom) {
       $('#aiFile').onchange = async e => {
