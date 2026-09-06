@@ -1085,6 +1085,38 @@
     }
   </style>
 
+
+  <style id="news-nav-landscape-width-fix">
+    /* Match the wider page/nav geometry used by the other Kollection pages. */
+    @media (min-width: 900px) {
+      .page {
+        width: min(calc(100% - 20px), 1760px) !important;
+        max-width: 1760px !important;
+      }
+
+      .nav .brand {
+        flex: 0 1 auto !important;
+        margin-right: auto !important;
+      }
+
+      .nav .brand img {
+        display: block !important;
+        height: 28px !important;
+        max-height: 28px !important;
+        width: auto !important;
+        max-width: min(68vw, 620px) !important;
+        object-fit: contain !important;
+        object-position: left center !important;
+      }
+
+      .news-shell.page-body {
+        width: min(100%, 1180px) !important;
+        max-width: 1180px !important;
+        margin: 0 !important;
+      }
+    }
+  </style>
+
   <script src="components.js" defer></script>
 </head>
 <body>

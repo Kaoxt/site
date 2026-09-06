@@ -839,3 +839,62 @@ summary {
   }
 }
 
+/* ==================== NAV COMMUNITY LINKS — APPROVED INLINE FORMAT ====================
+   Keep GitHub and Buy me a coffee side-by-side in the expanded mobile menu.
+*/
+.menu-community {
+  margin-top: 8px !important;
+  padding: 13px 6px 5px !important;
+  border-top: 1px solid rgba(255,255,255,.08) !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 18px !important;
+}
+
+.menu-community a {
+  min-height: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #818cf8 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: -.01em !important;
+  white-space: nowrap !important;
+  opacity: .94 !important;
+  flex: 0 0 auto !important;
+}
+
+.menu-community a:hover {
+  opacity: 1 !important;
+  transform: translateY(-1px) !important;
+  color: #a5b4fc !important;
+  background: transparent !important;
+}
+
+.menu-community svg {
+  width: 17px !important;
+  height: 17px !important;
+  flex: 0 0 17px !important;
+}
+
+body.light .menu-community {
+  border-top-color: rgba(0,0,0,.08) !important;
+}
+
+body.light .menu-community a {
+  color: #4f46e5 !important;
+}
+
+@media (max-width: 700px) {
+  .menu-community {
+    gap: 15px !important;
+  }
+}
+
