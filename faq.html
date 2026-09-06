@@ -494,6 +494,59 @@
       .faq-plus::before,
       .faq-plus::after { transition: none; }
     }
+
+    /* Match the Set Up Collection intro geometry exactly:
+       chip, title, and description all share the same left edge. */
+    .faq-shell {
+      width: 100% !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: clamp(68px, 7vw, 112px) 0 0 !important;
+    }
+
+    .faq-hero {
+      width: min(100%, 1180px) !important;
+      max-width: 1180px !important;
+      margin: 0 !important;
+      padding: 0 0 clamp(46px, 5vw, 70px) !important;
+      text-align: left !important;
+    }
+
+    .faq-kicker {
+      margin: 0 0 38px !important;
+      align-self: flex-start !important;
+    }
+
+    .faq-hero h1 {
+      margin: 0 !important;
+      text-align: left !important;
+    }
+
+    .faq-hero p {
+      width: min(100%, 980px) !important;
+      max-width: 980px !important;
+      margin: 24px 0 0 !important;
+      text-align: left !important;
+    }
+
+    @media (max-width: 700px) {
+      .faq-shell {
+        padding-top: 54px !important;
+      }
+
+      .faq-hero {
+        padding-bottom: 38px !important;
+      }
+
+      .faq-kicker {
+        margin-bottom: 30px !important;
+      }
+
+      .faq-hero p {
+        margin-top: 20px !important;
+      }
+    }
+
   </style>
   <link rel="stylesheet" href="shared.css" />
   <script src="components.js" defer></script>

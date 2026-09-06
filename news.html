@@ -967,6 +967,60 @@
       }
     }
 
+
+    /* Match the Set Up Collection intro geometry exactly:
+       chip, title, and description all share the same left edge. */
+    .news-shell {
+      width: 100% !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: clamp(68px, 7vw, 112px) 0 0 !important;
+    }
+
+    .news-heading {
+      width: min(100%, 1180px) !important;
+      max-width: 1180px !important;
+      margin: 0 !important;
+      padding: 0 0 clamp(46px, 5vw, 70px) !important;
+      border-bottom: 0 !important;
+      text-align: left !important;
+    }
+
+    .kicker {
+      margin: 0 0 38px !important;
+      align-self: flex-start !important;
+    }
+
+    .news-heading h1 {
+      margin: 0 !important;
+      text-align: left !important;
+    }
+
+    .news-heading p {
+      width: min(100%, 980px) !important;
+      max-width: 980px !important;
+      margin: 24px 0 0 !important;
+      text-align: left !important;
+    }
+
+    @media (max-width: 700px) {
+      .news-shell {
+        padding-top: 54px !important;
+      }
+
+      .news-heading {
+        padding-bottom: 38px !important;
+      }
+
+      .kicker {
+        margin-bottom: 30px !important;
+      }
+
+      .news-heading p {
+        margin-top: 20px !important;
+      }
+    }
+
   </style>
   <link rel="stylesheet" href="shared.css" />
   <script src="components.js" defer></script>
