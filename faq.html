@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="icon" href="/favicon.ico?v=3" sizes="any" />
+  <link rel="shortcut icon" href="/favicon.ico?v=3" type="image/x-icon" />
+  <meta name="theme-color" content="#050608" />
+  <meta name="description" content="Frequently asked questions about The Kollection, AIOMetadata, Bingecat, AIOStreams, and Nuvio setup." />
+  <title>FAQ | The Kollection</title>
+  <style>
+    :root {
+      --bg: #050608;
+      --panel: rgba(255,255,255,.025);
+      --text: #f5f5f7;
+      --muted: #96979f;
+      --line: rgba(255,255,255,.115);
+      --line-soft: rgba(255,255,255,.075);
+      --accent: #818cf8;
+      --max: 1760px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 48% 14%, rgba(61,72,106,.105), transparent 35rem),
+        radial-gradient(circle at 77% 72%, rgba(79,70,229,.065), transparent 34rem),
+        #050608;
+      font-family: "Product Sans", "Google Sans", "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .075;
+      background-image:
+        linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: linear-gradient(to bottom, transparent 3%, #000 30%, transparent 94%);
+    }
+
+    a { color: inherit; }
+    button, summary { font: inherit; }
+
+    .page {
+      width: min(calc(100% - 32px), var(--max));
+      margin: 0 auto;
+      padding: 20px 0 72px;
+    }
+
+    .faq-shell {
+      width: min(100%, 1540px);
+      margin: 0 auto;
+      padding: clamp(68px, 8vw, 132px) clamp(10px, 2.2vw, 34px) 0;
+    }
+
+    .faq-hero {
+      max-width: 1300px;
+      padding-bottom: clamp(48px, 6vw, 84px);
+    }
+
+    .faq-hero h1 {
+      margin: 0;
+      max-width: 940px;
+      color: #f7f7f8;
+      font-size: clamp(64px, 7.5vw, 126px);
+      line-height: .94;
+      letter-spacing: -.057em;
+      font-weight: 620;
+      text-wrap: balance;
+    }
+
+    .faq-hero p {
+      max-width: 1220px;
+      margin: clamp(34px, 4vw, 54px) 0 0;
+      color: var(--muted);
+      font-size: clamp(20px, 2vw, 31px);
+      line-height: 1.55;
+      letter-spacing: -.018em;
+      font-weight: 430;
+    }
+
+    .faq-list {
+      width: 100%;
+      border-top: 1px solid var(--line);
+    }
+
+    .faq-item {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .faq-item summary {
+      list-style: none;
+      min-height: clamp(82px, 7vw, 112px);
+      padding: 24px 2px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 28px;
+      cursor: pointer;
+      color: #f1f1f4;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .faq-item summary::-webkit-details-marker { display: none; }
+
+    .faq-question {
+      font-size: clamp(20px, 2vw, 30px);
+      line-height: 1.25;
+      letter-spacing: -.025em;
+      font-weight: 610;
+    }
+
+    .faq-plus {
+      position: relative;
+      flex: 0 0 34px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      transition: transform .22s ease, background .18s ease;
+    }
+
+    .faq-plus::before,
+    .faq-plus::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 18px;
+      height: 2px;
+      border-radius: 999px;
+      background: #d8d8dd;
+      transform: translate(-50%, -50%);
+      transition: transform .22s ease, opacity .22s ease;
+    }
+
+    .faq-plus::after {
+      transform: translate(-50%, -50%) rotate(90deg);
+    }
+
+    .faq-item summary:hover .faq-plus {
+      background: rgba(255,255,255,.055);
+    }
+
+    .faq-item[open] .faq-plus {
+      transform: rotate(45deg);
+      background: rgba(99,102,241,.11);
+    }
+
+    .faq-item[open] .faq-plus::before,
+    .faq-item[open] .faq-plus::after {
+      background: #aeb2ff;
+    }
+
+    .faq-answer {
+      max-width: 1180px;
+      padding: 0 58px clamp(30px, 3.5vw, 50px) 2px;
+      color: #a3a4ab;
+      font-size: clamp(16px, 1.45vw, 20px);
+      line-height: 1.72;
+      letter-spacing: -.012em;
+    }
+
+    .faq-answer p { margin: 0; }
+    .faq-answer p + p { margin-top: 14px; }
+    .faq-answer ul {
+      margin: 16px 0 0;
+      padding-left: 22px;
+    }
+    .faq-answer li + li { margin-top: 8px; }
+
+    .faq-answer a {
+      color: #aeb2ff;
+      text-decoration: underline;
+      text-decoration-color: rgba(174,178,255,.34);
+      text-underline-offset: 3px;
+    }
+
+    .faq-answer strong {
+      color: #d8d8dd;
+      font-weight: 650;
+    }
+
+    .faq-item summary:focus-visible {
+      outline: 2px solid #a5b4fc;
+      outline-offset: 5px;
+      border-radius: 12px;
+    }
+
+    body.light {
+      --bg: #f4f5f7;
+      --panel: rgba(255,255,255,.75);
+      --text: #17181c;
+      --muted: #696c74;
+      --line: rgba(0,0,0,.115);
+      --line-soft: rgba(0,0,0,.075);
+      background:
+        radial-gradient(circle at 48% 14%, rgba(107,114,128,.09), transparent 35rem),
+        radial-gradient(circle at 77% 72%, rgba(99,102,241,.065), transparent 34rem),
+        #f4f5f7 !important;
+      color: #17181c;
+    }
+
+    body.light::before {
+      opacity: .085;
+      background-image:
+        linear-gradient(rgba(0,0,0,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,.04) 1px, transparent 1px);
+    }
+
+    body.light .faq-hero h1,
+    body.light .faq-item summary { color: #17181c; }
+    body.light .faq-hero p,
+    body.light .faq-answer { color: #686b73; }
+    body.light .faq-answer strong { color: #303238; }
+    body.light .faq-plus::before,
+    body.light .faq-plus::after { background: #494b52; }
+    body.light .faq-item summary:hover .faq-plus { background: rgba(0,0,0,.05); }
+    body.light .faq-item[open] .faq-plus { background: rgba(99,102,241,.095); }
+    body.light .faq-item[open] .faq-plus::before,
+    body.light .faq-item[open] .faq-plus::after { background: #5a55dc; }
+    body.light .faq-answer a { color: #5148cf; text-decoration-color: rgba(81,72,207,.28); }
+
+    @media (max-width: 700px) {
+      .page {
+        width: min(calc(100% - 20px), 100%);
+        padding-top: 10px;
+      }
+
+      .faq-shell {
+        padding: 54px 8px 0;
+      }
+
+      .faq-hero {
+        padding-bottom: 44px;
+      }
+
+      .faq-hero h1 {
+        max-width: 100%;
+        font-size: clamp(50px, 16vw, 74px);
+        line-height: .96;
+        letter-spacing: -.052em;
+      }
+
+      .faq-hero p {
+        margin-top: 28px;
+        font-size: 19px;
+        line-height: 1.52;
+      }
+
+      .faq-item summary {
+        min-height: 82px;
+        padding: 21px 0;
+        gap: 18px;
+      }
+
+      .faq-question {
+        font-size: 19px;
+        line-height: 1.3;
+      }
+
+      .faq-plus {
+        width: 32px;
+        height: 32px;
+        flex-basis: 32px;
+      }
+
+      .faq-answer {
+        padding: 0 42px 30px 0;
+        font-size: 16px;
+        line-height: 1.68;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .faq-plus,
+      .faq-plus::before,
+      .faq-plus::after { transition: none; }
+    }
+  </style>
+  <link rel="stylesheet" href="shared.css" />
+  <script src="components.js" defer></script>
+</head>
+<body>
+  <main class="page">
+    <div id="site-nav" aria-label="Site navigation"></div>
+
+    <section class="faq-shell" aria-labelledby="faq-title">
+      <header class="faq-hero">
+        <h1 id="faq-title">Frequently<br>Asked Questions</h1>
+        <p>Find answers about collections, AIOmetadata, Bingecat, AIOstreams, and more.</p>
+      </header>
+
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>
+            <span class="faq-question">What is The Kollection?</span>
+            <span class="faq-plus" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-answer">
+            <p>The Kollection is a curated Nuvio collection setup built around organized catalogs and custom artwork. The current collection includes hundreds of catalogs covering Discover rows, streaming platforms, genres, studios, franchises, actors, directors, decades, awards and festivals, holidays, anime, and more.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>
+            <span class="faq-question">What is the easiest way to set up The Kollection?</span>
+            <span class="faq-plus" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-answer">
+            <p>Use the <a href="https://kollection.tv/set-up-collection">Set Up Collection</a> page. It walks you through connecting Nuvio, preparing AIOMetadata, optionally adding Bingecat, reviewing the setup, and installing the finished configuration.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>
+            <span class="faq-question">What does AIOMetadata do for The Kollection?</span>
+            <span class="faq-plus" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-answer">
+            <p>AIOMetadata supplies the regular catalog sources used throughout The Kollection. The setup process creates or prepares the AIOMetadata configuration needed by the collection and connects those catalog sources to your Nuvio profile.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>
+            <span class="faq-question">Which API keys do I need for AIOMetadata?</span>
+            <span class="faq-plus" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-answer">
+            <p>In the current Set Up Collection flow, an <strong>MDBList API key is required</strong>. A TMDB API key is optional and can improve metadata resolution. If you import your own custom AIOMetadata configuration, any additional credentials depend on the options you chose in that configuration.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>
+            <span class="faq-question">Why can setup create more than one AIOMetadata configuration?</span>
+            <span class="faq-plus" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-answer">
+            <p>The Kollection can reference more catalogs than a single AIOMetadata host allows in one configuration. When needed, Set Up Collection automatically splits the required catalogs across multiple AIOMetadata configurations while keeping the collection connected to the correct sources.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>
+            <span class="faq-question">Is Bingecat required?</span>
+            <span class="faq-plus" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-answer">
+            <p>No. Bingecat is optional. The rest of The Kollection can be used without it. Bingecat is specifically used for personalized recommendation catalogs in the <strong>For You</strong> area, such as recommended movies and recommended series.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>
+            <span class="faq-question">Why does Bingecat need my own manifest URL?</span>
+            <span class="faq-plus" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-answer">
+            <p>Each Bingecat installation can have its own addon ID and catalog IDs. Set Up Collection reads your personal Bingecat manifest and replaces the collection's recommendation placeholders with the IDs from your configuration, so your For You rows point to your recommendations instead of somebody else's setup.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>
+            <span class="faq-question">What happens if I skip Bingecat?</span>
+            <span class="faq-plus" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-answer">
+            <p>You can still install and use The Kollection. The Bingecat-powered recommendation rows will simply not be part of your personalized setup. Everything that uses the regular AIOMetadata catalog sources can remain available.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>
+            <span class="faq-question">What is AIOStreams?</span>
+            <span class="faq-plus" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-answer">
+            <p>AIOStreams is a separate streaming-source addon that can combine multiple source addons and services into one unified stream list. It can deduplicate, filter, sort, and format results according to your configuration. It handles playback sources; it is separate from the collection and metadata catalogs supplied by The Kollection and AIOMetadata.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>
+            <span class="faq-question">Do I need AIOStreams to use The Kollection?</span>
+            <span class="faq-plus" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-answer">
+            <p>No. AIOStreams is not required for the collection layout itself. You can add it separately if you want a unified way to manage the stream sources that appear when you choose a movie or series in Nuvio.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>
+            <span class="faq-question">Can I use AIOStreams with Nuvio?</span>
+            <span class="faq-plus" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-answer">
+            <p>Yes. AIOStreams documents Nuvio as a compatible client. After configuring AIOStreams, you can use its generated manifest URL with a compatible client such as Nuvio. AIOStreams remains its own addon, so changing your stream setup does not require rebuilding The Kollection.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>
+            <span class="faq-question">Will Set Up Collection remove my existing Nuvio collections?</span>
+            <span class="faq-plus" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-answer">
+            <p>The setup workflow is designed to preserve existing unrelated collections while it prepares and merges The Kollection into your Nuvio setup. Review the final step before installation so you can confirm what will be added.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>
+            <span class="faq-question">Why are some catalogs or recommendation rows missing?</span>
+            <span class="faq-plus" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-answer">
+            <p>Start by checking the source that powers the missing row. Regular collection catalogs depend on the AIOMetadata configuration being installed and available to the same Nuvio profile. Personalized For You rows depend on the Bingecat manifest you supplied. AIOStreams affects stream results after you open a title, not whether The Kollection catalog rows appear.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>
+            <span class="faq-question">Can I change my setup later?</span>
+            <span class="faq-plus" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-answer">
+            <p>Yes. AIOMetadata, Bingecat, and AIOStreams are separate configurations, so you can adjust them as your setup changes. For AIOStreams, most configuration changes can be saved without changing the installation URL; changes that alter the addon's manifest may require reinstalling or refreshing the addon in your client.</p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary>
+            <span class="faq-question">Where can I get help or report a problem?</span>
+            <span class="faq-plus" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-answer">
+            <p>You can use The Kollection's <a href="https://github.com/Kaoxt/The-Kollection/discussions" target="_blank" rel="noopener">GitHub Discussions</a> for questions and <a href="https://github.com/Kaoxt/The-Kollection/issues?reload=1" target="_blank" rel="noopener">GitHub Issues</a> for bugs. The site footer also links to the Nuvio Discord and Reddit community.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <div id="site-footer"></div>
+  </main>
+
+  <script>
+    (() => {
+      const items = [...document.querySelectorAll('.faq-item')];
+      items.forEach((item) => {
+        item.addEventListener('toggle', () => {
+          if (!item.open) return;
+          items.forEach((other) => {
+            if (other !== item) other.open = false;
+          });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
