@@ -3,10 +3,10 @@ window.KOLLECTION_CONFIG = {
   nuvioApiBase: 'https://api.nuvio.tv',
   nuvioPublishableKey: 'sb_publishable_1Clq8rlTVACkdcZuqr6_AD__xUUC_EN',
 
-  // Runtime files hosted in your own Kaoxt/The-Kollection GitHub repository.
-  kaoxtDatabaseUrl: 'https://raw.githubusercontent.com/Kaoxt/The-Kollection/main/runtime/database.kaoxt.js',
-  kaoxtAioCatalogsUrl: 'https://raw.githubusercontent.com/Kaoxt/The-Kollection/main/runtime/kaoxt-aio-catalogs.json',
-  kaoxtAioBaseConfigUrl: 'https://raw.githubusercontent.com/Kaoxt/The-Kollection/main/runtime/kaoxt-aio-base-config.json',
+  // Runtime files are served directly from the Kaoxt/site repository.
+  kaoxtDatabaseUrl: '/runtime/database.kaoxt.js',
+  kaoxtAioCatalogsUrl: '/runtime/kaoxt-aio-catalogs.json',
+  kaoxtAioBaseConfigUrl: '/runtime/kaoxt-aio-base-config.json',
 
   // Local AIOMetadata template retained as a reference/fallback.
   aiometadataTemplateUrl: './set-up-collection/templates/AIOmetadata.json',
