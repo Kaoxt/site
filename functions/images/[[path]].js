@@ -1,10 +1,6 @@
-const RAW_BASE =
-  "https://raw.githubusercontent.com/Kaoxt/The-Kollection/refs/heads/main";
-
 export async function onRequest(context) {
-  const { request } = context;
+  const { request, env } = context;
 
-  // This function only needs to serve images.
   if (request.method !== "GET" && request.method !== "HEAD") {
     return new Response("Method Not Allowed", {
       status: 405,
@@ -12,45 +8,109 @@ export async function onRequest(context) {
     });
   }
 
+  if (!env.IMAGES) {
+    return new Response("R2 binding IMAGES is not configured", {
+      status: 500,
+      headers: { "Cache-Control": "no-store" },
+    });
+  }
+
   const url = new URL(request.url);
 
-  // Preserve the exact /images/... path from kollection.tv.
-  // Also preserve a query string so ?v=2 can be used as a cache-buster.
-  const upstreamUrl = `${RAW_BASE}${url.pathname}${url.search}`;
+  // R2 keys mirror the GitHub repository path:
+  // /images/Discover/Popular/backdrop.webp
+  // -> images/Discover/Popular/backdrop.webp
+  let key;
+  try {
+    key = decodeURIComponent(url.pathname.replace(/^\/+/, ""));
+  } catch {
+    return new Response("Bad image path", {
+      status: 400,
+      headers: { "Cache-Control": "no-store" },
+    });
+  }
 
-  const upstream = await fetch(upstreamUrl, {
-    method: request.method,
-    redirect: "follow",
+  if (!key.startsWith("images/") || key.includes("..")) {
+    return new Response("Bad image path", {
+      status: 400,
+      headers: { "Cache-Control": "no-store" },
+    });
+  }
 
-    // Cloudflare edge-cache settings.
-    cf: {
-      cacheEverything: true,
-      cacheTtlByStatus: {
-        "200-299": 3600, // 1 hour at Cloudflare's edge
-        "404": 60,      // only cache missing files for 1 minute
-        "500-599": 0,   // don't cache upstream server errors
+  // Cache GET responses at the Cloudflare edge.
+  // The full URL (including ?v=...) is the cache key, which means query
+  // parameters can be used to immediately bypass an older cached copy.
+  if (request.method === "GET") {
+    const cache = caches.default;
+    const cacheKey = new Request(url.toString(), { method: "GET" });
+
+    const cached = await cache.match(cacheKey);
+    if (cached) {
+      const headers = new Headers(cached.headers);
+      headers.set("X-Kollection-Cache", "HIT");
+      return new Response(cached.body, {
+        status: cached.status,
+        statusText: cached.statusText,
+        headers,
+      });
+    }
+
+    const object = await env.IMAGES.get(key);
+
+    if (object === null) {
+      return new Response("Image not found", {
+        status: 404,
+        headers: {
+          "Cache-Control": "public, max-age=30, s-maxage=60",
+          "Access-Control-Allow-Origin": "*",
+          "X-Kollection-Cache": "MISS",
+        },
+      });
+    }
+
+    const headers = new Headers();
+    object.writeHttpMetadata(headers);
+    headers.set("etag", object.httpEtag);
+    headers.set("Access-Control-Allow-Origin", "*");
+    headers.set(
+      "Cache-Control",
+      "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400"
+    );
+    headers.set("X-Kollection-Cache", "MISS");
+
+    const response = new Response(object.body, {
+      status: 200,
+      headers,
+    });
+
+    context.waitUntil(cache.put(cacheKey, response.clone()));
+    return response;
+  }
+
+  // HEAD requests: return metadata without downloading the object body.
+  const object = await env.IMAGES.head(key);
+
+  if (object === null) {
+    return new Response(null, {
+      status: 404,
+      headers: {
+        "Cache-Control": "public, max-age=30, s-maxage=60",
+        "Access-Control-Allow-Origin": "*",
       },
-    },
-  });
+    });
+  }
 
-  const headers = new Headers(upstream.headers);
-
-  // Nuvio and browser clients may load these from other origins.
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set("etag", object.httpEtag);
   headers.set("Access-Control-Allow-Origin", "*");
-
-  // Browser/device cache: 5 minutes.
-  // Cloudflare's edge TTL above remains 1 hour.
   headers.set(
     "Cache-Control",
-    "public, max-age=300, stale-while-revalidate=86400"
+    "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400"
   );
 
-  // Helpful when testing the route.
-  headers.set("X-Kollection-Image-Proxy", "github-edge-cache");
-
-  return new Response(request.method === "HEAD" ? null : upstream.body, {
-    status: upstream.status,
-    statusText: upstream.statusText,
+  return new Response(null, {
+    status: 200,
     headers,
   });
 }
