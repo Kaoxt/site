@@ -1404,3 +1404,49 @@ body .hero .actions .btn-icon {
   }
 }
 
+/* ==========================================================================
+   HOME HERO BUTTONS — NUVIO-SIZE POLISH
+   Slightly smaller, tighter proportions to match the Nuvio homepage.
+   ========================================================================== */
+body .hero .actions {
+  gap: 12px !important;
+}
+
+body .hero .actions .btn {
+  min-height: 50px !important;
+  height: 50px !important;
+  padding: 0 22px !important;
+  border-radius: 999px !important;
+  gap: 9px !important;
+  font-size: 15px !important;
+  font-weight: 650 !important;
+  line-height: 1 !important;
+}
+
+body .hero .actions .btn-icon {
+  width: 18px !important;
+  height: 18px !important;
+  flex: 0 0 18px !important;
+}
+
+/* Keep the primary button crisp like Nuvio. */
+body .hero .actions .btn-primary,
+body .hero .actions .btn.primary {
+  box-shadow: 0 10px 28px rgba(255,255,255,.045) !important;
+}
+
+/* Secondary buttons stay subtle and compact. */
+body .hero .actions .btn-secondary {
+  background: rgba(255,255,255,.045) !important;
+  border-color: rgba(255,255,255,.13) !important;
+}
+
+@media (max-width: 700px) {
+  body .hero .actions .btn {
+    min-height: 50px !important;
+    height: 50px !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+}
+
