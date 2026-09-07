@@ -11,21 +11,27 @@
 
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/admin/admin.css?v=20260906-1" />
-  <link rel="stylesheet" href="/admin/admin-pages.css?v=20260907-2" />
-  <link rel="stylesheet" href="/admin/image-library.css?v=20260907-2" />
+  <link rel="stylesheet" href="/admin/admin-pages.css?v=20260907-3" />
+  <link rel="stylesheet" href="/admin/image-library.css?v=20260907-3" />
 
   <script src="/components.js?v=20260906-1" defer></script>
   <script src="/set-up-collection/config.js?v=20260906-1"></script>
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
-  <script src="/admin/image-library.js?v=20260907-2" defer></script>
+  <script src="/admin/image-library.js?v=20260907-3" defer></script>
 </head>
 <body>
   <main class="page admin-page image-library-page">
     <div id="site-nav" aria-label="Site navigation"></div>
 
+    <nav class="admin-breadcrumbs" aria-label="Admin breadcrumb">
+      <a href="/admin.html">Admin</a>
+      <span class="breadcrumb-separator" aria-hidden="true">›</span>
+      <span aria-current="page">Image Library</span>
+    </nav>
+
     <header class="admin-news-intro" aria-labelledby="image-library-title">
-      <div class="eyebrow"><span class="eyebrow-dot"></span>Private R2 Artwork Manager</div>
-      <h1 id="image-library-title">Kollection Image Storage Manager</h1>
+      <div class="eyebrow"><span class="eyebrow-dot"></span>Private R2 artwork browser</div>
+      <h1 id="image-library-title">Kollection Image Library</h1>
       <p>Upload, browse and copy permanent Kollection.tv artwork URLs for Nuvio.</p>
     </header>
 
@@ -98,10 +104,18 @@
           <form id="uploadForm" class="image-upload-form">
             <label class="upload-field">
               <span>Category</span>
-              <input id="uploadCategory" name="category" list="categorySuggestions"
-                     placeholder="Actors" autocomplete="off" required />
-              <datalist id="categorySuggestions"></datalist>
-              <small>Top-level folder under <code>images/</code>, e.g. Actors or Streaming Platforms.</small>
+              <select id="uploadCategorySelect" required>
+                <option value="">Choose Category</option>
+                <option value="__new__">+ Create New Category…</option>
+              </select>
+              <small>Choose an existing top-level image category or create a new one.</small>
+            </label>
+
+            <label class="upload-field new-category-field" id="newCategoryField" hidden>
+              <span>New Category Name</span>
+              <input id="uploadNewCategory" type="text"
+                     placeholder="e.g. International Cinema" autocomplete="off" />
+              <small>The category is created automatically when you upload the first artwork into it.</small>
             </label>
 
             <label class="upload-field">
