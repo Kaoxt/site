@@ -28,6 +28,24 @@
     libraryMessage: $('libraryMessage'),
     librarySummary: $('librarySummary'),
     refreshButton: $('refreshButton'),
+
+    uploadForm: $('uploadForm'),
+    uploadMessage: $('uploadMessage'),
+    uploadCategory: $('uploadCategory'),
+    uploadFolder: $('uploadFolder'),
+    categorySuggestions: $('categorySuggestions'),
+    coverFile: $('coverFile'),
+    backdropFile: $('backdropFile'),
+    logoFile: $('logoFile'),
+    coverFileName: $('coverFileName'),
+    backdropFileName: $('backdropFileName'),
+    logoFileName: $('logoFileName'),
+    uploadPathPreview: $('uploadPathPreview'),
+    uploadButton: $('uploadButton'),
+    uploadResult: $('uploadResult'),
+
+    recentGrid: $('recentGrid'),
+
     searchInput: $('searchInput'),
     categoryFilter: $('categoryFilter'),
     typeFilter: $('typeFilter'),
@@ -97,9 +115,7 @@
       el.libraryShell.hidden = false;
       clearMessage(el.authMessage);
 
-      if (!state.images.length && !state.loading) {
-        loadLibrary();
-      }
+      if (!state.images.length && !state.loading) loadLibrary();
     } else {
       el.authState.textContent = 'Not authorized';
       el.authState.className = 'auth-state bad';
@@ -180,6 +196,7 @@
     state.visible = 60;
     clearMessage(el.libraryMessage);
     el.imageGrid.innerHTML = '<div class="library-loading">Loading artwork from R2…</div>';
+    el.recentGrid.innerHTML = '<div class="recent-empty">Loading recent uploads…</div>';
     el.refreshButton.disabled = true;
 
     try {
@@ -192,9 +209,12 @@
         cursor = page.cursor || '';
       } while (cursor);
 
-      state.images = all.sort((a, b) => a.path.localeCompare(b.path, undefined, { sensitivity: 'base' }));
+      state.images = all.sort((a, b) =>
+        a.path.localeCompare(b.path, undefined, { sensitivity: 'base' })
+      );
 
       populateCategories();
+      renderRecent();
       applyFilters();
 
       const folders = new Set(state.images.map((item) => item.folder).filter(Boolean));
@@ -204,6 +224,7 @@
       state.images = [];
       state.filtered = [];
       el.imageGrid.innerHTML = '';
+      el.recentGrid.innerHTML = '';
       setMessage(el.libraryMessage, error.message || 'Could not load the image library.');
       el.librarySummary.textContent = 'Image library unavailable.';
     } finally {
@@ -224,7 +245,59 @@
         `<option value="${esc(category)}">${esc(category)}</option>`
       ).join('');
 
+    el.categorySuggestions.innerHTML =
+      categories.map((category) => `<option value="${esc(category)}"></option>`).join('');
+
     if (categories.includes(current)) el.categoryFilter.value = current;
+  }
+
+  function labelFor(filename) {
+    if (filename === 'cover.webp') return 'Cover';
+    if (filename === 'backdrop.webp') return 'Backdrop';
+    if (filename === 'logo.webp') return 'Logo';
+    return filename.replace(/\.[^.]+$/, '');
+  }
+
+  function prettyDate(value) {
+    if (!value) return 'Unknown upload time';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return 'Unknown upload time';
+
+    return new Intl.DateTimeFormat(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(d);
+  }
+
+  function renderRecent() {
+    const recent = [...state.images]
+      .filter((item) => item.uploaded)
+      .sort((a, b) => new Date(b.uploaded) - new Date(a.uploaded))
+      .slice(0, 12);
+
+    if (!recent.length) {
+      el.recentGrid.innerHTML = '<div class="recent-empty">No recent R2 uploads found yet.</div>';
+      return;
+    }
+
+    el.recentGrid.innerHTML = recent.map((item) => `
+      <article class="recent-card">
+        <a class="recent-thumb" href="${esc(item.url)}" target="_blank" rel="noopener">
+          <img src="${esc(item.url)}" alt="${esc(item.folder || item.filename)}" loading="lazy" decoding="async" />
+        </a>
+        <div class="recent-copy">
+          <strong>${esc(item.folder || item.filename)} · ${esc(labelFor(item.filename))}</strong>
+          <small>${esc(item.path)}<br>${esc(prettyDate(item.uploaded))}</small>
+          <div class="recent-actions">
+            <button class="copy-url-button" type="button" data-url="${esc(item.url)}">Copy URL</button>
+          </div>
+        </div>
+      </article>
+    `).join('');
+
+    bindCopyButtons(el.recentGrid);
   }
 
   function applyFilters() {
@@ -237,7 +310,8 @@
       if (type && item.filename !== type) return false;
 
       if (query) {
-        const haystack = `${item.path} ${item.folder} ${item.category} ${item.filename}`.toLowerCase();
+        const haystack =
+          `${item.path} ${item.folder} ${item.category} ${item.filename}`.toLowerCase();
         if (!haystack.includes(query)) return false;
       }
 
@@ -246,13 +320,6 @@
 
     state.visible = Math.min(Math.max(state.visible, 60), state.filtered.length || 60);
     renderGrid();
-  }
-
-  function labelFor(filename) {
-    if (filename === 'cover.webp') return 'Cover';
-    if (filename === 'backdrop.webp') return 'Backdrop';
-    if (filename === 'logo.webp') return 'Logo';
-    return filename.replace(/\.[^.]+$/, '');
   }
 
   function cardHtml(item) {
@@ -278,6 +345,25 @@
     `;
   }
 
+  function bindCopyButtons(container) {
+    container.querySelectorAll('.copy-url-button').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const original = button.textContent;
+        try {
+          await copyText(button.dataset.url || '');
+          button.textContent = 'Copied';
+          button.classList.add('copied');
+          setTimeout(() => {
+            button.textContent = original;
+            button.classList.remove('copied');
+          }, 1300);
+        } catch {
+          setMessage(el.libraryMessage, 'Could not copy that URL. Open the image and copy the address manually.');
+        }
+      });
+    });
+  }
+
   function renderGrid() {
     const total = state.filtered.length;
     const shown = state.filtered.slice(0, state.visible);
@@ -296,23 +382,142 @@
     el.loadMoreButton.textContent =
       `Load more (${Math.min(60, total - shown.length).toLocaleString()})`;
 
-    el.imageGrid.querySelectorAll('.copy-url-button').forEach((button) => {
-      button.addEventListener('click', async () => {
-        const original = button.textContent;
-        try {
-          await copyText(button.dataset.url || '');
-          button.textContent = 'Copied';
-          button.classList.add('copied');
-          setTimeout(() => {
-            button.textContent = original;
-            button.classList.remove('copied');
-          }, 1300);
-        } catch {
-          setMessage(el.libraryMessage, 'Could not copy that URL. Open the image and copy the address manually.');
-        }
-      });
-    });
+    bindCopyButtons(el.imageGrid);
   }
+
+  function updateFileLabel(input, label) {
+    const file = input.files?.[0];
+    label.textContent = file ? file.name : 'Choose WebP';
+    input.closest('.artwork-file-box')?.classList.toggle('has-file', Boolean(file));
+  }
+
+  function cleanDisplayPart(value) {
+    return String(value || '').trim().replace(/^\/+|\/+$/g, '');
+  }
+
+  function updateUploadPreview() {
+    const category = cleanDisplayPart(el.uploadCategory.value) || 'Category';
+    const folder = cleanDisplayPart(el.uploadFolder.value) || 'Folder';
+
+    const names = [];
+    if (el.coverFile.files?.[0]) names.push('cover.webp');
+    if (el.backdropFile.files?.[0]) names.push('backdrop.webp');
+    if (el.logoFile.files?.[0]) names.push('logo.webp');
+
+    el.uploadPathPreview.textContent =
+      `images/${category}/${folder}/${names.length ? names.join(', ') : '…'}`;
+  }
+
+  [
+    [el.coverFile, el.coverFileName],
+    [el.backdropFile, el.backdropFileName],
+    [el.logoFile, el.logoFileName],
+  ].forEach(([input, label]) => {
+    input.addEventListener('change', () => {
+      updateFileLabel(input, label);
+      updateUploadPreview();
+    });
+  });
+
+  el.uploadCategory.addEventListener('input', updateUploadPreview);
+  el.uploadFolder.addEventListener('input', updateUploadPreview);
+
+  el.uploadForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearMessage(el.uploadMessage);
+    el.uploadResult.hidden = true;
+    el.uploadResult.innerHTML = '';
+
+    const category = cleanDisplayPart(el.uploadCategory.value);
+    const folder = cleanDisplayPart(el.uploadFolder.value);
+    const selected = [
+      ['cover.webp', el.coverFile.files?.[0]],
+      ['backdrop.webp', el.backdropFile.files?.[0]],
+      ['logo.webp', el.logoFile.files?.[0]],
+    ].filter(([, file]) => Boolean(file));
+
+    if (!category) return setMessage(el.uploadMessage, 'Enter an image category.');
+    if (!folder) return setMessage(el.uploadMessage, 'Enter an artwork folder.');
+    if (!selected.length) return setMessage(el.uploadMessage, 'Choose at least one WebP image.');
+
+    for (const [, file] of selected) {
+      if (!/\.webp$/i.test(file.name) && file.type !== 'image/webp') {
+        return setMessage(el.uploadMessage, `${file.name} is not a WebP image.`);
+      }
+      if (file.size > 12_000_000) {
+        return setMessage(el.uploadMessage, `${file.name} is larger than the 12 MB upload limit.`);
+      }
+    }
+
+    const replacementPaths = selected
+      .map(([filename]) => `images/${category}/${folder}/${filename}`)
+      .filter((key) => state.images.some((item) => item.key === key));
+
+    if (
+      replacementPaths.length &&
+      !window.confirm(
+        `This will replace ${replacementPaths.length} existing image${replacementPaths.length === 1 ? '' : 's'}:\n\n` +
+        replacementPaths.join('\n') +
+        '\n\nContinue?'
+      )
+    ) {
+      return;
+    }
+
+    const form = new FormData();
+    form.set('category', category);
+    form.set('folder', folder);
+    if (el.coverFile.files?.[0]) form.set('cover', el.coverFile.files[0]);
+    if (el.backdropFile.files?.[0]) form.set('backdrop', el.backdropFile.files[0]);
+    if (el.logoFile.files?.[0]) form.set('logo', el.logoFile.files[0]);
+
+    const oldText = el.uploadButton.textContent;
+    el.uploadButton.disabled = true;
+    el.uploadButton.textContent = 'Uploading…';
+
+    try {
+      const res = await fetch('/api/admin/upload-image', {
+        method: 'POST',
+        credentials: 'same-origin',
+        body: form,
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(data?.error || `Upload failed (${res.status}).`);
+      }
+
+      const links = (data?.files || []).map((item) =>
+        `<div><a href="${esc(item.url)}" target="_blank" rel="noopener">${esc(item.url)}</a></div>`
+      ).join('');
+
+      el.uploadResult.innerHTML =
+        `<strong>${esc(data?.message || 'Artwork uploaded.')}</strong>` +
+        (data?.warning ? `<div>${esc(data.warning)}</div>` : '') +
+        links +
+        (data?.githubCommitUrl
+          ? `<div><a href="${esc(data.githubCommitUrl)}" target="_blank" rel="noopener">View GitHub commit</a></div>`
+          : '');
+
+      el.uploadResult.hidden = false;
+
+      [el.coverFile, el.backdropFile, el.logoFile].forEach((input) => { input.value = ''; });
+      [
+        [el.coverFile, el.coverFileName],
+        [el.backdropFile, el.backdropFileName],
+        [el.logoFile, el.logoFileName],
+      ].forEach(([input, label]) => updateFileLabel(input, label));
+
+      updateUploadPreview();
+      await loadLibrary();
+    } catch (error) {
+      setMessage(el.uploadMessage, error.message || 'Could not upload the artwork.');
+    } finally {
+      el.uploadButton.disabled = false;
+      el.uploadButton.textContent = oldText;
+    }
+  });
 
   let searchTimer = null;
   el.searchInput.addEventListener('input', () => {
@@ -354,5 +559,6 @@
     }
   });
 
+  updateUploadPreview();
   loadSession();
 })();

@@ -1,0 +1,200 @@
+/* Shared geometry for private Kollection admin pages.
+   Mirrors the current News page header/nav layout without changing public pages. */
+
+.admin-page.page {
+  width: min(calc(100% - 32px), 1180px) !important;
+  max-width: 1180px !important;
+  margin: 0 auto !important;
+  padding: 20px 0 72px !important;
+}
+
+/* Let the navigation span the wider News-style page width on landscape/desktop. */
+@media (min-width: 900px) {
+  .admin-page.page {
+    width: min(calc(100% - 20px), 1760px) !important;
+    max-width: 1760px !important;
+  }
+}
+
+/* Same final compact dock dimensions used by News. */
+.admin-page .nav {
+  height: 62px !important;
+  min-height: 62px !important;
+  max-height: 62px !important;
+  padding: 5px 14px 5px 18px !important;
+  gap: 12px !important;
+  align-items: center !important;
+}
+
+.admin-page .nav .brand {
+  height: 100% !important;
+  min-width: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  overflow: hidden !important;
+  margin-right: auto !important;
+}
+
+.admin-page .nav .brand img {
+  display: block !important;
+  height: 22px !important;
+  max-height: 22px !important;
+  width: auto !important;
+  max-width: min(68vw, 520px) !important;
+  object-fit: contain !important;
+  object-position: left center !important;
+  background: transparent !important;
+}
+
+.admin-page .menu-wrap {
+  width: 40px !important;
+  height: 40px !important;
+  flex: 0 0 40px !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+.admin-page .menu {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+  display: grid !important;
+  place-items: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* News-style page intro */
+.admin-news-intro {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 58px 0 46px !important;
+  text-align: left !important;
+}
+
+.admin-news-intro .eyebrow {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 7px 11px !important;
+  margin: 0 0 24px !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.035) !important;
+  color: #d6d5db !important;
+  font-size: 13px !important;
+  line-height: normal !important;
+  font-weight: 650 !important;
+  letter-spacing: .015em !important;
+  text-transform: none !important;
+  box-shadow: none !important;
+}
+
+.admin-news-intro .eyebrow-dot {
+  width: 7px !important;
+  height: 7px !important;
+  flex: 0 0 7px !important;
+  border-radius: 99px !important;
+  background: linear-gradient(135deg, #56aaff, #9d4edd) !important;
+  box-shadow: 0 0 18px rgba(86,170,255,.45) !important;
+}
+
+.admin-news-intro h1 {
+  margin: 0 !important;
+  max-width: 1040px !important;
+  font-family: "Inter","Google Sans","Product Sans",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif !important;
+  font-size: clamp(48px, 4.65vw, 76px) !important;
+  line-height: 1.02 !important;
+  letter-spacing: -.045em !important;
+  font-weight: 600 !important;
+  text-align: left !important;
+}
+
+.admin-news-intro > p {
+  width: min(980px, 100%) !important;
+  max-width: 980px !important;
+  margin: 24px 0 0 !important;
+  color: var(--muted, #9b9b9f) !important;
+  font-family: "Inter","Google Sans","Product Sans",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif !important;
+  font-size: clamp(18px, 1.35vw, 22px) !important;
+  line-height: 1.55 !important;
+  letter-spacing: -.015em !important;
+  font-weight: 400 !important;
+  text-align: left !important;
+}
+
+body.light .admin-news-intro .eyebrow {
+  color: #484b52 !important;
+  border-color: rgba(0,0,0,.10) !important;
+  background: rgba(255,255,255,.72) !important;
+}
+
+/* Keep admin content at the same left edge as the intro, but constrain readable width. */
+.admin-content-width {
+  width: min(100%, 1180px) !important;
+  max-width: 1180px !important;
+  margin: 0 !important;
+}
+
+/* Existing admin.css centers these. For the News-style admin pages, keep them left-aligned. */
+.admin-page .auth-shell {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+@media (max-width: 700px) {
+  .admin-page.page {
+    width: min(calc(100% - 20px), 100%) !important;
+    padding-top: 10px !important;
+  }
+
+  .admin-page .nav {
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+    padding: 4px 10px 4px 14px !important;
+    gap: 9px !important;
+  }
+
+  .admin-page .nav .brand img {
+    height: 18px !important;
+    max-height: 18px !important;
+    max-width: 72vw !important;
+  }
+
+  .admin-page .menu-wrap {
+    width: 36px !important;
+    height: 36px !important;
+    flex-basis: 36px !important;
+  }
+
+  .admin-page .menu {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+  }
+
+  .admin-news-intro {
+    padding: 54px 2px 34px !important;
+  }
+
+  .admin-news-intro .eyebrow {
+    margin-bottom: 20px !important;
+    font-size: 12px !important;
+  }
+
+  .admin-news-intro h1 {
+    font-size: clamp(40px, 11vw, 56px) !important;
+    line-height: 1.04 !important;
+  }
+
+  .admin-news-intro > p {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 20px !important;
+    font-size: 17px !important;
+    line-height: 1.52 !important;
+  }
+}
