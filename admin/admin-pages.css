@@ -198,3 +198,104 @@ body.light .admin-news-intro .eyebrow {
     line-height: 1.52 !important;
   }
 }
+
+
+/* ---------- Shared Admin Breadcrumbs ---------- */
+.admin-breadcrumbs {
+  width: 100%;
+  margin: 26px 0 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #7f8490;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+
+.admin-breadcrumbs a,
+.admin-breadcrumbs span[aria-current="page"] {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.admin-breadcrumbs a {
+  border: 1px solid rgba(255,255,255,.09);
+  background: rgba(255,255,255,.025);
+  color: #a8abb3;
+  transition: color .18s ease, background .18s ease, border-color .18s ease;
+}
+
+.admin-breadcrumbs a:hover {
+  color: #fff;
+  background: rgba(255,255,255,.055);
+  border-color: rgba(255,255,255,.15);
+}
+
+.admin-breadcrumbs .breadcrumb-separator {
+  color: #50545e;
+  font-size: 13px;
+}
+
+.admin-breadcrumbs span[aria-current="page"] {
+  padding-inline: 4px;
+  color: #d8d9de;
+}
+
+.admin-breadcrumbs + .admin-news-intro {
+  padding-top: 34px !important;
+}
+
+/* The updater uses the same left edge as the Image Library / News layout. */
+.admin-page .admin-shell,
+.admin-page .what-updates {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.admin-page .admin-shell {
+  width: min(1040px, 100%) !important;
+}
+
+.admin-page .what-updates {
+  width: min(1040px, 100%) !important;
+}
+
+body.light .admin-breadcrumbs a {
+  color: #555861;
+  border-color: rgba(0,0,0,.09);
+  background: rgba(255,255,255,.58);
+}
+
+body.light .admin-breadcrumbs a:hover {
+  color: #111217;
+  background: #fff;
+  border-color: rgba(0,0,0,.14);
+}
+
+body.light .admin-breadcrumbs span[aria-current="page"] {
+  color: #34363d;
+}
+
+@media (max-width: 700px) {
+  .admin-breadcrumbs {
+    margin-top: 18px;
+    gap: 6px;
+    font-size: 11px;
+  }
+
+  .admin-breadcrumbs a,
+  .admin-breadcrumbs span[aria-current="page"] {
+    min-height: 31px;
+  }
+
+  .admin-breadcrumbs + .admin-news-intro {
+    padding-top: 26px !important;
+  }
+}

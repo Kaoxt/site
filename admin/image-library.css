@@ -91,6 +91,7 @@
 }
 
 .upload-field input,
+.upload-field select,
 .library-search input,
 .library-filter select {
   min-height: 46px;
@@ -105,6 +106,7 @@
 }
 
 .upload-field input:focus,
+.upload-field select:focus,
 .library-search input:focus,
 .library-filter select:focus {
   border-color: rgba(255,255,255,.28);
@@ -419,15 +421,16 @@
   cursor: pointer;
 }
 
-/* Same light pill treatment as the News "Show more" button. */
+/* Indigo admin action treatment. */
 .copy-url-button {
-  border: 1px solid transparent;
-  background: #f2f2f4;
-  color: #151517;
+  border: 1px solid rgba(139,130,255,.30);
+  background: linear-gradient(135deg, #635bff 0%, #7251d6 100%);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
 }
 
 .copy-url-button:hover {
-  background: #fff;
+  background: linear-gradient(135deg, #7069ff 0%, #805fe0 100%);
   transform: translateY(-1px);
 }
 
@@ -479,6 +482,7 @@ body.light .library-controls {
 }
 
 body.light .upload-field input,
+body.light .upload-field select,
 body.light .library-search input,
 body.light .library-filter select,
 body.light .artwork-file-box {
@@ -565,4 +569,57 @@ body.light .text-button {
   .recent-grid {
     grid-template-columns: 1fr;
   }
+}
+
+
+.new-category-field[hidden] {
+  display: none !important;
+}
+
+.upload-field select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #9095a1 50%),
+    linear-gradient(135deg, #9095a1 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 19px,
+    calc(100% - 13px) 19px;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 38px;
+}
+
+.upload-field select option {
+  background: #101218;
+  color: #fff;
+}
+
+body.light .upload-field select option {
+  background: #fff;
+  color: #202126;
+}
+
+
+/* Keep the Image Library's main actions indigo instead of bright white. */
+.image-library-page .button-primary {
+  border: 1px solid rgba(139,130,255,.30) !important;
+  background: linear-gradient(135deg, #635bff 0%, #7251d6 100%) !important;
+  color: #fff !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12) !important;
+}
+
+.image-library-page .button-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7069ff 0%, #805fe0 100%) !important;
+  transform: translateY(-1px);
+}
+
+.image-library-page .button-primary:disabled {
+  opacity: .42;
+}
+
+/* Slightly softer indigo in light mode, but never the bright white pill. */
+body.light .image-library-page .button-primary,
+body.light .image-library-page .copy-url-button {
+  color: #fff !important;
 }

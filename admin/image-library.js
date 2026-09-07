@@ -31,9 +31,10 @@
 
     uploadForm: $('uploadForm'),
     uploadMessage: $('uploadMessage'),
-    uploadCategory: $('uploadCategory'),
+    uploadCategorySelect: $('uploadCategorySelect'),
+    uploadNewCategory: $('uploadNewCategory'),
+    newCategoryField: $('newCategoryField'),
     uploadFolder: $('uploadFolder'),
-    categorySuggestions: $('categorySuggestions'),
     coverFile: $('coverFile'),
     backdropFile: $('backdropFile'),
     logoFile: $('logoFile'),
@@ -234,7 +235,9 @@
   }
 
   function populateCategories() {
-    const current = el.categoryFilter.value;
+    const currentFilter = el.categoryFilter.value;
+    const currentUpload = el.uploadCategorySelect.value;
+
     const categories = [...new Set(
       state.images.map((item) => item.category).filter(Boolean)
     )].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
@@ -245,10 +248,22 @@
         `<option value="${esc(category)}">${esc(category)}</option>`
       ).join('');
 
-    el.categorySuggestions.innerHTML =
-      categories.map((category) => `<option value="${esc(category)}"></option>`).join('');
+    el.uploadCategorySelect.innerHTML =
+      '<option value="">Choose Category</option>' +
+      categories.map((category) =>
+        `<option value="${esc(category)}">${esc(category)}</option>`
+      ).join('') +
+      '<option value="__new__">+ Create New Category…</option>';
 
-    if (categories.includes(current)) el.categoryFilter.value = current;
+    if (categories.includes(currentFilter)) el.categoryFilter.value = currentFilter;
+
+    if (currentUpload === '__new__') {
+      el.uploadCategorySelect.value = '__new__';
+    } else if (categories.includes(currentUpload)) {
+      el.uploadCategorySelect.value = currentUpload;
+    }
+
+    syncNewCategoryField();
   }
 
   function labelFor(filename) {
@@ -395,8 +410,25 @@
     return String(value || '').trim().replace(/^\/+|\/+$/g, '');
   }
 
+  function syncNewCategoryField() {
+    const creating = el.uploadCategorySelect.value === '__new__';
+    el.newCategoryField.hidden = !creating;
+    el.uploadNewCategory.required = creating;
+
+    if (!creating) {
+      el.uploadNewCategory.value = '';
+    }
+  }
+
+  function getUploadCategory() {
+    if (el.uploadCategorySelect.value === '__new__') {
+      return cleanDisplayPart(el.uploadNewCategory.value);
+    }
+    return cleanDisplayPart(el.uploadCategorySelect.value);
+  }
+
   function updateUploadPreview() {
-    const category = cleanDisplayPart(el.uploadCategory.value) || 'Category';
+    const category = getUploadCategory() || 'Category';
     const folder = cleanDisplayPart(el.uploadFolder.value) || 'Folder';
 
     const names = [];
@@ -419,7 +451,11 @@
     });
   });
 
-  el.uploadCategory.addEventListener('input', updateUploadPreview);
+  el.uploadCategorySelect.addEventListener('change', () => {
+    syncNewCategoryField();
+    updateUploadPreview();
+  });
+  el.uploadNewCategory.addEventListener('input', updateUploadPreview);
   el.uploadFolder.addEventListener('input', updateUploadPreview);
 
   el.uploadForm.addEventListener('submit', async (event) => {
@@ -428,7 +464,7 @@
     el.uploadResult.hidden = true;
     el.uploadResult.innerHTML = '';
 
-    const category = cleanDisplayPart(el.uploadCategory.value);
+    const category = getUploadCategory();
     const folder = cleanDisplayPart(el.uploadFolder.value);
     const selected = [
       ['cover.webp', el.coverFile.files?.[0]],
@@ -436,7 +472,14 @@
       ['logo.webp', el.logoFile.files?.[0]],
     ].filter(([, file]) => Boolean(file));
 
-    if (!category) return setMessage(el.uploadMessage, 'Enter an image category.');
+    if (!category) {
+      return setMessage(
+        el.uploadMessage,
+        el.uploadCategorySelect.value === '__new__'
+          ? 'Enter a name for the new image category.'
+          : 'Choose an image category or create a new one.'
+      );
+    }
     if (!folder) return setMessage(el.uploadMessage, 'Enter an artwork folder.');
     if (!selected.length) return setMessage(el.uploadMessage, 'Choose at least one WebP image.');
 
@@ -509,8 +552,14 @@
         [el.logoFile, el.logoFileName],
       ].forEach(([input, label]) => updateFileLabel(input, label));
 
-      updateUploadPreview();
+      const uploadedCategory = category;
       await loadLibrary();
+
+      if ([...el.uploadCategorySelect.options].some((option) => option.value === uploadedCategory)) {
+        el.uploadCategorySelect.value = uploadedCategory;
+      }
+      syncNewCategoryField();
+      updateUploadPreview();
     } catch (error) {
       setMessage(el.uploadMessage, error.message || 'Could not upload the artwork.');
     } finally {
@@ -559,6 +608,7 @@
     }
   });
 
+  syncNewCategoryField();
   updateUploadPreview();
   loadSession();
 })();
