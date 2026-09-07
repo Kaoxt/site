@@ -16,54 +16,48 @@
   }
 }
 
-/* Same final compact dock dimensions used by News. */
-.admin-page .nav {
-  height: 62px !important;
-  min-height: 62px !important;
-  max-height: 62px !important;
-  padding: 5px 14px 5px 18px !important;
-  gap: 12px !important;
-  align-items: center !important;
-}
 
-.admin-page .nav .brand {
-  height: 100% !important;
-  min-width: 0 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  overflow: hidden !important;
+/* ---------- Admin-Only Navbar Match / Viewport Safety ----------
+   The actual navbar sizing now comes from shared.css, exactly like public pages.
+   These rules only keep the dock safely inside the viewport on admin pages. */
+.admin-page #site-nav {
+  width: 100% !important;
+  max-width: calc(100vw - 40px) !important;
+  margin-left: auto !important;
   margin-right: auto !important;
+  box-sizing: border-box !important;
+  transform: none !important;
+  left: auto !important;
+  right: auto !important;
+  overflow: visible !important;
 }
 
-.admin-page .nav .brand img {
-  display: block !important;
-  height: 22px !important;
-  max-height: 22px !important;
-  width: auto !important;
-  max-width: min(68vw, 520px) !important;
-  object-fit: contain !important;
-  object-position: left center !important;
-  background: transparent !important;
-}
-
-.admin-page .menu-wrap {
-  width: 40px !important;
-  height: 40px !important;
-  flex: 0 0 40px !important;
-  display: grid !important;
-  place-items: center !important;
-}
-
-.admin-page .menu {
-  width: 38px !important;
-  height: 38px !important;
-  min-width: 38px !important;
-  min-height: 38px !important;
-  display: grid !important;
-  place-items: center !important;
+.admin-page #site-nav > .nav {
+  width: 100% !important;
+  max-width: 100% !important;
   margin: 0 !important;
-  padding: 0 !important;
+  box-sizing: border-box !important;
+  left: auto !important;
+  right: auto !important;
+  transform: none !important;
 }
+
+/* Prevent the dynamically loaded account/menu area from forcing the dock wider. */
+.admin-page #site-nav .brand {
+  min-width: 0 !important;
+}
+
+.admin-page #site-nav .desktop-nav,
+.admin-page #site-nav .nav-actions {
+  min-width: 0 !important;
+}
+
+@media (max-width: 700px) {
+  .admin-page #site-nav {
+    max-width: calc(100vw - 24px) !important;
+  }
+}
+
 
 /* News-style page intro */
 .admin-news-intro {
@@ -147,33 +141,6 @@ body.light .admin-news-intro .eyebrow {
   .admin-page.page {
     width: min(calc(100% - 20px), 100%) !important;
     padding-top: 10px !important;
-  }
-
-  .admin-page .nav {
-    height: 52px !important;
-    min-height: 52px !important;
-    max-height: 52px !important;
-    padding: 4px 10px 4px 14px !important;
-    gap: 9px !important;
-  }
-
-  .admin-page .nav .brand img {
-    height: 18px !important;
-    max-height: 18px !important;
-    max-width: 72vw !important;
-  }
-
-  .admin-page .menu-wrap {
-    width: 36px !important;
-    height: 36px !important;
-    flex-basis: 36px !important;
-  }
-
-  .admin-page .menu {
-    width: 34px !important;
-    height: 34px !important;
-    min-width: 34px !important;
-    min-height: 34px !important;
   }
 
   .admin-news-intro {
