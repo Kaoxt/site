@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <link rel="icon" href="/favicon.ico?v=3" sizes="any" />
+  <link rel="shortcut icon" href="/favicon.ico?v=3" type="image/x-icon" />
+  <meta name="theme-color" content="#050608" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>PNG to WebP Converter | The Kollection</title>
+
+  <link rel="stylesheet" href="/shared.css?v=20260906-1" />
+  <link rel="stylesheet" href="/admin/admin.css?v=20260906-1" />
+  <link rel="stylesheet" href="/admin/admin-pages.css?v=20260907-4" />
+  <link rel="stylesheet" href="/admin/image-converter.css?v=20260907-2" />
+
+  <script src="/components.js?v=20260906-1" defer></script>
+  <script src="/set-up-collection/config.js?v=20260906-1"></script>
+  <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
+  <script src="/admin/image-converter.js?v=20260907-2" defer></script>
+</head>
+<body>
+  <main class="page admin-page converter-page">
+    <div id="site-nav" aria-label="Site navigation"></div>
+
+    <nav class="admin-breadcrumbs" aria-label="Admin breadcrumb">
+      <a href="/admin.html">Admin</a>
+      <span class="breadcrumb-separator" aria-hidden="true">›</span>
+      <span aria-current="page">PNG to WebP Converter</span>
+    </nav>
+
+    <header class="admin-news-intro" aria-labelledby="converter-title">
+      <div class="eyebrow"><span class="eyebrow-dot"></span>Private Image Converter</div>
+      <h1 id="converter-title">PNG to WebP Converter</h1>
+      <p>Convert PNG artwork to WebP directly in your browser. Your image stays on your device until you choose to download it.</p>
+    </header>
+
+    <div class="admin-content-width">
+      <section class="auth-shell" id="authShell" aria-labelledby="authHeading">
+        <header class="admin-shell-head">
+          <div>
+            <div class="kicker">NUVIO ACCOUNT</div>
+            <h2 id="authHeading">Administrator Access</h2>
+          </div>
+          <div class="auth-state" id="authState">Checking session…</div>
+        </header>
+
+        <div id="authMessage" class="admin-message" hidden></div>
+
+        <div class="auth-loading" id="authLoading">
+          <span class="auth-spinner"></span>
+          <span>Checking your Kollection session…</span>
+        </div>
+
+        <div class="nuvio-admin-login" id="loginPanel" hidden>
+          <div class="nuvio-admin-login-copy">
+            <h3>Continue with Nuvio</h3>
+            <p>Your authorized Nuvio account unlocks the private converter.</p>
+          </div>
+          <div class="nuvio-admin-login-actions">
+            <button id="continueNuvioButton" class="button-primary" type="button">Continue with Nuvio</button>
+            <span class="nuvio-admin-status" id="nuvioAdminStatus" aria-live="polite"></span>
+          </div>
+        </div>
+
+        <div class="signed-in-card" id="signedInCard" hidden>
+          <div class="signed-in-avatar" id="signedInAvatar">N</div>
+          <div class="signed-in-copy">
+            <span>Signed in with Nuvio</span>
+            <strong id="signedInEmail"></strong>
+            <small id="signedInRole"></small>
+          </div>
+          <button id="signOutButton" class="button-secondary" type="button">Sign out</button>
+        </div>
+      </section>
+
+      <section class="converter-shell" id="converterShell" hidden aria-labelledby="toolHeading">
+        <div class="converter-banner">
+          <div>
+            <div class="converter-kicker">PNG → WEBP</div>
+            <h2 id="toolHeading">Convert Your PNG to WebP</h2>
+            <p>Drag and drop a PNG below, or choose one from your device. The original dimensions and transparent areas are preserved.</p>
+          </div>
+          <button id="bannerChooseButton" class="converter-primary" type="button">Choose PNG</button>
+        </div>
+
+        <div id="converterMessage" class="admin-message" hidden></div>
+
+        <div class="converter-body">
+          <section class="drop-section" aria-labelledby="uploadHeading">
+            <div class="section-heading">
+              <div>
+                <div class="kicker">UPLOAD</div>
+                <h3 id="uploadHeading">Choose a PNG Image</h3>
+              </div>
+              <button id="resetButton" class="converter-secondary compact" type="button" hidden>Reset</button>
+            </div>
+
+            <input id="pngInput" type="file" accept="image/png,.png" hidden />
+
+            <div id="dropZone" class="drop-zone" tabindex="0" role="button"
+                 aria-label="Choose or drag a PNG image">
+              <div id="dropPrompt" class="drop-prompt">
+                <div class="upload-symbol" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M12 16V4"></path>
+                    <path d="m7 9 5-5 5 5"></path>
+                    <path d="M5 14v4.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V14"></path>
+                  </svg>
+                </div>
+                <strong>Drag and Drop a PNG Here</strong>
+                <span>or</span>
+                <button id="chooseButton" class="converter-secondary" type="button">Choose PNG</button>
+                <small>PNG only · up to 50 MB</small>
+              </div>
+
+              <div id="originalPreview" class="original-preview" hidden>
+                <div class="preview-stage transparency-grid">
+                  <img id="originalImage" alt="Original PNG preview" />
+                </div>
+                <div class="preview-copy">
+                  <strong id="originalName"></strong>
+                  <div class="file-meta">
+                    <span id="originalDimensions"></span>
+                    <span id="originalSize"></span>
+                    <span>PNG</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="conversion-controls" id="conversionControls" hidden aria-labelledby="settingsHeading">
+            <div class="section-heading">
+              <div>
+                <div class="kicker">OUTPUT</div>
+                <h3 id="settingsHeading">Maximum Quality WebP</h3>
+              </div>
+            </div>
+
+            <div class="maximum-quality-card">
+              <div class="maximum-quality-icon" aria-hidden="true">✓</div>
+              <div>
+                <strong>Maximum Quality Is Always Enabled</strong>
+                <span>The converter always uses the browser's highest WebP quality setting. Original pixel dimensions and transparency are preserved.</span>
+              </div>
+            </div>
+
+            <div class="conversion-note">
+              <strong>Processed locally.</strong>
+              <span>No conversion API or third-party upload is used. Your PNG stays on your device during conversion.</span>
+            </div>
+
+            <button id="convertButton" class="converter-primary full" type="button">Convert to WebP</button>
+          </section>
+
+          <section class="result-section" id="resultSection" hidden aria-labelledby="resultHeading">
+            <div class="section-heading">
+              <div>
+                <div class="kicker">RESULT</div>
+                <h3 id="resultHeading">Converted WebP</h3>
+              </div>
+            </div>
+
+            <div class="result-card">
+              <div class="result-preview transparency-grid">
+                <img id="resultImage" alt="Converted WebP preview" />
+              </div>
+
+              <div class="result-details">
+                <strong id="resultName"></strong>
+                <div class="result-stats">
+                  <div>
+                    <span>Dimensions</span>
+                    <strong id="resultDimensions"></strong>
+                  </div>
+                  <div>
+                    <span>PNG Size</span>
+                    <strong id="resultOriginalSize"></strong>
+                  </div>
+                  <div>
+                    <span>WebP Size</span>
+                    <strong id="resultSize"></strong>
+                  </div>
+                  <div>
+                    <span>Difference</span>
+                    <strong id="resultSavings"></strong>
+                  </div>
+                </div>
+
+                <div class="result-actions">
+                  <button id="downloadButton" class="converter-primary" type="button">Download WebP</button>
+                  <a class="converter-secondary link-button" href="/admin-images.html">Open Image Library</a>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="how-section" id="howSection" hidden aria-labelledby="howHeading">
+        <div class="section-heading standalone">
+          <div>
+            <div class="kicker">HOW IT WORKS</div>
+            <h2 id="howHeading">How to Convert a PNG</h2>
+          </div>
+        </div>
+
+        <div class="how-grid">
+          <article>
+            <div class="step-number">1</div>
+            <h3>Upload Your PNG</h3>
+            <p>Choose a PNG from your device or drag it directly into the upload area.</p>
+          </article>
+
+          <article>
+            <div class="step-number">2</div>
+            <h3>Convert to WebP</h3>
+            <p>Your PNG is converted automatically using the browser's maximum WebP quality setting.</p>
+          </article>
+
+          <article>
+            <div class="step-number">3</div>
+            <h3>Download the WebP</h3>
+            <p>Save the converted WebP, then upload it to your Kollection Image Library if needed.</p>
+          </article>
+        </div>
+      </section>
+    </div>
+
+    <div id="site-footer"></div>
+  </main>
+</body>
+</html>
