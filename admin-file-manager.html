@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <link rel="icon" href="/favicon.ico?v=3" sizes="any" />
+  <link rel="shortcut icon" href="/favicon.ico?v=3" type="image/x-icon" />
+  <meta name="theme-color" content="#050608" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>File Manager | The Kollection</title>
+
+  <link rel="stylesheet" href="/shared.css?v=20260906-1" />
+  <link rel="stylesheet" href="/admin/admin.css?v=20260906-1" />
+  <link rel="stylesheet" href="/admin/admin-pages.css?v=20260907-4" />
+  <link rel="stylesheet" href="/admin/file-manager.css?v=20260907-1" />
+
+  <script src="/components.js?v=20260906-1" defer></script>
+  <script src="/set-up-collection/config.js?v=20260906-1"></script>
+  <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
+  <script src="/admin/file-manager.js?v=20260907-1" defer></script>
+</head>
+<body>
+  <main class="page admin-page file-manager-page">
+    <div id="site-nav" aria-label="Site navigation"></div>
+
+    <nav class="admin-breadcrumbs" aria-label="Admin breadcrumb">
+      <a href="/admin.html">Admin</a>
+      <span class="breadcrumb-separator" aria-hidden="true">›</span>
+      <span aria-current="page">File Manager</span>
+    </nav>
+
+    <header class="admin-news-intro" aria-labelledby="file-manager-title">
+      <div class="eyebrow"><span class="eyebrow-dot"></span>Private Site File Manager</div>
+      <h1 id="file-manager-title">Site File Manager</h1>
+      <p>Manage the files in Kaoxt/site from The Kollection. Changes are committed to GitHub and your normal Cloudflare Pages deployment handles the rest.</p>
+    </header>
+
+    <div class="admin-content-width">
+      <section class="auth-shell" id="authShell" aria-labelledby="authHeading">
+        <header class="admin-shell-head">
+          <div>
+            <div class="kicker">NUVIO ACCOUNT</div>
+            <h2 id="authHeading">Administrator Access</h2>
+          </div>
+          <div class="auth-state" id="authState">Checking session…</div>
+        </header>
+
+        <div id="authMessage" class="admin-message" hidden></div>
+
+        <div class="auth-loading" id="authLoading">
+          <span class="auth-spinner"></span>
+          <span>Checking your Kollection session…</span>
+        </div>
+
+        <div class="nuvio-admin-login" id="loginPanel" hidden>
+          <div class="nuvio-admin-login-copy">
+            <h3>Continue with Nuvio</h3>
+            <p>Your authorized Nuvio account unlocks the private file manager.</p>
+          </div>
+          <div class="nuvio-admin-login-actions">
+            <button id="continueNuvioButton" class="button-primary" type="button">Continue with Nuvio</button>
+            <span class="nuvio-admin-status" id="nuvioAdminStatus" aria-live="polite"></span>
+          </div>
+        </div>
+
+        <div class="signed-in-card" id="signedInCard" hidden>
+          <div class="signed-in-avatar" id="signedInAvatar">N</div>
+          <div class="signed-in-copy">
+            <span>Signed in with Nuvio</span>
+            <strong id="signedInEmail"></strong>
+            <small id="signedInRole"></small>
+          </div>
+          <button id="signOutButton" class="button-secondary" type="button">Sign out</button>
+        </div>
+      </section>
+
+      <section class="manager-shell" id="managerShell" hidden>
+        <header class="manager-head">
+          <div>
+            <div class="kicker">KAOXT / SITE</div>
+            <h2>Production Repository</h2>
+            <p>Branch: <strong>main</strong> · Every change creates a GitHub commit.</p>
+          </div>
+          <div class="manager-head-actions">
+            <a class="manager-secondary link-button" href="/admin.html">Admin Hub</a>
+            <a class="manager-secondary link-button" href="https://github.com/Kaoxt/site" target="_blank" rel="noopener">Open GitHub</a>
+          </div>
+        </header>
+
+        <div class="production-warning">
+          <strong>Production Safety</strong>
+          <span>Saving, uploading, renaming, or deleting files here changes the production repository. Cloudflare Pages can deploy the commit automatically.</span>
+        </div>
+
+        <div id="managerMessage" class="admin-message manager-message" hidden></div>
+
+        <div class="manager-toolbar">
+          <nav id="repoBreadcrumbs" class="repo-breadcrumbs" aria-label="Repository path"></nav>
+
+          <div class="toolbar-actions">
+            <button id="newFileButton" class="manager-secondary" type="button">New File</button>
+            <button id="uploadButton" class="manager-primary" type="button">Upload Files</button>
+            <button id="refreshButton" class="manager-secondary" type="button">Refresh</button>
+          </div>
+        </div>
+
+        <section id="createPanel" class="action-panel" hidden aria-labelledby="createHeading">
+          <div class="panel-head">
+            <div>
+              <div class="kicker">CREATE</div>
+              <h3 id="createHeading">New Text File</h3>
+            </div>
+            <button class="icon-close" type="button" data-close-panel="createPanel" aria-label="Close">×</button>
+          </div>
+          <div class="new-file-grid">
+            <label>
+              <span>File Name</span>
+              <input id="newFileName" type="text" placeholder="new-page.html" autocomplete="off" />
+            </label>
+            <label>
+              <span>Commit Message <em>Optional</em></span>
+              <input id="newFileMessage" type="text" maxlength="100" placeholder="Add new-page.html" />
+            </label>
+          </div>
+          <label class="editor-label">
+            <span>Contents</span>
+            <textarea id="newFileContent" spellcheck="false" placeholder="Start typing…"></textarea>
+          </label>
+          <div class="panel-actions">
+            <button id="createFileButton" class="manager-primary" type="button">Create File</button>
+          </div>
+        </section>
+
+        <section id="uploadPanel" class="action-panel" hidden aria-labelledby="uploadHeading">
+          <div class="panel-head">
+            <div>
+              <div class="kicker">UPLOAD</div>
+              <h3 id="uploadHeading">Upload Files</h3>
+            </div>
+            <button class="icon-close" type="button" data-close-panel="uploadPanel" aria-label="Close">×</button>
+          </div>
+
+          <input id="fileInput" type="file" multiple hidden />
+          <div id="fileDropZone" class="file-drop-zone" tabindex="0" role="button">
+            <strong>Drag and Drop Files Here</strong>
+            <span>or</span>
+            <button id="chooseFilesButton" class="manager-secondary" type="button">Choose Files</button>
+            <small>Up to 10 files per upload · 10 MB maximum per file.</small>
+          </div>
+
+          <div id="uploadQueue" class="upload-queue" hidden></div>
+
+          <label class="upload-message-field">
+            <span>Commit Message <em>Optional</em></span>
+            <input id="uploadMessage" type="text" maxlength="100" placeholder="Upload site files" />
+          </label>
+
+          <div class="panel-actions">
+            <button id="commitUploadButton" class="manager-primary" type="button" disabled>Upload to GitHub</button>
+          </div>
+        </section>
+
+        <div class="manager-layout">
+          <section class="explorer-pane" aria-labelledby="explorerHeading">
+            <div class="pane-heading">
+              <div>
+                <div class="kicker">FILES</div>
+                <h3 id="explorerHeading">Repository Files</h3>
+              </div>
+              <label class="file-search">
+                <span class="sr-only">Filter current folder</span>
+                <input id="fileSearch" type="search" placeholder="Filter…" autocomplete="off" />
+              </label>
+            </div>
+
+            <div id="fileList" class="file-list">
+              <div class="manager-loading">Loading repository…</div>
+            </div>
+          </section>
+
+          <section class="editor-pane" id="editorPane" aria-labelledby="editorHeading">
+            <div id="emptyEditor" class="empty-editor">
+              <div>
+                <strong>Select a File</strong>
+                <span>Choose a text file to edit it, or select another file to manage it.</span>
+              </div>
+            </div>
+
+            <div id="fileEditor" hidden>
+              <div class="editor-head">
+                <div class="editor-title">
+                  <div class="kicker" id="editorType">FILE</div>
+                  <h3 id="editorHeading"></h3>
+                  <span id="editorPath"></span>
+                </div>
+                <div class="editor-head-actions">
+                  <a id="githubFileLink" class="manager-secondary link-button" target="_blank" rel="noopener">GitHub</a>
+                  <button id="renameButton" class="manager-secondary" type="button">Rename / Move</button>
+                  <button id="deleteButton" class="manager-danger" type="button">Delete</button>
+                </div>
+              </div>
+
+              <div id="textEditorArea" hidden>
+                <label class="editor-label">
+                  <span>File Contents</span>
+                  <textarea id="editorContent" spellcheck="false"></textarea>
+                </label>
+
+                <div class="save-grid">
+                  <label>
+                    <span>Commit Message <em>Optional</em></span>
+                    <input id="saveMessage" type="text" maxlength="100" placeholder="Update file" />
+                  </label>
+                  <button id="saveButton" class="manager-primary" type="button">Save Changes</button>
+                </div>
+              </div>
+
+              <div id="binaryEditorArea" class="binary-notice" hidden>
+                <strong>This File Is Not Edited as Text</strong>
+                <span>You can rename, move, delete, or replace it by uploading another file with the same name.</span>
+                <a id="rawFileLink" class="manager-primary link-button" target="_blank" rel="noopener">Open File</a>
+              </div>
+
+              <section id="renamePanel" class="rename-panel" hidden>
+                <label>
+                  <span>New Path</span>
+                  <input id="renamePath" type="text" autocomplete="off" />
+                  <small>Use a repository-relative path such as <code>admin/new-name.js</code>.</small>
+                </label>
+                <label>
+                  <span>Commit Message <em>Optional</em></span>
+                  <input id="renameMessage" type="text" maxlength="100" placeholder="Rename file" />
+                </label>
+                <div class="rename-actions">
+                  <button id="cancelRenameButton" class="manager-secondary" type="button">Cancel</button>
+                  <button id="commitRenameButton" class="manager-primary" type="button">Rename / Move</button>
+                </div>
+              </section>
+
+              <div class="file-metadata">
+                <div><span>Size</span><strong id="metaSize">—</strong></div>
+                <div><span>SHA</span><strong id="metaSha">—</strong></div>
+                <div><span>Branch</span><strong>main</strong></div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <footer class="manager-footer">
+          <span>GitHub remains the source of truth.</span>
+          <span>Cloudflare Pages continues deploying from <strong>main</strong> through your existing Git integration.</span>
+        </footer>
+      </section>
+    </div>
+
+    <div id="site-footer"></div>
+  </main>
+</body>
+</html>
