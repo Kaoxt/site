@@ -1,0 +1,117 @@
+/* The Kollection — administrator-only account shortcut */
+
+.nuvio-account-bottom-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 7px;
+}
+
+.nuvio-account-bottom-actions .nuvio-account-signout-button,
+.nuvio-account-admin-link {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 680;
+  text-decoration: none;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.nuvio-account-admin-link {
+  border: 1px solid rgba(126,117,255,.30);
+  background: rgba(99,91,255,.12);
+  color: #c9c6ff;
+}
+
+.nuvio-account-admin-link:hover {
+  border-color: rgba(150,143,255,.45);
+  background: rgba(99,91,255,.20);
+  color: #fff;
+}
+
+.nuvio-account-bottom-actions .nuvio-account-signout-button {
+  min-height: 40px;
+  justify-content: center;
+  background: rgba(255,255,255,.045);
+}
+
+.nuvio-mobile-account-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+}
+
+.nuvio-mobile-admin-link,
+.nuvio-mobile-account-actions .nuvio-mobile-signout-button {
+  min-height: 36px;
+  padding: 0 13px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 680;
+  text-decoration: none;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.nuvio-mobile-admin-link {
+  border: 1px solid rgba(126,117,255,.28);
+  background: rgba(99,91,255,.13);
+  color: #c7c4ff;
+}
+
+.nuvio-mobile-admin-link:hover {
+  background: rgba(99,91,255,.22);
+  border-color: rgba(150,143,255,.44);
+  color: #fff;
+}
+
+.nuvio-account-admin-link:focus-visible,
+.nuvio-mobile-admin-link:focus-visible {
+  outline: 2px solid #a5b4fc;
+  outline-offset: 2px;
+}
+
+/* Give the mobile footer enough room when Admin + Sign out are both present. */
+.nuvio-mobile-bottom-row {
+  flex-wrap: wrap;
+}
+
+body.light .nuvio-account-admin-link,
+body.light .nuvio-mobile-admin-link {
+  color: #4e46c8;
+  border-color: rgba(79,70,229,.22);
+  background: rgba(79,70,229,.08);
+}
+
+body.light .nuvio-account-admin-link:hover,
+body.light .nuvio-mobile-admin-link:hover {
+  color: #342db2;
+  background: rgba(79,70,229,.13);
+}
+
+@media (max-width: 420px) {
+  .nuvio-mobile-bottom-row {
+    align-items: stretch;
+  }
+
+  .nuvio-mobile-account-actions {
+    width: 100%;
+  }
+
+  .nuvio-mobile-admin-link,
+  .nuvio-mobile-account-actions .nuvio-mobile-signout-button {
+    flex: 1 1 0;
+  }
+}
