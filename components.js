@@ -76,7 +76,6 @@
     }
   };
 
-
   const ensureStylesheet = (filename) => {
     const href = assetUrl(filename);
     const exists = [...document.styleSheets].some((sheet) => {
@@ -133,6 +132,7 @@
 
   const prepareNuvioNavigation = async () => {
     ensureStylesheet('nuvio-auth/nav-account.css');
+    ensureStylesheet('nuvio-auth/admin-nav.css?v=20260907-1');
 
     if (!window.KollectionNuvioAuth) {
       await loadScriptOnce('nuvio-auth/nuvio-auth.js', () => Boolean(window.KollectionNuvioAuth));
@@ -142,8 +142,21 @@
       await loadScriptOnce('nuvio-auth/nav-account.js', () => Boolean(window.KollectionNavAccount));
     }
 
-    window.KollectionNavAccount?.init?.().catch?.((error) => {
+    try {
+      await window.KollectionNavAccount?.init?.();
+    } catch (error) {
       console.warn('[The Kollection] Nuvio navigation could not initialize.', error);
+    }
+
+    if (!window.KollectionAdminNav) {
+      await loadScriptOnce(
+        'nuvio-auth/admin-nav.js?v=20260907-1',
+        () => Boolean(window.KollectionAdminNav)
+      );
+    }
+
+    window.KollectionAdminNav?.init?.().catch?.((error) => {
+      console.warn('[The Kollection] Admin navigation shortcut could not initialize.', error);
     });
   };
 
@@ -212,11 +225,6 @@
     });
   };
 
-  /*
-    Responsive navigation is CSS-driven. This JS mirrors the exact same media
-    query only so nav-account.css can use .force-compact-nav. Pinch zoom and
-    visual viewport changes do not drive navigation layout anymore.
-  */
   const COMPACT_NAV_QUERY = '(max-width: 1100px), (orientation: portrait) and (max-width: 1400px)';
   let compactNavMedia = null;
 
@@ -254,7 +262,7 @@
     const footerTarget = document.getElementById('site-footer');
 
     const tasks = [];
-    if (navTarget) tasks.push(loadFragment('nav.html?v=20260906-5', navTarget));
+    if (navTarget) tasks.push(loadFragment('nav.html?v=20260907-6', navTarget));
     if (footerTarget) tasks.push(loadFragment('footer.html?v=20260906-5', footerTarget));
     if (tasks.length) await Promise.allSettled(tasks);
 
