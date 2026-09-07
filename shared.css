@@ -1393,3 +1393,14 @@ body .hero .actions .btn-icon {
   flex-basis: 18px !important;
 }
 
+/* ==========================================================================
+   REMOVE SET UP COLLECTION FROM SIGNED-IN DESKTOP PROFILE MENU
+   The Set Up Collection page remains available in the main desktop nav.
+   ========================================================================== */
+@media (min-width: 1101px) and (orientation: landscape) {
+  html:not(.force-compact-nav) body #site-nav
+  .nuvio-desktop-account-popover > a.nuvio-desktop-menu-row[href="/set-up-collection"] {
+    display: none !important;
+  }
+}
+
