@@ -11,112 +11,194 @@
 
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/admin/admin.css?v=20260906-1" />
-  <link rel="stylesheet" href="/admin/image-library.css?v=20260907-1" />
+  <link rel="stylesheet" href="/admin/admin-pages.css?v=20260907-2" />
+  <link rel="stylesheet" href="/admin/image-library.css?v=20260907-2" />
 
   <script src="/components.js?v=20260906-1" defer></script>
   <script src="/set-up-collection/config.js?v=20260906-1"></script>
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
-  <script src="/admin/image-library.js?v=20260907-1" defer></script>
+  <script src="/admin/image-library.js?v=20260907-2" defer></script>
 </head>
 <body>
   <main class="page admin-page image-library-page">
     <div id="site-nav" aria-label="Site navigation"></div>
 
-    <section class="admin-hero image-library-hero">
-      <div class="admin-eyebrow"><span></span> Private R2 artwork browser</div>
-      <h1>Kollection Image Library</h1>
-      <p>Browse the artwork synced from <strong>Kaoxt/The-Kollection</strong> to Cloudflare R2 and copy the permanent Kollection.tv URL for Nuvio.</p>
-    </section>
+    <header class="admin-news-intro" aria-labelledby="image-library-title">
+      <div class="eyebrow"><span class="eyebrow-dot"></span>Private R2 artwork browser</div>
+      <h1 id="image-library-title">Kollection Image Library</h1>
+      <p>Upload, browse and copy permanent Kollection.tv artwork URLs for Nuvio.</p>
+    </header>
 
-    <section class="auth-shell" id="authShell" aria-labelledby="authHeading">
-      <header class="admin-shell-head">
-        <div>
-          <div class="kicker">NUVIO ACCOUNT</div>
-          <h2 id="authHeading">Administrator access</h2>
+    <div class="admin-content-width">
+      <section class="auth-shell" id="authShell" aria-labelledby="authHeading">
+        <header class="admin-shell-head">
+          <div>
+            <div class="kicker">NUVIO ACCOUNT</div>
+            <h2 id="authHeading">Administrator access</h2>
+          </div>
+          <div class="auth-state" id="authState">Checking session…</div>
+        </header>
+
+        <div id="authMessage" class="admin-message" hidden></div>
+
+        <div class="auth-loading" id="authLoading">
+          <span class="auth-spinner"></span>
+          <span>Checking your Kollection session…</span>
         </div>
-        <div class="auth-state" id="authState">Checking session…</div>
-      </header>
 
-      <div id="authMessage" class="admin-message" hidden></div>
-
-      <div class="auth-loading" id="authLoading">
-        <span class="auth-spinner"></span>
-        <span>Checking your Kollection session…</span>
-      </div>
-
-      <div class="nuvio-admin-login" id="loginPanel" hidden>
-        <div class="nuvio-admin-login-copy">
-          <h3>Continue with Nuvio</h3>
-          <p>This image library uses the same secure administrator session as your Kollection updater.</p>
+        <div class="nuvio-admin-login" id="loginPanel" hidden>
+          <div class="nuvio-admin-login-copy">
+            <h3>Continue with Nuvio</h3>
+            <p>This page uses the same secure administrator session as your Kollection updater.</p>
+          </div>
+          <div class="nuvio-admin-login-actions">
+            <button id="continueNuvioButton" class="button-primary" type="button">Continue with Nuvio</button>
+            <span class="nuvio-admin-status" id="nuvioAdminStatus" aria-live="polite"></span>
+          </div>
         </div>
-        <div class="nuvio-admin-login-actions">
-          <button id="continueNuvioButton" class="button-primary" type="button">Continue with Nuvio</button>
-          <span class="nuvio-admin-status" id="nuvioAdminStatus" aria-live="polite"></span>
+
+        <div class="signed-in-card" id="signedInCard" hidden>
+          <div class="signed-in-avatar" id="signedInAvatar">N</div>
+          <div class="signed-in-copy">
+            <span>Signed in with Nuvio</span>
+            <strong id="signedInEmail"></strong>
+            <small id="signedInRole"></small>
+          </div>
+          <button id="signOutButton" class="button-secondary" type="button">Sign out</button>
         </div>
-      </div>
+      </section>
 
-      <div class="signed-in-card" id="signedInCard" hidden>
-        <div class="signed-in-avatar" id="signedInAvatar">N</div>
-        <div class="signed-in-copy">
-          <span>Signed in with Nuvio</span>
-          <strong id="signedInEmail"></strong>
-          <small id="signedInRole"></small>
-        </div>
-        <button id="signOutButton" class="button-secondary" type="button">Sign out</button>
-      </div>
-    </section>
+      <section class="image-library-shell" id="libraryShell" hidden>
+        <header class="library-toolbar-head">
+          <div>
+            <div class="kicker">ADMIN IMAGE TOOLS</div>
+            <h2>Artwork manager</h2>
+            <p id="librarySummary">Loading your synced artwork…</p>
+          </div>
+          <div class="library-head-actions">
+            <a class="button-secondary library-link-button" href="/admin.html">Admin hub</a>
+            <a class="button-secondary library-link-button" href="/admin-update-collection.html">Runtime updater</a>
+            <button id="refreshButton" class="button-secondary" type="button">Refresh</button>
+          </div>
+        </header>
 
-    <section class="image-library-shell" id="libraryShell" hidden>
-      <header class="library-toolbar-head">
-        <div>
-          <div class="kicker">R2 IMAGE LIBRARY</div>
-          <h2>Artwork links</h2>
-          <p id="librarySummary">Loading your synced artwork…</p>
-        </div>
-        <div class="library-head-actions">
-          <a class="button-secondary library-link-button" href="/admin-update-collection.html">Runtime updater</a>
-          <button id="refreshButton" class="button-secondary" type="button">Refresh</button>
-        </div>
-      </header>
+        <div id="libraryMessage" class="admin-message" hidden></div>
 
-      <div id="libraryMessage" class="admin-message" hidden></div>
+        <section class="upload-manager" aria-labelledby="uploadHeading">
+          <div class="section-title-row">
+            <div>
+              <div class="kicker">UPLOAD</div>
+              <h3 id="uploadHeading">Upload artwork</h3>
+              <p>Files are committed to <strong>Kaoxt/The-Kollection</strong> and written to R2 immediately.</p>
+            </div>
+          </div>
 
-      <div class="library-controls">
-        <label class="library-search">
-          <span>Search artwork</span>
-          <input id="searchInput" type="search" autocomplete="off"
-                 placeholder="Search Adam Sandler, Popular, Netflix…" />
-        </label>
+          <div id="uploadMessage" class="admin-message" hidden></div>
 
-        <label class="library-filter">
-          <span>Category</span>
-          <select id="categoryFilter">
-            <option value="">All categories</option>
-          </select>
-        </label>
+          <form id="uploadForm" class="image-upload-form">
+            <label class="upload-field">
+              <span>Category</span>
+              <input id="uploadCategory" name="category" list="categorySuggestions"
+                     placeholder="Actors" autocomplete="off" required />
+              <datalist id="categorySuggestions"></datalist>
+              <small>Top-level folder under <code>images/</code>, e.g. Actors or Streaming Platforms.</small>
+            </label>
 
-        <label class="library-filter">
-          <span>Image type</span>
-          <select id="typeFilter">
-            <option value="">All image types</option>
-            <option value="cover.webp">Cover</option>
-            <option value="backdrop.webp">Backdrop</option>
-            <option value="logo.webp">Logo</option>
-          </select>
-        </label>
-      </div>
+            <label class="upload-field">
+              <span>Folder</span>
+              <input id="uploadFolder" name="folder" placeholder="Adam Sandler" autocomplete="off" required />
+              <small>May include nested folders, e.g. <code>Marvel/Phase One</code>.</small>
+            </label>
 
-      <div class="library-status-row">
-        <span id="resultCount">0 images</span>
-        <button id="copyVisibleButton" class="text-button" type="button">Copy visible URLs</button>
-      </div>
+            <div class="upload-artwork-grid">
+              <label class="artwork-file-box">
+                <span class="artwork-kind">Cover</span>
+                <span class="artwork-size">cover.webp</span>
+                <input id="coverFile" name="cover" type="file" accept=".webp,image/webp" />
+                <strong id="coverFileName">Choose WebP</strong>
+              </label>
 
-      <div id="imageGrid" class="image-grid" aria-live="polite"></div>
+              <label class="artwork-file-box">
+                <span class="artwork-kind">Backdrop</span>
+                <span class="artwork-size">backdrop.webp</span>
+                <input id="backdropFile" name="backdrop" type="file" accept=".webp,image/webp" />
+                <strong id="backdropFileName">Choose WebP</strong>
+              </label>
 
-      <div class="library-more">
-        <button id="loadMoreButton" class="button-secondary" type="button" hidden>Load more</button>
-      </div>
-    </section>
+              <label class="artwork-file-box">
+                <span class="artwork-kind">Logo</span>
+                <span class="artwork-size">logo.webp</span>
+                <input id="logoFile" name="logo" type="file" accept=".webp,image/webp" />
+                <strong id="logoFileName">Choose WebP</strong>
+              </label>
+            </div>
+
+            <div class="upload-submit-row">
+              <span id="uploadPathPreview" class="upload-path-preview">images/Category/Folder/…</span>
+              <button id="uploadButton" class="button-primary" type="submit">Upload selected artwork</button>
+            </div>
+          </form>
+
+          <div id="uploadResult" class="upload-result" hidden></div>
+        </section>
+
+        <section class="recent-section" aria-labelledby="recentHeading">
+          <div class="section-title-row">
+            <div>
+              <div class="kicker">RECENT</div>
+              <h3 id="recentHeading">Recent uploads</h3>
+              <p>Newest artwork currently stored in your R2 image library.</p>
+            </div>
+          </div>
+          <div id="recentGrid" class="recent-grid"></div>
+        </section>
+
+        <section class="full-library-section" aria-labelledby="allArtworkHeading">
+          <div class="section-title-row library-title-row">
+            <div>
+              <div class="kicker">LIBRARY</div>
+              <h3 id="allArtworkHeading">All artwork</h3>
+            </div>
+          </div>
+
+          <div class="library-controls">
+            <label class="library-search">
+              <span>Search artwork</span>
+              <input id="searchInput" type="search" autocomplete="off"
+                     placeholder="Search Adam Sandler, Popular, Netflix…" />
+            </label>
+
+            <label class="library-filter">
+              <span>Category</span>
+              <select id="categoryFilter">
+                <option value="">All categories</option>
+              </select>
+            </label>
+
+            <label class="library-filter">
+              <span>Image type</span>
+              <select id="typeFilter">
+                <option value="">All image types</option>
+                <option value="cover.webp">Cover</option>
+                <option value="backdrop.webp">Backdrop</option>
+                <option value="logo.webp">Logo</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="library-status-row">
+            <span id="resultCount">0 images</span>
+            <button id="copyVisibleButton" class="text-button" type="button">Copy visible URLs</button>
+          </div>
+
+          <div id="imageGrid" class="image-grid" aria-live="polite"></div>
+
+          <div class="library-more">
+            <button id="loadMoreButton" class="button-secondary" type="button" hidden>Load more</button>
+          </div>
+        </section>
+      </section>
+    </div>
 
     <div id="site-footer"></div>
   </main>

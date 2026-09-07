@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <link rel="icon" href="/favicon.ico?v=3" sizes="any" />
+  <link rel="shortcut icon" href="/favicon.ico?v=3" type="image/x-icon" />
+  <meta name="theme-color" content="#050608" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>Admin | The Kollection</title>
+
+  <link rel="stylesheet" href="/shared.css?v=20260906-1" />
+  <link rel="stylesheet" href="/admin/admin.css?v=20260906-1" />
+  <link rel="stylesheet" href="/admin/admin-pages.css?v=20260907-2" />
+  <link rel="stylesheet" href="/admin/admin-hub.css?v=20260907-1" />
+
+  <script src="/components.js?v=20260906-1" defer></script>
+  <script src="/set-up-collection/config.js?v=20260906-1"></script>
+  <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
+  <script src="/admin/admin-hub.js?v=20260907-1" defer></script>
+</head>
+<body>
+  <main class="page admin-page admin-hub-page">
+    <div id="site-nav" aria-label="Site navigation"></div>
+
+    <header class="admin-news-intro" aria-labelledby="admin-title">
+      <div class="eyebrow"><span class="eyebrow-dot"></span>The Kollection administration</div>
+      <h1 id="admin-title">Admin</h1>
+      <p>One place for your private Kollection publishing and artwork tools.</p>
+    </header>
+
+    <div class="admin-content-width">
+      <section class="auth-shell" id="authShell" aria-labelledby="authHeading">
+        <header class="admin-shell-head">
+          <div>
+            <div class="kicker">NUVIO ACCOUNT</div>
+            <h2 id="authHeading">Administrator access</h2>
+          </div>
+          <div class="auth-state" id="authState">Checking session…</div>
+        </header>
+
+        <div id="authMessage" class="admin-message" hidden></div>
+
+        <div class="auth-loading" id="authLoading">
+          <span class="auth-spinner"></span>
+          <span>Checking your Kollection session…</span>
+        </div>
+
+        <div class="nuvio-admin-login" id="loginPanel" hidden>
+          <div class="nuvio-admin-login-copy">
+            <h3>Continue with Nuvio</h3>
+            <p>Your authorized Nuvio account unlocks the private admin tools.</p>
+          </div>
+          <div class="nuvio-admin-login-actions">
+            <button id="continueNuvioButton" class="button-primary" type="button">Continue with Nuvio</button>
+            <span class="nuvio-admin-status" id="nuvioAdminStatus" aria-live="polite"></span>
+          </div>
+        </div>
+
+        <div class="signed-in-card" id="signedInCard" hidden>
+          <div class="signed-in-avatar" id="signedInAvatar">N</div>
+          <div class="signed-in-copy">
+            <span>Signed in with Nuvio</span>
+            <strong id="signedInEmail"></strong>
+            <small id="signedInRole"></small>
+          </div>
+          <button id="signOutButton" class="button-secondary" type="button">Sign out</button>
+        </div>
+      </section>
+
+      <section class="admin-tools" id="adminTools" hidden aria-labelledby="toolsHeading">
+        <div class="admin-tools-heading">
+          <div class="kicker">TOOLS</div>
+          <h2 id="toolsHeading">Admin tools</h2>
+        </div>
+
+        <div class="admin-tool-grid">
+          <a class="admin-tool-card" href="/admin-images.html">
+            <div class="tool-icon" aria-hidden="true">▧</div>
+            <div>
+              <span>Artwork</span>
+              <h3>Image Library</h3>
+              <p>Upload artwork, view recent uploads, search your R2 library and copy permanent Nuvio image URLs.</p>
+            </div>
+            <strong>Open →</strong>
+          </a>
+
+          <a class="admin-tool-card" href="/admin-update-collection.html">
+            <div class="tool-icon" aria-hidden="true">↻</div>
+            <div>
+              <span>Runtime</span>
+              <h3>Collection Updater</h3>
+              <p>Validate and publish the latest Nuvio collection and AIOMetadata runtime files.</p>
+            </div>
+            <strong>Open →</strong>
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <div id="site-footer"></div>
+  </main>
+</body>
+</html>
