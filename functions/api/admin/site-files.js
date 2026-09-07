@@ -539,7 +539,9 @@ async function renameFile(token, body) {
 
 async function uploadFiles(token, form) {
   const directory = cleanPath(form.get('directory') || '', true);
-  const message = String(form.get('message') || `Upload files to ${directory || 'site root'}`).slice(0, 140);
+  const baseMessage = String(
+    form.get('message') || `Upload files to ${directory || 'site root'}`
+  ).slice(0, 120);
 
   const incoming = form
     .getAll('files')
@@ -557,8 +559,9 @@ async function uploadFiles(token, form) {
     throw error;
   }
 
-  const entries = [];
   const outputFiles = [];
+  const commits = [];
+  const skipped = [];
 
   for (const file of incoming) {
     if (file.size > MAX_UPLOAD_BYTES) {
@@ -570,27 +573,91 @@ async function uploadFiles(token, form) {
     const name = cleanFileName(file.name);
     const path = cleanPath(directory ? `${directory}/${name}` : name, false);
     const bytes = new Uint8Array(await file.arrayBuffer());
-    const blobSha = await createBlob(token, bytes);
 
-    entries.push({
-      path,
-      mode: '100644',
-      type: 'blob',
-      sha: blobSha,
-    });
+    /*
+      Use GitHub's Contents API for uploads/replacements.
+      This is intentionally the same API family used by saveText().
+      If a file already exists, its current SHA is supplied so GitHub
+      performs an actual replacement instead of a create-only request.
+    */
+    const current = await getContents(token, path, true);
+
+    if (Array.isArray(current)) {
+      const error = new Error(`${path} is a directory and cannot be replaced by a file.`);
+      error.status = 409;
+      throw error;
+    }
+
+    const commitMessage = incoming.length === 1
+      ? baseMessage
+      : `${baseMessage}: ${name}`.slice(0, 140);
+
+    let data;
+
+    try {
+      data = await gh(
+        token,
+        `/repos/${OWNER}/${REPO}/contents/${encodeRepoPath(path)}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: commitMessage,
+            content: bytesToB64(bytes),
+            branch: BRANCH,
+            ...(current?.sha ? { sha: current.sha } : {}),
+          }),
+        }
+      );
+    } catch (error) {
+      /*
+        GitHub can return 422 when an uploaded replacement is byte-for-byte
+        identical to the existing file. Treat that case as unchanged only
+        when there was already a file at the target path.
+      */
+      if (error.status === 422 && current?.sha) {
+        skipped.push({
+          name,
+          path,
+          size: file.size,
+          reason: 'unchanged',
+        });
+        continue;
+      }
+
+      throw error;
+    }
+
+    const commitSha = String(data?.commit?.sha || '');
+
+    if (commitSha) commits.push(commitSha);
 
     outputFiles.push({
       name,
       path,
       size: file.size,
+      replaced: Boolean(current?.sha),
+      sha: String(data?.content?.sha || ''),
+      htmlUrl: data?.content?.html_url || null,
     });
   }
 
-  const commit = await commitTree(token, entries, message);
+  if (!outputFiles.length && skipped.length) {
+    return {
+      commitSha: '',
+      commits: [],
+      files: [],
+      skipped,
+      unchanged: true,
+    };
+  }
 
   return {
-    commitSha: commit.sha,
+    commitSha: commits.at(-1) || '',
+    commits,
     files: outputFiles,
+    skipped,
+    unchanged: false,
   };
 }
 
@@ -618,6 +685,9 @@ export async function onRequestPost(context) {
         commitUrl: result.commitSha
           ? `https://github.com/${OWNER}/${REPO}/commit/${result.commitSha}`
           : null,
+        message: result.unchanged
+          ? 'The selected file already matches GitHub, so no new commit was needed.'
+          : `${result.files.length} file${result.files.length === 1 ? '' : 's'} uploaded to GitHub.`,
       });
     }
 
