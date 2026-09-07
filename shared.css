@@ -1321,3 +1321,75 @@ html body #site-nav .nuvio-mobile-signout-button::after {
   line-height: 1 !important;
 }
 
+/* ==========================================================================
+   DESKTOP GUEST NAV ORDER + HOME ACTION TYPE — FINAL AUTHORITY
+   ========================================================================== */
+
+/* Flatten only the empty account slot wrapper so its actual controls can
+   participate in the same desktop flex row as the theme button. */
+@media (min-width: 1101px) and (orientation: landscape) {
+  html:not(.force-compact-nav) body #site-nav .nuvio-desktop-account-slot {
+    display: contents !important;
+  }
+
+  html:not(.force-compact-nav) body #site-nav .nuvio-desktop-guest-actions {
+    display: contents !important;
+  }
+
+  /* GitHub + Buy me a coffee appear as text links before the theme control. */
+  html:not(.force-compact-nav) body #site-nav
+  .nuvio-desktop-guest-actions .nuvio-social-link.compact {
+    order: 70 !important;
+    width: auto !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 9px !important;
+    border-radius: 999px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    color: #bfc0c6 !important;
+    font-size: 13px !important;
+    font-weight: 620 !important;
+    white-space: nowrap !important;
+  }
+
+  html:not(.force-compact-nav) body #site-nav
+  .nuvio-desktop-guest-actions .nuvio-social-link.compact + .nuvio-social-link.compact {
+    order: 71 !important;
+  }
+
+  html:not(.force-compact-nav) body #site-nav
+  .nuvio-desktop-guest-actions .nuvio-social-link.compact span {
+    display: inline !important;
+  }
+
+  /* Theme is immediately before Log in or the signed-in profile pill. */
+  html:not(.force-compact-nav) body #site-nav .desktop-theme-toggle {
+    order: 80 !important;
+    margin-left: 5px !important;
+    margin-right: 3px !important;
+  }
+
+  html:not(.force-compact-nav) body #site-nav .nuvio-desktop-signin-button {
+    order: 81 !important;
+  }
+
+  html:not(.force-compact-nav) body #site-nav .nuvio-desktop-account-wrap {
+    order: 81 !important;
+  }
+}
+
+/* Slightly smaller home hero action text, closer to the Nuvio reference. */
+body .hero .actions .btn {
+  font-size: 15px !important;
+  font-weight: 650 !important;
+}
+
+body .hero .actions .btn-icon {
+  width: 18px !important;
+  height: 18px !important;
+  flex-basis: 18px !important;
+}
+
