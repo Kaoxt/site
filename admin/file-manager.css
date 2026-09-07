@@ -864,3 +864,45 @@ body.light .file-search input {
     font-size: 11px;
   }
 }
+
+
+/* ---------- Full-Height Repository List ----------
+   Do not trap repository files inside a separate scroll box.
+   Let the normal page scroll handle the full file list. */
+.file-list {
+  max-height: none !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.explorer-pane {
+  overflow: visible !important;
+}
+
+.manager-layout {
+  min-height: 0 !important;
+  align-items: start;
+}
+
+/* When stacked on tablet/mobile, the editor should follow the complete file list. */
+@media (max-width: 900px) {
+  .file-list {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .explorer-pane {
+    overflow: visible !important;
+  }
+
+  .empty-editor {
+    min-height: 260px;
+  }
+}
+
+@media (max-width: 620px) {
+  .empty-editor {
+    min-height: 220px;
+  }
+}
