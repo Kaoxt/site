@@ -23,7 +23,8 @@
       flex-wrap: wrap;
     }
 
-    .mobile-file-back {
+    .mobile-file-back,
+    .mobile-file-back-row {
       display: none;
     }
 
@@ -56,8 +57,28 @@
         border: 0;
       }
 
+      .manager-shell.mobile-editor-view .mobile-file-back-row {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 16px 20px 0;
+      }
+
       .manager-shell.mobile-editor-view .mobile-file-back {
         display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        margin: 0;
+      }
+
+      .manager-shell.mobile-editor-view .editor-head {
+        align-items: flex-start;
+        padding-top: 14px;
+      }
+
+      .manager-shell.mobile-editor-view .editor-head-actions {
+        align-items: center;
       }
     }
   </style>
@@ -65,7 +86,7 @@
   <script src="/components.js?v=20260906-1" defer></script>
   <script src="/set-up-collection/config.js?v=20260906-1"></script>
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
-  <script src="/admin/file-manager.js?v=20260908-6" defer></script>
+  <script src="/admin/file-manager.js?v=20260908-7" defer></script>
 </head>
 <body>
   <main class="page admin-page file-manager-page">
@@ -241,6 +262,10 @@
             </div>
 
             <div id="fileEditor" hidden>
+              <div class="mobile-file-back-row">
+                <button id="backToFilesButton" class="manager-secondary mobile-file-back" type="button">← Back to Files</button>
+              </div>
+
               <div class="editor-head">
                 <div class="editor-title">
                   <div class="kicker" id="editorType">FILE</div>
@@ -248,7 +273,6 @@
                   <span id="editorPath"></span>
                 </div>
                 <div class="editor-head-actions">
-                  <button id="backToFilesButton" class="manager-secondary mobile-file-back" type="button">← Back to Files</button>
                   <a id="githubFileLink" class="manager-secondary link-button" target="_blank" rel="noopener">GitHub</a>
                   <button id="renameButton" class="manager-secondary" type="button">Rename / Move</button>
                   <button id="deleteButton" class="manager-danger" type="button">Delete</button>
