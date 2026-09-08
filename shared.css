@@ -587,8 +587,8 @@ body.light .site-footer {
   padding-top: 14px !important;
 }
 
-/* Compact: phones, tablets up to 1100px, plus portrait tablet/desktop-site view. */
-@media (max-width: 1100px), (orientation: portrait) and (max-width: 1400px) {
+/* Compact: use the menu only on genuinely narrow viewports. */
+@media (max-width: 900px) {
   #site-nav .desktop-nav { display: none !important; }
 
   #site-nav .nav-actions {
@@ -620,7 +620,7 @@ html.force-compact-nav body #site-nav .mobile-theme-toggle { display: inline-gri
 html.force-compact-nav body #site-nav .menu-wrap { display: grid !important; }
 
 /* Desktop landscape. Geometry stays exactly 68px / 30px. */
-@media (min-width: 1101px) and (orientation: landscape) {
+@media (min-width: 901px) {
   html:not(.force-compact-nav) body #site-nav .desktop-nav { display: flex !important; }
 
   html:not(.force-compact-nav) body #site-nav .nav-actions,
@@ -1199,7 +1199,7 @@ body:not(.light)::before {
 /* ==========================================================================
    DESKTOP NAV POLISH — FINAL AUTHORITY
    ========================================================================== */
-@media (min-width: 1101px) and (orientation: landscape) {
+@media (min-width: 901px) {
   html:not(.force-compact-nav) body #site-nav .desktop-nav {
     gap: 0 !important;
   }
@@ -1327,7 +1327,7 @@ html body #site-nav .nuvio-mobile-signout-button::after {
 
 /* Flatten only the empty account slot wrapper so its actual controls can
    participate in the same desktop flex row as the theme button. */
-@media (min-width: 1101px) and (orientation: landscape) {
+@media (min-width: 901px) {
   html:not(.force-compact-nav) body #site-nav .nuvio-desktop-account-slot {
     display: contents !important;
   }
@@ -1397,7 +1397,7 @@ body .hero .actions .btn-icon {
    REMOVE SET UP COLLECTION FROM SIGNED-IN DESKTOP PROFILE MENU
    The Set Up Collection page remains available in the main desktop nav.
    ========================================================================== */
-@media (min-width: 1101px) and (orientation: landscape) {
+@media (min-width: 901px) {
   html:not(.force-compact-nav) body #site-nav
   .nuvio-desktop-account-popover > a.nuvio-desktop-menu-row[href="/set-up-collection"] {
     display: none !important;
