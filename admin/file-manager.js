@@ -53,6 +53,7 @@
     uploadQueue: $('uploadQueue'),
     uploadMessage: $('uploadMessage'),
     commitUploadButton: $('commitUploadButton'),
+    folderPickerSupport: $('folderPickerSupport'),
 
     fileSearch: $('fileSearch'),
     fileList: $('fileList'),
@@ -415,12 +416,21 @@
     el.commitUploadButton.disabled = false;
   }
 
-  function setUploadFiles(fileList, preserveRelativePaths = false) {
+  function setUploadEntries(entries) {
     clearMessage();
 
-    const files = [...(fileList || [])];
+    const normalized = [...(entries || [])];
 
-    for (const file of files) {
+    for (const entry of normalized) {
+      const file = entry.file;
+
+      if (!file || typeof file.size !== 'number') {
+        state.uploadFiles = [];
+        renderUploadQueue();
+        setMessage('The browser did not provide a readable file for this folder.');
+        return;
+      }
+
       if (file.size > MAX_UPLOAD_FILE_BYTES) {
         state.uploadFiles = [];
         renderUploadQueue();
@@ -438,13 +448,9 @@
     }
 
     try {
-      state.uploadFiles = files.map((file) => ({
+      state.uploadFiles = normalized.map(({ file, relativePath }) => ({
         file,
-        relativePath: cleanUploadRelativePath(
-          preserveRelativePaths && file.webkitRelativePath
-            ? file.webkitRelativePath
-            : file.name
-        ),
+        relativePath: cleanUploadRelativePath(relativePath || file.name),
       }));
     } catch (error) {
       state.uploadFiles = [];
@@ -452,6 +458,99 @@
     }
 
     renderUploadQueue();
+  }
+
+  function setUploadFiles(fileList, preserveRelativePaths = false) {
+    const files = [...(fileList || [])];
+
+    if (preserveRelativePaths && files.length) {
+      const hasFolderPaths = files.some((file) => String(file.webkitRelativePath || '').includes('/'));
+
+      if (!hasFolderPaths) {
+        state.uploadFiles = [];
+        renderUploadQueue();
+        setMessage(
+          'This browser opened the files but did not provide their folder paths, so the upload was stopped to avoid flattening the folder. Try the Upload Folder button again in Chrome/Edge, or use a desktop browser.'
+        );
+        return;
+      }
+    }
+
+    setUploadEntries(
+      files.map((file) => ({
+        file,
+        relativePath: preserveRelativePaths
+          ? file.webkitRelativePath
+          : file.name,
+      }))
+    );
+  }
+
+  async function collectDirectoryHandleFiles(directoryHandle) {
+    const entries = [];
+
+    async function walk(handle, relativeDirectory) {
+      for await (const [name, child] of handle.entries()) {
+        const relativePath = `${relativeDirectory}/${name}`;
+
+        if (child.kind === 'file') {
+          const file = await child.getFile();
+          entries.push({ file, relativePath });
+          continue;
+        }
+
+        if (child.kind === 'directory') {
+          await walk(child, relativePath);
+        }
+      }
+    }
+
+    await walk(directoryHandle, directoryHandle.name);
+    return entries;
+  }
+
+  async function chooseFolder() {
+    clearMessage();
+
+    /*
+      Prefer the modern File System Access picker where the browser exposes it.
+      It gives us the directory hierarchy directly. If it is unavailable or
+      blocked, fall back to the webkitdirectory input below.
+    */
+    if (typeof window.showDirectoryPicker === 'function') {
+      try {
+        const directoryHandle = await window.showDirectoryPicker({
+          id: 'kollection-site-upload-folder',
+          mode: 'read',
+        });
+
+        const entries = await collectDirectoryHandleFiles(directoryHandle);
+
+        if (!entries.length) {
+          setMessage('That folder does not contain any files to upload.', 'info');
+          return;
+        }
+
+        setUploadEntries(entries);
+        return;
+      } catch (error) {
+        if (error?.name === 'AbortError') return;
+        // Fall through to the input-based picker for browsers/platforms
+        // that expose the API but cannot use it in the current context.
+      }
+    }
+
+    el.folderInput.value = '';
+    el.folderInput.setAttribute('webkitdirectory', '');
+    el.folderInput.setAttribute('directory', '');
+
+    try {
+      el.folderInput.webkitdirectory = true;
+    } catch {
+      // The attribute above is still the standards-compatible fallback.
+    }
+
+    el.folderInput.click();
   }
 
   function buildUploadBatches(entries) {
@@ -859,7 +958,6 @@
   el.deleteButton.addEventListener('click', deleteCurrentFile);
 
   const chooseFiles = () => el.fileInput.click();
-  const chooseFolder = () => el.folderInput.click();
 
   el.chooseFilesButton.addEventListener('click', (event) => {
     event.stopPropagation();
@@ -911,6 +1009,17 @@
   });
 
   el.commitUploadButton.addEventListener('click', uploadFiles);
+
+  if (el.folderPickerSupport) {
+    const hasModernPicker = typeof window.showDirectoryPicker === 'function';
+    const hasDirectoryInput = 'webkitdirectory' in el.folderInput;
+
+    if (hasModernPicker || hasDirectoryInput) {
+      el.folderPickerSupport.textContent = 'Folder picker supported by this browser.';
+    } else {
+      el.folderPickerSupport.textContent = 'This browser may not support folder selection. Use a current Chrome/Edge browser or a desktop browser.';
+    }
+  }
 
   loadSession();
 })();
