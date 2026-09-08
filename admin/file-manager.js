@@ -3,6 +3,10 @@
 
   const $ = (id) => document.getElementById(id);
 
+  const MAX_UPLOAD_FILE_BYTES = 25 * 1024 * 1024;
+  const UPLOAD_BATCH_MAX_FILES = 10;
+  const UPLOAD_BATCH_MAX_BYTES = 50 * 1024 * 1024;
+
   const state = {
     session: null,
     path: '',
@@ -31,6 +35,7 @@
     repoBreadcrumbs: $('repoBreadcrumbs'),
     newFileButton: $('newFileButton'),
     uploadButton: $('uploadButton'),
+    uploadFolderButton: $('uploadFolderButton'),
     refreshButton: $('refreshButton'),
 
     createPanel: $('createPanel'),
@@ -135,6 +140,28 @@
 
   function basename(path) {
     return String(path || '').split('/').filter(Boolean).at(-1) || '';
+  }
+
+  function cleanUploadRelativePath(value) {
+    const path = String(value || '')
+      .replace(/\\/g, '/')
+      .replace(/^\/+|\/+$/g, '');
+
+    const parts = path.split('/');
+
+    if (
+      !path ||
+      parts.some((part) =>
+        !part ||
+        part === '.' ||
+        part === '..' ||
+        /[\u0000-\u001f]/.test(part)
+      )
+    ) {
+      throw new Error('One of the selected files has an invalid relative path.');
+    }
+
+    return parts.join('/');
   }
 
   async function api(url, options = {}) {
@@ -370,14 +397,6 @@
     if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
-  function uploadRelativePath(file, preserveRelativePath = false) {
-    const relativePath = preserveRelativePath
-      ? String(file.webkitRelativePath || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '')
-      : '';
-
-    return relativePath || file.name;
-  }
-
   function renderUploadQueue() {
     if (!state.uploadFiles.length) {
       el.uploadQueue.hidden = true;
@@ -387,30 +406,76 @@
     }
 
     el.uploadQueue.hidden = false;
-    el.uploadQueue.innerHTML = state.uploadFiles.map(({ file, relativePath }) => `
+    el.uploadQueue.innerHTML = state.uploadFiles.map((entry) => `
       <div class="upload-item">
-        <strong>${esc(relativePath)}</strong>
-        <span>${esc(formatBytes(file.size))}</span>
+        <strong>${esc(entry.relativePath)}</strong>
+        <span>${esc(formatBytes(entry.file.size))}</span>
       </div>
     `).join('');
     el.commitUploadButton.disabled = false;
   }
 
-  function setUploadFiles(fileList, { preserveRelativePath = false } = {}) {
-    const files = [...(fileList || [])].slice(0, 10);
+  function setUploadFiles(fileList, preserveRelativePaths = false) {
+    clearMessage();
+
+    const files = [...(fileList || [])];
 
     for (const file of files) {
-      if (file.size > 10 * 1024 * 1024) {
-        setMessage(`${file.name} is larger than the 10 MB upload limit.`);
+      if (file.size > MAX_UPLOAD_FILE_BYTES) {
+        state.uploadFiles = [];
+        renderUploadQueue();
+
+        const isZip = /\.zip$/i.test(file.name);
+        const guidance = isZip
+          ? ' Extract the ZIP and upload the folder instead so its contents can be batched safely.'
+          : '';
+
+        setMessage(
+          `${file.name} is larger than Cloudflare Pages' 25 MiB single-file asset limit.${guidance}`
+        );
         return;
       }
     }
 
-    state.uploadFiles = files.map((file) => ({
-      file,
-      relativePath: uploadRelativePath(file, preserveRelativePath),
-    }));
+    try {
+      state.uploadFiles = files.map((file) => ({
+        file,
+        relativePath: cleanUploadRelativePath(
+          preserveRelativePaths && file.webkitRelativePath
+            ? file.webkitRelativePath
+            : file.name
+        ),
+      }));
+    } catch (error) {
+      state.uploadFiles = [];
+      setMessage(error.message || 'Could not read the selected upload paths.');
+    }
+
     renderUploadQueue();
+  }
+
+  function buildUploadBatches(entries) {
+    const batches = [];
+    let batch = [];
+    let batchBytes = 0;
+
+    for (const entry of entries) {
+      const size = Number(entry.file?.size || 0);
+      const exceedsFileCount = batch.length >= UPLOAD_BATCH_MAX_FILES;
+      const exceedsBatchBytes = batch.length > 0 && (batchBytes + size) > UPLOAD_BATCH_MAX_BYTES;
+
+      if (exceedsFileCount || exceedsBatchBytes) {
+        batches.push(batch);
+        batch = [];
+        batchBytes = 0;
+      }
+
+      batch.push(entry);
+      batchBytes += size;
+    }
+
+    if (batch.length) batches.push(batch);
+    return batches;
   }
 
   async function createTextFile() {
@@ -590,11 +655,9 @@
 
     const folderRoots = [...new Set(
       state.uploadFiles
+        .filter(({ relativePath }) => relativePath.includes('/'))
         .map(({ relativePath }) => relativePath.split('/')[0])
-        .filter((root, index) =>
-          state.uploadFiles[index].relativePath.includes('/') &&
-          existingFolders.has(root.toLowerCase())
-        )
+        .filter((root) => existingFolders.has(root.toLowerCase()))
     )];
 
     if (replacements.length || folderRoots.length) {
@@ -606,42 +669,92 @@
       const okay = window.confirm(
         `This upload can replace existing content in ${state.path || 'the repository root'}:\n\n` +
         details.join('\n') +
-        '\n\nContinue?'
+        '\n\nOnly matching uploaded files are replaced; other files in those folders stay intact.\n\nContinue?'
       );
       if (!okay) return;
     }
 
     clearMessage();
 
-    const form = new FormData();
-    form.set('action', 'upload');
-    form.set('directory', state.path);
-    form.set('message', el.uploadMessage.value.trim() || `Upload files to ${state.path || 'site root'}`);
-    state.uploadFiles.forEach(({ file, relativePath }) => {
-      form.append('files', file, file.name);
-      form.append('paths', relativePath);
-    });
+    const batches = buildUploadBatches(state.uploadFiles);
+    const totalSelected = state.uploadFiles.length;
+    const baseMessage = el.uploadMessage.value.trim() || `Upload files to ${state.path || 'site root'}`;
+
+    let uploadedCount = 0;
+    let skippedCount = 0;
+    let lastCommitSha = '';
+    let completedCount = 0;
+    let allSucceeded = false;
 
     const old = el.commitUploadButton.textContent;
     el.commitUploadButton.disabled = true;
-    el.commitUploadButton.textContent = 'Uploading…';
 
     try {
-      const result = await api('/api/admin/site-files', {
-        method: 'POST',
-        body: form,
-      });
+      for (let index = 0; index < batches.length; index += 1) {
+        const batch = batches[index];
 
-      const commitText = result.commitSha
-        ? ` Commit ${result.commitSha.slice(0, 7)} was pushed to main.`
+        el.commitUploadButton.textContent = batches.length === 1
+          ? 'Uploading…'
+          : `Uploading batch ${index + 1} of ${batches.length}…`;
+
+        const form = new FormData();
+        form.set('action', 'upload');
+        form.set('directory', state.path);
+
+        const batchMessage = batches.length === 1
+          ? baseMessage
+          : `${baseMessage} (batch ${index + 1}/${batches.length})`;
+
+        form.set('message', batchMessage.slice(0, 100));
+
+        batch.forEach(({ file, relativePath }) => {
+          form.append('files', file, file.name);
+          form.append('paths', relativePath);
+        });
+
+        const result = await api('/api/admin/site-files', {
+          method: 'POST',
+          body: form,
+        });
+
+        uploadedCount += Array.isArray(result.files) ? result.files.length : 0;
+        skippedCount += Array.isArray(result.skipped) ? result.skipped.length : 0;
+        if (result.commitSha) lastCommitSha = result.commitSha;
+
+        completedCount += batch.length;
+
+        // Remove only successfully processed entries. If a later batch fails,
+        // the remaining queue is ready to retry without reselecting the folder.
+        state.uploadFiles = state.uploadFiles.slice(batch.length);
+        renderUploadQueue();
+      }
+
+      allSucceeded = true;
+
+      const commitText = lastCommitSha
+        ? ` Last commit ${lastCommitSha.slice(0, 7)} was pushed to main.`
         : '';
 
-      setMessage(
-        `Uploaded ${result.files.length} file${result.files.length === 1 ? '' : 's'}.${commitText}`,
-        'success'
-      );
+      if (!uploadedCount && skippedCount === totalSelected) {
+        setMessage(
+          `All ${totalSelected} selected files already match GitHub. No new commit was needed.`,
+          'info'
+        );
+      } else {
+        const skippedText = skippedCount
+          ? ` ${skippedCount} unchanged file${skippedCount === 1 ? ' was' : 's were'} skipped.`
+          : '';
 
-      state.uploadFiles = [];
+        const batchText = batches.length > 1
+          ? ` Processed automatically in ${batches.length} batches.`
+          : '';
+
+        setMessage(
+          `Uploaded ${uploadedCount} file${uploadedCount === 1 ? '' : 's'}.${skippedText}${batchText}${commitText}`,
+          'success'
+        );
+      }
+
       el.fileInput.value = '';
       el.folderInput.value = '';
       el.uploadMessage.value = '';
@@ -649,10 +762,24 @@
       el.uploadPanel.hidden = true;
       await loadDirectory(state.path);
     } catch (error) {
-      setMessage(error.message || 'Could not upload the files.');
+      const remaining = state.uploadFiles.length;
+
+      if (completedCount > 0) {
+        const errorText = error.message || 'A later upload batch failed.';
+        await loadDirectory(state.path);
+        setMessage(
+          `${completedCount} file${completedCount === 1 ? '' : 's'} were processed before the upload stopped. ` +
+          `${remaining} file${remaining === 1 ? ' remains' : 's remain'} queued. ${errorText}`
+        );
+        el.uploadPanel.hidden = false;
+        renderUploadQueue();
+      } else {
+        setMessage(error.message || 'Could not upload the files.');
+      }
     } finally {
-      el.commitUploadButton.disabled = false;
+      el.commitUploadButton.disabled = !state.uploadFiles.length && !allSucceeded;
       el.commitUploadButton.textContent = old;
+      if (state.uploadFiles.length) el.commitUploadButton.disabled = false;
     }
   }
 
@@ -700,6 +827,11 @@
 
   el.uploadButton.addEventListener('click', () => {
     showOnlyPanel(el.uploadPanel);
+  });
+
+  el.uploadFolderButton.addEventListener('click', () => {
+    showOnlyPanel(el.uploadPanel);
+    el.folderInput.click();
   });
 
   document.querySelectorAll('[data-close-panel]').forEach((button) => {
@@ -767,15 +899,15 @@
   });
 
   el.fileDropZone.addEventListener('drop', (event) => {
-    setUploadFiles(event.dataTransfer?.files);
+    setUploadFiles(event.dataTransfer?.files, false);
   });
 
   el.fileInput.addEventListener('change', () => {
-    setUploadFiles(el.fileInput.files);
+    setUploadFiles(el.fileInput.files, false);
   });
 
   el.folderInput.addEventListener('change', () => {
-    setUploadFiles(el.folderInput.files, { preserveRelativePath: true });
+    setUploadFiles(el.folderInput.files, true);
   });
 
   el.commitUploadButton.addEventListener('click', uploadFiles);
