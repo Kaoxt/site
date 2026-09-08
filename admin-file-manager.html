@@ -38,6 +38,24 @@
       fill: currentColor;
     }
 
+    /* Center the regular-file marker geometrically instead of relying on the
+       font baseline of the bullet character. */
+    .file-row.file .file-row-icon {
+      font-size: 0 !important;
+      line-height: 0 !important;
+      position: relative;
+    }
+
+    .file-row.file .file-row-icon::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      display: block;
+      border-radius: 50%;
+      background: currentColor;
+      margin: auto;
+    }
+
     @media (max-width: 620px) {
       .file-drop-zone {
         min-height: 220px !important;
