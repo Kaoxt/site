@@ -225,7 +225,7 @@
     });
   };
 
-  const COMPACT_NAV_QUERY = '(max-width: 1100px), (orientation: portrait) and (max-width: 1400px)';
+  const COMPACT_NAV_QUERY = '(max-width: 900px)';
   let compactNavMedia = null;
 
   const clearResponsiveInlineDisplays = () => {
