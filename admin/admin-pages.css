@@ -2,6 +2,18 @@
    Navigation geometry belongs exclusively to /shared.css.
    This file does not style the site navigation itself. */
 
+/* Match the public site's global browser reset exactly. */
+html,
+body {
+  margin: 0 !important;
+  width: 100%;
+  max-width: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 /* Match the public page container width without overriding shared.css top spacing. */
 .admin-page.page {
   width: min(calc(100% - 32px), 1760px) !important;
