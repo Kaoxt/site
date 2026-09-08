@@ -100,11 +100,19 @@ function cleanFileName(value) {
     !name ||
     name === '.' ||
     name === '..' ||
-    /[\/\\\u0000-\u001f]/.test(name)
+    /[/\\\u0000-\u001f]/.test(name)
   ) {
     throw new Error('A file name is not valid.');
   }
   return name;
+}
+
+function cleanUploadPath(value, fallbackName = '') {
+  const candidate = String(value || fallbackName || '')
+    .trim()
+    .replace(/\\/g, '/');
+
+  return cleanPath(candidate, false);
 }
 
 function encodeRepoPath(path) {
@@ -547,6 +555,8 @@ async function uploadFiles(token, form) {
     .getAll('files')
     .filter((file) => file && typeof file.arrayBuffer === 'function' && Number(file.size) >= 0);
 
+  const incomingPaths = form.getAll('paths').map((value) => String(value || ''));
+
   if (!incoming.length) {
     const error = new Error('Choose at least one file to upload.');
     error.status = 400;
@@ -563,15 +573,18 @@ async function uploadFiles(token, form) {
   const commits = [];
   const skipped = [];
 
-  for (const file of incoming) {
+  for (let index = 0; index < incoming.length; index += 1) {
+    const file = incoming[index];
+
     if (file.size > MAX_UPLOAD_BYTES) {
       const error = new Error(`${file.name} is larger than the 10 MB upload limit.`);
       error.status = 413;
       throw error;
     }
 
-    const name = cleanFileName(file.name);
-    const path = cleanPath(directory ? `${directory}/${name}` : name, false);
+    const relativePath = cleanUploadPath(incomingPaths[index], cleanFileName(file.name));
+    const name = basename(relativePath);
+    const path = cleanPath(directory ? `${directory}/${relativePath}` : relativePath, false);
     const bytes = new Uint8Array(await file.arrayBuffer());
 
     /*
@@ -590,7 +603,7 @@ async function uploadFiles(token, form) {
 
     const commitMessage = incoming.length === 1
       ? baseMessage
-      : `${baseMessage}: ${name}`.slice(0, 140);
+      : `${baseMessage}: ${relativePath}`.slice(0, 140);
 
     let data;
 
@@ -618,6 +631,7 @@ async function uploadFiles(token, form) {
       if (error.status === 422 && current?.sha) {
         skipped.push({
           name,
+          relativePath,
           path,
           size: file.size,
           reason: 'unchanged',
@@ -634,6 +648,7 @@ async function uploadFiles(token, form) {
 
     outputFiles.push({
       name,
+      relativePath,
       path,
       size: file.size,
       replaced: Boolean(current?.sha),
