@@ -739,10 +739,10 @@
     if (!confirmed) return;
 
     const second = window.prompt(
-      `Type DELETE to permanently remove:\n${fileName}`
+      `Type delete to permanently remove:\n${fileName}`
     );
 
-    if (second !== 'DELETE') return;
+    if (second !== 'delete') return;
 
     clearMessage();
     el.deleteButton.disabled = true;
