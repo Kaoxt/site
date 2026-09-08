@@ -17,7 +17,7 @@
   <script src="/components.js?v=20260906-1" defer></script>
   <script src="/set-up-collection/config.js?v=20260906-1"></script>
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
-  <script src="/admin/file-manager.js?v=20260907-1" defer></script>
+  <script src="/admin/file-manager.js?v=20260908-1" defer></script>
 </head>
 <body>
   <main class="page admin-page file-manager-page">
@@ -141,11 +141,15 @@
           </div>
 
           <input id="fileInput" type="file" multiple hidden />
+          <input id="folderInput" type="file" webkitdirectory directory multiple hidden />
           <div id="fileDropZone" class="file-drop-zone" tabindex="0" role="button">
             <strong>Drag and Drop Files Here</strong>
             <span>or</span>
-            <button id="chooseFilesButton" class="manager-secondary" type="button">Choose Files</button>
-            <small>Up to 10 files per upload · 10 MB maximum per file.</small>
+            <div>
+              <button id="chooseFilesButton" class="manager-secondary" type="button">Choose Files</button>
+              <button id="chooseFolderButton" class="manager-secondary" type="button">Upload Folder</button>
+            </div>
+            <small>Folder uploads keep the selected folder name, subfolders, and relative paths. Up to 10 files per upload · 10 MB maximum per file.</small>
           </div>
 
           <div id="uploadQueue" class="upload-queue" hidden></div>
