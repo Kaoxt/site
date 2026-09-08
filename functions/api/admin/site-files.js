@@ -9,8 +9,9 @@ const OWNER = 'Kaoxt';
 const REPO = 'site';
 const BRANCH = 'main';
 const MAX_EDIT_BYTES = 1_500_000;
-const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 const MAX_UPLOAD_FILES = 10;
+const MAX_UPLOAD_BATCH_BYTES = 50 * 1024 * 1024;
 
 const JSON_HEADERS = {
   'content-type': 'application/json; charset=utf-8',
@@ -105,14 +106,6 @@ function cleanFileName(value) {
     throw new Error('A file name is not valid.');
   }
   return name;
-}
-
-function cleanUploadPath(value, fallbackName = '') {
-  const candidate = String(value || fallbackName || '')
-    .trim()
-    .replace(/\\/g, '/');
-
-  return cleanPath(candidate, false);
 }
 
 function encodeRepoPath(path) {
@@ -549,13 +542,15 @@ async function uploadFiles(token, form) {
   const directory = cleanPath(form.get('directory') || '', true);
   const baseMessage = String(
     form.get('message') || `Upload files to ${directory || 'site root'}`
-  ).slice(0, 120);
+  ).slice(0, 140);
 
   const incoming = form
     .getAll('files')
     .filter((file) => file && typeof file.arrayBuffer === 'function' && Number(file.size) >= 0);
 
-  const incomingPaths = form.getAll('paths').map((value) => String(value || ''));
+  const relativePaths = form
+    .getAll('paths')
+    .map((value) => String(value || ''));
 
   if (!incoming.length) {
     const error = new Error('Choose at least one file to upload.');
@@ -564,35 +559,45 @@ async function uploadFiles(token, form) {
   }
 
   if (incoming.length > MAX_UPLOAD_FILES) {
-    const error = new Error(`Upload no more than ${MAX_UPLOAD_FILES} files at once.`);
+    const error = new Error('This upload batch contains too many files. Refresh the file manager so automatic batching can run.');
     error.status = 400;
     throw error;
   }
 
-  const outputFiles = [];
-  const commits = [];
+  const batchBytes = incoming.reduce((total, file) => total + Number(file.size || 0), 0);
+
+  if (batchBytes > MAX_UPLOAD_BATCH_BYTES) {
+    const error = new Error('This upload batch is too large. Refresh the file manager so automatic batching can run.');
+    error.status = 413;
+    throw error;
+  }
+
+  const pendingFiles = [];
   const skipped = [];
+  const treeEntries = [];
 
   for (let index = 0; index < incoming.length; index += 1) {
     const file = incoming[index];
 
     if (file.size > MAX_UPLOAD_BYTES) {
-      const error = new Error(`${file.name} is larger than the 10 MB upload limit.`);
+      const error = new Error(
+        `${file.name} is larger than Cloudflare Pages' 25 MiB single-file asset limit.`
+      );
       error.status = 413;
       throw error;
     }
 
-    const relativePath = cleanUploadPath(incomingPaths[index], cleanFileName(file.name));
-    const name = basename(relativePath);
-    const path = cleanPath(directory ? `${directory}/${relativePath}` : relativePath, false);
-    const bytes = new Uint8Array(await file.arrayBuffer());
+    const fallbackName = cleanFileName(file.name);
+    const requestedRelativePath = String(relativePaths[index] || fallbackName)
+      .replace(/\\/g, '/');
 
-    /*
-      Use GitHub's Contents API for uploads/replacements.
-      This is intentionally the same API family used by saveText().
-      If a file already exists, its current SHA is supplied so GitHub
-      performs an actual replacement instead of a create-only request.
-    */
+    const relativePath = cleanPath(requestedRelativePath, false);
+    const name = basename(relativePath);
+    const path = cleanPath(
+      directory ? `${directory}/${relativePath}` : relativePath,
+      false
+    );
+
     const current = await getContents(token, path, true);
 
     if (Array.isArray(current)) {
@@ -601,63 +606,41 @@ async function uploadFiles(token, form) {
       throw error;
     }
 
-    const commitMessage = incoming.length === 1
-      ? baseMessage
-      : `${baseMessage}: ${relativePath}`.slice(0, 140);
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const blobSha = await createBlob(token, bytes);
 
-    let data;
-
-    try {
-      data = await gh(
-        token,
-        `/repos/${OWNER}/${REPO}/contents/${encodeRepoPath(path)}`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: commitMessage,
-            content: bytesToB64(bytes),
-            branch: BRANCH,
-            ...(current?.sha ? { sha: current.sha } : {}),
-          }),
-        }
-      );
-    } catch (error) {
-      /*
-        GitHub can return 422 when an uploaded replacement is byte-for-byte
-        identical to the existing file. Treat that case as unchanged only
-        when there was already a file at the target path.
-      */
-      if (error.status === 422 && current?.sha) {
-        skipped.push({
-          name,
-          relativePath,
-          path,
-          size: file.size,
-          reason: 'unchanged',
-        });
-        continue;
-      }
-
-      throw error;
+    // Git blob SHAs are content-addressed. If the existing file already has
+    // the same blob SHA, skip it instead of creating a needless commit entry.
+    if (current?.sha && String(current.sha) === String(blobSha)) {
+      skipped.push({
+        name,
+        relativePath,
+        path,
+        size: file.size,
+        reason: 'unchanged',
+      });
+      continue;
     }
 
-    const commitSha = String(data?.commit?.sha || '');
+    treeEntries.push({
+      path,
+      mode: '100644',
+      type: 'blob',
+      sha: blobSha,
+    });
 
-    if (commitSha) commits.push(commitSha);
-
-    outputFiles.push({
+    pendingFiles.push({
       name,
       relativePath,
       path,
       size: file.size,
       replaced: Boolean(current?.sha),
-      sha: String(data?.content?.sha || ''),
-      htmlUrl: data?.content?.html_url || null,
+      sha: blobSha,
+      htmlUrl: `https://github.com/${OWNER}/${REPO}/blob/${BRANCH}/${encodeRepoPath(path)}`,
     });
   }
 
-  if (!outputFiles.length && skipped.length) {
+  if (!treeEntries.length) {
     return {
       commitSha: '',
       commits: [],
@@ -667,10 +650,14 @@ async function uploadFiles(token, form) {
     };
   }
 
+  // Commit the entire browser-generated batch at once. This keeps large
+  // folder uploads from generating one GitHub commit per individual file.
+  const commit = await commitTree(token, treeEntries, baseMessage);
+
   return {
-    commitSha: commits.at(-1) || '',
-    commits,
-    files: outputFiles,
+    commitSha: commit.sha,
+    commits: [commit.sha],
+    files: pendingFiles,
     skipped,
     unchanged: false,
   };
