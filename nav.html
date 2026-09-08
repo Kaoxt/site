@@ -1,3 +1,85 @@
+<style id="kollection-nav-final-parity">
+  /*
+    Final shared navbar parity.
+    Admin pages previously added their own page/nav width and top-spacing rules.
+    These later shared-fragment rules make the dock use the same geometry as
+    the public pages without changing the Admin content below it.
+  */
+  body .admin-page.page {
+    width: min(calc(100% - 32px), 1760px) !important;
+    max-width: 1760px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-top: 14px !important;
+  }
+
+  body .admin-page #site-nav {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box !important;
+    transform: none !important;
+    left: auto !important;
+    right: auto !important;
+  }
+
+  body .admin-page #site-nav > .nav {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    transform: none !important;
+    left: auto !important;
+    right: auto !important;
+  }
+
+  /*
+    Home has older broad ".menu-dropdown a" rules in its inline CSS.
+    Keep the dynamically-added Admin shortcut at the intended compact
+    account-action size on every page.
+  */
+  #site-nav .menu-dropdown .nuvio-mobile-account-actions .nuvio-mobile-admin-link,
+  #site-nav .menu-dropdown .nuvio-mobile-account-actions .nuvio-mobile-signout-button {
+    width: auto !important;
+    min-width: 0 !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+    padding: 0 13px !important;
+    border-radius: 999px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    font-size: 11px !important;
+    line-height: 1 !important;
+    font-weight: 680 !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+  }
+
+  @media (max-width: 700px) {
+    body .admin-page.page {
+      width: min(calc(100% - 20px), 100%) !important;
+      max-width: 100% !important;
+      padding-top: 14px !important;
+    }
+  }
+
+  @media (max-width: 420px) {
+    #site-nav .menu-dropdown .nuvio-mobile-account-actions {
+      width: 100% !important;
+    }
+
+    #site-nav .menu-dropdown .nuvio-mobile-account-actions .nuvio-mobile-admin-link,
+    #site-nav .menu-dropdown .nuvio-mobile-account-actions .nuvio-mobile-signout-button {
+      flex: 1 1 0 !important;
+      width: auto !important;
+    }
+  }
+</style>
+
 <header class="nav">
   <a class="brand" href="index.html" aria-label="The Kollection home">
     <img src="logo-banner.webp" alt="The Kollection" />
