@@ -17,7 +17,7 @@
   <script src="/components.js?v=20260906-1" defer></script>
   <script src="/set-up-collection/config.js?v=20260906-1"></script>
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
-  <script src="/admin/file-manager.js?v=20260908-2" defer></script>
+  <script src="/admin/file-manager.js?v=20260908-3" defer></script>
 </head>
 <body>
   <main class="page admin-page file-manager-page">
@@ -150,6 +150,7 @@
             <button id="chooseFolderButton" class="manager-secondary" type="button">Choose Folder</button>
             <small>Large folders are uploaded automatically in safe batches · 25 MiB maximum per file.</small>
             <small>Folder uploads preserve the selected folder name, subfolders, and relative paths. ZIP files over 25 MiB must be extracted and uploaded as a folder.</small>
+            <small id="folderPickerSupport" aria-live="polite"></small>
           </div>
 
           <div id="uploadQueue" class="upload-queue" hidden></div>
