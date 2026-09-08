@@ -22,12 +22,50 @@
       gap: 8px;
       flex-wrap: wrap;
     }
+
+    .mobile-file-back {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .manager-shell.mobile-editor-view .manager-head,
+      .manager-shell.mobile-editor-view .production-warning,
+      .manager-shell.mobile-editor-view .manager-message,
+      .manager-shell.mobile-editor-view .manager-toolbar,
+      .manager-shell.mobile-editor-view .action-panel,
+      .manager-shell.mobile-editor-view .explorer-pane,
+      .manager-shell.mobile-editor-view .manager-footer {
+        display: none !important;
+      }
+
+      .manager-shell.mobile-editor-view {
+        margin-top: 18px;
+        overflow: visible;
+        border-radius: 20px;
+      }
+
+      .manager-shell.mobile-editor-view .manager-layout {
+        display: block;
+        min-height: 0;
+      }
+
+      .manager-shell.mobile-editor-view .editor-pane {
+        display: block;
+        width: 100%;
+        min-height: 0;
+        border: 0;
+      }
+
+      .manager-shell.mobile-editor-view .mobile-file-back {
+        display: inline-flex;
+      }
+    }
   </style>
 
   <script src="/components.js?v=20260906-1" defer></script>
   <script src="/set-up-collection/config.js?v=20260906-1"></script>
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
-  <script src="/admin/file-manager.js?v=20260908-5" defer></script>
+  <script src="/admin/file-manager.js?v=20260908-6" defer></script>
 </head>
 <body>
   <main class="page admin-page file-manager-page">
@@ -210,6 +248,7 @@
                   <span id="editorPath"></span>
                 </div>
                 <div class="editor-head-actions">
+                  <button id="backToFilesButton" class="manager-secondary mobile-file-back" type="button">← Back to Files</button>
                   <a id="githubFileLink" class="manager-secondary link-button" target="_blank" rel="noopener">GitHub</a>
                   <button id="renameButton" class="manager-secondary" type="button">Rename / Move</button>
                   <button id="deleteButton" class="manager-danger" type="button">Delete</button>
