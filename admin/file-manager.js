@@ -308,7 +308,9 @@
                 type="button"
                 data-item-path="${esc(item.path)}"
                 data-item-type="${esc(item.type)}">
-          <span class="file-row-icon" aria-hidden="true">${item.type === 'dir' ? '▰' : '•'}</span>
+          <span class="file-row-icon" aria-hidden="true">${item.type === 'dir'
+            ? '<svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M3.75 5.5h5.86c.47 0 .91.2 1.22.55l1.32 1.45h8.1A1.75 1.75 0 0 1 22 9.25v8A1.75 1.75 0 0 1 20.25 19H3.75A1.75 1.75 0 0 1 2 17.25v-10A1.75 1.75 0 0 1 3.75 5.5Z"/></svg>'
+            : '•'}</span>
           <span class="file-row-copy">
             <strong>${esc(item.name)}</strong>
             <small>${esc(itemSubtitle(item))}</small>
