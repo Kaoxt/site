@@ -14,6 +14,48 @@
   <link rel="stylesheet" href="/admin/admin-pages.css?v=20260907-4" />
   <link rel="stylesheet" href="/admin/admin-hub.css?v=20260907-2" />
 
+  <style id="admin-navbar-index-match">
+    /*
+      Keep the Admin Hub navbar in the exact same page-relative position as
+      index.html. admin-pages.css adds an admin-only max-width inset to
+      #site-nav; these rules remove only that navbar-specific difference.
+    */
+    .admin-hub-page #site-nav {
+      position: sticky !important;
+      top: 14px !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 auto !important;
+      box-sizing: border-box !important;
+      transform: none !important;
+      left: auto !important;
+      right: auto !important;
+    }
+
+    .admin-hub-page #site-nav > .nav {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      box-sizing: border-box !important;
+      left: auto !important;
+      right: auto !important;
+      transform: none !important;
+    }
+
+    /* Match index.html page top geometry on mobile as well. */
+    @media (max-width: 700px) {
+      .admin-hub-page.page {
+        width: min(calc(100% - 20px), 100%) !important;
+        margin: 0 auto !important;
+        padding-top: 10px !important;
+      }
+
+      .admin-hub-page #site-nav {
+        max-width: 100% !important;
+      }
+    }
+  </style>
+
   <script src="/components.js?v=20260906-1" defer></script>
   <script src="/set-up-collection/config.js?v=20260906-1"></script>
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
