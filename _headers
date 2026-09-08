@@ -24,3 +24,25 @@
 
 /admin/file-manager.css
   Cache-Control: no-cache, max-age=0, must-revalidate
+
+# Navigation/account assets that change frequently.
+/nav.html
+  Cache-Control: no-cache, max-age=0, must-revalidate
+
+/admin.html
+  Cache-Control: no-cache, max-age=0, must-revalidate
+
+/admin/admin-pages.css
+  Cache-Control: no-cache, max-age=0, must-revalidate
+
+/nuvio-auth/nav-account.js
+  Cache-Control: no-cache, max-age=0, must-revalidate
+
+/nuvio-auth/nav-account.css
+  Cache-Control: no-cache, max-age=0, must-revalidate
+
+/nuvio-auth/admin-nav.js
+  Cache-Control: no-cache, max-age=0, must-revalidate
+
+/nuvio-auth/admin-nav.css
+  Cache-Control: no-cache, max-age=0, must-revalidate

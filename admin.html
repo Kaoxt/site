@@ -11,21 +11,26 @@
 
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/admin/admin.css?v=20260906-1" />
-  <link rel="stylesheet" href="/admin/admin-pages.css?v=20260907-4" />
+  <link rel="stylesheet" href="/admin/admin-pages.css?v=20260908-1" />
   <link rel="stylesheet" href="/admin/admin-hub.css?v=20260907-2" />
 
   <style id="admin-navbar-index-match">
     /*
-      Keep the Admin Hub navbar in the exact same page-relative position as
-      index.html. admin-pages.css adds an admin-only max-width inset to
-      #site-nav; these rules remove only that navbar-specific difference.
+      Match index.html's page/nav geometry directly.
+      admin-pages.css otherwise gives private pages different top/page sizing.
     */
+    .admin-hub-page.page {
+      width: min(calc(100% - 32px), 1760px) !important;
+      max-width: 1760px !important;
+      margin: 0 auto !important;
+      padding: 14px 0 72px !important;
+    }
+
     .admin-hub-page #site-nav {
-      position: sticky !important;
-      top: 14px !important;
       width: 100% !important;
       max-width: 100% !important;
-      margin: 0 auto !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
       box-sizing: border-box !important;
       transform: none !important;
       left: auto !important;
@@ -42,19 +47,15 @@
       transform: none !important;
     }
 
-    /* Match index.html page top geometry on mobile as well. */
     @media (max-width: 700px) {
       .admin-hub-page.page {
         width: min(calc(100% - 20px), 100%) !important;
-        margin: 0 auto !important;
-        padding-top: 10px !important;
-      }
-
-      .admin-hub-page #site-nav {
         max-width: 100% !important;
+        padding-top: 14px !important;
       }
     }
   </style>
+
 
   <script src="/components.js?v=20260906-1" defer></script>
   <script src="/set-up-collection/config.js?v=20260906-1"></script>
