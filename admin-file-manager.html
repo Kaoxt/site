@@ -11,7 +11,7 @@
 
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/admin/admin.css?v=20260906-1" />
-  <link rel="stylesheet" href="/admin/admin-pages.css?v=20260908-4" />
+  <link rel="stylesheet" href="/admin/admin-pages.css?v=20260908-5" />
   <link rel="stylesheet" href="/admin/file-manager.css?v=20260907-3" />
 
   <style>
@@ -21,6 +21,29 @@
       justify-content: center;
       gap: 8px;
       flex-wrap: wrap;
+    }
+
+    /* More vertical breathing room in the upload target. */
+    .file-drop-zone {
+      min-height: 235px !important;
+      padding: 36px 22px !important;
+      gap: 11px !important;
+    }
+
+    /* Proper small folder icon instead of the old text glyph. */
+    .file-row.folder .file-row-icon svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+      fill: currentColor;
+    }
+
+    @media (max-width: 620px) {
+      .file-drop-zone {
+        min-height: 220px !important;
+        padding-top: 34px !important;
+        padding-bottom: 34px !important;
+      }
     }
 
     .mobile-file-back,
@@ -86,7 +109,7 @@
   <script src="/components.js?v=20260906-1" defer></script>
   <script src="/set-up-collection/config.js?v=20260906-1"></script>
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
-  <script src="/admin/file-manager.js?v=20260908-8" defer></script>
+  <script src="/admin/file-manager.js?v=20260908-9" defer></script>
 </head>
 <body>
   <main class="page admin-page file-manager-page">
