@@ -35,7 +35,6 @@
     repoBreadcrumbs: $('repoBreadcrumbs'),
     newFileButton: $('newFileButton'),
     uploadButton: $('uploadButton'),
-    uploadFolderButton: $('uploadFolderButton'),
     refreshButton: $('refreshButton'),
 
     createPanel: $('createPanel'),
@@ -926,11 +925,6 @@
 
   el.uploadButton.addEventListener('click', () => {
     showOnlyPanel(el.uploadPanel);
-  });
-
-  el.uploadFolderButton.addEventListener('click', () => {
-    showOnlyPanel(el.uploadPanel);
-    chooseFolder();
   });
 
   document.querySelectorAll('[data-close-panel]').forEach((button) => {
