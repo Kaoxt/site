@@ -63,6 +63,7 @@
     editorType: $('editorType'),
     editorHeading: $('editorHeading'),
     editorPath: $('editorPath'),
+    backToFilesButton: $('backToFilesButton'),
     githubFileLink: $('githubFileLink'),
     renameButton: $('renameButton'),
     deleteButton: $('deleteButton'),
@@ -331,6 +332,7 @@
 
       state.path = data.path || '';
       state.items = Array.isArray(data.items) ? data.items : [];
+      el.managerShell.classList.remove('mobile-editor-view');
       state.selected = null;
       state.selectedContent = '';
 
@@ -347,22 +349,30 @@
     }
   }
 
-  function bringEditorIntoView() {
-    if (!el.editorPane) return;
+  function isCompactFileManager() {
+    return window.matchMedia('(max-width: 900px)').matches;
+  }
 
-    // At 900px and below the File Manager stacks the editor below the
-    // repository list. Root folders can be long, so a selected file can
-    // open completely off-screen unless we move the user to the editor.
-    const stackedLayout = window.matchMedia('(max-width: 900px)').matches;
-    if (!stackedLayout) return;
+  function enterFileView(pushHistory = true) {
+    if (!isCompactFileManager()) return;
 
-    requestAnimationFrame(() => {
-      el.editorPane.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-        inline: 'nearest',
-      });
-    });
+    el.managerShell.classList.add('mobile-editor-view');
+
+    if (pushHistory && !history.state?.kollectionFileView) {
+      history.pushState(
+        { ...(history.state || {}), kollectionFileView: true },
+        '',
+        window.location.href
+      );
+    }
+  }
+
+  function exitFileView(useHistory = false) {
+    el.managerShell.classList.remove('mobile-editor-view');
+
+    if (useHistory && history.state?.kollectionFileView) {
+      history.back();
+    }
   }
 
   async function openFile(item) {
@@ -403,7 +413,7 @@
       }
 
       renderList();
-      bringEditorIntoView();
+      enterFileView(true);
     } catch (error) {
       setMessage(error.message || 'Could not open the file.');
       clearEditor();
@@ -1023,6 +1033,24 @@
   });
 
   el.commitUploadButton.addEventListener('click', uploadFiles);
+
+  el.backToFilesButton.addEventListener('click', () => {
+    clearEditor();
+    exitFileView(true);
+  });
+
+  window.addEventListener('popstate', () => {
+    if (el.managerShell.classList.contains('mobile-editor-view')) {
+      clearEditor();
+      exitFileView(false);
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    if (!isCompactFileManager()) {
+      el.managerShell.classList.remove('mobile-editor-view');
+    }
+  }, { passive: true });
 
   if (el.folderPickerSupport) {
     const hasModernPicker = typeof window.showDirectoryPicker === 'function';
