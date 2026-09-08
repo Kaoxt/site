@@ -229,3 +229,117 @@ body.light .admin-breadcrumbs span[aria-current="page"] {
     padding-top: 26px !important;
   }
 }
+
+/* ==========================================================================
+   CLEAN ADMIN + REPOSITORY BREADCRUMBS
+   Larger text, no pill/circle containers.
+   ========================================================================== */
+
+/* General Admin breadcrumbs: Admin › File Manager / Image Library / etc. */
+.admin-breadcrumbs {
+  gap: 8px !important;
+  font-size: 14px !important;
+  font-weight: 680 !important;
+  line-height: 1.35 !important;
+}
+
+.admin-breadcrumbs a,
+.admin-breadcrumbs span[aria-current="page"] {
+  min-height: 0 !important;
+  padding: 2px 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.admin-breadcrumbs a {
+  color: #aeb1ba !important;
+}
+
+.admin-breadcrumbs a:hover {
+  color: #ffffff !important;
+  background: transparent !important;
+}
+
+.admin-breadcrumbs span[aria-current="page"] {
+  color: #e0e1e5 !important;
+}
+
+.admin-breadcrumbs .breadcrumb-separator {
+  color: #5f646f !important;
+  font-size: 14px !important;
+}
+
+/* File Manager repository path: site › nuvio-auth › ... */
+.repo-breadcrumbs {
+  gap: 7px !important;
+  font-size: 13px !important;
+  font-weight: 680 !important;
+  line-height: 1.35 !important;
+}
+
+.repo-breadcrumbs button {
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 2px 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #aeb1ba !important;
+  font: inherit !important;
+  font-size: 13px !important;
+  font-weight: 680 !important;
+}
+
+.repo-breadcrumbs button:hover {
+  color: #ffffff !important;
+  background: transparent !important;
+}
+
+.repo-separator {
+  color: #5f646f !important;
+  font-size: 13px !important;
+}
+
+/* Light mode keeps the same clean text-only treatment. */
+body.light .admin-breadcrumbs a,
+body.light .repo-breadcrumbs button {
+  color: #5d616b !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+body.light .admin-breadcrumbs a:hover,
+body.light .repo-breadcrumbs button:hover {
+  color: #17181c !important;
+  background: transparent !important;
+}
+
+body.light .admin-breadcrumbs span[aria-current="page"] {
+  color: #30323a !important;
+}
+
+body.light .admin-breadcrumbs .breadcrumb-separator,
+body.light .repo-separator {
+  color: #989ca5 !important;
+}
+
+@media (max-width: 700px) {
+  .admin-breadcrumbs {
+    font-size: 14px !important;
+    gap: 7px !important;
+  }
+
+  .admin-breadcrumbs .breadcrumb-separator {
+    font-size: 14px !important;
+  }
+
+  .repo-breadcrumbs,
+  .repo-breadcrumbs button,
+  .repo-separator {
+    font-size: 13px !important;
+  }
+}
+
