@@ -17,7 +17,7 @@
   <script src="/components.js?v=20260906-1" defer></script>
   <script src="/set-up-collection/config.js?v=20260906-1"></script>
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
-  <script src="/admin/file-manager.js?v=20260908-1" defer></script>
+  <script src="/admin/file-manager.js?v=20260908-2" defer></script>
 </head>
 <body>
   <main class="page admin-page file-manager-page">
@@ -100,6 +100,7 @@
           <div class="toolbar-actions">
             <button id="newFileButton" class="manager-secondary" type="button">New File</button>
             <button id="uploadButton" class="manager-primary" type="button">Upload Files</button>
+            <button id="uploadFolderButton" class="manager-secondary" type="button">Upload Folder</button>
             <button id="refreshButton" class="manager-secondary" type="button">Refresh</button>
           </div>
         </div>
@@ -135,7 +136,7 @@
           <div class="panel-head">
             <div>
               <div class="kicker">UPLOAD</div>
-              <h3 id="uploadHeading">Upload Files</h3>
+              <h3 id="uploadHeading">Upload Files or Folder</h3>
             </div>
             <button class="icon-close" type="button" data-close-panel="uploadPanel" aria-label="Close">×</button>
           </div>
@@ -144,12 +145,11 @@
           <input id="folderInput" type="file" webkitdirectory directory multiple hidden />
           <div id="fileDropZone" class="file-drop-zone" tabindex="0" role="button">
             <strong>Drag and Drop Files Here</strong>
-            <span>or</span>
-            <div>
-              <button id="chooseFilesButton" class="manager-secondary" type="button">Choose Files</button>
-              <button id="chooseFolderButton" class="manager-secondary" type="button">Upload Folder</button>
-            </div>
-            <small>Folder uploads keep the selected folder name, subfolders, and relative paths. Up to 10 files per upload · 10 MB maximum per file.</small>
+            <span>or choose what you want to upload</span>
+            <button id="chooseFilesButton" class="manager-secondary" type="button">Choose Files</button>
+            <button id="chooseFolderButton" class="manager-secondary" type="button">Choose Folder</button>
+            <small>Large folders are uploaded automatically in safe batches · 25 MiB maximum per file.</small>
+            <small>Folder uploads preserve the selected folder name, subfolders, and relative paths. ZIP files over 25 MiB must be extracted and uploaded as a folder.</small>
           </div>
 
           <div id="uploadQueue" class="upload-queue" hidden></div>
