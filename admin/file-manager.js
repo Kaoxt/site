@@ -57,6 +57,7 @@
     fileSearch: $('fileSearch'),
     fileList: $('fileList'),
 
+    editorPane: $('editorPane'),
     emptyEditor: $('emptyEditor'),
     fileEditor: $('fileEditor'),
     editorType: $('editorType'),
@@ -346,6 +347,24 @@
     }
   }
 
+  function bringEditorIntoView() {
+    if (!el.editorPane) return;
+
+    // At 900px and below the File Manager stacks the editor below the
+    // repository list. Root folders can be long, so a selected file can
+    // open completely off-screen unless we move the user to the editor.
+    const stackedLayout = window.matchMedia('(max-width: 900px)').matches;
+    if (!stackedLayout) return;
+
+    requestAnimationFrame(() => {
+      el.editorPane.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+        inline: 'nearest',
+      });
+    });
+  }
+
   async function openFile(item) {
     clearMessage();
     el.emptyEditor.hidden = true;
@@ -384,6 +403,7 @@
       }
 
       renderList();
+      bringEditorIntoView();
     } catch (error) {
       setMessage(error.message || 'Could not open the file.');
       clearEditor();
