@@ -49,26 +49,11 @@
   flex: 0 0 auto;
 }
 
-.nuvio-mobile-admin-link,
-.nuvio-mobile-account-actions .nuvio-mobile-signout-button {
-  min-height: 36px;
-  padding: 0 13px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 680;
-  text-decoration: none;
-  white-space: nowrap;
-  box-sizing: border-box;
-}
-
 .nuvio-mobile-admin-link {
   border: 1px solid rgba(126,117,255,.28);
   background: rgba(99,91,255,.13);
   color: #c7c4ff;
+  text-decoration: none;
 }
 
 .nuvio-mobile-admin-link:hover {
@@ -83,7 +68,6 @@
   outline-offset: 2px;
 }
 
-/* Give the mobile footer enough room when Admin + Sign out are both present. */
 .nuvio-mobile-bottom-row {
   flex-wrap: wrap;
 }
@@ -101,6 +85,30 @@ body.light .nuvio-mobile-admin-link:hover {
   background: rgba(79,70,229,.13);
 }
 
+/*
+  Public pages have older broad ".menu-dropdown a" rules.
+  Override ONLY the Admin anchor so it matches the existing Log Out pill.
+*/
+#site-nav .menu-dropdown .nuvio-mobile-account-actions > .nuvio-mobile-admin-link {
+  width: auto !important;
+  min-width: 0 !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  padding: 0 13px !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
+  font: inherit !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+  font-weight: 650 !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+
 @media (max-width: 420px) {
   .nuvio-mobile-bottom-row {
     align-items: stretch;
@@ -110,7 +118,11 @@ body.light .nuvio-mobile-admin-link:hover {
     width: 100%;
   }
 
-  .nuvio-mobile-admin-link,
+  #site-nav .menu-dropdown .nuvio-mobile-account-actions > .nuvio-mobile-admin-link {
+    flex: 1 1 0 !important;
+    width: auto !important;
+  }
+
   .nuvio-mobile-account-actions .nuvio-mobile-signout-button {
     flex: 1 1 0;
   }
