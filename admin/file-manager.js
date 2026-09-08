@@ -41,8 +41,10 @@
 
     uploadPanel: $('uploadPanel'),
     fileInput: $('fileInput'),
+    folderInput: $('folderInput'),
     fileDropZone: $('fileDropZone'),
     chooseFilesButton: $('chooseFilesButton'),
+    chooseFolderButton: $('chooseFolderButton'),
     uploadQueue: $('uploadQueue'),
     uploadMessage: $('uploadMessage'),
     commitUploadButton: $('commitUploadButton'),
@@ -368,6 +370,14 @@
     if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
+  function uploadRelativePath(file, preserveRelativePath = false) {
+    const relativePath = preserveRelativePath
+      ? String(file.webkitRelativePath || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '')
+      : '';
+
+    return relativePath || file.name;
+  }
+
   function renderUploadQueue() {
     if (!state.uploadFiles.length) {
       el.uploadQueue.hidden = true;
@@ -377,16 +387,16 @@
     }
 
     el.uploadQueue.hidden = false;
-    el.uploadQueue.innerHTML = state.uploadFiles.map((file) => `
+    el.uploadQueue.innerHTML = state.uploadFiles.map(({ file, relativePath }) => `
       <div class="upload-item">
-        <strong>${esc(file.name)}</strong>
+        <strong>${esc(relativePath)}</strong>
         <span>${esc(formatBytes(file.size))}</span>
       </div>
     `).join('');
     el.commitUploadButton.disabled = false;
   }
 
-  function setUploadFiles(fileList) {
+  function setUploadFiles(fileList, { preserveRelativePath = false } = {}) {
     const files = [...(fileList || [])].slice(0, 10);
 
     for (const file of files) {
@@ -396,7 +406,10 @@
       }
     }
 
-    state.uploadFiles = files;
+    state.uploadFiles = files.map((file) => ({
+      file,
+      relativePath: uploadRelativePath(file, preserveRelativePath),
+    }));
     renderUploadQueue();
   }
 
@@ -564,18 +577,35 @@
   async function uploadFiles() {
     if (!state.uploadFiles.length) return;
 
-    const existingNames = new Set(
+    const existingFiles = new Set(
       state.items.filter((item) => item.type === 'file').map((item) => item.name.toLowerCase())
     );
-
-    const replacements = state.uploadFiles.filter((file) =>
-      existingNames.has(file.name.toLowerCase())
+    const existingFolders = new Set(
+      state.items.filter((item) => item.type === 'dir').map((item) => item.name.toLowerCase())
     );
 
-    if (replacements.length) {
+    const replacements = state.uploadFiles.filter(({ relativePath }) =>
+      !relativePath.includes('/') && existingFiles.has(relativePath.toLowerCase())
+    );
+
+    const folderRoots = [...new Set(
+      state.uploadFiles
+        .map(({ relativePath }) => relativePath.split('/')[0])
+        .filter((root, index) =>
+          state.uploadFiles[index].relativePath.includes('/') &&
+          existingFolders.has(root.toLowerCase())
+        )
+    )];
+
+    if (replacements.length || folderRoots.length) {
+      const details = [
+        ...replacements.map(({ relativePath }) => relativePath),
+        ...folderRoots.map((name) => `${name}/ (existing folder)`),
+      ];
+
       const okay = window.confirm(
-        `This upload will replace ${replacements.length} existing file${replacements.length === 1 ? '' : 's'} in ${state.path || 'the repository root'}:\n\n` +
-        replacements.map((file) => file.name).join('\n') +
+        `This upload can replace existing content in ${state.path || 'the repository root'}:\n\n` +
+        details.join('\n') +
         '\n\nContinue?'
       );
       if (!okay) return;
@@ -587,7 +617,10 @@
     form.set('action', 'upload');
     form.set('directory', state.path);
     form.set('message', el.uploadMessage.value.trim() || `Upload files to ${state.path || 'site root'}`);
-    state.uploadFiles.forEach((file) => form.append('files', file, file.name));
+    state.uploadFiles.forEach(({ file, relativePath }) => {
+      form.append('files', file, file.name);
+      form.append('paths', relativePath);
+    });
 
     const old = el.commitUploadButton.textContent;
     el.commitUploadButton.disabled = true;
@@ -599,10 +632,18 @@
         body: form,
       });
 
-      setMessage(`Uploaded ${result.files.length} file${result.files.length === 1 ? '' : 's'}. Commit ${result.commitSha.slice(0, 7)} was pushed to main.`, 'success');
+      const commitText = result.commitSha
+        ? ` Commit ${result.commitSha.slice(0, 7)} was pushed to main.`
+        : '';
+
+      setMessage(
+        `Uploaded ${result.files.length} file${result.files.length === 1 ? '' : 's'}.${commitText}`,
+        'success'
+      );
 
       state.uploadFiles = [];
       el.fileInput.value = '';
+      el.folderInput.value = '';
       el.uploadMessage.value = '';
       renderUploadQueue();
       el.uploadPanel.hidden = true;
@@ -686,9 +727,16 @@
   el.deleteButton.addEventListener('click', deleteCurrentFile);
 
   const chooseFiles = () => el.fileInput.click();
+  const chooseFolder = () => el.folderInput.click();
+
   el.chooseFilesButton.addEventListener('click', (event) => {
     event.stopPropagation();
     chooseFiles();
+  });
+
+  el.chooseFolderButton.addEventListener('click', (event) => {
+    event.stopPropagation();
+    chooseFolder();
   });
 
   el.fileDropZone.addEventListener('click', (event) => {
@@ -726,7 +774,12 @@
     setUploadFiles(el.fileInput.files);
   });
 
+  el.folderInput.addEventListener('change', () => {
+    setUploadFiles(el.folderInput.files, { preserveRelativePath: true });
+  });
+
   el.commitUploadButton.addEventListener('click', uploadFiles);
 
   loadSession();
 })();
+1
