@@ -930,7 +930,7 @@
 
   el.uploadFolderButton.addEventListener('click', () => {
     showOnlyPanel(el.uploadPanel);
-    el.folderInput.click();
+    chooseFolder();
   });
 
   document.querySelectorAll('[data-close-panel]').forEach((button) => {
