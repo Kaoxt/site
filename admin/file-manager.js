@@ -127,6 +127,31 @@
     return `${amount.toFixed(order === 0 ? 0 : amount >= 100 ? 0 : amount >= 10 ? 1 : 2)} ${units[order]}`;
   }
 
+
+  function formatUpdatedAt(value) {
+    if (!value) return '';
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+
+    const diffMs = Math.max(0, Date.now() - date.getTime());
+    const seconds = Math.floor(diffMs / 1000);
+
+    if (seconds < 60) return 'Just Now';
+
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} min ago`;
+
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hr ago`;
+
+    return new Intl.DateTimeFormat(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: date.getFullYear() === new Date().getFullYear() ? undefined : 'numeric',
+    }).format(date);
+  }
+
   function parentPath(path) {
     const parts = String(path || '').split('/').filter(Boolean);
     parts.pop();
@@ -288,7 +313,7 @@
             <strong>${esc(item.name)}</strong>
             <small>${esc(itemSubtitle(item))}</small>
           </span>
-          <span class="file-row-size">${item.type === 'dir' ? '' : esc(formatBytes(item.size))}</span>
+          <span class="file-row-size" title="${item.updatedAt ? esc(new Date(item.updatedAt).toLocaleString()) : ''}">${esc(formatUpdatedAt(item.updatedAt))}</span>
         </button>`;
     }).join('');
 

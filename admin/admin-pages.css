@@ -343,3 +343,32 @@ body.light .repo-separator {
   }
 }
 
+/* ==========================================================================
+   FILE DETAIL METADATA + ADMINISTRATOR STATUS
+   ========================================================================== */
+
+/* Make Size / SHA / Branch easier to read in the file detail view. */
+.file-metadata span {
+  font-size: 11px !important;
+  line-height: 1.25 !important;
+  letter-spacing: .065em !important;
+}
+
+.file-metadata strong {
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+
+/* Administrator status: muted red instead of green. */
+.auth-state.good {
+  color: #fecaca !important;
+  border-color: rgba(248,113,113,.28) !important;
+  background: rgba(127,29,29,.18) !important;
+}
+
+body.light .auth-state.good {
+  color: #9f1239 !important;
+  border-color: rgba(190,24,93,.22) !important;
+  background: rgba(244,63,94,.08) !important;
+}
+
