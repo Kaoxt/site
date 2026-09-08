@@ -13,6 +13,10 @@ const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
 const MAX_UPLOAD_FILES = 10;
 const MAX_UPLOAD_BATCH_BYTES = 50 * 1024 * 1024;
 
+const LAST_UPDATED_TTL_MS = 5 * 60 * 1000;
+const LAST_UPDATED_CACHE_LIMIT = 500;
+const lastUpdatedCache = new Map();
+
 const JSON_HEADERS = {
   'content-type': 'application/json; charset=utf-8',
   'cache-control': 'no-store',
@@ -166,6 +170,91 @@ function itemShape(item) {
     htmlUrl: item.html_url || null,
     downloadUrl: item.download_url || null,
   };
+}
+
+
+function rememberLastUpdated(path, updatedAt) {
+  if (lastUpdatedCache.size >= LAST_UPDATED_CACHE_LIMIT) {
+    const oldestKey = lastUpdatedCache.keys().next().value;
+    if (oldestKey !== undefined) lastUpdatedCache.delete(oldestKey);
+  }
+
+  lastUpdatedCache.set(path, {
+    updatedAt,
+    expiresAt: Date.now() + LAST_UPDATED_TTL_MS,
+  });
+}
+
+function invalidateLastUpdatedPath(path) {
+  const parts = String(path || '').split('/').filter(Boolean);
+
+  while (parts.length) {
+    lastUpdatedCache.delete(parts.join('/'));
+    parts.pop();
+  }
+
+  lastUpdatedCache.delete('');
+}
+
+function invalidateLastUpdated(paths) {
+  for (const path of paths || []) {
+    invalidateLastUpdatedPath(path);
+  }
+}
+
+async function getLastUpdatedAt(token, path) {
+  const key = String(path || '');
+  const cached = lastUpdatedCache.get(key);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.updatedAt;
+  }
+
+  if (cached) lastUpdatedCache.delete(key);
+
+  const commits = await gh(
+    token,
+    `/repos/${OWNER}/${REPO}/commits?sha=${encodeURIComponent(BRANCH)}&path=${encodeURIComponent(key)}&per_page=1`
+  );
+
+  const updatedAt =
+    commits?.[0]?.commit?.committer?.date ||
+    commits?.[0]?.commit?.author?.date ||
+    null;
+
+  rememberLastUpdated(key, updatedAt);
+  return updatedAt;
+}
+
+async function enrichLastUpdated(token, items, concurrency = 6) {
+  const output = new Array(items.length);
+  let cursor = 0;
+
+  async function worker() {
+    while (cursor < items.length) {
+      const index = cursor;
+      cursor += 1;
+
+      const item = items[index];
+
+      let updatedAt = null;
+      try {
+        updatedAt = await getLastUpdatedAt(token, item.path);
+      } catch (error) {
+        console.warn('Could not load last-updated metadata for', item.path, error?.message || error);
+      }
+
+      output[index] = {
+        ...item,
+        updatedAt,
+      };
+    }
+  }
+
+  const workerCount = Math.min(concurrency, Math.max(1, items.length));
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+
+  return output;
 }
 
 async function requireAdmin(context, write = false) {
@@ -330,8 +419,8 @@ export async function onRequestGet(context) {
     const contents = await getContents(auth.token, path, false);
 
     if (Array.isArray(contents)) {
-      const items = contents
-        .map(itemShape)
+      const shapedItems = contents.map(itemShape);
+      const items = (await enrichLastUpdated(auth.token, shapedItems))
         .sort((a, b) => {
           if (a.type !== b.type) return a.type === 'dir' ? -1 : 1;
           return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
@@ -427,6 +516,8 @@ async function saveText(token, body) {
     }
   );
 
+  invalidateLastUpdated([path]);
+
   return {
     path,
     commitSha: data.commit?.sha || '',
@@ -471,6 +562,8 @@ async function deleteFile(token, body) {
       }),
     }
   );
+
+  invalidateLastUpdated([path]);
 
   return {
     path,
@@ -530,6 +623,8 @@ async function renameFile(token, body) {
     ],
     body.message || `Move ${sourcePath} to ${destinationPath}`
   );
+
+  invalidateLastUpdated([sourcePath, destinationPath]);
 
   return {
     sourcePath,
@@ -653,6 +748,8 @@ async function uploadFiles(token, form) {
   // Commit the entire browser-generated batch at once. This keeps large
   // folder uploads from generating one GitHub commit per individual file.
   const commit = await commitTree(token, treeEntries, baseMessage);
+
+  invalidateLastUpdated(pendingFiles.map((file) => file.path));
 
   return {
     commitSha: commit.sha,
