@@ -23,6 +23,11 @@ body { margin: 0; }
   overflow-x: clip;
 }
 
+/* Keep the injected shared nav on the same visual baseline as News / FAQ. */
+.account-page > #site-nav {
+  margin-top: -6px !important;
+}
+
 /* Page-shell geometry lives in /secondary-pages.css. Account CSS only owns account content. */
 .account-page .secondary-page-title { color: var(--account-text) !important; }
 .account-page .secondary-page-subtitle { color: var(--account-muted) !important; }
