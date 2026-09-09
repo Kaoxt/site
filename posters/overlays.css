@@ -99,20 +99,25 @@
 #tagOptions .tag-option.is-forced{border-color:rgba(129,140,248,.24);background:rgba(99,102,241,.055)}
 #tagOptions .tag-option.is-forced small::after{content:" • Always on while Quality is off";color:#9ba3ff}
 
+/* Rating source belongs to the Rating card instead of becoming its own box. */
+#tagOptions .rating-card{flex-wrap:wrap;align-items:center}
 .rating-source-row{
+  order:3;
+  flex:0 0 100%;
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:18px;
-  margin:-2px 0 2px;
-  padding:14px 18px;
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:16px;
-  background:rgba(255,255,255,.018);
+  margin:5px 0 0;
+  padding:14px 0 0;
+  border:0;
+  border-top:1px solid rgba(255,255,255,.09);
+  border-radius:0;
+  background:transparent;
 }
-.rating-source-copy{display:flex;flex-direction:column;gap:4px;min-width:0}
-.rating-source-copy strong{font-size:15px}
-.rating-source-copy small{color:#8f929d;font-size:11.5px;line-height:1.35}
+.rating-source-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+.rating-source-copy strong{font-size:15px!important}
+.rating-source-copy small{color:#8f929d;font-size:11.5px!important;line-height:1.35}
 .rating-source-select{
   min-width:220px;
   max-width:52%;
@@ -125,7 +130,7 @@
   font-size:14px;
 }
 body.light .rating-source-select,html[data-theme="light"] .rating-source-select{background:#fff;color:#202126;border-color:rgba(0,0,0,.13)}
-body.light .rating-source-row,html[data-theme="light"] .rating-source-row{border-color:rgba(0,0,0,.09);background:rgba(0,0,0,.018)}
+body.light .rating-source-row,html[data-theme="light"] .rating-source-row{border-top-color:rgba(0,0,0,.09);background:transparent}
 
 @media(max-width:900px){
   .poster-mock .overlay{min-height:34px;padding:7px 11px}
@@ -145,7 +150,7 @@ body.light .rating-source-row,html[data-theme="light"] .rating-source-row{border
   #tagOptions .tag-option{min-height:76px;padding:15px 14px}
   #tagOptions .tag-option strong{font-size:16px}
   #tagOptions .tag-option small{font-size:12px}
-  .rating-source-row{align-items:flex-start;flex-direction:column;gap:10px;padding:14px}
+  .rating-source-row{align-items:flex-start;flex-direction:column;gap:10px;padding-top:12px}
   .rating-source-select{width:100%;max-width:none;min-width:0}
 }
 
