@@ -43,14 +43,15 @@
   ratingSourceRow.className = 'rating-source-row';
   ratingSourceRow.innerHTML = `
     <div class="rating-source-copy">
-      <strong>Rating source</strong>
-      <small>Choose which rating Posters should request for the badge.</small>
+      <strong>Source</strong>
+      <small>Choose which rating Posters should request.</small>
     </div>
     <select id="ratingSource" class="rating-source-select" aria-label="Rating source">
       ${ratingSources.map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}
     </select>`;
   const ratingCard = ratingInput?.closest('.tag-option');
-  ratingCard?.after(ratingSourceRow);
+  ratingCard?.classList.add('rating-card');
+  ratingCard?.append(ratingSourceRow);
   const ratingSource = ratingSourceRow.querySelector('#ratingSource');
 
   const previewSamples = [
