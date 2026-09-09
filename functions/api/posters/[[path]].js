@@ -140,7 +140,6 @@ async function renderPoster(request, env, type, rawId) {
   }
 
   if (tagsEnabled && requested.has('rating') && Number(details.vote_average) > 0) {
-    // TMDB is the live fallback until the external MDBList-backed rating sources are connected server-side.
     draw.push({
       url: badgeUrl(url, `★ ${Number(details.vote_average).toFixed(1)}`, 'rating'),
       left: 22,
@@ -194,12 +193,19 @@ async function renderPoster(request, env, type, rawId) {
   };
   if (draw.length) imageOptions.draw = draw;
 
+  let transformed = true;
   let response = await fetch(sourceUrl, { cf: { image: imageOptions } });
-  if (!response.ok) response = await fetch(sourceUrl);
+  if (!response.ok) {
+    transformed = false;
+    response = await fetch(sourceUrl);
+  }
 
   const headers = new Headers(response.headers);
-  headers.set('cache-control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800');
-  headers.set('x-kollection-posters', 'tmdb-v4-layout');
+  headers.set('cache-control', transformed
+    ? 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800'
+    : 'no-store, max-age=0');
+  headers.set('x-kollection-posters', 'tmdb-v5-transform-state');
+  headers.set('x-kollection-transform', transformed ? 'applied' : 'fallback');
   headers.set('x-kollection-tmdb-id', resolved.id);
   headers.set('x-kollection-rating-source', ratingSource);
   if (ratingSource !== 'tmdb') headers.set('x-kollection-rating-fallback', 'tmdb');
@@ -234,7 +240,9 @@ export async function onRequest(context) {
     if (cached) return cached;
 
     const response = await renderPoster(request, env, type, rawId);
-    if (response.ok) context.waitUntil(cache.put(request, response.clone()));
+    if (response.ok && response.headers.get('x-kollection-transform') === 'applied') {
+      context.waitUntil(cache.put(request, response.clone()));
+    }
     return response;
   } catch (error) {
     return json({ error: error?.message || 'Poster renderer failed.' }, 502);
