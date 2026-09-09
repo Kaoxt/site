@@ -10,7 +10,7 @@
   <meta name="description" content="Create smart movie and TV poster overlays for AIOmetadata, Nuvio, Stremio, and The Kollection." />
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/secondary-pages.css?v=20260909-3" />
-  <link rel="stylesheet" href="/posters/styles.css?v=20260909-4" />
+  <link rel="stylesheet" href="/posters/styles.css?v=20260909-5" />
   <script src="/components.js?v=20260908-3" defer></script>
 </head>
 <body>
@@ -28,123 +28,143 @@
       </div>
     </header>
 
-    <section class="posters-shell" data-page-content aria-label="Configure Posters">
-      <div class="posters-config">
-        <div class="section-heading">
-          <span class="section-kicker">POSTER SOURCE</span>
-          <h2>Choose how artwork is handled</h2>
-          <p>The default keeps the poster choice already configured in AIOmetadata. Posters only changes it when you explicitly choose another mode.</p>
-        </div>
+    <section id="postersUsageChoice" class="posters-usage" data-page-content aria-label="Choose how to use Posters">
+      <div class="usage-progress" aria-hidden="true"><span class="active"></span><span></span><span></span><span></span></div>
+      <div class="usage-kicker">HOW DO YOU WANT TO USE POSTERS?</div>
+      <button class="usage-card" type="button" data-usage="setup">
+        <span><strong>Posters Setup</strong><small>Configure poster style, Smart Tags, previews, and your Posters settings.</small></span>
+        <span class="usage-arrow" aria-hidden="true">›</span>
+      </button>
+      <button class="usage-card" type="button" data-usage="addon">
+        <span><strong>AIOmetadata / Other Addon</strong><small>I already have catalogs — help me generate the poster URL and JSON settings.</small></span>
+        <span class="usage-arrow" aria-hidden="true">›</span>
+      </button>
+    </section>
 
-        <div class="choice-grid" id="posterSourceChoices">
-          <label class="choice-card selected">
-            <input type="radio" name="posterSource" value="inherit" checked />
-            <span class="choice-title">Use AIOmetadata setting</span>
-            <span class="choice-copy">Keep the poster provider already selected in the imported config, or AIOmetadata's own default when no config is imported.</span>
-          </label>
-          <label class="choice-card">
-            <input type="radio" name="posterSource" value="tmdb" />
-            <span class="choice-title">TMDB Original</span>
-            <span class="choice-copy">Use TMDB poster artwork and preserve the artwork/title placement. Smart Tags remain in fixed positions.</span>
-          </label>
-          <label class="choice-card">
-            <input type="radio" name="posterSource" value="smart" />
-            <span class="choice-title">Smart Layout</span>
-            <span class="choice-copy">Use a poster treatment designed around the fixed Smart Tag areas, including title-safe layout handling.</span>
-          </label>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="toggle-row master-toggle-row">
-          <div>
-            <span class="section-kicker">SMART TAGS</span>
-            <h2>Add poster overlays?</h2>
-            <p>Smart Tags are optional. Turning Posters on does not automatically add overlays to a collection.</p>
-          </div>
-          <label class="switch">
-            <input id="smartTagsEnabled" type="checkbox" />
-            <span class="switch-track"><span></span></span>
-          </label>
-        </div>
-
-        <div id="tagOptions" class="tag-options disabled" aria-disabled="true">
-          <div class="tag-grid">
-            <label class="tag-option"><input type="checkbox" value="rating" checked /><span><strong>Rating</strong><small>TMDB / IMDb-style score badge</small></span></label>
-            <label class="tag-option"><input type="checkbox" value="quality" checked /><span><strong>Quality</strong><small>4K / HD when available</small></span></label>
-            <label class="tag-option"><input type="checkbox" value="hdr" checked /><span><strong>HDR</strong><small>HDR / Dolby Vision</small></span></label>
-            <label class="tag-option"><input type="checkbox" value="audio" /><span><strong>Audio</strong><small>Atmos / premium audio</small></span></label>
-            <label class="tag-option"><input type="checkbox" value="age" /><span><strong>Age Rating</strong><small>Certification badge</small></span></label>
-            <label class="tag-option"><input type="checkbox" value="genre" /><span><strong>Genre</strong><small>Primary genre label</small></span></label>
-          </div>
-          <p class="fixed-note">Tag positions are fixed. In TMDB Original mode, tags are not moved to avoid artwork or title text.</p>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="section-heading compact-heading">
-          <span class="section-kicker">AIOmetadata JSON</span>
-          <h2>Bring your existing configuration</h2>
-          <p>Importing a config lets Posters preserve everything else and modify only the poster-related fields.</p>
-        </div>
-        <div class="import-row">
-          <label class="file-button" for="configFile">Import JSON</label>
-          <input id="configFile" type="file" accept="application/json,.json" />
-          <button id="clearImport" class="secondary-button" type="button" hidden>Clear import</button>
-          <span id="importStatus" class="import-status">No config imported</span>
-        </div>
-
-        <div class="generate-box">
-          <div>
-            <strong>Generate your configuration</strong>
-            <span id="generateHint">You can generate a Posters configuration now. Import an AIOmetadata JSON first to preserve a complete existing setup.</span>
-          </div>
-          <button id="generateBtn" class="primary-button" type="button">Generate JSON</button>
-        </div>
-
-        <div id="jsonPanel" class="json-panel" hidden>
-          <div class="json-toolbar">
-            <span>Generated JSON</span>
-            <div>
-              <button id="copyBtn" class="secondary-button" type="button">Copy JSON</button>
-              <button id="downloadBtn" class="secondary-button" type="button">Download JSON</button>
-            </div>
-          </div>
-          <pre id="jsonOutput"></pre>
-          <span id="copyStatus" class="copy-status" role="status" aria-live="polite"></span>
-        </div>
+    <section id="postersConfigurator" class="posters-configurator" data-page-content hidden>
+      <div class="config-routebar">
+        <button id="postersBackBtn" class="route-back" type="button">‹ Back</button>
+        <div><span id="routeKicker">POSTERS SETUP</span><strong id="routeTitle">Configure Posters</strong></div>
       </div>
 
-      <aside class="poster-preview-panel">
-        <div class="preview-heading">
-          <span class="section-kicker">LIVE PREVIEW</span>
-          <strong>Fixed Smart Tag layout</strong>
-        </div>
-        <div class="poster-stage">
-          <div class="poster-mock" id="posterMock">
-            <div class="poster-art">
-              <span class="mock-title">THE<br />KOLLECTION</span>
-              <span class="mock-subtitle">Preview artwork</span>
+      <section class="posters-shell" aria-label="Configure Posters">
+        <div class="posters-config">
+          <div class="section-heading">
+            <span class="section-kicker">POSTER SOURCE</span>
+            <h2>Choose how artwork is handled</h2>
+            <p>The default keeps the poster choice already configured in AIOmetadata. Posters only changes it when you explicitly choose another mode.</p>
+          </div>
+
+          <div class="choice-grid" id="posterSourceChoices">
+            <label class="choice-card selected">
+              <input type="radio" name="posterSource" value="inherit" checked />
+              <span class="choice-title">Use AIOmetadata setting</span>
+              <span class="choice-copy">Keep the poster provider already selected in the imported config, or AIOmetadata's own default when no config is imported.</span>
+            </label>
+            <label class="choice-card">
+              <input type="radio" name="posterSource" value="tmdb" />
+              <span class="choice-title">TMDB Original</span>
+              <span class="choice-copy">Use TMDB poster artwork and preserve the artwork/title placement. Smart Tags remain in fixed positions.</span>
+            </label>
+            <label class="choice-card">
+              <input type="radio" name="posterSource" value="smart" />
+              <span class="choice-title">Smart Layout</span>
+              <span class="choice-copy">Use a poster treatment designed around the fixed Smart Tag areas, including title-safe layout handling.</span>
+            </label>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="toggle-row master-toggle-row">
+            <div>
+              <span class="section-kicker">SMART TAGS</span>
+              <h2>Add poster overlays?</h2>
+              <p>Smart Tags are optional. Turning Posters on does not automatically add overlays to a collection.</p>
             </div>
-            <div class="overlay overlay-rating" data-tag="rating"><b>8.7</b><small>TMDB</small></div>
-            <div class="overlay overlay-quality" data-tag="quality">4K</div>
-            <div class="overlay overlay-hdr" data-tag="hdr">DV</div>
-            <div class="overlay overlay-audio" data-tag="audio">ATMOS</div>
-            <div class="overlay overlay-age" data-tag="age">PG-13</div>
-            <div class="overlay overlay-genre" data-tag="genre">SCI-FI</div>
+            <label class="switch">
+              <input id="smartTagsEnabled" type="checkbox" />
+              <span class="switch-track"><span></span></span>
+            </label>
+          </div>
+
+          <div id="tagOptions" class="tag-options disabled" aria-disabled="true">
+            <div class="tag-grid">
+              <label class="tag-option"><input type="checkbox" value="rating" checked /><span><strong>Rating</strong><small>TMDB / IMDb-style score badge</small></span></label>
+              <label class="tag-option"><input type="checkbox" value="quality" checked /><span><strong>Quality</strong><small>4K / HD when available</small></span></label>
+              <label class="tag-option"><input type="checkbox" value="hdr" checked /><span><strong>HDR</strong><small>HDR / Dolby Vision</small></span></label>
+              <label class="tag-option"><input type="checkbox" value="audio" /><span><strong>Audio</strong><small>Atmos / premium audio</small></span></label>
+              <label class="tag-option"><input type="checkbox" value="age" /><span><strong>Age Rating</strong><small>Certification badge</small></span></label>
+              <label class="tag-option"><input type="checkbox" value="genre" /><span><strong>Genre</strong><small>Primary genre label</small></span></label>
+            </div>
+            <p class="fixed-note">Tag positions are fixed. In TMDB Original mode, tags are not moved to avoid artwork or title text.</p>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="section-heading compact-heading">
+            <span class="section-kicker">AIOmetadata JSON</span>
+            <h2>Bring your existing configuration</h2>
+            <p>Importing a config lets Posters preserve everything else and modify only the poster-related fields.</p>
+          </div>
+          <div class="import-row">
+            <label class="file-button" for="configFile">Import JSON</label>
+            <input id="configFile" type="file" accept="application/json,.json" />
+            <button id="clearImport" class="secondary-button" type="button" hidden>Clear import</button>
+            <span id="importStatus" class="import-status">No config imported</span>
+          </div>
+
+          <div class="generate-box">
+            <div>
+              <strong>Generate your configuration</strong>
+              <span id="generateHint">You can generate a Posters configuration now. Import an AIOmetadata JSON first to preserve a complete existing setup.</span>
+            </div>
+            <button id="generateBtn" class="primary-button" type="button">Generate JSON</button>
+          </div>
+
+          <div id="jsonPanel" class="json-panel" hidden>
+            <div class="json-toolbar">
+              <span>Generated JSON</span>
+              <div>
+                <button id="copyBtn" class="secondary-button" type="button">Copy JSON</button>
+                <button id="downloadBtn" class="secondary-button" type="button">Download JSON</button>
+              </div>
+            </div>
+            <pre id="jsonOutput"></pre>
+            <span id="copyStatus" class="copy-status" role="status" aria-live="polite"></span>
           </div>
         </div>
-        <div class="preview-description" id="previewDescription">Using your AIOmetadata poster setting. Smart Tags are currently off.</div>
-        <div class="preview-legend">
-          <span><i></i> Poster artwork stays separate from tag configuration</span>
-          <span><i></i> TMDB mode never moves tags around</span>
-        </div>
-      </aside>
+
+        <aside class="poster-preview-panel">
+          <div class="preview-heading">
+            <span class="section-kicker">LIVE PREVIEW</span>
+            <strong>Fixed Smart Tag layout</strong>
+          </div>
+          <div class="poster-stage">
+            <div class="poster-mock" id="posterMock">
+              <div class="poster-art">
+                <span class="mock-title">THE<br />KOLLECTION</span>
+                <span class="mock-subtitle">Preview artwork</span>
+              </div>
+              <div class="overlay overlay-rating" data-tag="rating"><b>8.7</b><small>TMDB</small></div>
+              <div class="overlay overlay-quality" data-tag="quality">4K</div>
+              <div class="overlay overlay-hdr" data-tag="hdr">DV</div>
+              <div class="overlay overlay-audio" data-tag="audio">ATMOS</div>
+              <div class="overlay overlay-age" data-tag="age">PG-13</div>
+              <div class="overlay overlay-genre" data-tag="genre">SCI-FI</div>
+            </div>
+          </div>
+          <div class="preview-description" id="previewDescription">Using your AIOmetadata poster setting. Smart Tags are currently off.</div>
+          <div class="preview-legend">
+            <span><i></i> Poster artwork stays separate from tag configuration</span>
+            <span><i></i> TMDB mode never moves tags around</span>
+          </div>
+        </aside>
+      </section>
     </section>
 
     <div id="site-footer"></div>
   </main>
 
-  <script src="/posters/posters.js?v=20260909-1"></script>
+  <script src="/posters/posters.js?v=20260909-2"></script>
 </body>
 </html>
