@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="icon" href="/favicon.ico?v=3" sizes="any" />
+  <link rel="shortcut icon" href="/favicon.ico?v=3" type="image/x-icon" />
+  <meta name="theme-color" content="#050608" />
+  <title>Account | The Kollection</title>
+  <meta name="description" content="Manage your Kollection account, Nuvio profile connection, and saved collection setups." />
+  <link rel="stylesheet" href="/shared.css?v=20260906-1" />
+  <link rel="stylesheet" href="/account/account.css?v=20260908-1" />
+  <script src="/components.js?v=20260907-6" defer></script>
+</head>
+<body>
+  <main class="page account-page">
+    <div id="site-nav" aria-label="Site navigation"></div>
+
+    <section class="account-hero">
+      <div class="account-eyebrow"><span></span> Your Kollection</div>
+      <h1>Account</h1>
+      <p>Use your Nuvio account to sign in to The Kollection. Your Nuvio password is never stored by The Kollection.</p>
+    </section>
+
+    <section class="account-shell" aria-live="polite">
+      <div id="accountLoading" class="account-loading">
+        <span class="account-spinner" aria-hidden="true"></span>
+        <span>Loading your account…</span>
+      </div>
+
+      <div id="accountSignedOut" class="account-state" hidden>
+        <div class="account-card account-signin-card">
+          <div class="account-card-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M10 5H6.5A2.5 2.5 0 0 0 4 7.5v9A2.5 2.5 0 0 0 6.5 19H10"></path><path d="M14 8l4 4-4 4"></path><path d="M8.5 12H18"></path></svg>
+          </div>
+          <div>
+            <span class="account-kicker">NUVIO AUTHENTICATION</span>
+            <h2>Continue with Nuvio</h2>
+            <p>Nuvio handles authentication. The Kollection keeps its own account experience and secure 90-day session after you approve access.</p>
+          </div>
+          <button id="accountSignIn" class="account-primary-button" type="button">Continue with Nuvio</button>
+          <p id="accountSignInStatus" class="account-status" role="status"></p>
+          <div class="account-security-note">
+            <strong>Your password stays with Nuvio.</strong>
+            <span>The Kollection does not save your Nuvio password in its database or site storage.</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="accountSignedIn" class="account-state" hidden>
+        <div class="account-grid">
+          <section class="account-card account-profile-card">
+            <div class="account-section-head">
+              <div>
+                <span class="account-kicker">SIGNED IN</span>
+                <h2>Your account</h2>
+              </div>
+              <span class="account-session-pill">90-day session</span>
+            </div>
+
+            <dl class="account-details">
+              <div>
+                <dt>Email</dt>
+                <dd id="accountEmail">—</dd>
+              </div>
+              <div>
+                <dt>Session expires</dt>
+                <dd id="accountExpires">—</dd>
+              </div>
+            </dl>
+
+            <div class="account-actions">
+              <a class="account-primary-button" href="/set-up-collection">Set Up Collection</a>
+              <button id="accountSignOut" class="account-secondary-button" type="button">Log out</button>
+            </div>
+          </section>
+
+          <section class="account-card">
+            <div class="account-section-head">
+              <div>
+                <span class="account-kicker">NUVIO PROFILES</span>
+                <h2>Profiles</h2>
+              </div>
+            </div>
+            <p class="account-card-copy">Your Nuvio profiles are available when The Kollection needs to add or update a collection. You can choose the profile during setup.</p>
+            <div id="accountProfiles" class="account-profiles"></div>
+            <p id="accountProfilesStatus" class="account-status" role="status"></p>
+          </section>
+
+          <section class="account-card account-saved-card">
+            <div class="account-section-head">
+              <div>
+                <span class="account-kicker">SAVED COLLECTIONS</span>
+                <h2>Your setups</h2>
+              </div>
+              <span class="account-coming-soon">Next</span>
+            </div>
+            <p class="account-card-copy">This is where saved Kollection configurations will appear so you can resume, edit, and update them without starting over.</p>
+            <div class="account-empty-state">
+              <strong>No saved setups yet</strong>
+              <span>Saving and resuming collection configurations is the next account-system piece.</span>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <div id="site-footer"></div>
+  </main>
+
+  <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
+  <script src="/account/account.js?v=20260908-1"></script>
+</body>
+</html>
