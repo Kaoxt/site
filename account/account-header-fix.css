@@ -1,0 +1,32 @@
+/* Account page header alignment: match the News / FAQ secondary-page rhythm. */
+
+/* Keep the account cards on their existing centered shell, but let the page header
+   align with the secondary-page heading grid instead of the card grid. */
+.account-page .account-hero {
+  width: calc(100% - 10px) !important;
+  max-width: none !important;
+  margin-left: 5px !important;
+  margin-right: 5px !important;
+  padding-top: 52px !important;
+  padding-bottom: 26px !important;
+}
+
+.account-page .account-hero h1 {
+  margin-top: 30px !important;
+}
+
+@media (max-width: 760px) {
+  .account-page .account-hero {
+    width: calc(100% - 18px) !important;
+    margin-left: 9px !important;
+    margin-right: 9px !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-top: 34px !important;
+    padding-bottom: 24px !important;
+  }
+
+  .account-page .account-hero h1 {
+    margin-top: 26px !important;
+  }
+}
