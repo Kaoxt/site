@@ -1,5 +1,6 @@
 const TMDB_API = 'https://api.themoviedb.org/3';
 const TMDB_IMAGE = 'https://image.tmdb.org/t/p/w780';
+const FONT_URL = 'https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Regular.ttf';
 const trendMemory = new Map();
 
 function json(data, status = 200) {
@@ -64,6 +65,7 @@ function choosePoster(details, smart) {
 function textOverlay(text, options = {}) {
   return {
     text: String(text),
+    font: { url: FONT_URL },
     color: options.color || '#ffffff',
     size: options.size || 36,
     ...(options.left != null ? { left: options.left } : {}),
@@ -75,10 +77,7 @@ function textOverlay(text, options = {}) {
 
 async function renderPoster(request, env, type, rawId) {
   if (!env.TMDB_API_KEY) {
-    return json({
-      error: 'TMDB_API_KEY is not configured',
-      setup: 'Add TMDB_API_KEY as a Cloudflare Pages secret/environment variable.',
-    }, 503);
+    return json({ error: 'TMDB_API_KEY is not configured' }, 503);
   }
 
   const url = new URL(request.url);
@@ -113,7 +112,7 @@ async function renderPoster(request, env, type, rawId) {
   }
 
   if (tagsEnabled && requested.has('rating') && Number(details.vote_average) > 0) {
-    draw.push(textOverlay(`★ ${Number(details.vote_average).toFixed(1)}`, {
+    draw.push(textOverlay(Number(details.vote_average).toFixed(1), {
       size: 38,
       left: 28,
       bottom: 30,
@@ -152,19 +151,16 @@ async function renderPoster(request, env, type, rawId) {
   const sourceUrl = `${TMDB_IMAGE}${posterPath}`;
   const imageOptions = {
     width: 780,
-    fit: 'cover',
     format: 'webp',
     quality: 88,
     ...(draw.length ? { draw } : {}),
   };
 
-  let transformed = true;
-  let transformStatus = 0;
   let response = await fetch(sourceUrl, { cf: { image: imageOptions } });
-  transformStatus = response.status;
+  const transformStatus = response.status;
+  const transformError = response.ok ? null : await response.clone().text().catch(() => null);
 
-  const debug = url.searchParams.get('debug') === '1';
-  if (debug) {
+  if (url.searchParams.get('debug') === '1') {
     return json({
       resolved: { type: normalizedType, id: resolved.id },
       sourceUrl,
@@ -172,15 +168,18 @@ async function renderPoster(request, env, type, rawId) {
       requestedTags: [...requested],
       drawCount: draw.length,
       draw,
+      imageOptions,
       transformStatus,
       transformOk: response.ok,
       transformContentType: response.headers.get('content-type'),
+      transformError,
       cfResized: response.headers.get('cf-resized') || null,
       cfCacheStatus: response.headers.get('cf-cache-status') || null,
       server: response.headers.get('server') || null,
     });
   }
 
+  let transformed = response.ok;
   if (!response.ok) {
     transformed = false;
     response = await fetch(sourceUrl);
@@ -190,7 +189,7 @@ async function renderPoster(request, env, type, rawId) {
   headers.set('cache-control', transformed
     ? 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800'
     : 'no-store, max-age=0');
-  headers.set('x-kollection-posters', 'tmdb-v7-debug');
+  headers.set('x-kollection-posters', 'tmdb-v8-font-fix');
   headers.set('x-kollection-transform', transformed ? 'applied' : 'fallback');
   headers.set('x-kollection-transform-status', String(transformStatus));
   headers.set('x-kollection-draw-count', String(draw.length));
@@ -206,23 +205,23 @@ export async function onRequest(context) {
   const { request, env } = context;
   const url = new URL(request.url);
   const parts = url.pathname.split('/').filter(Boolean);
-
   const type = parts[2];
-  const idPart = parts[3] || '';
-  const rawId = idPart.replace(/\.webp$/i, '');
+  const rawId = (parts[3] || '').replace(/\.webp$/i, '');
+
   if (!type || !rawId) {
     return json({ error: 'Expected /api/posters/movie/123.webp or /api/posters/tv/123.webp' }, 400);
   }
 
   try {
     const cache = caches.default;
-    if (url.searchParams.get('debug') !== '1') {
+    const debug = url.searchParams.get('debug') === '1';
+    if (!debug) {
       const cached = await cache.match(request);
       if (cached) return cached;
     }
 
     const response = await renderPoster(request, env, type, rawId);
-    if (url.searchParams.get('debug') !== '1' && response.ok && response.headers.get('x-kollection-transform') === 'applied') {
+    if (!debug && response.ok && response.headers.get('x-kollection-transform') === 'applied') {
       context.waitUntil(cache.put(request, response.clone()));
     }
     return response;
