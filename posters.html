@@ -9,17 +9,18 @@
   <title>Posters | The Kollection</title>
   <meta name="description" content="Create smart movie and TV poster overlays for AIOmetadata, Nuvio, Stremio, and The Kollection." />
   <link rel="stylesheet" href="/shared.css?v=20260909-1" />
-  <link rel="stylesheet" href="/posters/styles.css?v=20260909-1" />
-  <script src="/components.js?v=20260908-2" defer></script>
+  <link rel="stylesheet" href="/posters/styles.css?v=20260909-2" />
+  <link rel="stylesheet" href="/secondary-pages.css?v=20260909-2" />
+  <script src="/components.js?v=20260908-3" defer></script>
 </head>
 <body>
-  <main class="page posters-page">
+  <main class="page posters-page secondary-page" data-kollection-page="secondary">
     <div id="site-nav" aria-label="Site navigation"></div>
 
-    <section class="posters-hero">
-      <div class="eyebrow"><span class="eyebrow-dot"></span> Poster Configurator</div>
-      <h1>Posters</h1>
-      <p>Add optional smart tags to movie and TV posters without locking your setup to one app. Use Posters by itself or later as part of Set Up Collection.</p>
+    <section class="posters-hero secondary-page-header" data-page-header>
+      <div class="secondary-page-chip" data-page-chip>Poster Configurator</div>
+      <h1 class="secondary-page-title" data-page-title>Posters</h1>
+      <p class="secondary-page-subtitle" data-page-subtitle>Add optional smart tags to movie and TV posters without locking your setup to one app. Use Posters by itself or later as part of Set Up Collection.</p>
       <div class="hero-pills">
         <span>AIOmetadata compatible</span>
         <span>Movies + TV</span>
@@ -27,7 +28,7 @@
       </div>
     </section>
 
-    <section class="posters-shell" aria-label="Configure Posters">
+    <section class="posters-shell secondary-page-content" data-page-content aria-label="Configure Posters">
       <div class="posters-config">
         <div class="section-heading">
           <span class="section-kicker">POSTER SOURCE</span>
