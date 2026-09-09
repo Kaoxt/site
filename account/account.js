@@ -3,7 +3,6 @@
 
   const DEFAULT_API_BASE = 'https://api.nuvio.tv';
   const DEFAULT_PUBLISHABLE_KEY = 'sb_publishable_1Clq8rlTVACkdcZuqr6_AD__xUUC_EN';
-
   const els = {};
 
   const config = () => {
@@ -23,10 +22,7 @@
   const formatDate = (value) => {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '—';
-    return new Intl.DateTimeFormat(undefined, {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(date);
+    return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
   };
 
   async function rpc(name, body, accessToken) {
@@ -42,11 +38,8 @@
       body: JSON.stringify(body || {}),
       cache: 'no-store',
     });
-
     const data = await response.json().catch(() => null);
-    if (!response.ok) {
-      throw new Error(data?.message || `${name} failed (HTTP ${response.status}).`);
-    }
+    if (!response.ok) throw new Error(data?.message || `${name} failed (HTTP ${response.status}).`);
     return data;
   }
 
@@ -62,31 +55,23 @@
   async function loadProfiles() {
     els.profiles.innerHTML = '';
     els.profilesStatus.textContent = 'Loading Nuvio profiles…';
-
     try {
       const token = await window.KollectionNuvioAuth.getAccessToken();
       const result = await rpc('sync_pull_profiles', {}, token.accessToken);
       const rows = Array.isArray(result) ? result : (result?.profiles || []);
-
       if (!rows.length) {
         els.profilesStatus.textContent = 'No Nuvio profiles were returned for this account.';
         return;
       }
-
       for (const profile of rows) {
         const name = String(profile.name || `Profile ${profile.profile_index ?? profile.id ?? ''}`).trim() || 'Nuvio profile';
-        const avatarColor = /^#[0-9a-f]{3,8}$/i.test(String(profile.avatar_color_hex || ''))
-          ? profile.avatar_color_hex
-          : '#5666e8';
+        const avatarColor = /^#[0-9a-f]{3,8}$/i.test(String(profile.avatar_color_hex || '')) ? profile.avatar_color_hex : '#5666e8';
         const avatarUrl = normalizeAvatarUrl(profile.avatar_url || profile.avatarUrl || '');
-
         const row = document.createElement('div');
         row.className = 'account-profile-row';
-
         const avatar = document.createElement('div');
         avatar.className = 'account-profile-avatar';
         avatar.style.setProperty('--profile-color', avatarColor);
-
         if (avatarUrl) {
           const img = document.createElement('img');
           img.src = avatarUrl;
@@ -100,18 +85,15 @@
         } else {
           avatar.textContent = (name[0] || 'N').toUpperCase();
         }
-
         const copy = document.createElement('div');
         const strong = document.createElement('strong');
         strong.textContent = name;
         const small = document.createElement('small');
         small.textContent = 'Available for Set Up Collection';
         copy.append(strong, small);
-
         row.append(avatar, copy);
         els.profiles.appendChild(row);
       }
-
       els.profilesStatus.textContent = `${rows.length} profile${rows.length === 1 ? '' : 's'} available.`;
     } catch (error) {
       els.profilesStatus.textContent = error?.message || 'Could not load Nuvio profiles.';
@@ -120,14 +102,12 @@
 
   async function refreshAccount() {
     setState('loading');
-
     try {
       const session = await window.KollectionNuvioAuth.getSession();
       if (!session?.authenticated) {
         setState('signedOut');
         return;
       }
-
       els.email.textContent = session.user?.email || 'Nuvio account';
       els.expires.textContent = formatDate(session.expiresAt);
       setState('signedIn');
@@ -138,23 +118,49 @@
     }
   }
 
-  async function signIn() {
-    els.signIn.disabled = true;
-    els.signInStatus.textContent = 'Preparing Nuvio sign in…';
+  async function authenticateWithNuvio(email, password) {
+    const { apiBase, publishableKey } = config();
+    const response = await fetch(`${apiBase}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: {
+        apikey: publishableKey,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+      cache: 'no-store',
+    });
+    const body = await response.json().catch(() => null);
+    if (!response.ok || !body?.access_token) {
+      throw new Error(body?.msg || body?.message || body?.error_description || 'Nuvio could not sign you in with that email and password.');
+    }
+    return body;
+  }
 
+  async function signIn(event) {
+    event?.preventDefault?.();
+    const email = String(els.loginEmail?.value || '').trim();
+    const password = String(els.loginPassword?.value || '');
+    if (!email || !password) {
+      els.signInStatus.textContent = 'Enter your Nuvio email and password.';
+      return;
+    }
+    els.signIn.disabled = true;
+    els.loginEmail.disabled = true;
+    els.loginPassword.disabled = true;
+    els.signInStatus.textContent = 'Signing in with Nuvio…';
     try {
-      await window.KollectionNuvioAuth.continueWithNuvio({
-        deviceName: 'The Kollection',
-        onStatus(message) {
-          els.signInStatus.textContent = message;
-        },
-      });
+      const tokenResponse = await authenticateWithNuvio(email, password);
+      await window.KollectionNuvioAuth.connectTokenResponse(tokenResponse);
+      els.loginPassword.value = '';
       window.dispatchEvent(new CustomEvent('kollection:nuvio-signed-in'));
       await refreshAccount();
     } catch (error) {
       els.signInStatus.textContent = error?.message || 'Could not sign in with Nuvio.';
     } finally {
       els.signIn.disabled = false;
+      els.loginEmail.disabled = false;
+      els.loginPassword.disabled = false;
     }
   }
 
@@ -177,6 +183,9 @@
     els.loading = document.getElementById('accountLoading');
     els.signedOut = document.getElementById('accountSignedOut');
     els.signedIn = document.getElementById('accountSignedIn');
+    els.loginForm = document.getElementById('accountLoginForm');
+    els.loginEmail = document.getElementById('accountLoginEmail');
+    els.loginPassword = document.getElementById('accountLoginPassword');
     els.signIn = document.getElementById('accountSignIn');
     els.signInStatus = document.getElementById('accountSignInStatus');
     els.signOut = document.getElementById('accountSignOut');
@@ -185,15 +194,11 @@
     els.profiles = document.getElementById('accountProfiles');
     els.profilesStatus = document.getElementById('accountProfilesStatus');
 
-    els.signIn?.addEventListener('click', signIn);
+    els.loginForm?.addEventListener('submit', signIn);
     els.signOut?.addEventListener('click', signOut);
-
     refreshAccount();
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init, { once: true });
-  } else {
-    init();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
 })();
