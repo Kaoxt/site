@@ -25,13 +25,31 @@
         font-size: 11px !important;
         line-height: 1.25 !important;
       }
+
+      #site-nav .nuvio-mobile-profile-head {
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(220px, 34%) !important;
+        align-items: center !important;
+        gap: 18px !important;
+        margin: 0 0 4px !important;
+      }
+
+      #site-nav .nuvio-mobile-profile-head .nuvio-mobile-current-profile {
+        min-width: 0 !important;
+        margin: 0 !important;
+        padding-bottom: 10px !important;
+      }
+
       #site-nav .nuvio-mobile-account-row {
         width: 100% !important;
+        min-width: 0 !important;
         min-height: 58px !important;
-        margin: 0 0 8px !important;
-        padding: 8px 10px !important;
+        margin: 0 0 10px !important;
+        padding: 8px 12px !important;
         border: 0 !important;
-        border-radius: 12px !important;
+        border-left: 1px solid rgba(255,255,255,.085) !important;
+        border-radius: 0 !important;
         color: #d7d8dd !important;
         background: transparent !important;
         display: flex !important;
@@ -45,7 +63,7 @@
       }
       #site-nav .nuvio-mobile-account-row:hover {
         color: #fff !important;
-        background: rgba(255,255,255,.06) !important;
+        background: rgba(255,255,255,.045) !important;
       }
       #site-nav .nuvio-mobile-account-row .nuvio-row-icon {
         width: 20px !important;
@@ -80,6 +98,18 @@
         outline: 2px solid #a5b4fc !important;
         outline-offset: 2px !important;
       }
+
+      @media (max-width: 560px) {
+        #site-nav .nuvio-mobile-profile-head {
+          grid-template-columns: 1fr !important;
+          gap: 0 !important;
+        }
+        #site-nav .nuvio-mobile-account-row {
+          border-left: 0 !important;
+          border-top: 1px solid rgba(255,255,255,.085) !important;
+          padding-left: 2px !important;
+        }
+      }
     `;
     document.head.appendChild(style);
   }
@@ -104,8 +134,9 @@
     const slot = document.getElementById('nuvioMobileAccount');
     const signedIn = slot?.querySelector('.nuvio-mobile-account, section');
     if (!signedIn || slot.querySelector('[data-kollection-account-link]')) return;
-    const bottom = slot.querySelector('.nuvio-mobile-bottom-row');
-    if (!bottom) return;
+
+    const current = slot.querySelector('.nuvio-mobile-current-profile');
+    if (!current) return;
 
     const link = document.createElement('a');
     link.className = 'nuvio-mobile-account-row';
@@ -113,9 +144,14 @@
     link.dataset.kollectionAccountLink = 'true';
     link.innerHTML = `${icon}<span class="nuvio-mobile-account-copy"><strong>Account</strong><small>Saved setups & account details</small></span>`;
 
-    const chips = slot.querySelector('.nuvio-mobile-profile-chips');
-    if (chips) chips.insertAdjacentElement('afterend', link);
-    else bottom.before(link);
+    let head = slot.querySelector('.nuvio-mobile-profile-head');
+    if (!head) {
+      head = document.createElement('div');
+      head.className = 'nuvio-mobile-profile-head';
+      current.before(head);
+      head.appendChild(current);
+    }
+    head.appendChild(link);
   }
 
   function sync() {
