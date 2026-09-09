@@ -1,5 +1,6 @@
 const TMDB_API = 'https://api.themoviedb.org/3';
 const TMDB_IMAGE = 'https://image.tmdb.org/t/p/w780';
+const trendMemory = new Map();
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -27,7 +28,7 @@ function badgeSvg(text, kind = 'default') {
   };
   const [bg, fg] = palette[kind] || palette.default;
   const safe = esc(text).slice(0, 34);
-  const width = Math.max(116, Math.min(360, 42 + safe.length * 17));
+  const width = kind === 'trend' ? 190 : Math.max(116, Math.min(360, 42 + safe.length * 17));
   const height = 68;
   const radius = height / 2;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
@@ -54,6 +55,20 @@ async function resolveTmdbId(type, rawId, key) {
     return { type, id: String(list[0].id) };
   }
   return null;
+}
+
+async function getTrendingRank(type, id, key) {
+  const now = Date.now();
+  const cached = trendMemory.get(type);
+  if (cached && cached.expires > now) {
+    const index = cached.ids.indexOf(String(id));
+    return index >= 0 ? index + 1 : 0;
+  }
+  const data = await tmdbFetch(`/trending/${type}/day?language=en-US&page=1`, key);
+  const ids = (data.results || []).map((item) => String(item.id));
+  trendMemory.set(type, { ids, expires: now + 10 * 60 * 1000 });
+  const index = ids.indexOf(String(id));
+  return index >= 0 ? index + 1 : 0;
 }
 
 function pickCertification(details, type) {
@@ -102,9 +117,22 @@ async function renderPoster(request, env, type, rawId) {
   const posterPath = choosePoster(details, smart);
   if (!posterPath) return json({ error: 'TMDB has no poster for this title.' }, 404);
 
-  const tagsEnabled = url.searchParams.get('smart') === '1';
+  const tagsEnabled = url.searchParams.get('smart') !== '0';
   const requested = new Set((url.searchParams.get('tags') || '').split(',').filter(Boolean));
   const draw = [];
+
+  if (tagsEnabled && requested.has('trend')) {
+    const rank = await getTrendingRank(normalizedType, resolved.id, env.TMDB_API_KEY);
+    if (rank > 0) {
+      draw.push({
+        url: badgeUrl(url, `#${rank} TODAY`, 'trend'),
+        left: 295,
+        top: 22,
+        fit: 'contain',
+        height: 68,
+      });
+    }
+  }
 
   if (tagsEnabled && requested.has('rating') && Number(details.vote_average) > 0) {
     draw.push({
@@ -146,7 +174,7 @@ async function renderPoster(request, env, type, rawId) {
         color: '#ffffff',
         size: title.length > 24 ? 40 : 50,
         left: 26,
-        bottom: tagsEnabled ? 108 : 32,
+        bottom: requested.has('rating') || requested.has('genre') ? 108 : 32,
       });
     }
   }
@@ -161,13 +189,11 @@ async function renderPoster(request, env, type, rawId) {
   if (draw.length) imageOptions.draw = draw;
 
   let response = await fetch(sourceUrl, { cf: { image: imageOptions } });
-  if (!response.ok) {
-    response = await fetch(sourceUrl);
-  }
+  if (!response.ok) response = await fetch(sourceUrl);
 
   const headers = new Headers(response.headers);
   headers.set('cache-control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800');
-  headers.set('x-kollection-posters', 'tmdb-v2-pill');
+  headers.set('x-kollection-posters', 'tmdb-v3-trend');
   headers.set('x-kollection-tmdb-id', resolved.id);
   headers.delete('set-cookie');
   return new Response(response.body, { status: response.status, headers });
