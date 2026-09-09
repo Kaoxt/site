@@ -119,22 +119,28 @@ async function renderPoster(request, env, type, rawId) {
 
   const tagsEnabled = url.searchParams.get('smart') !== '0';
   const requested = new Set((url.searchParams.get('tags') || '').split(',').filter(Boolean));
+  const ratingSource = (url.searchParams.get('ratingSource') || 'average').toLowerCase();
+  const qualityOn = requested.has('quality');
+  if (!qualityOn) requested.add('trend');
   const draw = [];
 
   if (tagsEnabled && requested.has('trend')) {
     const rank = await getTrendingRank(normalizedType, resolved.id, env.TMDB_API_KEY);
     if (rank > 0) {
-      draw.push({
+      const trendDraw = {
         url: badgeUrl(url, `#${rank} TODAY`, 'trend'),
-        left: 295,
         top: 22,
         fit: 'contain',
         height: 68,
-      });
+      };
+      if (qualityOn) trendDraw.right = 92;
+      else trendDraw.left = 295;
+      draw.push(trendDraw);
     }
   }
 
   if (tagsEnabled && requested.has('rating') && Number(details.vote_average) > 0) {
+    // TMDB is the live fallback until the external MDBList-backed rating sources are connected server-side.
     draw.push({
       url: badgeUrl(url, `★ ${Number(details.vote_average).toFixed(1)}`, 'rating'),
       left: 22,
@@ -193,8 +199,10 @@ async function renderPoster(request, env, type, rawId) {
 
   const headers = new Headers(response.headers);
   headers.set('cache-control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800');
-  headers.set('x-kollection-posters', 'tmdb-v3-trend');
+  headers.set('x-kollection-posters', 'tmdb-v4-layout');
   headers.set('x-kollection-tmdb-id', resolved.id);
+  headers.set('x-kollection-rating-source', ratingSource);
+  if (ratingSource !== 'tmdb') headers.set('x-kollection-rating-fallback', 'tmdb');
   headers.delete('set-cookie');
   return new Response(response.body, { status: response.status, headers });
 }
