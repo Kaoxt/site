@@ -1,0 +1,14 @@
+.account-saved-list { display: grid; gap: 10px; margin-top: 18px; }
+.account-saved-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; border: 1px solid var(--account-border); border-radius: 16px; padding: 14px 16px; background: rgba(255,255,255,.018); }
+.account-saved-row > div:first-child { min-width: 0; }
+.account-saved-row strong { display: block; color: var(--account-text); overflow-wrap: anywhere; }
+.account-saved-row small { display: block; margin-top: 3px; color: var(--account-muted); line-height: 1.45; }
+.account-saved-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.account-small-button { min-height: 36px; padding: 0 12px; border-radius: 11px; font-size: 13px; }
+.account-secondary-button:disabled { opacity: .5; cursor: default; transform: none; }
+
+@media (max-width: 680px) {
+  .account-saved-row { align-items: flex-start; flex-direction: column; }
+  .account-saved-actions { width: 100%; }
+  .account-saved-actions .account-small-button { flex: 1; }
+}
