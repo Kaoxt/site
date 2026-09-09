@@ -12,7 +12,6 @@ export function requireDb(env) {
 function sanitize(value) {
   if (Array.isArray(value)) return value.map(sanitize);
   if (!value || typeof value !== 'object') return value;
-
   const out = {};
   for (const [key, child] of Object.entries(value)) {
     if (SENSITIVE_KEYS.has(String(key).toLowerCase())) continue;
@@ -42,8 +41,10 @@ export function parseRow(row) {
   return {
     id: row.id,
     name: row.name,
-    nuvioProfileId: row.nuvio_profile_id == null ? null : Number(row.nuvio_profile_id),
-    nuvioProfileName: row.nuvio_profile_name || '',
+    draftStep: Number(row.draft_step || 0),
+    nuvioProfileId: row.last_nuvio_profile_id == null ? null : Number(row.last_nuvio_profile_id),
+    nuvioProfileName: row.last_nuvio_profile_name || '',
+    lastAppliedAt: row.last_applied_at || null,
     config,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
