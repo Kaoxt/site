@@ -1,16 +1,34 @@
 /* The Kollection — canonical secondary-page shell
    The rendered News/Set Up header is the visual source of truth.
-   Use these classes on Account, FAQ and future secondary pages instead of
-   redefining page-header geometry in page-specific CSS. */
+
+   Preferred future-page contract:
+     <main class="page" data-kollection-page="secondary">
+       <div id="site-nav"></div>
+       <header data-page-header>
+         <div data-page-chip>...</div>
+         <h1 data-page-title>...</h1>
+         <p data-page-subtitle>...</p>
+       </header>
+       <section data-page-content>...</section>
+       <div id="site-footer"></div>
+     </main>
+
+   Existing .secondary-page classes remain supported for current pages.
+*/
 
 .secondary-page,
+[data-kollection-page="secondary"],
 .secondary-page *,
 .secondary-page *::before,
-.secondary-page *::after {
+.secondary-page *::after,
+[data-kollection-page="secondary"] *,
+[data-kollection-page="secondary"] *::before,
+[data-kollection-page="secondary"] *::after {
   box-sizing: border-box;
 }
 
-.secondary-page {
+.secondary-page,
+[data-kollection-page="secondary"] {
   width: min(calc(100% - 32px), 1760px) !important;
   max-width: 1760px !important;
   margin: 0 auto !important;
@@ -18,8 +36,16 @@
   font-family: "Inter", "Google Sans", "Product Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
 }
 
+/* Keep the shared nav on the same page grid on every secondary page. */
+.secondary-page > #site-nav,
+[data-kollection-page="secondary"] > #site-nav {
+  width: 100% !important;
+  margin: 0 !important;
+}
+
 /* Header uses the same final setup-hero/page-intro geometry rendered on News. */
-.secondary-page-header {
+.secondary-page-header,
+[data-kollection-page="secondary"] > [data-page-header] {
   width: 100% !important;
   max-width: none !important;
   margin: 0 !important;
@@ -27,7 +53,8 @@
   text-align: left !important;
 }
 
-.secondary-page-chip {
+.secondary-page-chip,
+[data-kollection-page="secondary"] [data-page-chip] {
   display: inline-flex !important;
   align-items: center !important;
   gap: 8px !important;
@@ -46,7 +73,8 @@
   text-transform: none !important;
 }
 
-.secondary-page-chip::before {
+.secondary-page-chip::before,
+[data-kollection-page="secondary"] [data-page-chip]::before {
   content: "" !important;
   width: 7px !important;
   height: 7px !important;
@@ -56,7 +84,8 @@
   box-shadow: 0 0 18px rgba(86,170,255,.45) !important;
 }
 
-.secondary-page-title {
+.secondary-page-title,
+[data-kollection-page="secondary"] [data-page-title] {
   margin: 0 !important;
   max-width: 1040px !important;
   font-family: "Inter", "Google Sans", "Product Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
@@ -67,7 +96,8 @@
   text-align: left !important;
 }
 
-.secondary-page-subtitle {
+.secondary-page-subtitle,
+[data-kollection-page="secondary"] [data-page-subtitle] {
   width: min(980px, 100%) !important;
   max-width: 980px !important;
   margin: 24px 0 0 !important;
@@ -80,14 +110,17 @@
   text-align: left !important;
 }
 
-.secondary-page-content {
+.secondary-page-content,
+[data-kollection-page="secondary"] > [data-page-content] {
   width: min(100%, 1180px) !important;
   max-width: 1180px !important;
   margin: 0 !important;
 }
 
 html[data-theme="light"] .secondary-page-chip,
-body.light .secondary-page-chip {
+body.light .secondary-page-chip,
+html[data-theme="light"] [data-kollection-page="secondary"] [data-page-chip],
+body.light [data-kollection-page="secondary"] [data-page-chip] {
   color: #484b52 !important;
   border-color: rgba(0,0,0,.10) !important;
   background: rgba(255,255,255,.72) !important;
@@ -95,32 +128,38 @@ body.light .secondary-page-chip {
 }
 
 @media (min-width: 900px) {
-  .secondary-page {
+  .secondary-page,
+  [data-kollection-page="secondary"] {
     width: min(calc(100% - 20px), 1760px) !important;
   }
 }
 
 @media (max-width: 700px) {
-  .secondary-page {
+  .secondary-page,
+  [data-kollection-page="secondary"] {
     width: min(calc(100% - 20px), 100%) !important;
     padding-top: 10px !important;
   }
 
-  .secondary-page-header {
+  .secondary-page-header,
+  [data-kollection-page="secondary"] > [data-page-header] {
     padding: 54px 2px 34px !important;
   }
 
-  .secondary-page-chip {
+  .secondary-page-chip,
+  [data-kollection-page="secondary"] [data-page-chip] {
     margin-bottom: 20px !important;
     font-size: 12px !important;
   }
 
-  .secondary-page-title {
+  .secondary-page-title,
+  [data-kollection-page="secondary"] [data-page-title] {
     font-size: clamp(40px, 11vw, 56px) !important;
     line-height: 1.04 !important;
   }
 
-  .secondary-page-subtitle {
+  .secondary-page-subtitle,
+  [data-kollection-page="secondary"] [data-page-subtitle] {
     width: 100% !important;
     max-width: 100% !important;
     margin-top: 20px !important;
@@ -128,7 +167,8 @@ body.light .secondary-page-chip {
     line-height: 1.52 !important;
   }
 
-  .secondary-page-content {
+  .secondary-page-content,
+  [data-kollection-page="secondary"] > [data-page-content] {
     width: 100% !important;
     max-width: none !important;
   }
