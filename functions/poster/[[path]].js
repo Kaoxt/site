@@ -24,17 +24,15 @@ export async function onRequest({ request }) {
   if (!target.searchParams.has('tags')) target.searchParams.set('tags', 'trend,rating');
   if (!target.searchParams.has('ratingSource')) target.searchParams.set('ratingSource', 'average');
 
-  const response = await fetch(target.toString(), {
-    method: 'GET',
-    headers: { accept: 'image/webp,image/*;q=0.9,*/*;q=0.8' },
-  });
-
-  const headers = new Headers(response.headers);
-  headers.set('x-kollection-poster-route', 'direct-webp-v1');
-  headers.delete('set-cookie');
-  return new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers,
+  // Important: do not proxy the renderer through another Worker fetch.
+  // Cloudflare Images transformations can be skipped when one Worker calls another
+  // on the same zone. Redirect so the image renderer is reached as a fresh request.
+  return new Response(null, {
+    status: 302,
+    headers: {
+      location: target.toString(),
+      'cache-control': 'no-store',
+      'x-kollection-poster-route': 'direct-webp-redirect-v2',
+    },
   });
 }
