@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="icon" href="/favicon.ico?v=3" sizes="any" />
+  <link rel="shortcut icon" href="/favicon.ico?v=3" type="image/x-icon" />
+  <meta name="theme-color" content="#050608" />
+  <title>PAGE TITLE | The Kollection</title>
+  <meta name="description" content="PAGE DESCRIPTION" />
+  <link rel="stylesheet" href="/shared.css?v=20260906-1" />
+  <script src="/components.js?v=20260908-3" defer></script>
+</head>
+<body>
+  <!--
+    Standard secondary page shell.
+    Keep these data attributes intact so navigation, page spacing, chip, title,
+    subtitle and content alignment remain consistent with News / FAQ / Account.
+    Page-specific CSS should style only the content inside [data-page-content].
+  -->
+  <main class="page" data-kollection-page="secondary">
+    <div id="site-nav" aria-label="Site navigation"></div>
+
+    <header data-page-header>
+      <div data-page-chip>PAGE CHIP</div>
+      <h1 data-page-title>PAGE TITLE</h1>
+      <p data-page-subtitle>PAGE SUBTITLE</p>
+    </header>
+
+    <section data-page-content>
+      <!-- Page-specific content goes here. -->
+    </section>
+
+    <div id="site-footer"></div>
+  </main>
+</body>
+</html>
