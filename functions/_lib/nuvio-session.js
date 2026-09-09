@@ -1,5 +1,5 @@
 const COOKIE_NAME = 'kollection_nuvio_session';
-const SESSION_TTL_SECONDS = 8 * 60 * 60;
+const SESSION_TTL_SECONDS = 90 * 24 * 60 * 60;
 const DEFAULT_NUVIO_API_BASE = 'https://api.nuvio.tv';
 const DEFAULT_NUVIO_PUBLISHABLE_KEY = 'sb_publishable_1Clq8rlTVACkdcZuqr6_AD__xUUC_EN';
 
