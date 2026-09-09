@@ -1,3 +1,5 @@
+import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
+
 const TMDB_API = 'https://api.themoviedb.org/3';
 const TMDB_IMAGE = 'https://image.tmdb.org/t/p/w780';
 const FONT_URL = 'https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Regular.ttf';
@@ -75,7 +77,7 @@ function textOverlay(text, options = {}) {
   };
 }
 
-async function renderPoster(request, env, type, rawId) {
+async function renderPoster(request, env, type, rawId, renderSlot) {
   if (!env.TMDB_API_KEY) {
     return json({ error: 'TMDB_API_KEY is not configured' }, 503);
   }
@@ -149,6 +151,18 @@ async function renderPoster(request, env, type, rawId) {
   }
 
   const sourceUrl = `${TMDB_IMAGE}${posterPath}`;
+
+  if (!renderSlot.allowed) {
+    const fallback = await fetch(sourceUrl);
+    const headers = new Headers(fallback.headers);
+    headers.set('cache-control', 'no-store, max-age=0');
+    headers.set('x-kollection-posters', 'safety-fallback');
+    headers.set('x-kollection-safety', renderSlot.reason || 'blocked');
+    headers.set('x-kollection-transform', 'blocked');
+    headers.delete('set-cookie');
+    return new Response(fallback.body, { status: fallback.status, headers });
+  }
+
   const imageOptions = {
     width: 780,
     format: 'webp',
@@ -169,6 +183,13 @@ async function renderPoster(request, env, type, rawId) {
       drawCount: draw.length,
       draw,
       imageOptions,
+      safety: {
+        reason: renderSlot.reason,
+        activeRenders: renderSlot.activeRenders,
+        maxConcurrent: renderSlot.maxConcurrent,
+        maxDaily: renderSlot.maxDaily,
+        maxClientHourly: renderSlot.maxClientHourly,
+      },
       transformStatus,
       transformOk: response.ok,
       transformContentType: response.headers.get('content-type'),
@@ -189,12 +210,13 @@ async function renderPoster(request, env, type, rawId) {
   headers.set('cache-control', transformed
     ? 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800'
     : 'no-store, max-age=0');
-  headers.set('x-kollection-posters', 'tmdb-v8-font-fix');
+  headers.set('x-kollection-posters', 'tmdb-v9-safety');
   headers.set('x-kollection-transform', transformed ? 'applied' : 'fallback');
   headers.set('x-kollection-transform-status', String(transformStatus));
   headers.set('x-kollection-draw-count', String(draw.length));
   headers.set('x-kollection-tmdb-id', resolved.id);
   headers.set('x-kollection-rating-source', ratingSource);
+  headers.set('x-kollection-safety', renderSlot.reason || 'budget-reserved');
   if (ratingSource !== 'tmdb') headers.set('x-kollection-rating-fallback', 'tmdb');
   headers.delete('set-cookie');
 
@@ -220,7 +242,21 @@ export async function onRequest(context) {
       if (cached) return cached;
     }
 
-    const response = await renderPoster(request, env, type, rawId);
+    const renderSlot = await acquirePosterRenderSlot(env, request);
+    if (!renderSlot.allowed && renderSlot.reason === 'client-hourly-limit') {
+      return json({
+        error: 'Poster render rate limit reached. Try again later.',
+        reason: renderSlot.reason,
+      }, 429);
+    }
+
+    let response;
+    try {
+      response = await renderPoster(request, env, type, rawId, renderSlot);
+    } finally {
+      renderSlot.release();
+    }
+
     if (!debug && response.ok && response.headers.get('x-kollection-transform') === 'applied') {
       context.waitUntil(cache.put(request, response.clone()));
     }
