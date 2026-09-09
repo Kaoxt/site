@@ -28,6 +28,12 @@
   background:rgba(91,108,255,.94);
   font-size:12px;
   letter-spacing:.04em;
+  transition:left .18s ease,right .18s ease,transform .18s ease;
+}
+.poster-mock.quality-on .overlay-trend{
+  left:auto;
+  right:72px;
+  transform:none;
 }
 .poster-mock .overlay-rating{
   left:10px;
@@ -54,9 +60,77 @@
 }
 .poster-mock.tags-off .overlay,.poster-mock .overlay.tag-hidden{display:none!important}
 
+/* BetterPosters-style settings rows with native switch behavior. */
+#tagOptions .tag-grid{display:grid;grid-template-columns:1fr;gap:12px}
+#tagOptions .tag-option{
+  min-height:84px;
+  display:flex;
+  align-items:center;
+  gap:18px;
+  padding:17px 18px;
+  border-radius:18px;
+}
+#tagOptions .tag-option>span{order:1;flex:1;gap:5px}
+#tagOptions .tag-option strong{font-size:17px;line-height:1.2}
+#tagOptions .tag-option small{font-size:13px;line-height:1.35}
+#tagOptions .tag-option>input[type="checkbox"]{
+  order:2;
+  appearance:none;
+  -webkit-appearance:none;
+  flex:0 0 54px;
+  width:54px;
+  height:30px;
+  margin:0;
+  border:0;
+  border-radius:999px;
+  cursor:pointer;
+  background:
+    radial-gradient(circle at 15px 15px,#fff 0 10px,transparent 11px),
+    #353944;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.05),0 2px 9px rgba(0,0,0,.2);
+  transition:background .18s ease,opacity .18s ease;
+}
+#tagOptions .tag-option>input[type="checkbox"]:checked{
+  background:
+    radial-gradient(circle at 39px 15px,#fff 0 10px,transparent 11px),
+    #6366f1;
+}
+#tagOptions .tag-option>input[type="checkbox"]:disabled{cursor:not-allowed;opacity:.7}
+#tagOptions .tag-option.is-forced{border-color:rgba(129,140,248,.24);background:rgba(99,102,241,.055)}
+#tagOptions .tag-option.is-forced small::after{content:" • Always on while Quality is off";color:#9ba3ff}
+
+.rating-source-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  margin:-2px 0 2px;
+  padding:14px 18px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;
+  background:rgba(255,255,255,.018);
+}
+.rating-source-copy{display:flex;flex-direction:column;gap:4px;min-width:0}
+.rating-source-copy strong{font-size:15px}
+.rating-source-copy small{color:#8f929d;font-size:11.5px;line-height:1.35}
+.rating-source-select{
+  min-width:220px;
+  max-width:52%;
+  padding:12px 38px 12px 13px;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:13px;
+  background:#0c0d11;
+  color:#f5f5f7;
+  font:inherit;
+  font-size:14px;
+}
+body.light .rating-source-select,html[data-theme="light"] .rating-source-select{background:#fff;color:#202126;border-color:rgba(0,0,0,.13)}
+body.light .rating-source-row,html[data-theme="light"] .rating-source-row{border-color:rgba(0,0,0,.09);background:rgba(0,0,0,.018)}
+
 @media(max-width:900px){
   .poster-mock .overlay{min-height:34px;padding:7px 11px}
   .poster-mock .overlay-trend{top:7px;min-height:35px;padding:7px 12px;font-size:10px}
+  .poster-mock.quality-on .overlay-trend{right:58px}
   .poster-mock .overlay-rating{left:7px;bottom:7px;min-height:35px;padding:7px 10px}
   .poster-mock .overlay-rating b{font-size:14px}
   .poster-mock .overlay-rating small{font-size:8px}
@@ -67,9 +141,18 @@
   .poster-mock .overlay-genre{bottom:7px;font-size:9px;max-width:44%}
 }
 
+@media(max-width:620px){
+  #tagOptions .tag-option{min-height:76px;padding:15px 14px}
+  #tagOptions .tag-option strong{font-size:16px}
+  #tagOptions .tag-option small{font-size:12px}
+  .rating-source-row{align-items:flex-start;flex-direction:column;gap:10px;padding:14px}
+  .rating-source-select{width:100%;max-width:none;min-width:0}
+}
+
 @media(max-width:520px){
   .poster-mock .overlay{min-height:30px;padding:6px 9px}
   .poster-mock .overlay-trend{top:6px;min-height:31px;padding:6px 10px;font-size:9px}
+  .poster-mock.quality-on .overlay-trend{right:50px}
   .poster-mock .overlay-rating{left:6px;bottom:6px;min-height:31px;padding:6px 9px}
   .poster-mock .overlay-rating b{font-size:13px}
   .poster-mock .overlay-rating small{font-size:7px;display:inline}
