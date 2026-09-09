@@ -25,8 +25,8 @@ html[data-theme="light"] {
 .account-hero h1 { margin: 0; font-size: clamp(42px, 7vw, 72px); line-height: .98; letter-spacing: -.045em; color: var(--account-text); }
 .account-hero p { max-width: 720px; margin: 18px 0 0; font-size: 17px; line-height: 1.65; color: var(--account-muted); }
 .account-shell { padding: 0 0 88px; }
-.account-loading { min-height: 220px; display: flex; align-items: center; justify-content: center; gap: 12px; color: var(--account-muted); }
-.account-spinner { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255,255,255,.14); border-top-color: var(--account-accent); animation: account-spin .8s linear infinite; }
+.account-loading { min-height: 0; height: 0; margin: 0; padding: 0; overflow: hidden; opacity: 0; pointer-events: none; }
+.account-spinner { display: none; }
 @keyframes account-spin { to { transform: rotate(360deg); } }
 .account-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 .account-card { border: 1px solid var(--account-border); border-radius: 24px; background: linear-gradient(180deg, var(--account-panel-strong), var(--account-panel)); padding: 26px; backdrop-filter: blur(14px); }
