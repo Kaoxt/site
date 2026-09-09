@@ -16,6 +16,12 @@
    Existing .secondary-page classes remain supported for current pages.
 */
 
+/* Critical reset for secondary pages. Without this, the browser's default
+   body margin pushes the sticky shared navbar lower than the approved pages. */
+body {
+  margin: 0 !important;
+}
+
 .secondary-page,
 [data-kollection-page="secondary"],
 .secondary-page *,
