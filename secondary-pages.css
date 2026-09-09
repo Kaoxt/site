@@ -1,0 +1,111 @@
+/* The Kollection — canonical secondary-page shell
+   News is the visual source of truth for page gutters, heading rhythm and chips.
+   Use these classes on Account, FAQ and future secondary pages instead of
+   redefining page-header geometry in page-specific CSS. */
+
+.secondary-page,
+.secondary-page *,
+.secondary-page *::before,
+.secondary-page *::after {
+  box-sizing: border-box;
+}
+
+.secondary-page {
+  width: min(calc(100% - 30px), 1500px) !important;
+  margin: 0 auto !important;
+  padding: 18px 0 70px !important;
+}
+
+.secondary-page-header,
+.secondary-page-content {
+  width: min(calc(100% - 36px), 1180px) !important;
+  margin-inline: auto !important;
+}
+
+.secondary-page-header {
+  padding: clamp(62px, 8vw, 105px) 0 30px !important;
+}
+
+.secondary-page-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-height: 42px !important;
+  padding: 0 16px !important;
+  margin: 0 !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.028) !important;
+  color: #c7c7cc !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
+  font-size: 14px !important;
+  font-weight: 650 !important;
+  line-height: 1 !important;
+  letter-spacing: -.01em !important;
+  text-transform: none !important;
+}
+
+.secondary-page-chip::before {
+  content: "" !important;
+  width: 8px !important;
+  height: 8px !important;
+  flex: 0 0 8px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #56aaff 0%, #8b5cf6 58%, #d86cff 100%) !important;
+  box-shadow: 0 0 14px rgba(99,102,241,.42) !important;
+}
+
+.secondary-page-title {
+  margin: 38px 0 0 !important;
+  font-size: clamp(38px, 5vw, 64px) !important;
+  line-height: 1 !important;
+  letter-spacing: -.05em !important;
+  font-weight: 720 !important;
+}
+
+.secondary-page-subtitle {
+  max-width: 720px !important;
+  margin: 24px 0 0 !important;
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+}
+
+html[data-theme="light"] .secondary-page-chip,
+body.light .secondary-page-chip {
+  color: #555860 !important;
+  border-color: rgba(0,0,0,.10) !important;
+  background: rgba(255,255,255,.72) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.85) !important;
+}
+
+@media (max-width: 700px) {
+  .secondary-page {
+    width: min(calc(100% - 18px), 100%) !important;
+    padding-top: 9px !important;
+  }
+
+  .secondary-page-header,
+  .secondary-page-content {
+    width: min(calc(100% - 22px), 1180px) !important;
+    margin-inline: auto !important;
+  }
+
+  .secondary-page-header {
+    padding: 55px 0 30px !important;
+  }
+
+  .secondary-page-chip {
+    min-height: 38px !important;
+    padding: 0 14px !important;
+    font-size: 13px !important;
+  }
+
+  .secondary-page-title {
+    margin-top: 30px !important;
+    font-size: 38px !important;
+  }
+
+  .secondary-page-subtitle {
+    font-size: 15px !important;
+  }
+}
