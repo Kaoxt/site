@@ -371,4 +371,18 @@ body.light .auth-state.good {
   border-color: rgba(190,24,93,.22) !important;
   background: rgba(244,63,94,.08) !important;
 }
+/* Unified Admin sign-in / tool panel width */
+.admin-content-width > .auth-shell,
+.admin-content-width > .admin-shell,
+.admin-content-width > .manager-shell,
+.admin-content-width > .what-updates {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
 
+.admin-content-width > .auth-shell {
+  margin-top: 30px !important;
+  margin-bottom: 24px !important;
+}
