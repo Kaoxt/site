@@ -9,34 +9,6 @@ function json(data, status = 200) {
   });
 }
 
-function esc(value = '') {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function badgeSvg(text, kind = 'default') {
-  const palette = {
-    rating: ['rgba(8,9,12,.90)', '#ffffff'],
-    genre: ['rgba(8,9,12,.90)', '#ffffff'],
-    age: ['rgba(8,9,12,.90)', '#ffffff'],
-    trend: ['rgba(91,108,255,.94)', '#ffffff'],
-    default: ['rgba(8,9,12,.90)', '#ffffff'],
-  };
-  const [bg, fg] = palette[kind] || palette.default;
-  const safe = esc(text).slice(0, 34);
-  const width = kind === 'trend' ? 190 : Math.max(116, Math.min(360, 42 + safe.length * 17));
-  const height = 68;
-  const radius = height / 2;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-    <rect x="1" y="1" width="${width - 2}" height="${height - 2}" rx="${radius}" fill="${bg}" stroke="rgba(255,255,255,.24)" stroke-width="2"/>
-    <text x="${width / 2}" y="43" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="27" font-weight="700" fill="${fg}">${safe}</text>
-  </svg>`;
-}
-
 async function tmdbFetch(path, key) {
   const joiner = path.includes('?') ? '&' : '?';
   const res = await fetch(`${TMDB_API}${path}${joiner}api_key=${encodeURIComponent(key)}`, {
@@ -74,8 +46,7 @@ async function getTrendingRank(type, id, key) {
 function pickCertification(details, type) {
   if (type === 'movie') {
     const us = details.release_dates?.results?.find((x) => x.iso_3166_1 === 'US');
-    const cert = us?.release_dates?.find((x) => x.certification)?.certification;
-    return cert || '';
+    return us?.release_dates?.find((x) => x.certification)?.certification || '';
   }
   const us = details.content_ratings?.results?.find((x) => x.iso_3166_1 === 'US');
   return us?.rating || '';
@@ -90,18 +61,23 @@ function choosePoster(details, smart) {
   return textless[0]?.file_path || details.poster_path || '';
 }
 
-function badgeUrl(requestUrl, text, kind) {
-  const u = new URL('/api/posters/badge', requestUrl.origin);
-  u.searchParams.set('text', text);
-  u.searchParams.set('kind', kind);
-  return u.toString();
+function textOverlay(text, options = {}) {
+  return {
+    text: String(text),
+    color: options.color || '#ffffff',
+    size: options.size || 36,
+    ...(options.left != null ? { left: options.left } : {}),
+    ...(options.right != null ? { right: options.right } : {}),
+    ...(options.top != null ? { top: options.top } : {}),
+    ...(options.bottom != null ? { bottom: options.bottom } : {}),
+  };
 }
 
 async function renderPoster(request, env, type, rawId) {
   if (!env.TMDB_API_KEY) {
     return json({
       error: 'TMDB_API_KEY is not configured',
-      setup: 'Add TMDB_API_KEY as a Cloudflare Pages secret/environment variable.'
+      setup: 'Add TMDB_API_KEY as a Cloudflare Pages secret/environment variable.',
     }, 503);
   }
 
@@ -122,65 +98,56 @@ async function renderPoster(request, env, type, rawId) {
   const ratingSource = (url.searchParams.get('ratingSource') || 'average').toLowerCase();
   const qualityOn = requested.has('quality');
   if (!qualityOn) requested.add('trend');
+
+  // IMPORTANT: Keep this draw array self-contained. Dynamic overlay-image URLs on
+  // the same Pages zone can cause Cloudflare to drop the entire transform.
   const draw = [];
 
   if (tagsEnabled && requested.has('trend')) {
     const rank = await getTrendingRank(normalizedType, resolved.id, env.TMDB_API_KEY);
     if (rank > 0) {
-      const trendDraw = {
-        url: badgeUrl(url, `#${rank} TODAY`, 'trend'),
-        top: 22,
-        fit: 'contain',
-        height: 68,
-      };
-      if (qualityOn) trendDraw.right = 92;
-      else trendDraw.left = 295;
-      draw.push(trendDraw);
+      draw.push(textOverlay(`#${rank} TODAY`, {
+        size: 31,
+        top: 28,
+        ...(qualityOn ? { right: 105 } : { left: 300 }),
+      }));
     }
   }
 
   if (tagsEnabled && requested.has('rating') && Number(details.vote_average) > 0) {
-    draw.push({
-      url: badgeUrl(url, `★ ${Number(details.vote_average).toFixed(1)}`, 'rating'),
-      left: 22,
-      bottom: 22,
-      fit: 'contain',
-      height: 68,
-    });
+    draw.push(textOverlay(`★ ${Number(details.vote_average).toFixed(1)}`, {
+      size: 38,
+      left: 28,
+      bottom: 30,
+    }));
   }
 
   const genre = details.genres?.[0]?.name || '';
   if (tagsEnabled && requested.has('genre') && genre) {
-    draw.push({
-      url: badgeUrl(url, genre.toUpperCase(), 'genre'),
-      right: 22,
-      bottom: 22,
-      fit: 'contain',
-      height: 68,
-    });
+    draw.push(textOverlay(genre.toUpperCase(), {
+      size: 30,
+      right: 28,
+      bottom: 30,
+    }));
   }
 
   const certification = pickCertification(details, normalizedType);
   if (tagsEnabled && requested.has('age') && certification) {
-    draw.push({
-      url: badgeUrl(url, certification, 'age'),
-      left: 22,
-      top: 22,
-      fit: 'contain',
-      height: 68,
-    });
+    draw.push(textOverlay(certification, {
+      size: 30,
+      left: 28,
+      top: 28,
+    }));
   }
 
   if (smart) {
     const title = String(details.title || details.name || '').trim().slice(0, 38);
     if (title) {
-      draw.push({
-        text: title,
-        color: '#ffffff',
+      draw.push(textOverlay(title, {
         size: title.length > 24 ? 40 : 50,
-        left: 26,
-        bottom: requested.has('rating') || requested.has('genre') ? 108 : 32,
-      });
+        left: 28,
+        bottom: requested.has('rating') || requested.has('genre') ? 112 : 34,
+      }));
     }
   }
 
@@ -190,11 +157,14 @@ async function renderPoster(request, env, type, rawId) {
     fit: 'cover',
     format: 'webp',
     quality: 88,
+    ...(draw.length ? { draw } : {}),
   };
-  if (draw.length) imageOptions.draw = draw;
 
   let transformed = true;
+  let transformStatus = 0;
   let response = await fetch(sourceUrl, { cf: { image: imageOptions } });
+  transformStatus = response.status;
+
   if (!response.ok) {
     transformed = false;
     response = await fetch(sourceUrl);
@@ -204,12 +174,15 @@ async function renderPoster(request, env, type, rawId) {
   headers.set('cache-control', transformed
     ? 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800'
     : 'no-store, max-age=0');
-  headers.set('x-kollection-posters', 'tmdb-v5-transform-state');
+  headers.set('x-kollection-posters', 'tmdb-v6-direct-text');
   headers.set('x-kollection-transform', transformed ? 'applied' : 'fallback');
+  headers.set('x-kollection-transform-status', String(transformStatus));
+  headers.set('x-kollection-draw-count', String(draw.length));
   headers.set('x-kollection-tmdb-id', resolved.id);
   headers.set('x-kollection-rating-source', ratingSource);
   if (ratingSource !== 'tmdb') headers.set('x-kollection-rating-fallback', 'tmdb');
   headers.delete('set-cookie');
+
   return new Response(response.body, { status: response.status, headers });
 }
 
@@ -218,21 +191,12 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   const parts = url.pathname.split('/').filter(Boolean);
 
-  if (parts[2] === 'badge') {
-    const text = url.searchParams.get('text') || '';
-    const kind = url.searchParams.get('kind') || 'default';
-    return new Response(badgeSvg(text, kind), {
-      headers: {
-        'content-type': 'image/svg+xml; charset=utf-8',
-        'cache-control': 'public, max-age=86400, s-maxage=604800',
-      },
-    });
-  }
-
   const type = parts[2];
   const idPart = parts[3] || '';
   const rawId = idPart.replace(/\.webp$/i, '');
-  if (!type || !rawId) return json({ error: 'Expected /api/posters/movie/123.webp or /api/posters/tv/123.webp' }, 400);
+  if (!type || !rawId) {
+    return json({ error: 'Expected /api/posters/movie/123.webp or /api/posters/tv/123.webp' }, 400);
+  }
 
   try {
     const cache = caches.default;
