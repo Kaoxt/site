@@ -16,7 +16,7 @@ html[data-theme="light"] {
   --account-text: #151922;
 }
 
-/* Use the same page reset as News / FAQ so the shared nav and page heading sit on the same viewport grid. */
+/* Match the page reset used by News / FAQ. */
 body { margin: 0; }
 
 .account-page,
@@ -139,40 +139,23 @@ html[data-theme="light"] .account-section-chip { border-color: rgba(0,0,0,.10); 
 html[data-theme="light"] .account-profile-url { background: rgba(255,255,255,.72); }
 
 @media (max-width: 760px) {
+  /* Exact secondary-page grid used by News / FAQ. */
   .account-page {
-    width: 100% !important;
-    margin-inline: auto !important;
-    padding: 0 0 70px !important;
+    width: min(calc(100% - 18px), 100%);
+    margin: 0 auto;
+    padding: 9px 0 70px;
   }
 
-  /* On compact layouts the secondary-page content sits on the same grid as the nav. */
   .account-hero,
   .account-shell {
-    width: 100% !important;
-    margin-inline: 0 !important;
-    padding-left: 18px !important;
-    padding-right: 18px !important;
+    width: min(calc(100% - 22px), 1180px);
+    margin-inline: auto;
   }
 
-  /* Pull the page heading up to match News / FAQ. */
-  body .account-page .account-hero {
-    padding-top: 32px !important;
-    padding-bottom: 24px !important;
-    margin-bottom: 18px !important;
-  }
-
-  body .account-page .account-eyebrow {
-    min-height: 38px !important;
-    padding: 0 14px !important;
-    font-size: 13px !important;
-  }
-
-  body .account-page .account-hero h1 {
-    margin-top: 30px !important;
-    font-size: 38px !important;
-  }
-
-  body .account-page .account-hero p { font-size: 15px !important; }
+  .account-hero { padding-top: 55px; }
+  .account-eyebrow { min-height: 38px; padding: 0 14px; font-size: 13px; }
+  .account-hero h1 { margin-top: 30px; font-size: 38px; }
+  .account-hero p { font-size: 15px; }
   .account-grid { grid-template-columns: 1fr; }
   .account-profile-card,
   .account-profiles-card,
