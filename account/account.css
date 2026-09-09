@@ -16,6 +16,9 @@ html[data-theme="light"] {
   --account-text: #151922;
 }
 
+/* Use the same page reset as News / FAQ so the shared nav and page heading sit on the same viewport grid. */
+body { margin: 0; }
+
 .account-page,
 .account-page *,
 .account-page *::before,
