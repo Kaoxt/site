@@ -1,5 +1,5 @@
 /* The Kollection — canonical secondary-page shell
-   News is the visual source of truth for page gutters, heading rhythm and chips.
+   The rendered News/Set Up header is the visual source of truth.
    Use these classes on Account, FAQ and future secondary pages instead of
    redefining page-header geometry in page-specific CSS. */
 
@@ -11,102 +11,125 @@
 }
 
 .secondary-page {
-  width: min(calc(100% - 30px), 1500px) !important;
+  width: min(calc(100% - 32px), 1760px) !important;
+  max-width: 1760px !important;
   margin: 0 auto !important;
-  padding: 18px 0 70px !important;
-  font-family: "Product Sans", "Google Sans", "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  padding: 20px 0 72px !important;
+  font-family: "Inter", "Google Sans", "Product Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
 }
 
-.secondary-page-header,
-.secondary-page-content {
-  width: min(calc(100% - 36px), 1180px) !important;
-  margin-inline: auto !important;
-}
-
+/* Header uses the same final setup-hero/page-intro geometry rendered on News. */
 .secondary-page-header {
-  padding: clamp(62px, 8vw, 105px) 0 30px !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 58px 0 46px !important;
+  text-align: left !important;
 }
 
 .secondary-page-chip {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 10px !important;
-  min-height: 42px !important;
-  padding: 0 16px !important;
-  margin: 0 !important;
-  border: 1px solid rgba(255,255,255,.12) !important;
+  gap: 8px !important;
+  min-height: 0 !important;
+  padding: 7px 11px !important;
+  margin: 0 0 24px !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
   border-radius: 999px !important;
-  background: rgba(255,255,255,.028) !important;
-  color: #c7c7cc !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.025) !important;
-  font-size: 14px !important;
+  background: rgba(255,255,255,.035) !important;
+  color: #d6d5db !important;
+  box-shadow: none !important;
+  font-size: 13px !important;
   font-weight: 650 !important;
-  line-height: 1 !important;
-  letter-spacing: -.01em !important;
+  line-height: normal !important;
+  letter-spacing: .015em !important;
   text-transform: none !important;
 }
 
 .secondary-page-chip::before {
   content: "" !important;
-  width: 8px !important;
-  height: 8px !important;
-  flex: 0 0 8px !important;
-  border-radius: 50% !important;
-  background: linear-gradient(135deg, #56aaff 0%, #8b5cf6 58%, #d86cff 100%) !important;
-  box-shadow: 0 0 14px rgba(99,102,241,.42) !important;
+  width: 7px !important;
+  height: 7px !important;
+  flex: 0 0 7px !important;
+  border-radius: 99px !important;
+  background: linear-gradient(135deg, #56aaff, #9d4edd) !important;
+  box-shadow: 0 0 18px rgba(86,170,255,.45) !important;
 }
 
 .secondary-page-title {
-  margin: 38px 0 0 !important;
-  font-size: clamp(38px, 5vw, 64px) !important;
-  line-height: 1 !important;
-  letter-spacing: -.05em !important;
-  font-weight: 720 !important;
+  margin: 0 !important;
+  max-width: 1040px !important;
+  font-family: "Inter", "Google Sans", "Product Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: clamp(48px, 4.65vw, 76px) !important;
+  line-height: 1.02 !important;
+  letter-spacing: -.045em !important;
+  font-weight: 600 !important;
+  text-align: left !important;
 }
 
 .secondary-page-subtitle {
-  max-width: 720px !important;
+  width: min(980px, 100%) !important;
+  max-width: 980px !important;
   margin: 24px 0 0 !important;
-  font-size: 16px !important;
-  line-height: 1.6 !important;
+  color: var(--muted, #9b9b9f) !important;
+  font-family: "Inter", "Google Sans", "Product Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: clamp(18px, 1.35vw, 22px) !important;
+  line-height: 1.55 !important;
+  letter-spacing: -.015em !important;
+  font-weight: 400 !important;
+  text-align: left !important;
+}
+
+.secondary-page-content {
+  width: min(100%, 1180px) !important;
+  max-width: 1180px !important;
+  margin: 0 !important;
 }
 
 html[data-theme="light"] .secondary-page-chip,
 body.light .secondary-page-chip {
-  color: #555860 !important;
+  color: #484b52 !important;
   border-color: rgba(0,0,0,.10) !important;
   background: rgba(255,255,255,.72) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.85) !important;
+  box-shadow: 0 6px 24px rgba(17,24,39,.04) !important;
+}
+
+@media (min-width: 900px) {
+  .secondary-page {
+    width: min(calc(100% - 20px), 1760px) !important;
+  }
 }
 
 @media (max-width: 700px) {
   .secondary-page {
-    width: min(calc(100% - 18px), 100%) !important;
-    padding-top: 9px !important;
-  }
-
-  .secondary-page-header,
-  .secondary-page-content {
-    width: min(calc(100% - 22px), 1180px) !important;
-    margin-inline: auto !important;
+    width: min(calc(100% - 20px), 100%) !important;
+    padding-top: 10px !important;
   }
 
   .secondary-page-header {
-    padding: 55px 0 30px !important;
+    padding: 54px 2px 34px !important;
   }
 
   .secondary-page-chip {
-    min-height: 38px !important;
-    padding: 0 14px !important;
-    font-size: 13px !important;
+    margin-bottom: 20px !important;
+    font-size: 12px !important;
   }
 
   .secondary-page-title {
-    margin-top: 30px !important;
-    font-size: 38px !important;
+    font-size: clamp(40px, 11vw, 56px) !important;
+    line-height: 1.04 !important;
   }
 
   .secondary-page-subtitle {
-    font-size: 15px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 20px !important;
+    font-size: 17px !important;
+    line-height: 1.52 !important;
+  }
+
+  .secondary-page-content {
+    width: 100% !important;
+    max-width: none !important;
   }
 }
