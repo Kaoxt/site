@@ -13,7 +13,7 @@
   const smartTagsEnabled = document.getElementById('smartTagsEnabled');
   const tagOptions = document.getElementById('tagOptions');
   const tagInputs = [...document.querySelectorAll('.tag-option input[type="checkbox"]')];
-  const posterMock = document.getElementById('posterMock');
+  const posterMocks = [...document.querySelectorAll('.poster-mock')];
   const previewDescription = document.getElementById('previewDescription');
   const configFile = document.getElementById('configFile');
   const clearImport = document.getElementById('clearImport');
@@ -50,6 +50,7 @@
         : 'You can generate a Posters configuration now. Import an AIOmetadata JSON first to preserve a complete existing setup.';
     }
 
+    refreshPreview();
     configurator.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -80,11 +81,13 @@
     sourceCards.forEach((card) => card.classList.toggle('selected', card.querySelector('input')?.checked));
     tagOptions.classList.toggle('disabled', !enabled);
     tagOptions.setAttribute('aria-disabled', String(!enabled));
-    posterMock.classList.toggle('tags-off', !enabled);
-    posterMock.classList.toggle('smart-layout', source === 'smart');
 
-    posterMock.querySelectorAll('[data-tag]').forEach((badge) => {
-      badge.classList.toggle('tag-hidden', !enabledTags.has(badge.dataset.tag));
+    posterMocks.forEach((posterMock) => {
+      posterMock.classList.toggle('tags-off', !enabled);
+      posterMock.classList.toggle('smart-layout', source === 'smart');
+      posterMock.querySelectorAll('[data-tag]').forEach((badge) => {
+        badge.classList.toggle('tag-hidden', !enabledTags.has(badge.dataset.tag));
+      });
     });
 
     const tagText = enabled
