@@ -205,6 +205,7 @@
     window.addEventListener('orientationchange', syncResponsiveNav, { passive: true });
   };
   const init = async () => {
+    ensureStylesheet('secondary-pages.css?v=20260908-2');
     applyTheme(readTheme(), false);
     const navTarget = document.getElementById('site-nav');
     const footerTarget = document.getElementById('site-footer');
