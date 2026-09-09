@@ -27,10 +27,12 @@ function badgeSvg(text, kind = 'default') {
   };
   const [bg, fg] = palette[kind] || palette.default;
   const safe = esc(text).slice(0, 34);
-  const width = Math.max(74, Math.min(300, 26 + safe.length * 15));
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="52" viewBox="0 0 ${width} 52">
-    <rect x="1" y="1" width="${width - 2}" height="50" rx="14" fill="${bg}" stroke="rgba(255,255,255,.22)"/>
-    <text x="${width / 2}" y="33" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="700" fill="${fg}">${safe}</text>
+  const width = Math.max(116, Math.min(360, 42 + safe.length * 17));
+  const height = 68;
+  const radius = height / 2;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+    <rect x="1" y="1" width="${width - 2}" height="${height - 2}" rx="${radius}" fill="${bg}" stroke="rgba(255,255,255,.24)" stroke-width="2"/>
+    <text x="${width / 2}" y="43" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="27" font-weight="700" fill="${fg}">${safe}</text>
   </svg>`;
 }
 
@@ -107,10 +109,10 @@ async function renderPoster(request, env, type, rawId) {
   if (tagsEnabled && requested.has('rating') && Number(details.vote_average) > 0) {
     draw.push({
       url: badgeUrl(url, `★ ${Number(details.vote_average).toFixed(1)}`, 'rating'),
-      left: 18,
-      bottom: 18,
+      left: 22,
+      bottom: 22,
       fit: 'contain',
-      height: 52,
+      height: 68,
     });
   }
 
@@ -118,10 +120,10 @@ async function renderPoster(request, env, type, rawId) {
   if (tagsEnabled && requested.has('genre') && genre) {
     draw.push({
       url: badgeUrl(url, genre.toUpperCase(), 'genre'),
-      right: 18,
-      bottom: 18,
+      right: 22,
+      bottom: 22,
       fit: 'contain',
-      height: 52,
+      height: 68,
     });
   }
 
@@ -129,10 +131,10 @@ async function renderPoster(request, env, type, rawId) {
   if (tagsEnabled && requested.has('age') && certification) {
     draw.push({
       url: badgeUrl(url, certification, 'age'),
-      right: 18,
-      top: 18,
+      left: 22,
+      top: 22,
       fit: 'contain',
-      height: 52,
+      height: 68,
     });
   }
 
@@ -142,9 +144,9 @@ async function renderPoster(request, env, type, rawId) {
       draw.push({
         text: title,
         color: '#ffffff',
-        size: title.length > 24 ? 38 : 48,
-        left: 24,
-        bottom: tagsEnabled ? 88 : 28,
+        size: title.length > 24 ? 40 : 50,
+        left: 26,
+        bottom: tagsEnabled ? 108 : 32,
       });
     }
   }
@@ -160,13 +162,12 @@ async function renderPoster(request, env, type, rawId) {
 
   let response = await fetch(sourceUrl, { cf: { image: imageOptions } });
   if (!response.ok) {
-    // Graceful fallback: return the real TMDB poster even if image transformation is not enabled yet.
     response = await fetch(sourceUrl);
   }
 
   const headers = new Headers(response.headers);
   headers.set('cache-control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800');
-  headers.set('x-kollection-posters', 'tmdb-v1');
+  headers.set('x-kollection-posters', 'tmdb-v2-pill');
   headers.set('x-kollection-tmdb-id', resolved.id);
   headers.delete('set-cookie');
   return new Response(response.body, { status: response.status, headers });
@@ -188,7 +189,6 @@ export async function onRequest(context) {
     });
   }
 
-  // /api/posters/:type/:id.webp
   const type = parts[2];
   const idPart = parts[3] || '';
   const rawId = idPart.replace(/\.webp$/i, '');
