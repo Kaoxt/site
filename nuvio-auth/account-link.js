@@ -18,7 +18,7 @@
     if (!setup) return;
 
     const link = document.createElement('a');
-    link.className = 'nuvio-desktop-menu-row';
+    link.className = 'nuvio-desktop-menu-row nuvio-account-link-row';
     link.href = '/account';
     link.dataset.kollectionAccountLink = 'true';
     link.innerHTML = `${icon}<span class="nuvio-row-copy"><strong>Account</strong><small>Saved setups & account details</small></span>`;
@@ -33,10 +33,10 @@
     if (!bottom) return;
 
     const link = document.createElement('a');
-    link.className = 'nuvio-mobile-login-row';
+    link.className = 'nuvio-mobile-account-row';
     link.href = '/account';
     link.dataset.kollectionAccountLink = 'true';
-    link.innerHTML = `${icon}<span>Account</span>`;
+    link.innerHTML = `${icon}<span class="nuvio-mobile-account-copy"><strong>Account</strong><small>Saved setups & account details</small></span>`;
     bottom.before(link);
   }
 
