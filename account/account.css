@@ -136,24 +136,25 @@ html[data-theme="light"] .account-section-chip { border-color: rgba(0,0,0,.10); 
 html[data-theme="light"] .account-profile-url { background: rgba(255,255,255,.72); }
 
 @media (max-width: 760px) {
-  /* Use the same viewport grid as News: no extra outer Account wrapper inset. */
   .account-page {
     width: 100% !important;
     margin-inline: auto !important;
     padding: 0 0 70px !important;
   }
 
-  /* News content begins 18px from the viewport edge. */
+  /* On compact layouts the secondary-page content sits on the same grid as the nav. */
   .account-hero,
   .account-shell {
-    width: min(calc(100% - 36px), 1180px) !important;
-    margin-inline: auto !important;
+    width: 100% !important;
+    margin-inline: 0 !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
   }
 
-  /* Match the News header's visual distance below the navigation. */
+  /* Pull the page heading up to match News / FAQ. */
   body .account-page .account-hero {
-    padding-top: 45px !important;
-    padding-bottom: 26px !important;
+    padding-top: 32px !important;
+    padding-bottom: 24px !important;
     margin-bottom: 18px !important;
   }
 
