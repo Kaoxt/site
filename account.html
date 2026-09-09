@@ -49,12 +49,12 @@
       <div id="accountSignedIn" class="account-state" hidden>
         <div class="account-grid">
           <section class="account-card account-profile-card">
-            <div class="account-section-head"><div><span class="account-kicker">SIGNED IN</span><h2>Your account</h2></div><span class="account-session-pill">Last sync</span></div>
+            <div class="account-section-head"><div><span class="account-kicker">SIGNED IN</span><h2>Your account</h2></div><span id="accountLastSync" class="account-session-pill">Last sync · —</span></div>
             <dl class="account-details">
               <div><dt>Email</dt><dd id="accountEmail">—</dd></div>
               <div><dt>Active profile</dt><dd id="accountActiveProfile">—</dd></div>
-              <div><dt>Last sync</dt><dd id="accountLastSync">—</dd><dd id="accountExpires" hidden>—</dd></div>
             </dl>
+            <span id="accountExpires" hidden>—</span>
             <div class="account-actions"><a class="account-primary-button" href="/set-up-collection">Set Up Collection</a><button id="accountSignOut" class="account-secondary-button" type="button">Log out</button></div>
           </section>
 
@@ -86,6 +86,9 @@
         if (Number.isNaN(date.getTime())) return '—';
         return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'medium' }).format(date);
       };
+      const setLastSync = (element, value) => {
+        element.textContent = `Last sync · ${value ? formatSync(value) : '—'}`;
+      };
       const updateSummary = () => {
         const profiles = document.getElementById('accountProfiles');
         const active = document.getElementById('accountActiveProfile');
@@ -97,11 +100,11 @@
         if (firstName && status && /profile/i.test(status.textContent || '')) {
           const now = new Date().toISOString();
           try { localStorage.setItem(SYNC_KEY, now); } catch {}
-          lastSync.textContent = formatSync(now);
+          setLastSync(lastSync, now);
         } else {
           let saved = '';
           try { saved = localStorage.getItem(SYNC_KEY) || ''; } catch {}
-          lastSync.textContent = saved ? formatSync(saved) : '—';
+          setLastSync(lastSync, saved);
         }
       };
       const start = () => {
