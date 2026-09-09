@@ -1,0 +1,70 @@
+/* Kollection Posters overlay system — preview styling mirrors rendered poster badges. */
+.poster-mock .overlay{
+  position:absolute;
+  z-index:4;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  min-height:34px;
+  padding:7px 12px;
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:999px;
+  background:rgba(9,10,14,.88);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  box-shadow:0 6px 18px rgba(0,0,0,.32);
+  color:#fff;
+  font-weight:800;
+  letter-spacing:.01em;
+  white-space:nowrap;
+}
+.poster-mock .overlay-rating{
+  left:10px;
+  bottom:10px;
+  top:auto;
+  flex-direction:row;
+  min-height:36px;
+  padding:7px 12px;
+}
+.poster-mock .overlay-rating b{font-size:15px;line-height:1}
+.poster-mock .overlay-rating small{margin:0;font-size:9px;color:#c7cad3;font-weight:700}
+.poster-mock .overlay-quality{right:10px;top:10px;font-size:12px;min-width:48px}
+.poster-mock .overlay-hdr{right:10px;top:52px;font-size:11px;min-width:50px}
+.poster-mock .overlay-audio{right:10px;bottom:10px;font-size:10px}
+.poster-mock .overlay-age{left:10px;top:10px;bottom:auto;font-size:10px}
+.poster-mock .overlay-genre{
+  left:50%;
+  bottom:10px;
+  transform:translateX(-50%);
+  max-width:46%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-size:10px;
+}
+.poster-mock.tags-off .overlay,.poster-mock .overlay.tag-hidden{display:none!important}
+
+/* Compact screens still show badges at realistic poster-relative size. */
+@media(max-width:900px){
+  .poster-mock .overlay{min-height:30px;padding:6px 10px}
+  .poster-mock .overlay-rating{left:7px;bottom:7px;min-height:31px;padding:6px 9px}
+  .poster-mock .overlay-rating b{font-size:13px}
+  .poster-mock .overlay-rating small{font-size:8px}
+  .poster-mock .overlay-quality{right:7px;top:7px;font-size:10px;min-width:42px}
+  .poster-mock .overlay-hdr{right:7px;top:45px;font-size:9px;min-width:44px}
+  .poster-mock .overlay-audio{right:7px;bottom:7px;font-size:9px}
+  .poster-mock .overlay-age{left:7px;top:7px;font-size:9px}
+  .poster-mock .overlay-genre{bottom:7px;font-size:9px;max-width:44%}
+}
+
+@media(max-width:520px){
+  .poster-mock .overlay{min-height:27px;padding:5px 8px}
+  .poster-mock .overlay-rating{left:6px;bottom:6px;min-height:28px;padding:5px 8px}
+  .poster-mock .overlay-rating b{font-size:12px}
+  .poster-mock .overlay-rating small{font-size:7px;display:inline}
+  .poster-mock .overlay-quality{right:6px;top:6px;font-size:9px;min-width:38px}
+  .poster-mock .overlay-hdr{right:6px;top:39px;font-size:8px;min-width:40px}
+  .poster-mock .overlay-audio{right:6px;bottom:6px;font-size:8px}
+  .poster-mock .overlay-age{left:6px;top:6px;font-size:8px}
+  .poster-mock .overlay-genre{bottom:6px;font-size:8px}
+}
