@@ -9,7 +9,7 @@
   <title>Account | The Kollection</title>
   <meta name="description" content="Manage your Kollection account, Nuvio profile connection, and saved collection setups." />
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
-  <link rel="stylesheet" href="/account/account.css?v=20260909-1" />
+  <link rel="stylesheet" href="/account/account.css?v=20260909-2" />
   <link rel="stylesheet" href="/secondary-pages.css?v=20260909-2" />
   <link rel="stylesheet" href="/account/login-form.css?v=20260908-1" />
   <link rel="stylesheet" href="/account/saved-collections.css?v=20260908-1" />
@@ -89,19 +89,35 @@
       const setLastSync = (element, value) => {
         element.textContent = `Last sync · ${value ? formatSync(value) : '—'}`;
       };
+      const renderActiveProfile = (active, row) => {
+        const name = row?.querySelector('.account-profile-copy strong');
+        if (!name) return false;
+        active.replaceChildren();
+        const sourceAvatar = row.querySelector('.account-profile-avatar');
+        if (sourceAvatar) {
+          const avatar = sourceAvatar.cloneNode(true);
+          avatar.classList.add('account-active-avatar');
+          active.appendChild(avatar);
+        }
+        const label = document.createElement('span');
+        label.textContent = name.textContent || 'Nuvio profile';
+        active.appendChild(label);
+        return true;
+      };
       const updateSummary = () => {
         const profiles = document.getElementById('accountProfiles');
         const active = document.getElementById('accountActiveProfile');
         const lastSync = document.getElementById('accountLastSync');
         if (!profiles || !active || !lastSync) return;
-        const firstName = profiles.querySelector('.account-profile-copy strong');
-        if (firstName) active.textContent = firstName.textContent || 'Nuvio profile';
+        const firstRow = profiles.querySelector('.account-profile-row');
+        const hasActiveProfile = renderActiveProfile(active, firstRow);
         const status = document.getElementById('accountProfilesStatus');
-        if (firstName && status && /profile/i.test(status.textContent || '')) {
+        if (hasActiveProfile && status && /profile/i.test(status.textContent || '')) {
           const now = new Date().toISOString();
           try { localStorage.setItem(SYNC_KEY, now); } catch {}
           setLastSync(lastSync, now);
         } else {
+          if (!hasActiveProfile) active.textContent = '—';
           let saved = '';
           try { saved = localStorage.getItem(SYNC_KEY) || ''; } catch {}
           setLastSync(lastSync, saved);
