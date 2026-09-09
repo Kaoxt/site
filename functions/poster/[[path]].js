@@ -16,23 +16,19 @@ export async function onRequest({ request }) {
   }
 
   const source = mode === 'tmdb' ? 'tmdb' : mode === 'inherit' ? 'inherit' : 'smart';
-  const target = new URL(`/api/posters/${encodeURIComponent(type)}/${encodeURIComponent(rawId)}.webp`, url.origin);
+  const target = new URL(`/api/posters-v2/${encodeURIComponent(type)}/${encodeURIComponent(rawId)}.webp`, url.origin);
 
   for (const [key, value] of url.searchParams) target.searchParams.append(key, value);
   if (!target.searchParams.has('source')) target.searchParams.set('source', source);
-  if (!target.searchParams.has('smart')) target.searchParams.set('smart', '1');
   if (!target.searchParams.has('tags')) target.searchParams.set('tags', 'trend,rating');
   if (!target.searchParams.has('ratingSource')) target.searchParams.set('ratingSource', 'average');
 
-  // Important: do not proxy the renderer through another Worker fetch.
-  // Cloudflare Images transformations can be skipped when one Worker calls another
-  // on the same zone. Redirect so the image renderer is reached as a fresh request.
   return new Response(null, {
     status: 302,
     headers: {
       location: target.toString(),
       'cache-control': 'no-store',
-      'x-kollection-poster-route': 'direct-webp-redirect-v2',
+      'x-kollection-poster-route': 'v2-sharp',
     },
   });
 }
