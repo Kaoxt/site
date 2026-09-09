@@ -3,7 +3,7 @@ const TMDB_IMAGE = 'https://image.tmdb.org/t/p/w780';
 const trendMemory = new Map();
 
 function json(data, status = 200) {
-  return new Response(JSON.stringify(data), {
+  return new Response(JSON.stringify(data, null, 2), {
     status,
     headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
   });
@@ -99,8 +99,6 @@ async function renderPoster(request, env, type, rawId) {
   const qualityOn = requested.has('quality');
   if (!qualityOn) requested.add('trend');
 
-  // IMPORTANT: Keep this draw array self-contained. Dynamic overlay-image URLs on
-  // the same Pages zone can cause Cloudflare to drop the entire transform.
   const draw = [];
 
   if (tagsEnabled && requested.has('trend')) {
@@ -165,6 +163,24 @@ async function renderPoster(request, env, type, rawId) {
   let response = await fetch(sourceUrl, { cf: { image: imageOptions } });
   transformStatus = response.status;
 
+  const debug = url.searchParams.get('debug') === '1';
+  if (debug) {
+    return json({
+      resolved: { type: normalizedType, id: resolved.id },
+      sourceUrl,
+      smart,
+      requestedTags: [...requested],
+      drawCount: draw.length,
+      draw,
+      transformStatus,
+      transformOk: response.ok,
+      transformContentType: response.headers.get('content-type'),
+      cfResized: response.headers.get('cf-resized') || null,
+      cfCacheStatus: response.headers.get('cf-cache-status') || null,
+      server: response.headers.get('server') || null,
+    });
+  }
+
   if (!response.ok) {
     transformed = false;
     response = await fetch(sourceUrl);
@@ -174,7 +190,7 @@ async function renderPoster(request, env, type, rawId) {
   headers.set('cache-control', transformed
     ? 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800'
     : 'no-store, max-age=0');
-  headers.set('x-kollection-posters', 'tmdb-v6-direct-text');
+  headers.set('x-kollection-posters', 'tmdb-v7-debug');
   headers.set('x-kollection-transform', transformed ? 'applied' : 'fallback');
   headers.set('x-kollection-transform-status', String(transformStatus));
   headers.set('x-kollection-draw-count', String(draw.length));
@@ -200,11 +216,13 @@ export async function onRequest(context) {
 
   try {
     const cache = caches.default;
-    const cached = await cache.match(request);
-    if (cached) return cached;
+    if (url.searchParams.get('debug') !== '1') {
+      const cached = await cache.match(request);
+      if (cached) return cached;
+    }
 
     const response = await renderPoster(request, env, type, rawId);
-    if (response.ok && response.headers.get('x-kollection-transform') === 'applied') {
+    if (url.searchParams.get('debug') !== '1' && response.ok && response.headers.get('x-kollection-transform') === 'applied') {
       context.waitUntil(cache.put(request, response.clone()));
     }
     return response;
