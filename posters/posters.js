@@ -1,6 +1,13 @@
 (() => {
   'use strict';
 
+  const usageChoice = document.getElementById('postersUsageChoice');
+  const configurator = document.getElementById('postersConfigurator');
+  const usageButtons = [...document.querySelectorAll('[data-usage]')];
+  const backBtn = document.getElementById('postersBackBtn');
+  const routeKicker = document.getElementById('routeKicker');
+  const routeTitle = document.getElementById('routeTitle');
+
   const sourceInputs = [...document.querySelectorAll('input[name="posterSource"]')];
   const sourceCards = [...document.querySelectorAll('.choice-card')];
   const smartTagsEnabled = document.getElementById('smartTagsEnabled');
@@ -22,6 +29,39 @@
   let importedConfig = null;
   let importedFileName = '';
   let generatedJson = '';
+  let usageMode = '';
+
+  const openConfigurator = (mode) => {
+    usageMode = mode;
+    usageChoice.hidden = true;
+    configurator.hidden = false;
+
+    if (mode === 'addon') {
+      routeKicker.textContent = 'AIOMETADATA / OTHER ADDON';
+      routeTitle.textContent = 'Generate poster settings';
+      generateHint.textContent = importedConfig
+        ? 'Your existing AIOmetadata JSON will be preserved; only poster-related fields are changed when your selections require it.'
+        : 'Configure Posters, then generate the poster URL and JSON settings for AIOmetadata or another compatible addon.';
+    } else {
+      routeKicker.textContent = 'POSTERS SETUP';
+      routeTitle.textContent = 'Configure Posters';
+      generateHint.textContent = importedConfig
+        ? 'Your existing AIOmetadata JSON will be preserved; only poster-related fields are changed when your selections require it.'
+        : 'You can generate a Posters configuration now. Import an AIOmetadata JSON first to preserve a complete existing setup.';
+    }
+
+    configurator.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const returnToUsage = () => {
+    usageMode = '';
+    configurator.hidden = true;
+    usageChoice.hidden = false;
+    usageChoice.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  usageButtons.forEach((button) => button.addEventListener('click', () => openConfigurator(button.dataset.usage)));
+  backBtn?.addEventListener('click', returnToUsage);
 
   const selectedSource = () => document.querySelector('input[name="posterSource"]:checked')?.value || 'inherit';
   const selectedTags = () => tagInputs.filter((input) => input.checked).map((input) => input.value);
@@ -105,19 +145,15 @@
         config.posterRatingProvider = 'custom';
         config.usePosterProxy = true;
         config.customPosterUrlPattern = posterPattern();
-      } else if (source === 'inherit') {
-        // Preserve the imported poster-related fields exactly when Posters is not changing them.
-      } else if (source === 'tmdb') {
-        // TMDB-only mode changes the poster provider but does not force custom poster rendering.
       }
 
-      const kollection = {
+      config.kollectionPosters = {
         version: 1,
+        usageMode: usageMode || 'setup',
         posterSource: source,
         smartTags: { enabled: tagsEnabled, tags, fixedPlacement: true },
         renderer: 'https://kollection.tv/api/posters/{type}/{tmdb_id}.webp'
       };
-      config.kollectionPosters = kollection;
 
       if (normalized.wrapper) {
         normalized.wrapper.exportedAt = new Date().toISOString();
@@ -130,9 +166,11 @@
       version: '1.0.0',
       exportedAt: new Date().toISOString(),
       type: 'kollection-posters',
+      usageMode: usageMode || 'setup',
       config: {
         posterSource: source,
         smartTags: { enabled: tagsEnabled, tags, fixedPlacement: true },
+        posterUrlPattern: posterPattern(),
         aiometadata: {
           posterRatingProvider: tagsEnabled || source === 'smart' ? 'custom' : 'none',
           usePosterProxy: Boolean(tagsEnabled || source === 'smart'),
@@ -183,7 +221,9 @@
     configFile.value = '';
     clearImport.hidden = true;
     importStatus.textContent = 'No config imported';
-    generateHint.textContent = 'You can generate a Posters configuration now. Import an AIOmetadata JSON first to preserve a complete existing setup.';
+    generateHint.textContent = usageMode === 'addon'
+      ? 'Configure Posters, then generate the poster URL and JSON settings for AIOmetadata or another compatible addon.'
+      : 'You can generate a Posters configuration now. Import an AIOmetadata JSON first to preserve a complete existing setup.';
   });
 
   generateBtn.addEventListener('click', generate);
