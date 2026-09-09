@@ -1,6 +1,7 @@
 import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
+const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data, null, 2), {
@@ -47,7 +48,7 @@ export async function onRequest(context) {
 
   if (!rawId) return json({ error: 'Expected /api/posters-v2/movie/27205.webp' }, 400);
   if (!env.TMDB_API_KEY) return json({ error: 'TMDB_API_KEY is not configured.' }, 503);
-  if (!env.POSTERS_V2_RENDERER_URL) return json({ error: 'Posters v2 renderer is not deployed yet.', setup: 'Configure POSTERS_V2_RENDERER_URL after the Sharp container is online.' }, 503);
+  if (!env.POSTERS_RENDERER_AUTH_TOKEN) return json({ error: 'POSTERS_RENDERER_AUTH_TOKEN is not configured.' }, 503);
 
   const cache = caches.default;
   const cached = await cache.match(request);
@@ -79,10 +80,14 @@ export async function onRequest(context) {
       smartLayout,
     };
 
-    const rendererUrl = `${String(env.POSTERS_V2_RENDERER_URL).replace(/\/$/, '')}/render`;
-    const rendered = await fetch(rendererUrl, {
+    const rendererBase = String(env.POSTERS_V2_RENDERER_URL || DEFAULT_RENDERER_URL).replace(/\/$/, '');
+    const rendered = await fetch(`${rendererBase}/render`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', accept: 'image/webp' },
+      headers: {
+        'content-type': 'application/json',
+        accept: 'image/webp',
+        'x-kollection-render-key': String(env.POSTERS_RENDERER_AUTH_TOKEN),
+      },
       body: JSON.stringify(payload),
     });
 
