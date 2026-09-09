@@ -9,8 +9,8 @@
   <title>Account | The Kollection</title>
   <meta name="description" content="Manage your Kollection account, Nuvio profile connection, and saved collection setups." />
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
-  <link rel="stylesheet" href="/account/account.css?v=20260908-1" />
-  <script src="/components.js?v=20260907-6" defer></script>
+  <link rel="stylesheet" href="/account/account.css?v=20260908-2" />
+  <script src="/components.js?v=20260908-2" defer></script>
 </head>
 <body>
   <main class="page account-page">
@@ -93,13 +93,11 @@
                 <span class="account-kicker">SAVED COLLECTIONS</span>
                 <h2>Your setups</h2>
               </div>
-              <span class="account-coming-soon">Next</span>
+              <a class="account-secondary-button account-small-button" href="/set-up-collection">New setup</a>
             </div>
-            <p class="account-card-copy">This is where saved Kollection configurations will appear so you can resume, edit, and update them without starting over.</p>
-            <div class="account-empty-state">
-              <strong>No saved setups yet</strong>
-              <span>Saving and resuming collection configurations is the next account-system piece.</span>
-            </div>
+            <p class="account-card-copy">Saved Kollection configurations stay tied to this Nuvio account so you can resume, edit, and update them later. Passwords, session tokens, and API keys are not saved in collection configuration data.</p>
+            <div id="accountSavedCollections" class="account-saved-list"></div>
+            <p id="accountSavedStatus" class="account-status" role="status"></p>
           </section>
         </div>
       </div>
@@ -110,5 +108,6 @@
 
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
   <script src="/account/account.js?v=20260908-1"></script>
+  <script src="/account/saved-collections.js?v=20260908-1"></script>
 </body>
 </html>
