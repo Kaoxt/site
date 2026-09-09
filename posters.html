@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/secondary-pages.css?v=20260909-3" />
   <link rel="stylesheet" href="/posters/styles.css?v=20260909-7" />
-  <link rel="stylesheet" href="/posters/overlays.css?v=20260909-1" />
+  <link rel="stylesheet" href="/posters/overlays.css?v=20260909-2" />
   <script src="/components.js?v=20260908-3" defer></script>
 </head>
 <body>
@@ -21,7 +21,7 @@
     <header data-page-header>
       <div data-page-chip>Poster Configurator</div>
       <h1 data-page-title>Posters</h1>
-      <p data-page-subtitle>Add optional smart tags to movie and TV posters without locking your setup to one app. Use Posters by itself or later as part of Set Up Collection.</p>
+      <p data-page-subtitle>Add smart tags to movie and TV posters without locking your setup to one app. Use Posters by itself or later as part of Set Up Collection.</p>
       <div class="hero-pills">
         <span>AIOmetadata compatible</span>
         <span>Movies + TV</span>
@@ -56,6 +56,7 @@
         <div class="poster-preview-grid">
           <div class="poster-mock poster-example-one">
             <div class="poster-art"><span class="mock-title">NEBULA<br />RUN</span><span class="mock-subtitle">Science Fiction</span></div>
+            <div class="overlay overlay-trend" data-tag="trend">#3 TODAY</div>
             <div class="overlay overlay-rating" data-tag="rating"><b>8.7</b><small>TMDB</small></div>
             <div class="overlay overlay-quality" data-tag="quality">4K</div>
             <div class="overlay overlay-hdr" data-tag="hdr">DV</div>
@@ -65,6 +66,7 @@
           </div>
           <div class="poster-mock poster-example-two">
             <div class="poster-art"><span class="mock-title">AFTER<br />LIGHT</span><span class="mock-subtitle">Drama</span></div>
+            <div class="overlay overlay-trend" data-tag="trend">#2 TODAY</div>
             <div class="overlay overlay-rating" data-tag="rating"><b>7.9</b><small>TMDB</small></div>
             <div class="overlay overlay-quality" data-tag="quality">HD</div>
             <div class="overlay overlay-hdr" data-tag="hdr">HDR</div>
@@ -74,6 +76,7 @@
           </div>
           <div class="poster-mock poster-example-three">
             <div class="poster-art"><span class="mock-title">NORTH<br />BOUND</span><span class="mock-subtitle">Adventure</span></div>
+            <div class="overlay overlay-trend" data-tag="trend">#7 TODAY</div>
             <div class="overlay overlay-rating" data-tag="rating"><b>8.2</b><small>TMDB</small></div>
             <div class="overlay overlay-quality" data-tag="quality">4K</div>
             <div class="overlay overlay-hdr" data-tag="hdr">HDR</div>
@@ -82,7 +85,7 @@
             <div class="overlay overlay-genre" data-tag="genre">ADVENTURE</div>
           </div>
         </div>
-        <div class="preview-description" id="previewDescription">Using Smart Layout artwork. Smart Tags are currently off.</div>
+        <div class="preview-description" id="previewDescription">Using Smart Layout artwork. 2 Smart Tags enabled.</div>
         <div class="preview-legend">
           <span><i></i> Live previews are rendered through The Kollection poster service</span>
           <span><i></i> TMDB Original mode keeps the original poster/title placement</span>
@@ -117,26 +120,21 @@
 
           <div class="divider"></div>
 
-          <div class="toggle-row master-toggle-row">
-            <div>
-              <span class="section-kicker">SMART TAGS</span>
-              <h2>Add poster overlays?</h2>
-              <p>Smart Tags are optional. Choosing Smart Layout does not automatically turn the overlays on.</p>
-            </div>
-            <label class="switch">
-              <input id="smartTagsEnabled" type="checkbox" />
-              <span class="switch-track"><span></span></span>
-            </label>
+          <div class="section-heading compact-heading">
+            <span class="section-kicker">SMART TAGS</span>
+            <h2>Choose your poster overlays</h2>
+            <p>Posters includes overlays by default. Trend Tags and Rating start on; turn on any additional tags you want.</p>
           </div>
 
-          <div id="tagOptions" class="tag-options disabled" aria-disabled="true">
+          <div id="tagOptions" class="tag-options" aria-disabled="false">
             <div class="tag-grid">
-              <label class="tag-option"><input type="checkbox" value="rating" checked /><span><strong>Rating</strong><small>TMDB / IMDb-style score badge</small></span></label>
-              <label class="tag-option"><input type="checkbox" value="quality" checked /><span><strong>Quality</strong><small>4K / HD when available</small></span></label>
-              <label class="tag-option"><input type="checkbox" value="hdr" checked /><span><strong>HDR</strong><small>HDR / Dolby Vision</small></span></label>
-              <label class="tag-option"><input type="checkbox" value="audio" /><span><strong>Audio</strong><small>Atmos / premium audio</small></span></label>
-              <label class="tag-option"><input type="checkbox" value="age" /><span><strong>Age Rating</strong><small>Certification badge</small></span></label>
+              <label class="tag-option"><input type="checkbox" value="trend" checked /><span><strong>Trend Tags</strong><small>Daily TMDB trending rank when available</small></span></label>
+              <label class="tag-option"><input type="checkbox" value="rating" checked /><span><strong>Rating</strong><small>TMDB rating badge</small></span></label>
               <label class="tag-option"><input type="checkbox" value="genre" /><span><strong>Genre</strong><small>Primary genre label</small></span></label>
+              <label class="tag-option"><input type="checkbox" value="quality" /><span><strong>Quality</strong><small>4K / HD when available</small></span></label>
+              <label class="tag-option"><input type="checkbox" value="hdr" /><span><strong>HDR</strong><small>HDR / Dolby Vision when available</small></span></label>
+              <label class="tag-option"><input type="checkbox" value="audio" /><span><strong>Audio</strong><small>Atmos / premium audio when available</small></span></label>
+              <label class="tag-option"><input type="checkbox" value="age" /><span><strong>Age Rating</strong><small>Certification badge</small></span></label>
             </div>
             <p class="fixed-note">Tag positions are fixed. In TMDB Original mode, tags are not moved to avoid artwork or title text.</p>
           </div>
@@ -181,6 +179,6 @@
     <div id="site-footer"></div>
   </main>
 
-  <script src="/posters/posters.js?v=20260909-6"></script>
+  <script src="/posters/posters.js?v=20260909-7"></script>
 </body>
 </html>
