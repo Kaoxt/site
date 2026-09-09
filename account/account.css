@@ -16,12 +16,19 @@ html[data-theme="light"] {
   --account-text: #151922;
 }
 
+/* Match the sizing baseline used by the rest of The Kollection pages. */
+.account-page,
+.account-page *,
+.account-page *::before,
+.account-page *::after {
+  box-sizing: border-box;
+}
+
 .account-page {
   min-height: 100vh;
   width: min(calc(100% - 30px), 1500px);
   margin: 0 auto;
   padding: 18px 0 70px;
-  box-sizing: border-box;
   overflow-x: clip;
 }
 .account-hero,
@@ -128,7 +135,7 @@ html[data-theme="light"] .account-profile-url { background: rgba(255,255,255,.72
 
 @media (max-width: 760px) {
   .account-page {
-    width: min(calc(100% - 36px), 100%);
+    width: min(calc(100% - 18px), 100%);
     margin-inline: auto;
     padding: 9px 0 70px;
   }
