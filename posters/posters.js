@@ -99,14 +99,14 @@
   usageButtons.forEach((button) => button.addEventListener('click', () => openConfigurator(button.dataset.usage)));
   backBtn?.addEventListener('click', returnToUsage);
 
-  const selectedSource = () => document.querySelector('input[name="posterSource"]:checked')?.value || 'inherit';
+  const selectedSource = () => document.querySelector('input[name="posterSource"]:checked')?.value || 'smart';
   const selectedTags = () => tagInputs.filter((input) => input.checked).map((input) => input.value);
 
   const sourceLabel = (source) => ({
     inherit: 'Using your AIOmetadata poster setting',
     tmdb: 'Using TMDB Original artwork',
     smart: 'Using Smart Layout artwork'
-  }[source] || 'Using your AIOmetadata poster setting');
+  }[source] || 'Using Smart Layout artwork');
 
   const refreshServicePreviews = (source, enabled, tags) => {
     posterMocks.forEach((posterMock, index) => {
