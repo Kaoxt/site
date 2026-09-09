@@ -53,7 +53,7 @@
             <dl class="account-details">
               <div><dt>Email</dt><dd id="accountEmail">—</dd></div>
               <div><dt>Active profile</dt><dd id="accountActiveProfile">—</dd></div>
-              <div><dt>Last sync</dt><dd id="accountLastSync">—</dd></div>
+              <div><dt>Last sync</dt><dd id="accountLastSync">—</dd><dd id="accountExpires" hidden>—</dd></div>
             </dl>
             <div class="account-actions"><a class="account-primary-button" href="/set-up-collection">Set Up Collection</a><button id="accountSignOut" class="account-secondary-button" type="button">Log out</button></div>
           </section>
@@ -76,7 +76,44 @@
     <div id="site-footer"></div>
   </main>
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
-  <script src="/account/account.js?v=20260909-1"></script>
+  <script src="/account/account.js?v=20260908-4"></script>
   <script src="/account/saved-collections.js?v=20260908-1"></script>
+  <script>
+    (() => {
+      const SYNC_KEY = 'kollection-nuvio-last-sync';
+      const formatSync = (value) => {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '—';
+        return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'medium' }).format(date);
+      };
+      const updateSummary = () => {
+        const profiles = document.getElementById('accountProfiles');
+        const active = document.getElementById('accountActiveProfile');
+        const lastSync = document.getElementById('accountLastSync');
+        if (!profiles || !active || !lastSync) return;
+        const firstName = profiles.querySelector('.account-profile-copy strong');
+        if (firstName) active.textContent = firstName.textContent || 'Nuvio profile';
+        const status = document.getElementById('accountProfilesStatus');
+        if (firstName && status && /profile/i.test(status.textContent || '')) {
+          const now = new Date().toISOString();
+          try { localStorage.setItem(SYNC_KEY, now); } catch {}
+          lastSync.textContent = formatSync(now);
+        } else {
+          let saved = '';
+          try { saved = localStorage.getItem(SYNC_KEY) || ''; } catch {}
+          lastSync.textContent = saved ? formatSync(saved) : '—';
+        }
+      };
+      const start = () => {
+        const profiles = document.getElementById('accountProfiles');
+        const status = document.getElementById('accountProfilesStatus');
+        if (profiles) new MutationObserver(updateSummary).observe(profiles, { childList: true, subtree: true });
+        if (status) new MutationObserver(updateSummary).observe(status, { childList: true, characterData: true, subtree: true });
+        updateSummary();
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+      else start();
+    })();
+  </script>
 </body>
 </html>
