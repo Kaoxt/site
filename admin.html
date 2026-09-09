@@ -12,11 +12,11 @@
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/admin/admin.css?v=20260906-1" />
   <link rel="stylesheet" href="/admin/admin-pages.css?v=20260908-3" />
-  <link rel="stylesheet" href="/admin/admin-hub.css?v=20260907-2" />
+  <link rel="stylesheet" href="/admin/admin-hub.css?v=20260909-usage-1" />
 <script src="/components.js?v=20260906-1" defer></script>
   <script src="/set-up-collection/config.js?v=20260906-1"></script>
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
-  <script src="/admin/admin-hub.js?v=20260907-1" defer></script>
+  <script src="/admin/admin-hub.js?v=20260909-usage-1" defer></script>
 </head>
 <body>
   <main class="page admin-page admin-hub-page">
@@ -117,6 +117,65 @@
             </div>
             <strong>Open →</strong>
           </a>
+        </div>
+      </section>
+
+      <section class="workers-usage" id="workersUsage" hidden aria-labelledby="workersUsageHeading">
+        <div class="workers-usage-head">
+          <div>
+            <div class="kicker">WORKERS · POSTERS</div>
+            <h2 id="workersUsageHeading">Usage & Safety</h2>
+            <p>Kollection's live application meter for poster rendering. Cloudflare billing totals may update separately.</p>
+          </div>
+          <button class="button-secondary workers-refresh" id="workersUsageRefresh" type="button">Refresh</button>
+        </div>
+
+        <div class="workers-usage-alert" id="workersUsageAlert" hidden></div>
+
+        <div class="workers-usage-grid">
+          <article class="workers-stat-card">
+            <span>Today's renders</span>
+            <strong id="workersDailyRenders">—</strong>
+            <small id="workersDailyLimit">of — daily budget</small>
+          </article>
+          <article class="workers-stat-card">
+            <span>Budget used</span>
+            <strong id="workersUsagePercent">—</strong>
+            <small>95% conserve · 98% hard stop</small>
+          </article>
+          <article class="workers-stat-card">
+            <span>Renderer state</span>
+            <strong id="workersRendererState">—</strong>
+            <small id="workersRendererDetail">Checking…</small>
+          </article>
+          <article class="workers-stat-card">
+            <span>Active renders</span>
+            <strong id="workersActiveRenders">—</strong>
+            <small id="workersConcurrencyLimit">of — concurrent</small>
+          </article>
+        </div>
+
+        <div class="workers-meter-wrap" aria-label="Poster render budget usage">
+          <div class="workers-meter-labels">
+            <span>Daily render budget</span>
+            <strong id="workersMeterText">—</strong>
+          </div>
+          <div class="workers-meter">
+            <div class="workers-meter-fill" id="workersMeterFill"></div>
+            <span class="workers-marker workers-marker-conserve" title="Conservation starts at 95%"></span>
+            <span class="workers-marker workers-marker-stop" title="Hard stop at 98%"></span>
+          </div>
+          <div class="workers-thresholds">
+            <span>0%</span>
+            <span>95% conservation</span>
+            <span>98% hard stop</span>
+            <span>100%</span>
+          </div>
+        </div>
+
+        <div class="workers-usage-foot">
+          <span id="workersClientLimit">Per-client hourly limit: —</span>
+          <span>Cached posters do not consume this render budget.</span>
         </div>
       </section>
     </div>
