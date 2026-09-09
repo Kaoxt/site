@@ -65,6 +65,9 @@ body { margin: 0; }
 .account-details > div { border: 1px solid var(--account-border); border-radius: 16px; padding: 16px; background: rgba(255,255,255,.018); min-width: 0; }
 .account-details dt { margin-bottom: 5px; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--account-muted); }
 .account-details dd { margin: 0; color: var(--account-text); overflow-wrap: anywhere; }
+#accountActiveProfile { display: inline-flex; align-items: center; gap: 9px; min-height: 30px; font-weight: 700; }
+#accountActiveProfile .account-active-avatar { width: 30px; height: 30px; flex: 0 0 30px; font-size: 12px; }
+#accountActiveProfile .account-active-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .account-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
 .account-profiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
 .account-profile-row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; border: 1px solid var(--account-border); border-radius: 16px; padding: 14px; background: rgba(255,255,255,.018); min-width: 0; }
