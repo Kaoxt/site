@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="/set-up-collection/styles.css?v=20260906-1" />
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/nuvio-auth/setup-account.css?v=20260906-1" />
+  <link rel="stylesheet" href="/set-up-collection/saved-setup.css?v=20260908-1" />
   <script src="/components.js?v=20260908-2" defer></script>
 </head>
 <body>
@@ -34,7 +35,11 @@
           <span class="toolbar-label">SET UP COLLECTION</span>
           <strong>Personalize your setup</strong>
         </div>
-        <button class="ghost small" id="resetBtn" type="button">Start over</button>
+        <div class="setup-toolbar-actions">
+          <span id="saveSetupStatus" class="save-setup-status" role="status" aria-live="polite"></span>
+          <button class="ghost small" id="saveSetupBtn" type="button">Save setup</button>
+          <button class="ghost small" id="resetBtn" type="button">Start over</button>
+        </div>
       </div>
 
       <div class="shell">
@@ -70,5 +75,6 @@
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
   <script src="/set-up-collection/set-up-collection.js?v=20260906-1"></script>
   <script src="/nuvio-auth/device-only-guard.js?v=20260908-1"></script>
+  <script src="/set-up-collection/saved-setup.js?v=20260908-1"></script>
 </body>
 </html>
