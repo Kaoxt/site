@@ -35,7 +35,8 @@
   const previewStyle = document.createElement('style');
   previewStyle.textContent = `
     .poster-service-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1}
-    .poster-mock.service-live .poster-art,.poster-mock.service-live .overlay{display:none!important}
+    .poster-mock.service-live .poster-art{display:none!important}
+    .poster-mock.service-live .overlay{z-index:4}
     .poster-mock.service-loading::after{content:"Loading…";position:absolute;inset:auto 10px 10px;z-index:5;padding:6px 8px;border-radius:8px;background:rgba(0,0,0,.72);color:#fff;font-size:10px;text-align:center}
   `;
   document.head.appendChild(previewStyle);
