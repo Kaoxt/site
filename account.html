@@ -9,7 +9,7 @@
   <title>Account | The Kollection</title>
   <meta name="description" content="Manage your Kollection account, Nuvio profile connection, and saved collection setups." />
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
-  <link rel="stylesheet" href="/account/account.css?v=20260908-3" />
+  <link rel="stylesheet" href="/account/account.css?v=20260908-4" />
   <link rel="stylesheet" href="/account/login-form.css?v=20260908-1" />
   <link rel="stylesheet" href="/account/saved-collections.css?v=20260908-1" />
   <script src="/components.js?v=20260908-2" defer></script>
@@ -19,16 +19,13 @@
     <div id="site-nav" aria-label="Site navigation"></div>
 
     <section class="account-hero">
-      <div class="account-eyebrow"><span></span> Your Kollection</div>
+      <div class="account-eyebrow">Your Kollection</div>
       <h1>Account</h1>
       <p>Use your Nuvio account to sign in to The Kollection. Your Nuvio password is never stored by The Kollection.</p>
     </section>
 
     <section class="account-shell" aria-live="polite">
-      <div id="accountLoading" class="account-loading">
-        <span class="account-spinner" aria-hidden="true"></span>
-        <span>Loading your account…</span>
-      </div>
+      <div id="accountLoading" class="account-loading" hidden></div>
 
       <div id="accountSignedOut" class="account-state" hidden>
         <div class="account-card account-signin-card">
@@ -89,14 +86,14 @@
             </div>
           </section>
 
-          <section class="account-card">
+          <section class="account-card account-profiles-card">
             <div class="account-section-head">
               <div>
-                <span class="account-kicker">NUVIO PROFILES</span>
+                <span class="account-kicker account-section-chip">NUVIO PROFILES</span>
                 <h2>Profiles</h2>
               </div>
             </div>
-            <p class="account-card-copy">Your Nuvio profiles are available when The Kollection needs to add or update a collection. You can choose the profile during setup.</p>
+            <p class="account-card-copy">Your Nuvio profiles are available when The Kollection needs to add or update a collection. You can choose the profile during setup, or paste a direct image URL below to update that profile icon in Nuvio.</p>
             <div id="accountProfiles" class="account-profiles"></div>
             <p id="accountProfilesStatus" class="account-status" role="status"></p>
           </section>
@@ -121,7 +118,7 @@
   </main>
 
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
-  <script src="/account/account.js?v=20260908-3"></script>
+  <script src="/account/account.js?v=20260908-4"></script>
   <script src="/account/saved-collections.js?v=20260908-1"></script>
 </body>
 </html>
