@@ -26,6 +26,41 @@
   const copyStatus = document.getElementById('copyStatus');
   const generateHint = document.getElementById('generateHint');
 
+  const previewSamples = [
+    { type: 'movie', id: '27205' },
+    { type: 'movie', id: '155' },
+    { type: 'tv', id: '1399' }
+  ];
+
+  const previewStyle = document.createElement('style');
+  previewStyle.textContent = `
+    .poster-service-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1}
+    .poster-mock.service-live .poster-art,.poster-mock.service-live .overlay{display:none!important}
+    .poster-mock.service-loading::after{content:"Loading…";position:absolute;inset:auto 10px 10px;z-index:5;padding:6px 8px;border-radius:8px;background:rgba(0,0,0,.72);color:#fff;font-size:10px;text-align:center}
+  `;
+  document.head.appendChild(previewStyle);
+
+  posterMocks.forEach((posterMock, index) => {
+    const sample = previewSamples[index];
+    if (!sample) return;
+    const img = document.createElement('img');
+    img.className = 'poster-service-image';
+    img.alt = 'Live TMDB poster preview';
+    img.loading = 'eager';
+    img.decoding = 'async';
+    img.hidden = true;
+    img.addEventListener('load', () => {
+      posterMock.classList.remove('service-loading');
+      posterMock.classList.add('service-live');
+      img.hidden = false;
+    });
+    img.addEventListener('error', () => {
+      posterMock.classList.remove('service-loading', 'service-live');
+      img.hidden = true;
+    });
+    posterMock.prepend(img);
+  });
+
   let importedConfig = null;
   let importedFileName = '';
   let generatedJson = '';
@@ -73,6 +108,24 @@
     smart: 'Using Smart Layout artwork'
   }[source] || 'Using your AIOmetadata poster setting');
 
+  const refreshServicePreviews = (source, enabled, tags) => {
+    posterMocks.forEach((posterMock, index) => {
+      const sample = previewSamples[index];
+      const img = posterMock.querySelector('.poster-service-image');
+      if (!sample || !img) return;
+      posterMock.classList.remove('service-live');
+      posterMock.classList.add('service-loading');
+      img.hidden = true;
+      const params = new URLSearchParams({
+        source,
+        smart: enabled ? '1' : '0',
+        tags: [...tags].join(','),
+        preview: '1'
+      });
+      img.src = `/api/posters/${sample.type}/${sample.id}.webp?${params.toString()}`;
+    });
+  };
+
   const refreshPreview = () => {
     const source = selectedSource();
     const enabled = smartTagsEnabled.checked;
@@ -90,10 +143,15 @@
       });
     });
 
+    refreshServicePreviews(source, enabled, enabledTags);
+
     const tagText = enabled
       ? `${enabledTags.size} Smart Tag${enabledTags.size === 1 ? '' : 's'} enabled. Tag positions remain fixed.`
       : 'Smart Tags are currently off.';
-    previewDescription.textContent = `${sourceLabel(source)}. ${tagText}`;
+    const inheritNote = source === 'inherit'
+      ? ' The live examples use TMDB artwork for previewing, while your generated AIOmetadata config preserves its existing poster provider.'
+      : '';
+    previewDescription.textContent = `${sourceLabel(source)}. ${tagText}${inheritNote}`;
   };
 
   const normalizeAioExport = (value) => {
