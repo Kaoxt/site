@@ -11,6 +11,9 @@
   const sourceInputs = [...document.querySelectorAll('input[name="posterSource"]')];
   const sourceCards = [...document.querySelectorAll('.choice-card')];
   const tagInputs = [...document.querySelectorAll('.tag-option input[type="checkbox"]')];
+  const trendInput = tagInputs.find((input) => input.value === 'trend');
+  const qualityInput = tagInputs.find((input) => input.value === 'quality');
+  const ratingInput = tagInputs.find((input) => input.value === 'rating');
   const posterMocks = [...document.querySelectorAll('.poster-mock')];
   const previewDescription = document.getElementById('previewDescription');
   const configFile = document.getElementById('configFile');
@@ -23,6 +26,32 @@
   const downloadBtn = document.getElementById('downloadBtn');
   const copyStatus = document.getElementById('copyStatus');
   const generateHint = document.getElementById('generateHint');
+
+  const ratingSources = [
+    ['average', 'Score (average)'],
+    ['score', 'Score'],
+    ['imdb', 'IMDb Rating'],
+    ['letterboxd', 'Letterboxd'],
+    ['mal', 'MyAnimeList'],
+    ['rogerebert', 'RogerEbert'],
+    ['tomatometer', 'Tomatometer'],
+    ['popcornmeter', 'Popcornmeter'],
+    ['tmdb', 'TMDB Rating']
+  ];
+
+  const ratingSourceRow = document.createElement('div');
+  ratingSourceRow.className = 'rating-source-row';
+  ratingSourceRow.innerHTML = `
+    <div class="rating-source-copy">
+      <strong>Rating source</strong>
+      <small>Choose which rating Posters should request for the badge.</small>
+    </div>
+    <select id="ratingSource" class="rating-source-select" aria-label="Rating source">
+      ${ratingSources.map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}
+    </select>`;
+  const ratingCard = ratingInput?.closest('.tag-option');
+  ratingCard?.after(ratingSourceRow);
+  const ratingSource = ratingSourceRow.querySelector('#ratingSource');
 
   const previewSamples = [
     { type: 'movie', id: '27205' },
@@ -100,12 +129,33 @@
 
   const selectedSource = () => document.querySelector('input[name="posterSource"]:checked')?.value || 'smart';
   const selectedTags = () => tagInputs.filter((input) => input.checked).map((input) => input.value);
+  const selectedRatingSource = () => ratingSource?.value || 'average';
 
   const sourceLabel = (source) => ({
     inherit: 'Using your AIOmetadata poster setting',
     tmdb: 'Using TMDB Original artwork',
     smart: 'Using Smart Layout artwork'
   }[source] || 'Using Smart Layout artwork');
+
+  const ratingShortLabel = () => ({
+    average: 'AVG',
+    score: 'SCORE',
+    imdb: 'IMDb',
+    letterboxd: 'LB',
+    mal: 'MAL',
+    rogerebert: 'Ebert',
+    tomatometer: 'RT',
+    popcornmeter: 'POP',
+    tmdb: 'TMDB'
+  }[selectedRatingSource()] || 'AVG');
+
+  const syncTrendConstraint = () => {
+    if (!trendInput || !qualityInput) return;
+    const forced = !qualityInput.checked;
+    if (forced) trendInput.checked = true;
+    trendInput.disabled = forced;
+    trendInput.closest('.tag-option')?.classList.toggle('is-forced', forced);
+  };
 
   const refreshServicePreviews = (source, tags) => {
     posterMocks.forEach((posterMock, index) => {
@@ -119,6 +169,7 @@
         source,
         smart: '1',
         tags: [...tags].join(','),
+        ratingSource: selectedRatingSource(),
         preview: '1'
       });
       img.src = `/api/posters/${sample.type}/${sample.id}.webp?${params.toString()}`;
@@ -126,26 +177,35 @@
   };
 
   const refreshPreview = () => {
+    syncTrendConstraint();
     const source = selectedSource();
     const enabledTags = new Set(selectedTags());
+    const qualityOn = enabledTags.has('quality');
 
     sourceCards.forEach((card) => card.classList.toggle('selected', card.querySelector('input')?.checked));
+    ratingSourceRow.hidden = !ratingInput?.checked;
 
     posterMocks.forEach((posterMock) => {
       posterMock.classList.remove('tags-off');
       posterMock.classList.toggle('smart-layout', source === 'smart');
+      posterMock.classList.toggle('quality-on', qualityOn);
       posterMock.querySelectorAll('[data-tag]').forEach((badge) => {
         badge.classList.toggle('tag-hidden', !enabledTags.has(badge.dataset.tag));
       });
+      const ratingMeta = posterMock.querySelector('.overlay-rating small');
+      if (ratingMeta) ratingMeta.textContent = ratingShortLabel();
     });
 
     refreshServicePreviews(source, enabledTags);
 
     const tagText = `${enabledTags.size} Smart Tag${enabledTags.size === 1 ? '' : 's'} enabled.`;
+    const placementText = qualityOn
+      ? ' Trend shifts right while Quality is enabled.'
+      : ' Trend stays centered and is always enabled while Quality is off.';
     const inheritNote = source === 'inherit'
       ? ' The live examples use TMDB artwork for previewing, while your generated AIOmetadata config preserves its existing poster provider.'
       : '';
-    previewDescription.textContent = `${sourceLabel(source)}. ${tagText}${inheritNote}`;
+    previewDescription.textContent = `${sourceLabel(source)}. ${tagText}${placementText}${inheritNote}`;
   };
 
   const normalizeAioExport = (value) => {
@@ -177,12 +237,13 @@
   const posterPattern = () => {
     const source = selectedSource();
     const tags = selectedTags().join(',');
-    return `https://kollection.tv/api/posters/{type}/{tmdb_id}.webp?source=${encodeURIComponent(source)}&smart=1&tags=${encodeURIComponent(tags)}`;
+    return `https://kollection.tv/api/posters/{type}/{tmdb_id}.webp?source=${encodeURIComponent(source)}&smart=1&tags=${encodeURIComponent(tags)}&ratingSource=${encodeURIComponent(selectedRatingSource())}`;
   };
 
   const buildOutput = () => {
     const source = selectedSource();
     const tags = selectedTags();
+    const ratingProvider = selectedRatingSource();
 
     if (importedConfig) {
       const clone = structuredClone(importedConfig);
@@ -202,6 +263,7 @@
         version: 1,
         usageMode: usageMode || 'setup',
         posterSource: source,
+        ratingSource: ratingProvider,
         smartTags: { enabled: true, tags, fixedPlacement: true },
         renderer: 'https://kollection.tv/api/posters/{type}/{tmdb_id}.webp'
       };
@@ -220,6 +282,7 @@
       usageMode: usageMode || 'setup',
       config: {
         posterSource: source,
+        ratingSource: ratingProvider,
         smartTags: { enabled: true, tags, fixedPlacement: true },
         posterUrlPattern: posterPattern(),
         aiometadata: {
@@ -244,6 +307,7 @@
 
   sourceInputs.forEach((input) => input.addEventListener('change', refreshPreview));
   tagInputs.forEach((input) => input.addEventListener('change', refreshPreview));
+  ratingSource?.addEventListener('change', refreshPreview);
 
   configFile.addEventListener('change', async () => {
     const file = configFile.files?.[0];
