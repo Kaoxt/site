@@ -11,7 +11,8 @@
   <link rel="stylesheet" href="/set-up-collection/styles.css?v=20260906-1" />
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/nuvio-auth/setup-account.css?v=20260906-1" />
-  <script src="/components.js?v=20260906-1" defer></script>
+  <link rel="stylesheet" href="/set-up-collection/saved-setup.css?v=20260908-1" />
+  <script src="/components.js?v=20260908-2" defer></script>
 </head>
 <body>
   <main class="page">
@@ -34,7 +35,11 @@
           <span class="toolbar-label">SET UP COLLECTION</span>
           <strong>Personalize your setup</strong>
         </div>
-        <button class="ghost small" id="resetBtn" type="button">Start over</button>
+        <div class="setup-toolbar-actions">
+          <span id="saveSetupStatus" class="save-setup-status" role="status" aria-live="polite"></span>
+          <button class="ghost small" id="saveSetupBtn" type="button">Save setup</button>
+          <button class="ghost small" id="resetBtn" type="button">Start over</button>
+        </div>
       </div>
 
       <div class="shell">
@@ -47,7 +52,7 @@
           <nav id="stepNav" class="steps"></nav>
           <div class="security-note">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2"></path><path d="M5.5 10h13v10h-13z"></path><path d="M12 14v2.5"></path></svg>
-            <div><strong>Private by design</strong><span>Credentials and API keys stay in this browser session while setup runs.</span></div>
+            <div><strong>Private by design</strong><span>Your Nuvio password is never stored. MDBList and TMDB keys are encrypted before a saved setup is written to your account.</span></div>
           </div>
         </aside>
 
@@ -69,5 +74,8 @@
   <script src="/set-up-collection/config.js?v=20260906-1"></script>
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
   <script src="/set-up-collection/set-up-collection.js?v=20260906-1"></script>
+  <script src="/nuvio-auth/onsite-login-only.js?v=20260908-1"></script>
+  <script src="/set-up-collection/saved-setup.js?v=20260908-1"></script>
+  <script src="/set-up-collection/saved-secrets.js?v=20260908-1"></script>
 </body>
 </html>

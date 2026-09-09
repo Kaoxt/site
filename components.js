@@ -12,19 +12,10 @@
   const assetUrl = (name) => new URL(name, baseUrl).href;
 
   const readTheme = () => {
-    try {
-      return localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark';
-    } catch (_) {
-      return 'dark';
-    }
+    try { return localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark'; }
+    catch (_) { return 'dark'; }
   };
-
-  const writeTheme = (theme) => {
-    try {
-      localStorage.setItem(THEME_KEY, theme);
-    } catch (_) {}
-  };
-
+  const writeTheme = (theme) => { try { localStorage.setItem(THEME_KEY, theme); } catch (_) {} };
   const ensureThemeMeta = () => {
     let meta = document.querySelector('meta[name="theme-color"]');
     if (!meta) {
@@ -34,7 +25,6 @@
     }
     return meta;
   };
-
   const updateThemeButtons = (theme) => {
     const isLight = theme === 'light';
     const label = isLight ? 'Switch to dark mode' : 'Switch to light mode';
@@ -44,25 +34,19 @@
       button.setAttribute('aria-pressed', String(isLight));
     });
   };
-
   const applyTheme = (theme, persist = false) => {
     const normalized = theme === 'light' ? 'light' : 'dark';
     const isLight = normalized === 'light';
-
     document.documentElement.dataset.theme = normalized;
     document.documentElement.style.colorScheme = normalized;
-
     if (document.body) {
       document.body.classList.toggle('light', isLight);
       document.body.classList.toggle('dark', !isLight);
     }
-
     ensureThemeMeta().setAttribute('content', isLight ? LIGHT_COLOR : DARK_COLOR);
     updateThemeButtons(normalized);
-
     if (persist) writeTheme(normalized);
   };
-
   const loadFragment = async (filename, target) => {
     if (!target) return false;
     try {
@@ -75,49 +59,32 @@
       return false;
     }
   };
-
   const ensureStylesheet = (filename) => {
     const href = assetUrl(filename);
     const exists = [...document.styleSheets].some((sheet) => {
       try { return sheet.href === href; } catch { return false; }
     }) || [...document.querySelectorAll('link[rel="stylesheet"]')].some((link) => link.href === href);
-
     if (exists) return;
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = href;
     document.head.appendChild(link);
   };
-
   const loadScriptOnce = (filename, globalCheck) => new Promise((resolve, reject) => {
-    if (typeof globalCheck === 'function' && globalCheck()) {
-      resolve(true);
-      return;
-    }
-
+    if (typeof globalCheck === 'function' && globalCheck()) { resolve(true); return; }
     const src = assetUrl(filename);
     const existing = [...document.scripts].find((script) => script.src === src);
-
     if (existing) {
       const done = () => {
         if (!globalCheck || globalCheck()) resolve(true);
         else reject(new Error(`${filename} loaded without its expected global.`));
       };
-
-      if (existing.dataset.kollectionLoaded === 'true') {
-        done();
-        return;
-      }
-
+      if (existing.dataset.kollectionLoaded === 'true') { done(); return; }
       existing.addEventListener('load', done, { once: true });
       existing.addEventListener('error', () => reject(new Error(`Could not load ${filename}.`)), { once: true });
-
-      setTimeout(() => {
-        if (typeof globalCheck === 'function' && globalCheck()) resolve(true);
-      }, 0);
+      setTimeout(() => { if (typeof globalCheck === 'function' && globalCheck()) resolve(true); }, 0);
       return;
     }
-
     const script = document.createElement('script');
     script.src = src;
     script.async = false;
@@ -137,24 +104,25 @@
     if (!window.KollectionNuvioAuth) {
       await loadScriptOnce('nuvio-auth/nuvio-auth.js', () => Boolean(window.KollectionNuvioAuth));
     }
-
     if (!window.KollectionNavAccount) {
       await loadScriptOnce('nuvio-auth/nav-account.js', () => Boolean(window.KollectionNavAccount));
     }
-
-    try {
-      await window.KollectionNavAccount?.init?.();
-    } catch (error) {
-      console.warn('[The Kollection] Nuvio navigation could not initialize.', error);
+    if (!window.KollectionNavLoginRedirect) {
+      await loadScriptOnce('nuvio-auth/nav-login-redirect.js?v=20260908-1', () => Boolean(window.KollectionNavLoginRedirect));
     }
+    window.KollectionNavLoginRedirect?.init?.();
+
+    try { await window.KollectionNavAccount?.init?.(); }
+    catch (error) { console.warn('[The Kollection] Nuvio navigation could not initialize.', error); }
+
+    if (!window.KollectionAccountLink) {
+      await loadScriptOnce('nuvio-auth/account-link.js?v=20260908-1', () => Boolean(window.KollectionAccountLink));
+    }
+    window.KollectionAccountLink?.init?.();
 
     if (!window.KollectionAdminNav) {
-      await loadScriptOnce(
-        'nuvio-auth/admin-nav.js?v=20260907-1',
-        () => Boolean(window.KollectionAdminNav)
-      );
+      await loadScriptOnce('nuvio-auth/admin-nav.js?v=20260907-1', () => Boolean(window.KollectionAdminNav));
     }
-
     window.KollectionAdminNav?.init?.().catch?.((error) => {
       console.warn('[The Kollection] Admin navigation shortcut could not initialize.', error);
     });
@@ -167,7 +135,6 @@
     if (last === 'news' || last === 'news.html') return 'news.html';
     return last.endsWith('.html') ? last : `${last}.html`;
   };
-
   const setActiveNav = () => {
     const current = resolvePage();
     document.querySelectorAll('[data-page]').forEach((link) => {
@@ -177,7 +144,6 @@
       else link.removeAttribute('aria-current');
     });
   };
-
   const bindThemeButtons = () => {
     updateThemeButtons(document.body?.classList.contains('light') ? 'light' : 'dark');
     document.querySelectorAll('.theme-toggle').forEach((button) => {
@@ -189,34 +155,23 @@
       });
     });
   };
-
   const bindMenu = () => {
     const wrap = document.getElementById('menuWrap');
     const button = document.getElementById('menuButton');
     if (!wrap || !button || button.dataset.menuBound === 'true') return;
-
     button.dataset.menuBound = 'true';
-
     const setOpen = (open) => {
       wrap.classList.toggle('open', open);
       button.setAttribute('aria-expanded', String(open));
       button.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
     };
-
     button.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
       setOpen(!wrap.classList.contains('open'));
     });
-
-    wrap.addEventListener('click', (event) => {
-      if (event.target.closest('.menu-dropdown a')) setOpen(false);
-    });
-
-    document.addEventListener('click', (event) => {
-      if (!wrap.contains(event.target)) setOpen(false);
-    });
-
+    wrap.addEventListener('click', (event) => { if (event.target.closest('.menu-dropdown a')) setOpen(false); });
+    document.addEventListener('click', (event) => { if (!wrap.contains(event.target)) setOpen(false); });
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && wrap.classList.contains('open')) {
         setOpen(false);
@@ -224,10 +179,8 @@
       }
     });
   };
-
   const COMPACT_NAV_QUERY = '(max-width: 900px)';
   let compactNavMedia = null;
-
   const clearResponsiveInlineDisplays = () => {
     [
       document.querySelector('#site-nav .desktop-nav'),
@@ -237,50 +190,38 @@
       document.querySelector('#site-nav .mobile-theme-toggle'),
     ].forEach((element) => element?.style.removeProperty('display'));
   };
-
   const syncResponsiveNav = () => {
     if (!compactNavMedia) compactNavMedia = window.matchMedia(COMPACT_NAV_QUERY);
     document.documentElement.classList.toggle('force-compact-nav', compactNavMedia.matches);
     document.documentElement.classList.remove('force-large-compact-nav');
     clearResponsiveInlineDisplays();
   };
-
   const bindResponsiveNav = () => {
     if (window.__kollectionResponsiveNavBound) return;
     window.__kollectionResponsiveNavBound = true;
-
     compactNavMedia = window.matchMedia(COMPACT_NAV_QUERY);
     if (compactNavMedia.addEventListener) compactNavMedia.addEventListener('change', syncResponsiveNav);
     else compactNavMedia.addListener?.(syncResponsiveNav);
     window.addEventListener('orientationchange', syncResponsiveNav, { passive: true });
   };
-
   const init = async () => {
     applyTheme(readTheme(), false);
-
     const navTarget = document.getElementById('site-nav');
     const footerTarget = document.getElementById('site-footer');
-
     const tasks = [];
     if (navTarget) tasks.push(loadFragment('nav.html?v=20260907-6', navTarget));
     if (footerTarget) tasks.push(loadFragment('footer.html?v=20260906-5', footerTarget));
     if (tasks.length) await Promise.allSettled(tasks);
-
     setActiveNav();
     bindThemeButtons();
     bindMenu();
     bindResponsiveNav();
     syncResponsiveNav();
     applyTheme(readTheme(), false);
-
     prepareNuvioNavigation().catch((error) => {
       console.warn('[The Kollection] Nuvio account navigation unavailable.', error);
     });
   };
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init, { once: true });
-  } else {
-    init();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
 })();
