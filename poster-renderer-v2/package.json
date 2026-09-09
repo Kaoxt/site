@@ -1,0 +1,12 @@
+{
+  "name": "kollection-poster-renderer-v2",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "sharp": "^0.34.3"
+  }
+}
