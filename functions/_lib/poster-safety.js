@@ -1,6 +1,8 @@
 const DEFAULT_MAX_DAILY_RENDERS = 500;
 const DEFAULT_MAX_CLIENT_HOURLY_RENDERS = 60;
 const DEFAULT_MAX_CONCURRENT_RENDERS = 4;
+const DEFAULT_CONSERVE_AT_PERCENT = 95;
+const DEFAULT_HARD_STOP_AT_PERCENT = 98;
 
 let activeRenders = 0;
 let schemaReady = false;
@@ -11,6 +13,10 @@ function intEnv(env, key, fallback, min = 1, max = 1000000) {
   return Math.max(min, Math.min(max, raw));
 }
 
+function percentEnv(env, key, fallback) {
+  return intEnv(env, key, fallback, 1, 100);
+}
+
 function enabled(env) {
   const value = String(env?.POSTERS_RENDERING_ENABLED ?? '1').trim().toLowerCase();
   return !['0', 'false', 'off', 'no'].includes(value);
@@ -19,6 +25,18 @@ function enabled(env) {
 function failOpen(env) {
   const value = String(env?.POSTERS_SAFETY_FAIL_OPEN ?? '0').trim().toLowerCase();
   return ['1', 'true', 'on', 'yes'].includes(value);
+}
+
+function thresholds(env, maxDaily) {
+  const conservePercent = percentEnv(env, 'POSTERS_CONSERVE_AT_PERCENT', DEFAULT_CONSERVE_AT_PERCENT);
+  const requestedHardStop = percentEnv(env, 'POSTERS_HARD_STOP_AT_PERCENT', DEFAULT_HARD_STOP_AT_PERCENT);
+  const hardStopPercent = Math.max(conservePercent, requestedHardStop);
+  return {
+    conservePercent,
+    hardStopPercent,
+    conserveAt: Math.max(1, Math.floor(maxDaily * (conservePercent / 100))),
+    hardStopAt: Math.max(1, Math.floor(maxDaily * (hardStopPercent / 100))),
+  };
 }
 
 async function hashClient(request) {
@@ -62,6 +80,30 @@ async function reserveDbBudget(env, request) {
   const clientHash = await hashClient(request);
   const maxDaily = intEnv(env, 'POSTERS_MAX_DAILY_RENDERS', DEFAULT_MAX_DAILY_RENDERS, 1, 1000000);
   const maxClientHourly = intEnv(env, 'POSTERS_MAX_CLIENT_HOURLY_RENDERS', DEFAULT_MAX_CLIENT_HOURLY_RENDERS, 1, 100000);
+  const policy = thresholds(env, maxDaily);
+
+  await db.prepare(
+    `INSERT INTO poster_usage_daily (day, renders, updated_at)
+     VALUES (?, 0, CURRENT_TIMESTAMP)
+     ON CONFLICT(day) DO NOTHING`
+  ).bind(day).run();
+
+  const dailyRow = await db.prepare(
+    'SELECT renders FROM poster_usage_daily WHERE day = ?'
+  ).bind(day).first();
+  const currentDaily = Number(dailyRow?.renders || 0);
+
+  if (currentDaily >= policy.hardStopAt) {
+    return {
+      allowed: false,
+      reason: 'hard-stop-budget',
+      maxDaily,
+      dailyRenders: currentDaily,
+      ...policy,
+    };
+  }
+
+  const conservationMode = currentDaily >= policy.conserveAt;
 
   await db.prepare(
     `INSERT INTO poster_usage_client_hourly (hour, client_hash, renders, updated_at)
@@ -79,23 +121,31 @@ async function reserveDbBudget(env, request) {
     return { allowed: false, reason: 'client-hourly-limit', maxClientHourly };
   }
 
-  await db.prepare(
-    `INSERT INTO poster_usage_daily (day, renders, updated_at)
-     VALUES (?, 0, CURRENT_TIMESTAMP)
-     ON CONFLICT(day) DO NOTHING`
-  ).bind(day).run();
-
   const dailyUpdate = await db.prepare(
     `UPDATE poster_usage_daily
      SET renders = renders + 1, updated_at = CURRENT_TIMESTAMP
      WHERE day = ? AND renders < ?`
-  ).bind(day, maxDaily).run();
+  ).bind(day, policy.hardStopAt).run();
 
   if (!dailyUpdate?.meta?.changes) {
-    return { allowed: false, reason: 'daily-render-budget', maxDaily };
+    return {
+      allowed: false,
+      reason: 'hard-stop-budget',
+      maxDaily,
+      dailyRenders: currentDaily,
+      ...policy,
+    };
   }
 
-  return { allowed: true, reason: 'budget-reserved', maxDaily, maxClientHourly };
+  return {
+    allowed: true,
+    reason: conservationMode ? 'budget-reserved-conservation' : 'budget-reserved',
+    conservationMode,
+    maxDaily,
+    maxClientHourly,
+    dailyRenders: currentDaily + 1,
+    ...policy,
+  };
 }
 
 export async function acquirePosterRenderSlot(env, request) {
@@ -104,16 +154,13 @@ export async function acquirePosterRenderSlot(env, request) {
   }
 
   const maxConcurrent = intEnv(env, 'POSTERS_MAX_CONCURRENT_RENDERS', DEFAULT_MAX_CONCURRENT_RENDERS, 1, 100);
-  if (activeRenders >= maxConcurrent) {
-    return { allowed: false, reason: 'concurrency-limit', maxConcurrent, release() {} };
-  }
 
   let budget;
   try {
     budget = await reserveDbBudget(env, request);
   } catch (error) {
     if (failOpen(env)) {
-      budget = { allowed: true, reason: 'budget-error-fail-open' };
+      budget = { allowed: true, reason: 'budget-error-fail-open', conservationMode: false };
     } else {
       return { allowed: false, reason: 'budget-error', error: error?.message || String(error), release() {} };
     }
@@ -123,13 +170,24 @@ export async function acquirePosterRenderSlot(env, request) {
     return { ...budget, release() {} };
   }
 
+  const effectiveMaxConcurrent = budget.conservationMode ? 1 : maxConcurrent;
+  if (activeRenders >= effectiveMaxConcurrent) {
+    return {
+      allowed: false,
+      reason: budget.conservationMode ? 'conservation-concurrency-limit' : 'concurrency-limit',
+      conservationMode: Boolean(budget.conservationMode),
+      maxConcurrent: effectiveMaxConcurrent,
+      release() {},
+    };
+  }
+
   activeRenders += 1;
   let released = false;
   return {
     ...budget,
     allowed: true,
     activeRenders,
-    maxConcurrent,
+    maxConcurrent: effectiveMaxConcurrent,
     release() {
       if (released) return;
       released = true;
@@ -142,6 +200,7 @@ export async function getPosterUsageStatus(env) {
   const maxDaily = intEnv(env, 'POSTERS_MAX_DAILY_RENDERS', DEFAULT_MAX_DAILY_RENDERS, 1, 1000000);
   const maxClientHourly = intEnv(env, 'POSTERS_MAX_CLIENT_HOURLY_RENDERS', DEFAULT_MAX_CLIENT_HOURLY_RENDERS, 1, 100000);
   const maxConcurrent = intEnv(env, 'POSTERS_MAX_CONCURRENT_RENDERS', DEFAULT_MAX_CONCURRENT_RENDERS, 1, 100);
+  const policy = thresholds(env, maxDaily);
   const db = env?.DB;
   const status = {
     renderingEnabled: enabled(env),
@@ -150,7 +209,11 @@ export async function getPosterUsageStatus(env) {
     maxConcurrent,
     maxDaily,
     maxClientHourly,
+    ...policy,
     dailyRenders: null,
+    usagePercent: null,
+    conservationMode: false,
+    hardStopped: false,
   };
   if (!db) return status;
   try {
@@ -158,6 +221,9 @@ export async function getPosterUsageStatus(env) {
     const day = new Date().toISOString().slice(0, 10);
     const row = await db.prepare('SELECT renders FROM poster_usage_daily WHERE day = ?').bind(day).first();
     status.dailyRenders = Number(row?.renders || 0);
+    status.usagePercent = maxDaily > 0 ? Number(((status.dailyRenders / maxDaily) * 100).toFixed(2)) : 0;
+    status.conservationMode = status.dailyRenders >= policy.conserveAt && status.dailyRenders < policy.hardStopAt;
+    status.hardStopped = status.dailyRenders >= policy.hardStopAt;
   } catch {}
   return status;
 }
