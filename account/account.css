@@ -16,74 +16,18 @@ html[data-theme="light"] {
   --account-text: #151922;
 }
 
-/* Match the page reset used by News / FAQ. */
 body { margin: 0; }
-
-.account-page,
-.account-page *,
-.account-page *::before,
-.account-page *::after { box-sizing: border-box; }
 
 .account-page {
   min-height: 100vh;
-  width: min(calc(100% - 30px), 1500px);
-  margin: 0 auto;
-  padding: 18px 0 70px;
   overflow-x: clip;
 }
 
-.account-hero,
-.account-shell {
-  width: min(calc(100% - 36px), 1180px);
-  margin-inline: auto;
-}
+/* Page-shell geometry lives in /secondary-pages.css. Account CSS only owns account content. */
+.account-page .secondary-page-title { color: var(--account-text) !important; }
+.account-page .secondary-page-subtitle { color: var(--account-muted) !important; }
 
-.account-hero { padding: clamp(62px, 8vw, 105px) 0 30px; }
-
-.account-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 42px;
-  padding: 0 16px;
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 999px;
-  background: rgba(255,255,255,.028);
-  color: #c7c7cc;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
-  font-size: 14px;
-  font-weight: 650;
-  line-height: 1;
-  letter-spacing: -.01em;
-}
-
-.account-eyebrow::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  flex: 0 0 8px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #56aaff 0%, #8b5cf6 58%, #d86cff 100%);
-  box-shadow: 0 0 14px rgba(99,102,241,.42);
-}
-
-.account-hero h1 {
-  margin: 38px 0 0;
-  font-size: clamp(38px, 5vw, 64px);
-  line-height: 1;
-  letter-spacing: -.05em;
-  color: var(--account-text);
-}
-
-.account-hero p {
-  max-width: 720px;
-  margin: 24px 0 0;
-  font-size: 16px;
-  line-height: 1.6;
-  color: var(--account-muted);
-}
-
-.account-shell { padding: 0 0 88px; }
+.account-shell { padding-bottom: 88px; }
 .account-loading { display: none !important; }
 .account-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 .account-card { border: 1px solid var(--account-border); border-radius: 24px; background: linear-gradient(180deg, var(--account-panel-strong), var(--account-panel)); padding: 26px; backdrop-filter: blur(14px); }
@@ -134,28 +78,10 @@ body { margin: 0; }
 .account-empty-state { margin-top: 18px; border: 1px dashed var(--account-border); border-radius: 18px; padding: 22px; display: grid; gap: 5px; color: var(--account-muted); }
 .account-empty-state strong { color: var(--account-text); }
 
-html[data-theme="light"] .account-eyebrow,
 html[data-theme="light"] .account-section-chip { border-color: rgba(0,0,0,.10); background: rgba(255,255,255,.72); color: #555860; }
 html[data-theme="light"] .account-profile-url { background: rgba(255,255,255,.72); }
 
 @media (max-width: 760px) {
-  /* Exact secondary-page grid used by News / FAQ. */
-  .account-page {
-    width: min(calc(100% - 18px), 100%);
-    margin: 0 auto;
-    padding: 9px 0 70px;
-  }
-
-  .account-hero,
-  .account-shell {
-    width: min(calc(100% - 22px), 1180px);
-    margin-inline: auto;
-  }
-
-  .account-hero { padding-top: 55px; }
-  .account-eyebrow { min-height: 38px; padding: 0 14px; font-size: 13px; }
-  .account-hero h1 { margin-top: 30px; font-size: 38px; }
-  .account-hero p { font-size: 15px; }
   .account-grid { grid-template-columns: 1fr; }
   .account-profile-card,
   .account-profiles-card,
