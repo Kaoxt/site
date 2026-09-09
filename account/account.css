@@ -22,8 +22,8 @@ html[data-theme="light"] {
   margin: 0 auto;
   padding: 18px 0 70px;
   box-sizing: border-box;
+  overflow-x: clip;
 }
-.account-page #site-nav { width: 100%; max-width: 100%; }
 .account-hero,
 .account-shell { width: min(calc(100% - 36px), 1180px); margin-inline: auto; }
 .account-hero { padding: clamp(62px, 8vw, 105px) 0 30px; }
@@ -127,7 +127,11 @@ html[data-theme="light"] .account-section-chip { border-color: rgba(0,0,0,.10); 
 html[data-theme="light"] .account-profile-url { background: rgba(255,255,255,.72); }
 
 @media (max-width: 760px) {
-  .account-page { width: min(calc(100% - 18px), 100%); padding-top: 9px; }
+  .account-page {
+    width: min(calc(100% - 36px), 100%);
+    margin-inline: auto;
+    padding: 9px 0 70px;
+  }
   .account-hero,
   .account-shell { width: min(calc(100% - 22px), 1180px); }
   .account-hero { padding-top: 55px; }
