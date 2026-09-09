@@ -148,6 +148,14 @@
       console.warn('[The Kollection] Nuvio navigation could not initialize.', error);
     }
 
+    if (!window.KollectionAccountLink) {
+      await loadScriptOnce(
+        'nuvio-auth/account-link.js?v=20260908-1',
+        () => Boolean(window.KollectionAccountLink)
+      );
+    }
+    window.KollectionAccountLink?.init?.();
+
     if (!window.KollectionAdminNav) {
       await loadScriptOnce(
         'nuvio-auth/admin-nav.js?v=20260907-1',
