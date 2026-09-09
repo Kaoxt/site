@@ -310,6 +310,9 @@
 
 .nuvio-row-copy strong { font-size: 13px; font-weight: 680; }
 .nuvio-row-copy small { color: #858790; font-size: 10px; font-weight: 500; }
+.nuvio-account-link-row { min-height: 50px; }
+.nuvio-account-link-row .nuvio-row-copy strong { font-size: 15px; font-weight: 720; line-height: 1.15; }
+.nuvio-account-link-row .nuvio-row-copy small { margin-top: 2px; font-size: 11px; line-height: 1.25; }
 
 .nuvio-desktop-account-popover > .nuvio-social-link .nuvio-social-svg {
   color: #a6a9ff;
@@ -485,6 +488,56 @@ html.force-compact-nav #site-nav .menu-dropdown .menu-link.active .nav-item-icon
   color: #fff;
 }
 
+.nuvio-mobile-account-row {
+  width: 100%;
+  min-height: 54px;
+  margin: 2px 0 8px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 12px;
+  color: #d7d8dd;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  text-align: left;
+  transition: background .16s ease, color .16s ease;
+}
+
+.nuvio-mobile-account-row:hover {
+  color: #fff;
+  background: rgba(255,255,255,.06);
+}
+
+.nuvio-mobile-account-row .nuvio-row-icon {
+  width: 20px;
+  height: 20px;
+  flex-basis: 20px;
+  color: #dfe0e5;
+}
+
+.nuvio-mobile-account-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nuvio-mobile-account-copy strong {
+  color: inherit;
+  font-size: 15px;
+  font-weight: 720;
+  line-height: 1.15;
+}
+
+.nuvio-mobile-account-copy small {
+  color: #858790;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
 /* ---------- bottom social/signout row ---------- */
 .nuvio-mobile-bottom-row {
   margin: 0 -12px;
@@ -518,57 +571,4 @@ html.force-compact-nav #site-nav .menu-dropdown .menu-link.active .nav-item-icon
   align-items: center;
   gap: 7px;
   text-decoration: none;
-  font-size: 11px;
-  font-weight: 650;
-  white-space: nowrap;
-}
-
-.nuvio-mobile-socials .nuvio-social-link:hover {
-  color: #c1c4ff;
-}
-
-.nuvio-mobile-signout-button {
-  min-height: 36px;
-  padding: 0 13px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255,255,255,.06);
-  color: #cfd0d6;
-  font: inherit;
-  font-size: 11px;
-  font-weight: 650;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.nuvio-mobile-signout-button:hover {
-  background: rgba(255,255,255,.10);
-  color: #fff;
-}
-
-/* ---------- focus ---------- */
-.nuvio-desktop-signin-button:focus-visible,
-.nuvio-desktop-profile-button:focus-visible,
-.nuvio-desktop-profile-option:focus-visible,
-.nuvio-desktop-menu-row:focus-visible,
-.nuvio-account-signout-button:focus-visible,
-.nuvio-mobile-login-row:focus-visible,
-.nuvio-mobile-profile-chip:focus-visible,
-.nuvio-mobile-signout-button:focus-visible,
-.nuvio-social-link:focus-visible {
-  outline: 2px solid #a5b4fc;
-  outline-offset: 2px;
-}
-
-/* Navigation stays dark in light mode, consistent with shared.css. */
-body.light .nuvio-desktop-account-popover,
-body.light .nuvio-mobile-account {
-  color: #f5f5f6;
-}
-
-/* Tight landscape/tablet widths: preserve the profile name but keep the dock slim. */
-@media (max-width: 1180px) and (min-width: 900px) {
-  .nuvio-desktop-profile-name { max-width: 76px; }
-  .nuvio-desktop-guest-actions .nuvio-social-link.compact { width: 32px; height: 32px; }
-  .nuvio-desktop-signin-button { padding-inline: 13px; }
 }
