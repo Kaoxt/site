@@ -10,8 +10,6 @@
 
   const sourceInputs = [...document.querySelectorAll('input[name="posterSource"]')];
   const sourceCards = [...document.querySelectorAll('.choice-card')];
-  const smartTagsEnabled = document.getElementById('smartTagsEnabled');
-  const tagOptions = document.getElementById('tagOptions');
   const tagInputs = [...document.querySelectorAll('.tag-option input[type="checkbox"]')];
   const posterMocks = [...document.querySelectorAll('.poster-mock')];
   const previewDescription = document.getElementById('previewDescription');
@@ -109,7 +107,7 @@
     smart: 'Using Smart Layout artwork'
   }[source] || 'Using Smart Layout artwork');
 
-  const refreshServicePreviews = (source, enabled, tags) => {
+  const refreshServicePreviews = (source, tags) => {
     posterMocks.forEach((posterMock, index) => {
       const sample = previewSamples[index];
       const img = posterMock.querySelector('.poster-service-image');
@@ -119,7 +117,7 @@
       img.hidden = true;
       const params = new URLSearchParams({
         source,
-        smart: enabled ? '1' : '0',
+        smart: '1',
         tags: [...tags].join(','),
         preview: '1'
       });
@@ -129,26 +127,21 @@
 
   const refreshPreview = () => {
     const source = selectedSource();
-    const enabled = smartTagsEnabled.checked;
     const enabledTags = new Set(selectedTags());
 
     sourceCards.forEach((card) => card.classList.toggle('selected', card.querySelector('input')?.checked));
-    tagOptions.classList.toggle('disabled', !enabled);
-    tagOptions.setAttribute('aria-disabled', String(!enabled));
 
     posterMocks.forEach((posterMock) => {
-      posterMock.classList.toggle('tags-off', !enabled);
+      posterMock.classList.remove('tags-off');
       posterMock.classList.toggle('smart-layout', source === 'smart');
       posterMock.querySelectorAll('[data-tag]').forEach((badge) => {
         badge.classList.toggle('tag-hidden', !enabledTags.has(badge.dataset.tag));
       });
     });
 
-    refreshServicePreviews(source, enabled, enabledTags);
+    refreshServicePreviews(source, enabledTags);
 
-    const tagText = enabled
-      ? `${enabledTags.size} Smart Tag${enabledTags.size === 1 ? '' : 's'} enabled. Tag positions remain fixed.`
-      : 'Smart Tags are currently off.';
+    const tagText = `${enabledTags.size} Smart Tag${enabledTags.size === 1 ? '' : 's'} enabled.`;
     const inheritNote = source === 'inherit'
       ? ' The live examples use TMDB artwork for previewing, while your generated AIOmetadata config preserves its existing poster provider.'
       : '';
@@ -184,13 +177,11 @@
   const posterPattern = () => {
     const source = selectedSource();
     const tags = selectedTags().join(',');
-    const enabled = smartTagsEnabled.checked ? '1' : '0';
-    return `https://kollection.tv/api/posters/{type}/{tmdb_id}.webp?source=${encodeURIComponent(source)}&smart=${enabled}&tags=${encodeURIComponent(tags)}`;
+    return `https://kollection.tv/api/posters/{type}/{tmdb_id}.webp?source=${encodeURIComponent(source)}&smart=1&tags=${encodeURIComponent(tags)}`;
   };
 
   const buildOutput = () => {
     const source = selectedSource();
-    const tagsEnabled = smartTagsEnabled.checked;
     const tags = selectedTags();
 
     if (importedConfig) {
@@ -203,17 +194,15 @@
         getSeriesArtObject(config).poster = 'tmdb';
       }
 
-      if (tagsEnabled || source === 'smart') {
-        config.posterRatingProvider = 'custom';
-        config.usePosterProxy = true;
-        config.customPosterUrlPattern = posterPattern();
-      }
+      config.posterRatingProvider = 'custom';
+      config.usePosterProxy = true;
+      config.customPosterUrlPattern = posterPattern();
 
       config.kollectionPosters = {
         version: 1,
         usageMode: usageMode || 'setup',
         posterSource: source,
-        smartTags: { enabled: tagsEnabled, tags, fixedPlacement: true },
+        smartTags: { enabled: true, tags, fixedPlacement: true },
         renderer: 'https://kollection.tv/api/posters/{type}/{tmdb_id}.webp'
       };
 
@@ -231,12 +220,12 @@
       usageMode: usageMode || 'setup',
       config: {
         posterSource: source,
-        smartTags: { enabled: tagsEnabled, tags, fixedPlacement: true },
+        smartTags: { enabled: true, tags, fixedPlacement: true },
         posterUrlPattern: posterPattern(),
         aiometadata: {
-          posterRatingProvider: tagsEnabled || source === 'smart' ? 'custom' : 'none',
-          usePosterProxy: Boolean(tagsEnabled || source === 'smart'),
-          customPosterUrlPattern: tagsEnabled || source === 'smart' ? posterPattern() : '',
+          posterRatingProvider: 'custom',
+          usePosterProxy: true,
+          customPosterUrlPattern: posterPattern(),
           moviePosterProvider: source === 'tmdb' ? 'tmdb' : 'inherit',
           seriesPosterProvider: source === 'tmdb' ? 'tmdb' : 'inherit'
         }
@@ -254,7 +243,6 @@
   };
 
   sourceInputs.forEach((input) => input.addEventListener('change', refreshPreview));
-  smartTagsEnabled.addEventListener('change', refreshPreview);
   tagInputs.forEach((input) => input.addEventListener('change', refreshPreview));
 
   configFile.addEventListener('change', async () => {
