@@ -25,54 +25,60 @@
         font-size: 11px !important;
         line-height: 1.25 !important;
       }
-      .nuvio-mobile-account-row {
-        width: 100%;
-        min-height: 58px;
-        margin: 2px 0 8px;
-        padding: 8px 10px;
-        border: 0;
-        border-radius: 12px;
-        color: #d7d8dd;
-        background: transparent;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        text-decoration: none;
-        text-align: left;
-        box-sizing: border-box;
-        transition: background .16s ease, color .16s ease;
+      #site-nav .nuvio-mobile-account-row {
+        width: 100% !important;
+        min-height: 58px !important;
+        margin: 0 0 8px !important;
+        padding: 8px 10px !important;
+        border: 0 !important;
+        border-radius: 12px !important;
+        color: #d7d8dd !important;
+        background: transparent !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 12px !important;
+        text-decoration: none !important;
+        text-align: left !important;
+        box-sizing: border-box !important;
+        transition: background .16s ease, color .16s ease !important;
       }
-      .nuvio-mobile-account-row:hover {
-        color: #fff;
-        background: rgba(255,255,255,.06);
+      #site-nav .nuvio-mobile-account-row:hover {
+        color: #fff !important;
+        background: rgba(255,255,255,.06) !important;
       }
-      .nuvio-mobile-account-row .nuvio-row-icon {
-        width: 20px;
-        height: 20px;
-        flex: 0 0 20px;
-        color: #dfe0e5;
+      #site-nav .nuvio-mobile-account-row .nuvio-row-icon {
+        width: 20px !important;
+        height: 20px !important;
+        flex: 0 0 20px !important;
+        color: #dfe0e5 !important;
+        margin: 0 !important;
       }
-      .nuvio-mobile-account-copy {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
+      #site-nav .nuvio-mobile-account-copy {
+        min-width: 0 !important;
+        margin: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        justify-content: center !important;
+        gap: 2px !important;
+        flex: 0 1 auto !important;
       }
-      .nuvio-mobile-account-copy strong {
-        color: inherit;
-        font-size: 15px;
-        font-weight: 720;
-        line-height: 1.15;
+      #site-nav .nuvio-mobile-account-copy strong {
+        color: inherit !important;
+        font-size: 15px !important;
+        font-weight: 720 !important;
+        line-height: 1.15 !important;
       }
-      .nuvio-mobile-account-copy small {
-        color: #858790;
-        font-size: 11px;
-        font-weight: 500;
-        line-height: 1.25;
+      #site-nav .nuvio-mobile-account-copy small {
+        color: #858790 !important;
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        line-height: 1.25 !important;
       }
-      .nuvio-mobile-account-row:focus-visible {
-        outline: 2px solid #a5b4fc;
-        outline-offset: 2px;
+      #site-nav .nuvio-mobile-account-row:focus-visible {
+        outline: 2px solid #a5b4fc !important;
+        outline-offset: 2px !important;
       }
     `;
     document.head.appendChild(style);
@@ -106,7 +112,10 @@
     link.href = '/account';
     link.dataset.kollectionAccountLink = 'true';
     link.innerHTML = `${icon}<span class="nuvio-mobile-account-copy"><strong>Account</strong><small>Saved setups & account details</small></span>`;
-    bottom.before(link);
+
+    const chips = slot.querySelector('.nuvio-mobile-profile-chips');
+    if (chips) chips.insertAdjacentElement('afterend', link);
+    else bottom.before(link);
   }
 
   function sync() {
