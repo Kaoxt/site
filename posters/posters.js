@@ -168,12 +168,11 @@
       img.hidden = true;
       const params = new URLSearchParams({
         source,
-        smart: '1',
         tags: [...tags].join(','),
         ratingSource: selectedRatingSource(),
         preview: '1'
       });
-      img.src = `/api/posters/${sample.type}/${sample.id}.webp?${params.toString()}`;
+      img.src = `/api/posters-v2/${sample.type}/${sample.id}.webp?${params.toString()}`;
     });
   };
 
@@ -238,7 +237,7 @@
   const posterPattern = () => {
     const source = selectedSource();
     const tags = selectedTags().join(',');
-    return `https://kollection.tv/api/posters/{type}/{tmdb_id}.webp?source=${encodeURIComponent(source)}&smart=1&tags=${encodeURIComponent(tags)}&ratingSource=${encodeURIComponent(selectedRatingSource())}`;
+    return `https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?source=${encodeURIComponent(source)}&tags=${encodeURIComponent(tags)}&ratingSource=${encodeURIComponent(selectedRatingSource())}`;
   };
 
   const buildOutput = () => {
@@ -261,12 +260,12 @@
       config.customPosterUrlPattern = posterPattern();
 
       config.kollectionPosters = {
-        version: 1,
+        version: 2,
         usageMode: usageMode || 'setup',
         posterSource: source,
         ratingSource: ratingProvider,
         smartTags: { enabled: true, tags, fixedPlacement: true },
-        renderer: 'https://kollection.tv/api/posters/{type}/{tmdb_id}.webp'
+        renderer: 'https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp'
       };
 
       if (normalized.wrapper) {
@@ -277,7 +276,7 @@
     }
 
     return {
-      version: '1.0.0',
+      version: '2.0.0',
       exportedAt: new Date().toISOString(),
       type: 'kollection-posters',
       usageMode: usageMode || 'setup',
