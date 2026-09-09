@@ -10,7 +10,7 @@
   <meta name="description" content="Create smart movie and TV poster overlays for AIOmetadata, Nuvio, Stremio, and The Kollection." />
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/secondary-pages.css?v=20260909-3" />
-  <link rel="stylesheet" href="/posters/styles.css?v=20260909-6" />
+  <link rel="stylesheet" href="/posters/styles.css?v=20260909-7" />
   <script src="/components.js?v=20260908-3" defer></script>
 </head>
 <body>
@@ -46,6 +46,47 @@
         <button id="postersBackBtn" class="route-back" type="button">‹ Back</button>
         <div><span id="routeKicker">POSTERS SETUP</span><strong id="routeTitle">Configure Posters</strong></div>
       </div>
+
+      <section class="poster-preview-panel preview-top" aria-label="Poster preview examples">
+        <div class="preview-heading">
+          <span class="section-kicker">LIVE PREVIEW</span>
+          <strong>See your Smart Tags before you generate anything</strong>
+        </div>
+        <div class="poster-preview-grid">
+          <div class="poster-mock poster-example-one">
+            <div class="poster-art"><span class="mock-title">NEBULA<br />RUN</span><span class="mock-subtitle">Science Fiction</span></div>
+            <div class="overlay overlay-rating" data-tag="rating"><b>8.7</b><small>TMDB</small></div>
+            <div class="overlay overlay-quality" data-tag="quality">4K</div>
+            <div class="overlay overlay-hdr" data-tag="hdr">DV</div>
+            <div class="overlay overlay-audio" data-tag="audio">ATMOS</div>
+            <div class="overlay overlay-age" data-tag="age">PG-13</div>
+            <div class="overlay overlay-genre" data-tag="genre">SCI-FI</div>
+          </div>
+          <div class="poster-mock poster-example-two">
+            <div class="poster-art"><span class="mock-title">AFTER<br />LIGHT</span><span class="mock-subtitle">Drama</span></div>
+            <div class="overlay overlay-rating" data-tag="rating"><b>7.9</b><small>TMDB</small></div>
+            <div class="overlay overlay-quality" data-tag="quality">HD</div>
+            <div class="overlay overlay-hdr" data-tag="hdr">HDR</div>
+            <div class="overlay overlay-audio" data-tag="audio">5.1</div>
+            <div class="overlay overlay-age" data-tag="age">TV-14</div>
+            <div class="overlay overlay-genre" data-tag="genre">DRAMA</div>
+          </div>
+          <div class="poster-mock poster-example-three">
+            <div class="poster-art"><span class="mock-title">NORTH<br />BOUND</span><span class="mock-subtitle">Adventure</span></div>
+            <div class="overlay overlay-rating" data-tag="rating"><b>8.2</b><small>TMDB</small></div>
+            <div class="overlay overlay-quality" data-tag="quality">4K</div>
+            <div class="overlay overlay-hdr" data-tag="hdr">HDR</div>
+            <div class="overlay overlay-audio" data-tag="audio">ATMOS</div>
+            <div class="overlay overlay-age" data-tag="age">PG</div>
+            <div class="overlay overlay-genre" data-tag="genre">ADVENTURE</div>
+          </div>
+        </div>
+        <div class="preview-description" id="previewDescription">Using your AIOmetadata poster setting. Smart Tags are currently off.</div>
+        <div class="preview-legend">
+          <span><i></i> These are example posters for previewing layout only</span>
+          <span><i></i> TMDB Original mode keeps the original poster/title placement</span>
+        </div>
+      </section>
 
       <section class="posters-shell" aria-label="Configure Posters">
         <div class="posters-config">
@@ -133,38 +174,12 @@
             <span id="copyStatus" class="copy-status" role="status" aria-live="polite"></span>
           </div>
         </div>
-
-        <aside class="poster-preview-panel">
-          <div class="preview-heading">
-            <span class="section-kicker">LIVE PREVIEW</span>
-            <strong>Fixed Smart Tag layout</strong>
-          </div>
-          <div class="poster-stage">
-            <div class="poster-mock" id="posterMock">
-              <div class="poster-art">
-                <span class="mock-title">THE<br />KOLLECTION</span>
-                <span class="mock-subtitle">Preview artwork</span>
-              </div>
-              <div class="overlay overlay-rating" data-tag="rating"><b>8.7</b><small>TMDB</small></div>
-              <div class="overlay overlay-quality" data-tag="quality">4K</div>
-              <div class="overlay overlay-hdr" data-tag="hdr">DV</div>
-              <div class="overlay overlay-audio" data-tag="audio">ATMOS</div>
-              <div class="overlay overlay-age" data-tag="age">PG-13</div>
-              <div class="overlay overlay-genre" data-tag="genre">SCI-FI</div>
-            </div>
-          </div>
-          <div class="preview-description" id="previewDescription">Using your AIOmetadata poster setting. Smart Tags are currently off.</div>
-          <div class="preview-legend">
-            <span><i></i> Poster artwork stays separate from tag configuration</span>
-            <span><i></i> TMDB mode never moves tags around</span>
-          </div>
-        </aside>
       </section>
     </section>
 
     <div id="site-footer"></div>
   </main>
 
-  <script src="/posters/posters.js?v=20260909-2"></script>
+  <script src="/posters/posters.js?v=20260909-3"></script>
 </body>
 </html>
