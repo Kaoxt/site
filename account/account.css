@@ -68,7 +68,10 @@ body { margin: 0; }
 #accountActiveProfile { display: inline-flex; align-items: center; gap: 9px; min-height: 30px; font-weight: 700; }
 #accountActiveProfile .account-active-avatar { width: 30px; height: 30px; flex: 0 0 30px; font-size: 12px; }
 #accountActiveProfile .account-active-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#accountExpires { display: none !important; }
 .account-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.account-actions::before,
+.account-actions::after { content: none !important; }
 .account-profiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
 .account-profile-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; border: 1px solid var(--account-border); border-radius: 16px; padding: 14px; background: rgba(255,255,255,.018); min-width: 0; }
 .account-profile-avatar { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; flex: 0 0 auto; font-weight: 800; color: white; background: var(--profile-color, #5666e8); overflow: hidden; }
@@ -93,6 +96,16 @@ html[data-theme="light"] .account-section-chip { border-color: rgba(0,0,0,.10); 
 html[data-theme="light"] .account-profile-url { background: rgba(255,255,255,.72); }
 html[data-theme="light"] .account-profile-switch:disabled { background: rgba(0,0,0,.025); }
 
+/* Match the account summary to the compact navigation breakpoint. This keeps
+   Email and Active profile vertically aligned instead of allowing the second
+   column to drift beyond the visible tablet/compact viewport. */
+@media (max-width: 900px) {
+  .account-details { grid-template-columns: 1fr; }
+  .account-details > div { width: 100%; }
+  .account-section-head { flex-wrap: wrap; align-items: center; }
+  .account-session-pill { margin-left: 0; }
+}
+
 @media (max-width: 760px) {
   .account-grid { grid-template-columns: 1fr; }
   .account-profile-card,
@@ -104,7 +117,6 @@ html[data-theme="light"] .account-profile-switch:disabled { background: rgba(0,0
   .account-signin-copy { max-width: 100%; }
   .account-signin-copy p { max-width: 34rem; padding-inline: 8px; font-size: 15px; line-height: 1.5; }
   .account-security-note { max-width: 100%; padding-inline: 8px; }
-  .account-details { grid-template-columns: 1fr; }
   .account-section-head { align-items: center; }
   .account-profiles { grid-template-columns: 1fr; }
   .account-profile-editor { grid-template-columns: 1fr; }
