@@ -70,7 +70,7 @@
     const tags = selectedTags();
     if (!tags.includes('quality') && !tags.includes('trend')) tags.push('trend');
     const config = {
-      v: 1,
+      v: 2,
       upstream: upstream.toString(),
       source: selectedSource(),
       tags: [...new Set(tags)].sort(),
