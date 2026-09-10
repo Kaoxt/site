@@ -56,6 +56,29 @@
 
   const profileId = (profile) => Number(profile?.profile_index ?? profile?.id);
 
+  function normalizeAvatarUrl(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    if (/^https?:\/\//i.test(raw)) return raw;
+    const { apiBase } = cfg();
+    if (raw.startsWith('/')) return `${apiBase}${raw}`;
+    return `${apiBase}/storage/v1/object/public/avatars/${raw.replace(/^\/+/, '')}`;
+  }
+
+  async function resolveCurrentAvatar(profile, accessToken) {
+    const direct = normalizeAvatarUrl(profile?.avatar_url || profile?.avatarUrl || '');
+    if (direct) return direct;
+    const avatarId = profile?.avatar_id ?? profile?.avatarId ?? null;
+    if (!avatarId) return '';
+    try {
+      const rows = await rpc('get_avatar_catalog', {}, accessToken);
+      const match = (Array.isArray(rows) ? rows : []).find((item) => String(item?.id || '') === String(avatarId));
+      return normalizeAvatarUrl(match?.storage_path || match?.storagePath || '');
+    } catch {
+      return '';
+    }
+  }
+
   function getSyncClientId() {
     try {
       const stored = localStorage.getItem(PROFILE_CLIENT_ID_KEY);
@@ -88,23 +111,67 @@
     };
   }
 
+  async function pushAvatar(profiles, targetId, nextAvatar, nextName, accessToken) {
+    const payload = profiles.map((item) => {
+      const id = profileId(item);
+      const next = profilePayload(item, id === targetId ? nextAvatar : undefined);
+      if (id === targetId && nextName) next.name = nextName;
+      return next;
+    });
+    await rpc('sync_push_profiles', {
+      p_client_max_profiles: MAX_PROFILES,
+      p_profiles: payload,
+      p_origin_client_id: getSyncClientId(),
+    }, accessToken);
+  }
+
   function injectStyles() {
     if (document.getElementById('kollection-avatar-edit-styles')) return;
     const style = document.createElement('style');
     style.id = 'kollection-avatar-edit-styles';
     style.textContent = `
-      .account-avatar-edit-field { margin-top: 18px; }
-      .account-avatar-edit-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; align-items: end; }
-      .account-avatar-remove { min-height: 48px; padding: 0 16px; border: 1px solid rgba(255,91,107,.34); border-radius: 12px; background: rgba(255,91,107,.035); color: #ff707d; font: inherit; font-size: 13px; font-weight: 750; cursor: pointer; white-space: nowrap; }
-      .account-avatar-remove:hover { background: rgba(255,91,107,.08); border-color: rgba(255,91,107,.52); color: #ff8b95; }
-      .account-avatar-remove.is-armed { background: rgba(255,91,107,.11); }
-      .account-avatar-help { margin: 7px 0 0; color: var(--account-muted); font-size: 12px; line-height: 1.45; }
-      @media (max-width: 560px) {
-        .account-avatar-edit-row { grid-template-columns: 1fr; }
-        .account-avatar-remove { width: 100%; }
+      .account-avatar-preview-wrap { display:flex; align-items:center; gap:14px; margin:0 0 22px; }
+      .account-avatar-preview { width:68px; height:68px; flex:0 0 68px; border-radius:50%; overflow:hidden; display:grid; place-items:center; border:1px solid var(--account-border); background:#26272c; color:#fff; font-size:24px; font-weight:800; }
+      .account-avatar-preview img { width:100%; height:100%; display:block; object-fit:cover; }
+      .account-avatar-preview-copy { min-width:0; display:grid; gap:3px; }
+      .account-avatar-preview-copy strong { color:var(--account-text); font-size:15px; }
+      .account-avatar-preview-copy small { color:var(--account-muted); font-size:12px; }
+      .account-avatar-edit-field { margin-top:18px; }
+      .account-avatar-edit-row { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:10px; align-items:end; }
+      .account-avatar-update,
+      .account-avatar-remove { min-height:48px; padding:0 16px; border-radius:12px; font:inherit; font-size:13px; font-weight:750; cursor:pointer; white-space:nowrap; }
+      .account-avatar-update { border:1px solid var(--account-border); background:rgba(255,255,255,.035); color:var(--account-text); }
+      .account-avatar-update:hover { background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.18); }
+      .account-avatar-remove { border:1px solid rgba(255,91,107,.34); background:rgba(255,91,107,.035); color:#ff707d; }
+      .account-avatar-remove:hover { background:rgba(255,91,107,.08); border-color:rgba(255,91,107,.52); color:#ff8b95; }
+      .account-avatar-update:disabled,
+      .account-avatar-remove:disabled { opacity:.55; cursor:default; }
+      .account-avatar-help { margin:7px 0 0; color:var(--account-muted); font-size:12px; line-height:1.45; }
+      @media (max-width:700px) {
+        .account-avatar-edit-row { grid-template-columns:1fr 1fr; }
+        .account-avatar-edit-row .account-modal-field { grid-column:1 / -1; }
+        .account-avatar-update,
+        .account-avatar-remove { width:100%; }
       }
     `;
     document.head.appendChild(style);
+  }
+
+  function setPreview(preview, url, name) {
+    preview.replaceChildren();
+    if (url) {
+      const img = document.createElement('img');
+      img.src = normalizeAvatarUrl(url);
+      img.alt = '';
+      img.referrerPolicy = 'no-referrer';
+      img.addEventListener('error', () => {
+        img.remove();
+        preview.textContent = (String(name || 'N')[0] || 'N').toUpperCase();
+      }, { once: true });
+      preview.appendChild(img);
+    } else {
+      preview.textContent = (String(name || 'N')[0] || 'N').toUpperCase();
+    }
   }
 
   async function enhanceEditModal() {
@@ -115,17 +182,33 @@
     if (!Number.isFinite(editingProfileId)) return;
 
     modal.dataset.avatarEditReady = 'true';
+    heading.textContent = 'Edit Profile';
+
     const body = modal.querySelector('.account-modal-body');
     const status = modal.querySelector('#accountEditStatus');
+    const intro = modal.querySelector('.account-modal-copy');
     if (!body || !status) return;
+    if (intro) intro.textContent = 'Update this Nuvio profile name or profile picture.';
 
     try {
-      const { accessToken } = await getAuth();
+      const { accessToken, userId } = await getAuth();
       const profiles = await getProfiles(accessToken);
       const profile = profiles.find((item) => profileId(item) === editingProfileId);
       if (!profile) return;
 
+      const name = String(profile.name || `Profile ${editingProfileId}`);
       const avatarUrl = String(profile.avatar_url || profile.avatarUrl || '');
+      const resolvedAvatar = await resolveCurrentAvatar(profile, accessToken);
+
+      const previewWrap = document.createElement('div');
+      previewWrap.className = 'account-avatar-preview-wrap';
+      previewWrap.innerHTML = `
+        <div class="account-avatar-preview" id="accountAvatarPreview" aria-hidden="true"></div>
+        <div class="account-avatar-preview-copy"><strong>${name.replace(/[&<>"']/g, '')}</strong><small>Current profile picture</small></div>`;
+      body.insertBefore(previewWrap, body.firstElementChild?.nextSibling || body.firstChild);
+      const preview = previewWrap.querySelector('#accountAvatarPreview');
+      setPreview(preview, resolvedAvatar, name);
+
       const wrap = document.createElement('div');
       wrap.className = 'account-avatar-edit-field';
       wrap.innerHTML = `
@@ -134,25 +217,82 @@
             <span>Profile picture URL</span>
             <input id="accountEditAvatarUrl" type="url" inputmode="url" autocomplete="off" placeholder="Paste image URL" />
           </label>
+          <button class="account-avatar-update" id="accountUpdateAvatar" type="button">Update image</button>
           <button class="account-avatar-remove" id="accountRemoveAvatar" type="button">Remove</button>
         </div>
-        <p class="account-avatar-help">Paste a complete http:// or https:// image URL, or choose Remove to clear the custom profile picture.</p>`;
+        <p class="account-avatar-help">Paste a complete http:// or https:// image URL to update the profile picture, or choose Remove to clear it.</p>`;
       const avatarInput = wrap.querySelector('#accountEditAvatarUrl');
       avatarInput.value = avatarUrl;
       status.before(wrap);
 
+      const updateButton = wrap.querySelector('#accountUpdateAvatar');
       const removeButton = wrap.querySelector('#accountRemoveAvatar');
-      removeButton.addEventListener('click', () => {
-        avatarInput.value = '';
-        avatarInput.dataset.removeAvatar = 'true';
-        removeButton.classList.add('is-armed');
-        removeButton.textContent = 'Remove selected';
+      const saveButton = modal.querySelector('#accountSaveProfile');
+      const nameInput = modal.querySelector('#accountEditProfileName');
+
+      updateButton.addEventListener('click', async () => {
+        const nextAvatar = String(avatarInput.value || '').trim();
+        if (!/^https?:\/\//i.test(nextAvatar)) {
+          status.textContent = 'Enter a complete http:// or https:// image URL.';
+          return;
+        }
+        updateButton.disabled = true;
+        removeButton.disabled = true;
+        status.textContent = 'Updating profile picture…';
+        try {
+          const currentName = String(nameInput?.value || name).trim() || name;
+          await pushAvatar(profiles, editingProfileId, nextAvatar, currentName, accessToken);
+          profile.avatar_url = nextAvatar;
+          profile.avatarUrl = nextAvatar;
+          profile.avatar_id = null;
+          profile.avatarId = null;
+          setPreview(preview, nextAvatar, currentName);
+          avatarInput.dataset.savedAvatar = nextAvatar;
+          const now = new Date().toISOString();
+          try { localStorage.setItem(`${LAST_SYNC_KEY_PREFIX}${userId || 'default'}`, now); } catch {}
+          status.textContent = 'Profile picture updated.';
+          try { await window.KollectionNavAccount?.refresh?.(); } catch {}
+        } catch (error) {
+          status.textContent = error?.message || 'Could not update the profile picture.';
+        } finally {
+          updateButton.disabled = false;
+          removeButton.disabled = false;
+        }
       });
+
+      removeButton.addEventListener('click', async () => {
+        removeButton.disabled = true;
+        updateButton.disabled = true;
+        status.textContent = 'Removing profile picture…';
+        try {
+          const currentName = String(nameInput?.value || name).trim() || name;
+          await pushAvatar(profiles, editingProfileId, '', currentName, accessToken);
+          profile.avatar_url = null;
+          profile.avatarUrl = null;
+          profile.avatar_id = null;
+          profile.avatarId = null;
+          avatarInput.value = '';
+          avatarInput.dataset.savedAvatar = '';
+          setPreview(preview, '', currentName);
+          const now = new Date().toISOString();
+          try { localStorage.setItem(`${LAST_SYNC_KEY_PREFIX}${userId || 'default'}`, now); } catch {}
+          status.textContent = 'Profile picture removed.';
+          try { await window.KollectionNavAccount?.refresh?.(); } catch {}
+        } catch (error) {
+          status.textContent = error?.message || 'Could not remove the profile picture.';
+        } finally {
+          removeButton.disabled = false;
+          updateButton.disabled = false;
+        }
+      });
+
       avatarInput.addEventListener('input', () => {
-        delete avatarInput.dataset.removeAvatar;
-        removeButton.classList.remove('is-armed');
-        removeButton.textContent = 'Remove';
+        const candidate = String(avatarInput.value || '').trim();
+        if (/^https?:\/\//i.test(candidate)) setPreview(preview, candidate, nameInput?.value || name);
+        else if (!candidate) setPreview(preview, resolvedAvatar, nameInput?.value || name);
       });
+
+      if (saveButton) saveButton.textContent = 'Save changes';
     } catch (error) {
       status.textContent = error?.message || 'Could not load the current profile picture.';
     }
@@ -171,45 +311,17 @@
     const nameInput = modal.querySelector('#accountEditProfileName');
     const status = modal.querySelector('#accountEditStatus');
     const nextName = String(nameInput?.value || '').trim();
-    const nextAvatar = String(avatarInput.value || '').trim();
-    const removeAvatar = avatarInput.dataset.removeAvatar === 'true';
-
     if (!nextName) { status.textContent = 'Enter a profile name.'; return; }
-    if (nextAvatar && !/^https?:\/\//i.test(nextAvatar)) {
-      status.textContent = 'Enter a complete http:// or https:// image URL.';
-      return;
-    }
 
     save.disabled = true;
-    status.textContent = 'Saving…';
+    status.textContent = 'Saving profile…';
     try {
       const { accessToken, userId } = await getAuth();
-      const profiles = await getProfiles(accessToken);
-      const profile = profiles.find((item) => profileId(item) === editingProfileId);
-      if (!profile) throw new Error('This Nuvio profile could not be found.');
-
       await apiFetch(`/rest/v1/profiles?profile_index=eq.${editingProfileId}`, accessToken, {
         method: 'PATCH',
         headers: { Prefer: 'return=minimal' },
         body: JSON.stringify({ name: nextName }),
       });
-
-      const currentAvatar = String(profile.avatar_url || profile.avatarUrl || '');
-      const shouldUpdateAvatar = removeAvatar || nextAvatar !== currentAvatar;
-      if (shouldUpdateAvatar) {
-        const profilesPayload = profiles.map((item) => {
-          const id = profileId(item);
-          const payload = profilePayload(item, id === editingProfileId ? (removeAvatar ? '' : nextAvatar) : undefined);
-          if (id === editingProfileId) payload.name = nextName;
-          return payload;
-        });
-        await rpc('sync_push_profiles', {
-          p_client_max_profiles: MAX_PROFILES,
-          p_profiles: profilesPayload,
-          p_origin_client_id: getSyncClientId(),
-        }, accessToken);
-      }
-
       const now = new Date().toISOString();
       try { localStorage.setItem(`${LAST_SYNC_KEY_PREFIX}${userId || 'default'}`, now); } catch {}
       window.KollectionProfileActions?.closeModal?.();
