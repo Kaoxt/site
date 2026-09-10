@@ -2,7 +2,7 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'overlay-3';
+const CACHE_VERSION = 'rating-1';
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data, null, 2), {
@@ -40,6 +40,48 @@ function certification(details, type) {
   return details.content_ratings?.results?.find((x) => x.iso_3166_1 === 'US')?.rating || '';
 }
 
+function normalizeRatingSource(value) {
+  const source = String(value || 'average').toLowerCase();
+  return ['average', 'score', 'imdb', 'letterboxd', 'mal', 'rogerebert', 'tomatometer', 'popcornmeter', 'tmdb'].includes(source)
+    ? source
+    : 'average';
+}
+
+function tmdbRating(details, source) {
+  const value = Number(details.vote_average);
+  if (!Number.isFinite(value) || value <= 0) return { value: '', label: '', source, status: 'missing' };
+  const formatted = value.toFixed(1);
+  if (source === 'tmdb') return { value: formatted, label: `TMDB ${formatted}`, source: 'tmdb', status: 'ok' };
+  return { value: formatted, label: `★ ${formatted}`, source, status: 'ok' };
+}
+
+async function imdbRating(details, env) {
+  const imdbId = details.external_ids?.imdb_id || '';
+  if (!imdbId) return { value: '', label: '', source: 'imdb', status: 'missing-id' };
+  if (!env.OMDB_API_KEY) return { value: '', label: '', source: 'imdb', status: 'not-configured' };
+
+  const response = await fetch(`https://www.omdbapi.com/?apikey=${encodeURIComponent(env.OMDB_API_KEY)}&i=${encodeURIComponent(imdbId)}`, {
+    headers: { accept: 'application/json' },
+    cf: { cacheTtl: 21600, cacheEverything: true },
+  });
+  if (!response.ok) return { value: '', label: '', source: 'imdb', status: `upstream-${response.status}` };
+  const data = await response.json();
+  const value = Number.parseFloat(data?.imdbRating);
+  if (!Number.isFinite(value) || value <= 0) return { value: '', label: '', source: 'imdb', status: 'missing' };
+  const formatted = value.toFixed(1);
+  return { value: formatted, label: `IMDb ${formatted}`, source: 'imdb', status: 'ok' };
+}
+
+async function resolveRating(details, requestedSource, env) {
+  const source = normalizeRatingSource(requestedSource);
+  if (source === 'imdb') return imdbRating(details, env);
+  if (source === 'tmdb' || source === 'score' || source === 'average') return tmdbRating(details, source);
+
+  // These providers do not currently have a configured, reliable upstream in Kollection.
+  // Returning no badge is preferable to silently showing a TMDB score under the wrong label.
+  return { value: '', label: '', source, status: 'unsupported' };
+}
+
 function cacheRequestFor(request) {
   const cacheUrl = new URL(request.url);
   cacheUrl.searchParams.set('__kollection_renderer', CACHE_VERSION);
@@ -71,16 +113,22 @@ export async function onRequest(context) {
     const id = await resolveTmdbId(type, rawId, env.TMDB_API_KEY);
     if (!id) return json({ error: 'Could not resolve TMDB/IMDb id.' }, 404);
 
-    const append = type === 'movie' ? 'images,release_dates' : 'images,content_ratings';
+    const append = type === 'movie' ? 'images,release_dates,external_ids' : 'images,content_ratings,external_ids';
     const details = await tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null`, env.TMDB_API_KEY);
     if (!details.poster_path) return json({ error: 'TMDB has no poster for this title.' }, 404);
 
     const tags = new Set((url.searchParams.get('tags') || 'trend,rating').split(',').map((v) => v.trim()).filter(Boolean));
     const smartLayout = url.searchParams.get('source') !== 'tmdb';
+    const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
+    const rating = tags.has('rating')
+      ? await resolveRating(details, requestedRatingSource, env)
+      : { value: '', label: '', source: requestedRatingSource, status: 'disabled' };
+
     const payload = {
       posterPath: details.poster_path,
       title: String(details.title || details.name || '').slice(0, 44),
-      rating: tags.has('rating') && Number(details.vote_average) > 0 ? Number(details.vote_average).toFixed(1) : '',
+      rating: rating.value,
+      ratingLabel: rating.label,
       genre: tags.has('genre') ? (details.genres?.[0]?.name || '') : '',
       age: tags.has('age') ? certification(details, type) : '',
       trend: tags.has('trend') ? await trendLabel(type, id, env.TMDB_API_KEY) : '',
@@ -111,6 +159,8 @@ export async function onRequest(context) {
       : 'public, max-age=21600, s-maxage=86400, stale-while-revalidate=604800');
     headers.set('x-kollection-posters', 'v2-sharp');
     headers.set('x-kollection-render-version', CACHE_VERSION);
+    headers.set('x-kollection-rating-source', rating.source);
+    headers.set('x-kollection-rating-status', rating.status);
     headers.set('x-kollection-tmdb-id', id);
     const response = new Response(rendered.body, { status: 200, headers });
     context.waitUntil(cache.put(cacheRequest, response.clone()));
