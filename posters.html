@@ -98,14 +98,14 @@
           <div class="section-heading">
             <span class="section-kicker">POSTER SOURCE</span>
             <h2>Choose how artwork is handled</h2>
-            <p>Smart Layout is the default. It keeps the title low on the poster so the fixed Smart Tag areas stay clear. TMDB Original preserves the poster exactly as TMDB provides it.</p>
+            <p>Smart Layout is the default. It prefers textless TMDB artwork when available and adds a clean title treatment above the fixed Smart Tag area. TMDB Original preserves the poster exactly as TMDB provides it.</p>
           </div>
 
           <div class="choice-grid" id="posterSourceChoices">
             <label class="choice-card selected">
               <input type="radio" name="posterSource" value="smart" checked />
               <span class="choice-title">Smart Layout</span>
-              <span class="choice-copy">Default. Uses a title-safe poster treatment with the movie or show title positioned near the bottom so Smart Tags do not interfere with it.</span>
+              <span class="choice-copy">Default. Prefers textless TMDB artwork when available, then adds the title near the bottom so Smart Tags have a cleaner fixed layout.</span>
             </label>
             <label class="choice-card">
               <input type="radio" name="posterSource" value="tmdb" />
@@ -181,6 +181,7 @@
   </main>
 
   <script src="/posters/posters.js?v=20260909-9"></script>
+  <script src="/posters/rating-sources-status.js?v=20260910-1"></script>
   <script src="/posters/addon.js?v=20260909-1"></script>
 </body>
 </html>
