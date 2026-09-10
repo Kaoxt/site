@@ -66,7 +66,6 @@
         outline: none !important;
       }
 
-      /* Use the exact same icon/text column geometry for Account and coffee. */
       #site-nav .nuvio-desktop-account-popover > .nuvio-account-link-row,
       #site-nav .nuvio-desktop-account-popover > .nuvio-social-link {
         padding-left: 10px !important;
@@ -100,15 +99,6 @@
         background: rgba(255,255,255,.065) !important;
         color: #fff !important;
         outline: none !important;
-      }
-
-      /* Never allow legacy generated Sign out text to appear beside Log Out. */
-      #site-nav .nuvio-mobile-signout-button::before,
-      #site-nav .nuvio-mobile-signout-button::after,
-      #site-nav [data-nuvio-signout-mobile]::before,
-      #site-nav [data-nuvio-signout-mobile]::after {
-        content: none !important;
-        display: none !important;
       }
 
       #site-nav .nuvio-mobile-current-profile {
@@ -237,12 +227,6 @@
       switchLink.dataset.kollectionProfileSwitchLink = 'true';
       switchLink.setAttribute('aria-label', 'Switch Nuvio profile on the Account page');
       current.appendChild(switchLink);
-    }
-
-    const signOut = slot.querySelector('[data-nuvio-signout-mobile]');
-    if (signOut) {
-      signOut.textContent = 'Log Out';
-      signOut.setAttribute('aria-label', 'Log out');
     }
 
     slot.querySelector('[data-kollection-mobile-account-link]')?.remove();
