@@ -121,3 +121,15 @@ html[data-theme="light"] .account-profile-switch:disabled { background: rgba(0,0
   .account-profile-editor { grid-template-columns: 1fr; }
   .account-profile-update { width: 100%; }
 }
+
+/* Extra-small phones: stack account detail cards vertically. */
+@media (max-width: 520px) {
+  .account-details {
+    grid-template-columns: 1fr;
+  }
+
+  .account-details > div {
+    width: 100%;
+  }
+}
+
