@@ -1,0 +1,64 @@
+.account-profile-row { grid-template-columns: auto minmax(0,1fr) !important; align-items: center; }
+.account-profile-row > .account-profile-switch { display: none !important; }
+.account-profile-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.account-profile-actions .account-profile-switch,
+.account-profile-action { min-height: 38px; padding: 0 14px; border: 1px solid var(--account-border); border-radius: 10px; background: rgba(255,255,255,.025); color: var(--account-text); font: inherit; font-size: 12px; font-weight: 760; cursor: pointer; white-space: nowrap; transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease; }
+.account-profile-actions .account-profile-switch:hover:not(:disabled),
+.account-profile-action:hover { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); transform: translateY(-1px); }
+.account-profile-actions .account-profile-switch:disabled { color: var(--account-muted); cursor: default; background: rgba(255,255,255,.025); }
+.account-profile-action.danger { color: #ff6b78; border-color: rgba(255,91,107,.30); }
+.account-profile-action.danger:hover { color: #ff8993; border-color: rgba(255,91,107,.48); background: rgba(255,91,107,.07); }
+
+#accountProfileModalRoot { position: fixed; inset: 0; z-index: 10000; pointer-events: none; }
+#accountProfileModalRoot.open { pointer-events: auto; }
+.account-modal-backdrop { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(5,6,8,.48); backdrop-filter: blur(16px) saturate(.92); -webkit-backdrop-filter: blur(16px) saturate(.92); }
+.account-modal { width: min(650px, 100%); max-height: min(86vh, 820px); overflow: auto; border: 1px solid rgba(255,255,255,.13); border-radius: 22px; background: rgba(22,22,24,.98); box-shadow: 0 28px 90px rgba(0,0,0,.58); color: var(--account-text); }
+.account-modal-head { min-height: 74px; padding: 20px 26px; border-bottom: 1px solid var(--account-border); display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.account-modal-head h3 { margin: 0; font-size: 22px; letter-spacing: -.025em; }
+.account-modal-x { width: 42px; height: 42px; border: 1px solid var(--account-border); border-radius: 50%; background: rgba(255,255,255,.025); color: var(--account-muted); font: inherit; font-size: 24px; line-height: 1; cursor: pointer; }
+.account-modal-x:hover { color: var(--account-text); background: rgba(255,255,255,.06); }
+.account-modal-body { padding: 26px; }
+.account-modal-copy { margin: 0 0 24px; color: var(--account-muted); line-height: 1.55; }
+.account-modal-field { display: grid; gap: 8px; min-width: 0; }
+.account-modal-field > span { color: var(--account-text); font-size: 13px; font-weight: 700; }
+.account-modal-field input,
+.account-modal-field select { width: 100%; min-height: 48px; border: 1px solid var(--account-border); border-radius: 13px; background: rgba(255,255,255,.04); color: var(--account-text); padding: 0 14px; font: inherit; outline: none; }
+.account-modal-field input:focus,
+.account-modal-field select:focus { border-color: rgba(111,124,255,.72); box-shadow: 0 0 0 3px rgba(111,124,255,.11); }
+.account-modal-field input:disabled { opacity: .62; }
+.account-copy-route { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); align-items: end; gap: 12px; }
+.account-copy-arrow { padding-bottom: 14px; color: var(--account-muted); }
+.account-copy-options { margin: 26px 0 0; padding: 0; border: 0; }
+.account-copy-options legend { margin-bottom: 8px; font-size: 13px; font-weight: 800; color: var(--account-text); }
+.account-copy-options label { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--account-border); cursor: pointer; }
+.account-copy-options label:last-child { border-bottom: 0; }
+.account-copy-options input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: #fff; }
+.account-copy-options span { display: grid; gap: 4px; }
+.account-copy-options strong { color: var(--account-text); font-size: 14px; }
+.account-copy-options small { color: var(--account-muted); line-height: 1.45; }
+.account-copy-note { margin-top: 20px; padding: 16px; border-radius: 14px; background: rgba(255,255,255,.055); color: var(--account-muted); font-size: 12px; line-height: 1.55; }
+.account-modal-status { min-height: 18px; margin: 14px 0 0; color: var(--account-muted); font-size: 12px; }
+.account-modal-footer { padding: 18px 26px 24px; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
+.account-modal-button { min-height: 44px; padding: 0 18px; border: 1px solid var(--account-border); border-radius: 13px; background: rgba(255,255,255,.025); color: var(--account-text); font: inherit; font-weight: 750; cursor: pointer; }
+.account-modal-button.primary { background: #f4f4f6; color: #17171a; border-color: #f4f4f6; }
+.account-modal-button.danger { color: #ff6b78; border-color: rgba(255,91,107,.35); }
+.account-modal-button:disabled { opacity: .55; cursor: default; }
+html.account-modal-open { overflow: hidden; }
+
+html[data-theme="light"] .account-modal { background: rgba(248,249,252,.98); border-color: rgba(0,0,0,.10); box-shadow: 0 28px 90px rgba(24,30,45,.24); }
+html[data-theme="light"] .account-modal-backdrop { background: rgba(230,233,240,.45); }
+html[data-theme="light"] .account-modal-field input,
+html[data-theme="light"] .account-modal-field select { background: rgba(255,255,255,.82); }
+html[data-theme="light"] .account-modal-button.primary { background: #181a20; color: #fff; border-color: #181a20; }
+
+@media (max-width: 760px) {
+  .account-profile-actions { justify-content: flex-start; }
+  .account-modal-backdrop { padding: 12px; align-items: center; }
+  .account-modal { border-radius: 18px; max-height: 90vh; }
+  .account-modal-head { min-height: 64px; padding: 16px 18px; }
+  .account-modal-head h3 { font-size: 19px; }
+  .account-modal-body { padding: 20px 18px; }
+  .account-modal-footer { padding: 14px 18px 18px; }
+  .account-copy-route { grid-template-columns: 1fr; }
+  .account-copy-arrow { display: none; }
+}
