@@ -16,7 +16,7 @@
 <script src="/components.js?v=20260906-1" defer></script>
   <script src="/set-up-collection/config.js?v=20260906-1"></script>
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
-  <script src="/admin/admin-hub.js?v=20260909-usage-1" defer></script>
+  <script src="/admin/admin-hub.js?v=20260910-omdb-1" defer></script>
 </head>
 <body>
   <main class="page admin-page admin-hub-page">
@@ -125,7 +125,7 @@
           <div>
             <div class="kicker">WORKERS · POSTERS</div>
             <h2 id="workersUsageHeading">Usage & Safety</h2>
-            <p>Kollection's live application meter for poster rendering. Cloudflare billing totals may update separately.</p>
+            <p>Kollection's live application meter for poster rendering and IMDb rating lookups. Cloudflare billing totals may update separately.</p>
           </div>
           <button class="button-secondary workers-refresh" id="workersUsageRefresh" type="button">Refresh</button>
         </div>
@@ -142,6 +142,16 @@
             <span>Budget used</span>
             <strong id="workersUsagePercent">—</strong>
             <small>95% conserve · 98% hard stop</small>
+          </article>
+          <article class="workers-stat-card">
+            <span>OMDb lookups today</span>
+            <strong id="omdbLookupsToday">—</strong>
+            <small id="omdbLookupLimit">of — daily API guard</small>
+          </article>
+          <article class="workers-stat-card">
+            <span>IMDb rating cache</span>
+            <strong id="omdbCachedRatings">—</strong>
+            <small id="omdbCacheDetail">cached ratings · — day lifetime</small>
           </article>
           <article class="workers-stat-card">
             <span>Renderer state</span>
@@ -175,7 +185,8 @@
 
         <div class="workers-usage-foot">
           <span id="workersClientLimit">Per-client hourly limit: —</span>
-          <span>Cached posters do not consume this render budget.</span>
+          <span id="omdbRemaining">OMDb remaining today: —</span>
+          <span>Cached posters and cached IMDb ratings do not consume their respective daily guards.</span>
         </div>
       </section>
     </div>
