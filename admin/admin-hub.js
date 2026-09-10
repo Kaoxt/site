@@ -29,6 +29,11 @@
     workersMeterText: $('workersMeterText'),
     workersMeterFill: $('workersMeterFill'),
     workersClientLimit: $('workersClientLimit'),
+    omdbLookupsToday: $('omdbLookupsToday'),
+    omdbLookupLimit: $('omdbLookupLimit'),
+    omdbCachedRatings: $('omdbCachedRatings'),
+    omdbCacheDetail: $('omdbCacheDetail'),
+    omdbRemaining: $('omdbRemaining'),
   };
 
   let session = null;
@@ -62,6 +67,13 @@
     const hardStop = Boolean(data?.hardStop) || percent >= 98;
     const enabled = data?.renderingEnabled !== false;
 
+    const omdb = data?.omdb || {};
+    const omdbLookups = Math.max(0, Number(omdb.lookupsToday ?? 0));
+    const omdbLimit = Math.max(0, Number(omdb.dailyLimit ?? 0));
+    const omdbRemaining = Math.max(0, Number(omdb.remaining ?? Math.max(0, omdbLimit - omdbLookups)));
+    const omdbCached = Math.max(0, Number(omdb.cachedRatings ?? 0));
+    const omdbCacheDays = Math.max(0, Number(omdb.cacheDays ?? 0));
+
     el.workersDailyRenders.textContent = daily.toLocaleString();
     el.workersDailyLimit.textContent = `of ${maxDaily.toLocaleString()} daily budget`;
     el.workersUsagePercent.textContent = `${percent.toFixed(percent >= 10 ? 0 : 1)}%`;
@@ -70,6 +82,14 @@
     el.workersMeterText.textContent = `${daily.toLocaleString()} / ${maxDaily.toLocaleString()}`;
     el.workersMeterFill.style.width = `${safePercent}%`;
     el.workersClientLimit.textContent = `Per-client hourly limit: ${Number(data?.maxClientHourly ?? 0).toLocaleString()} renders`;
+
+    if (el.omdbLookupsToday) el.omdbLookupsToday.textContent = omdb.available === false ? 'Unavailable' : omdbLookups.toLocaleString();
+    if (el.omdbLookupLimit) el.omdbLookupLimit.textContent = `of ${omdbLimit.toLocaleString()} daily API guard`;
+    if (el.omdbCachedRatings) el.omdbCachedRatings.textContent = omdb.available === false ? 'Unavailable' : omdbCached.toLocaleString();
+    if (el.omdbCacheDetail) el.omdbCacheDetail.textContent = `cached ratings · ${omdbCacheDays.toLocaleString()} day lifetime`;
+    if (el.omdbRemaining) el.omdbRemaining.textContent = omdb.available === false
+      ? 'OMDb usage meter unavailable'
+      : `OMDb remaining today: ${omdbRemaining.toLocaleString()}`;
 
     el.workersUsage.classList.toggle('is-conservation', conservation && !hardStop);
     el.workersUsage.classList.toggle('is-hard-stop', hardStop || !enabled);
@@ -86,6 +106,10 @@
       el.workersRendererState.textContent = 'Conserving';
       el.workersRendererDetail.textContent = '95% threshold reached';
       setWorkersAlert('Conservation mode is active. Poster rendering is being restricted to protect your Workers budget.', 'warning');
+    } else if (omdb.available !== false && omdbLimit > 0 && omdbLookups >= omdbLimit) {
+      el.workersRendererState.textContent = 'Normal';
+      el.workersRendererDetail.textContent = 'Rendering enabled';
+      setWorkersAlert('OMDb daily lookup guard has been reached. New uncached IMDb ratings will temporarily fall back to TMDB.', 'warning');
     } else {
       el.workersRendererState.textContent = 'Normal';
       el.workersRendererDetail.textContent = 'Rendering enabled';
