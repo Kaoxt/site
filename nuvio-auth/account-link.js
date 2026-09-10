@@ -3,6 +3,8 @@
 
   if (window.KollectionAccountLink) return;
 
+  const GITHUB_URL = 'https://github.com/Kaoxt/The-Kollection';
+
   const icon = `
     <svg viewBox="0 0 24 24" aria-hidden="true" class="nuvio-row-icon">
       <circle cx="12" cy="8" r="3.25"></circle>
@@ -26,88 +28,59 @@
         line-height: 1.25 !important;
       }
 
-      #site-nav .nuvio-mobile-profile-head {
+      #site-nav .nuvio-mobile-current-profile {
         width: 100% !important;
         display: grid !important;
-        grid-template-columns: minmax(0, 1fr) minmax(220px, 34%) !important;
+        grid-template-columns: auto minmax(0, 1fr) auto !important;
         align-items: center !important;
-        gap: 18px !important;
-        margin: 0 0 4px !important;
-      }
-
-      #site-nav .nuvio-mobile-profile-head .nuvio-mobile-current-profile {
-        min-width: 0 !important;
+        gap: 12px !important;
         margin: 0 !important;
         padding-bottom: 10px !important;
       }
 
-      #site-nav .nuvio-mobile-account-row {
-        width: 100% !important;
+      #site-nav .nuvio-mobile-current-profile > div {
         min-width: 0 !important;
-        min-height: 58px !important;
-        margin: 0 0 10px !important;
-        padding: 8px 12px !important;
-        border: 0 !important;
-        border-left: 1px solid rgba(255,255,255,.085) !important;
-        border-radius: 0 !important;
-        color: #d7d8dd !important;
-        background: transparent !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-start !important;
-        gap: 12px !important;
-        text-decoration: none !important;
-        text-align: left !important;
-        box-sizing: border-box !important;
-        transition: background .16s ease, color .16s ease !important;
-      }
-      #site-nav .nuvio-mobile-account-row:hover {
-        color: #fff !important;
-        background: rgba(255,255,255,.045) !important;
-      }
-      #site-nav .nuvio-mobile-account-row .nuvio-row-icon {
-        width: 20px !important;
-        height: 20px !important;
-        flex: 0 0 20px !important;
-        color: #dfe0e5 !important;
-        margin: 0 !important;
-      }
-      #site-nav .nuvio-mobile-account-copy {
-        min-width: 0 !important;
-        margin: 0 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        justify-content: center !important;
-        gap: 2px !important;
-        flex: 0 1 auto !important;
-      }
-      #site-nav .nuvio-mobile-account-copy strong {
-        color: inherit !important;
-        font-size: 15px !important;
-        font-weight: 720 !important;
-        line-height: 1.15 !important;
-      }
-      #site-nav .nuvio-mobile-account-copy small {
-        color: #858790 !important;
-        font-size: 11px !important;
-        font-weight: 500 !important;
-        line-height: 1.25 !important;
-      }
-      #site-nav .nuvio-mobile-account-row:focus-visible {
-        outline: 2px solid #a5b4fc !important;
-        outline-offset: 2px !important;
       }
 
-      @media (max-width: 560px) {
-        #site-nav .nuvio-mobile-profile-head {
-          grid-template-columns: 1fr !important;
-          gap: 0 !important;
+      #site-nav .nuvio-mobile-switch-link {
+        min-height: 34px !important;
+        padding: 0 12px !important;
+        border: 1px solid rgba(255,255,255,.10) !important;
+        border-radius: 999px !important;
+        background: rgba(255,255,255,.035) !important;
+        color: #cfd1d8 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-decoration: none !important;
+        font-size: 12px !important;
+        font-weight: 720 !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+        transition: color .16s ease, background .16s ease, border-color .16s ease !important;
+      }
+
+      #site-nav .nuvio-mobile-switch-link:hover,
+      #site-nav .nuvio-mobile-switch-link:focus-visible {
+        color: #fff !important;
+        background: rgba(99,102,241,.10) !important;
+        border-color: rgba(129,140,248,.32) !important;
+        outline: none !important;
+      }
+
+      body.light #site-nav .nuvio-mobile-switch-link {
+        color: #4b4d55 !important;
+        border-color: rgba(0,0,0,.10) !important;
+        background: rgba(255,255,255,.72) !important;
+      }
+
+      @media (max-width: 430px) {
+        #site-nav .nuvio-mobile-current-profile {
+          gap: 10px !important;
         }
-        #site-nav .nuvio-mobile-account-row {
-          border-left: 0 !important;
-          border-top: 1px solid rgba(255,255,255,.085) !important;
-          padding-left: 2px !important;
+        #site-nav .nuvio-mobile-switch-link {
+          min-height: 32px !important;
+          padding-inline: 10px !important;
         }
       }
     `;
@@ -116,7 +89,14 @@
 
   function syncDesktop() {
     const slot = document.getElementById('nuvioDesktopAccount');
-    const popover = slot?.querySelector('.nuvio-desktop-account-popover');
+    if (!slot) return;
+
+    /* GitHub remains available in mobile navigation and the footer, but not desktop nav. */
+    slot.querySelectorAll('a').forEach((link) => {
+      if ((link.getAttribute('href') || '').replace(/\/$/, '') === GITHUB_URL) link.remove();
+    });
+
+    const popover = slot.querySelector('.nuvio-desktop-account-popover');
     if (!popover || popover.querySelector('[data-kollection-account-link]')) return;
 
     const setup = [...popover.querySelectorAll('a')].find((a) => /set up collection/i.test(a.textContent || ''));
@@ -133,25 +113,30 @@
   function syncMobile() {
     const slot = document.getElementById('nuvioMobileAccount');
     const signedIn = slot?.querySelector('.nuvio-mobile-account, section');
-    if (!signedIn || slot.querySelector('[data-kollection-account-link]')) return;
+    if (!signedIn) return;
+
+    /* Profile switching now lives on /account. Remove the old inline switcher. */
+    slot.querySelectorAll('.nuvio-mobile-switch-label, .nuvio-mobile-profile-chips, .nuvio-mobile-profile-head, .nuvio-mobile-account-row').forEach((node) => {
+      if (node.classList.contains('nuvio-mobile-profile-head')) {
+        const current = node.querySelector('.nuvio-mobile-current-profile');
+        if (current) node.before(current);
+      }
+      node.remove();
+    });
 
     const current = slot.querySelector('.nuvio-mobile-current-profile');
     if (!current) return;
 
-    const link = document.createElement('a');
-    link.className = 'nuvio-mobile-account-row';
-    link.href = '/account';
-    link.dataset.kollectionAccountLink = 'true';
-    link.innerHTML = `${icon}<span class="nuvio-mobile-account-copy"><strong>Account</strong><small>Saved setups & account details</small></span>`;
-
-    let head = slot.querySelector('.nuvio-mobile-profile-head');
-    if (!head) {
-      head = document.createElement('div');
-      head.className = 'nuvio-mobile-profile-head';
-      current.before(head);
-      head.appendChild(current);
+    let switchLink = current.querySelector('[data-kollection-profile-switch-link]');
+    if (!switchLink) {
+      switchLink = document.createElement('a');
+      switchLink.className = 'nuvio-mobile-switch-link';
+      switchLink.href = '/account#profiles';
+      switchLink.textContent = 'Switch';
+      switchLink.dataset.kollectionProfileSwitchLink = 'true';
+      switchLink.setAttribute('aria-label', 'Switch Nuvio profile on the Account page');
+      current.appendChild(switchLink);
     }
-    head.appendChild(link);
   }
 
   function sync() {
