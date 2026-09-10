@@ -3,6 +3,9 @@ import sharp from 'sharp';
 
 const PORT = Number(process.env.PORT || 8080);
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w780';
+const POSTER_WIDTH = 780;
+const POSTER_HEIGHT = 1170;
+const SAFE_MARGIN = 30;
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -16,9 +19,6 @@ async function pillImage(text, {
   textColor = '#ffffff',
   fontSize = 28,
 } = {}) {
-  // Keep the rounded badge background in SVG, but render the label itself
-  // through Sharp's native Pango text input. This avoids librsvg/SVG text
-  // inconsistencies inside the Cloudflare container.
   const background = Buffer.from(`
     <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
       <rect x="1" y="1" width="${width - 2}" height="${height - 2}" rx="${Math.floor(height / 2)}"
@@ -53,6 +53,13 @@ async function pillImage(text, {
     .toBuffer();
 }
 
+function ratingBadgeWidth(label) {
+  const length = String(label || '').length;
+  if (length <= 6) return 165;
+  if (length <= 10) return 205;
+  return 245;
+}
+
 async function readJson(req) {
   const chunks = [];
   for await (const chunk of req) chunks.push(chunk);
@@ -65,6 +72,7 @@ async function renderPoster(body) {
     posterPath,
     sourceUrl,
     rating = '',
+    ratingLabel = '',
     genre = '',
     trend = '',
     age = '',
@@ -80,27 +88,26 @@ async function renderPoster(body) {
 
   const composites = [];
 
-  // Match the Posters page preview: age top-left, trend top-center,
-  // quality top-right, rating bottom-left, genre bottom-center.
   if (age) {
     composites.push({
       input: await pillImage(age, { width: 138, height: 58, fontSize: 25 }),
-      top: 24,
-      left: 24,
+      top: SAFE_MARGIN,
+      left: SAFE_MARGIN,
     });
   }
 
   if (quality) {
+    const width = 150;
     composites.push({
-      input: await pillImage(quality, { width: 150, height: 60, fontSize: 25 }),
-      top: 24,
-      left: 606,
+      input: await pillImage(quality, { width, height: 60, fontSize: 25 }),
+      top: SAFE_MARGIN,
+      left: POSTER_WIDTH - SAFE_MARGIN - width,
     });
   }
 
   if (trend) {
     const trendWidth = 220;
-    const trendLeft = quality ? 362 : Math.round((780 - trendWidth) / 2);
+    const trendLeft = quality ? 350 : Math.round((POSTER_WIDTH - trendWidth) / 2);
     composites.push({
       input: await pillImage(trend, {
         width: trendWidth,
@@ -110,30 +117,34 @@ async function renderPoster(body) {
         strokeOpacity: 0.18,
         fontSize: 25,
       }),
-      top: 24,
+      top: SAFE_MARGIN,
       left: trendLeft,
     });
   }
 
-  if (rating) {
+  const resolvedRatingLabel = ratingLabel || (rating ? `★ ${rating}` : '');
+  if (resolvedRatingLabel) {
+    const width = ratingBadgeWidth(resolvedRatingLabel);
+    const height = 62;
     composites.push({
-      input: await pillImage(`★ ${rating}`, { width: 165, height: 62, fontSize: 27 }),
-      top: 1084,
-      left: 24,
+      input: await pillImage(resolvedRatingLabel, { width, height, fontSize: 27 }),
+      top: POSTER_HEIGHT - SAFE_MARGIN - height,
+      left: SAFE_MARGIN,
     });
   }
 
   if (genre) {
     const genreWidth = 230;
+    const height = 58;
     composites.push({
-      input: await pillImage(genre, { width: genreWidth, height: 58, fontSize: 24 }),
-      top: 1088,
-      left: Math.round((780 - genreWidth) / 2),
+      input: await pillImage(genre, { width: genreWidth, height, fontSize: 24 }),
+      top: POSTER_HEIGHT - SAFE_MARGIN - height,
+      left: Math.round((POSTER_WIDTH - genreWidth) / 2),
     });
   }
 
   return sharp(input)
-    .resize(780, 1170, { fit: 'cover' })
+    .resize(POSTER_WIDTH, POSTER_HEIGHT, { fit: 'cover' })
     .composite(composites)
     .webp({ quality: 88, effort: 4 })
     .toBuffer();
@@ -143,7 +154,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-sharp-overlay-3' }));
+      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-sharp-rating-1' }));
     }
 
     if (req.method !== 'POST' || req.url !== '/render') {
@@ -158,7 +169,7 @@ const server = http.createServer(async (req, res) => {
       'content-type': 'image/webp',
       'content-length': String(output.length),
       'cache-control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
-      'x-kollection-renderer': 'v2-sharp-overlay-3',
+      'x-kollection-renderer': 'v2-sharp-rating-1',
       'x-kollection-render-ms': String(Date.now() - started),
     });
     res.end(output);
