@@ -85,18 +85,17 @@ body.light .nuvio-mobile-admin-link:hover {
   background: rgba(79,70,229,.13);
 }
 
-/*
-  Public pages have older broad ".menu-dropdown a" rules.
-  Override ONLY the Admin anchor so it matches the existing Log Out pill.
-*/
-#site-nav .menu-dropdown .nuvio-mobile-account-actions > .nuvio-mobile-admin-link {
+/* Compact/mobile controls intentionally use squared 12px corners. */
+#site-nav .menu-dropdown .nuvio-mobile-account-actions > .nuvio-mobile-admin-link,
+#site-nav .menu-dropdown .nuvio-mobile-account-actions > .nuvio-mobile-signout-button,
+#site-nav .menu-dropdown .nuvio-mobile-account-actions > .nuvio-account-signout-button {
   width: auto !important;
   min-width: 0 !important;
   height: 36px !important;
   min-height: 36px !important;
   max-height: 36px !important;
   padding: 0 13px !important;
-  border-radius: 999px !important;
+  border-radius: 12px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -109,6 +108,30 @@ body.light .nuvio-mobile-admin-link:hover {
   box-sizing: border-box !important;
 }
 
+#site-nav .menu-dropdown .nuvio-mobile-account-actions > .nuvio-mobile-signout-button,
+#site-nav .menu-dropdown .nuvio-mobile-account-actions > .nuvio-account-signout-button {
+  border: 1px solid rgba(255,255,255,.12) !important;
+  background: rgba(255,255,255,.035) !important;
+  color: #d7d8dd !important;
+}
+
+#site-nav .menu-dropdown .nuvio-mobile-account-actions > .nuvio-mobile-signout-button:hover,
+#site-nav .menu-dropdown .nuvio-mobile-account-actions > .nuvio-account-signout-button:hover,
+#site-nav .menu-dropdown .nuvio-mobile-account-actions > .nuvio-mobile-signout-button:focus-visible,
+#site-nav .menu-dropdown .nuvio-mobile-account-actions > .nuvio-account-signout-button:focus-visible {
+  border-color: rgba(255,255,255,.20) !important;
+  background: rgba(255,255,255,.065) !important;
+  color: #fff !important;
+  outline: none !important;
+}
+
+body.light #site-nav .menu-dropdown .nuvio-mobile-account-actions > .nuvio-mobile-signout-button,
+body.light #site-nav .menu-dropdown .nuvio-mobile-account-actions > .nuvio-account-signout-button {
+  border-color: rgba(0,0,0,.10) !important;
+  background: rgba(255,255,255,.72) !important;
+  color: #4b4d55 !important;
+}
+
 @media (max-width: 420px) {
   .nuvio-mobile-bottom-row {
     align-items: stretch;
@@ -118,12 +141,10 @@ body.light .nuvio-mobile-admin-link:hover {
     width: 100%;
   }
 
-  #site-nav .menu-dropdown .nuvio-mobile-account-actions > .nuvio-mobile-admin-link {
+  #site-nav .menu-dropdown .nuvio-mobile-account-actions > .nuvio-mobile-admin-link,
+  #site-nav .menu-dropdown .nuvio-mobile-account-actions > .nuvio-mobile-signout-button,
+  #site-nav .menu-dropdown .nuvio-mobile-account-actions > .nuvio-account-signout-button {
     flex: 1 1 0 !important;
     width: auto !important;
-  }
-
-  .nuvio-mobile-account-actions .nuvio-mobile-signout-button {
-    flex: 1 1 0;
   }
 }
