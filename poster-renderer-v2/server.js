@@ -53,6 +53,22 @@ async function pillImage(text, {
     .toBuffer();
 }
 
+async function titleImage(title) {
+  const text = String(title || '').trim();
+  if (!text) return null;
+  const fontSize = text.length > 30 ? 34 : text.length > 20 ? 39 : 46;
+  return sharp({
+    text: {
+      text: `<span foreground="#ffffff" weight="bold">${esc(text)}</span>`,
+      font: `DejaVu Sans ${fontSize}`,
+      width: 680,
+      height: 150,
+      align: 'center',
+      rgba: true,
+    },
+  }).png().toBuffer();
+}
+
 function ratingBadgeWidth(label) {
   const length = String(label || '').length;
   if (length <= 6) return 165;
@@ -71,6 +87,8 @@ async function renderPoster(body) {
   const {
     posterPath,
     sourceUrl,
+    title = '',
+    smartLayout = false,
     rating = '',
     ratingLabel = '',
     genre = '',
@@ -143,6 +161,18 @@ async function renderPoster(body) {
     });
   }
 
+  if (smartLayout && title) {
+    const titleBuffer = await titleImage(title);
+    if (titleBuffer) {
+      const hasBottomTags = Boolean(resolvedRatingLabel || genre);
+      composites.push({
+        input: titleBuffer,
+        top: hasBottomTags ? POSTER_HEIGHT - 250 : POSTER_HEIGHT - 180,
+        left: 50,
+      });
+    }
+  }
+
   return sharp(input)
     .resize(POSTER_WIDTH, POSTER_HEIGHT, { fit: 'cover' })
     .composite(composites)
@@ -154,7 +184,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-sharp-rating-1' }));
+      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-sharp-smart-1' }));
     }
 
     if (req.method !== 'POST' || req.url !== '/render') {
@@ -169,7 +199,7 @@ const server = http.createServer(async (req, res) => {
       'content-type': 'image/webp',
       'content-length': String(output.length),
       'cache-control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
-      'x-kollection-renderer': 'v2-sharp-rating-1',
+      'x-kollection-renderer': 'v2-sharp-smart-1',
       'x-kollection-render-ms': String(Date.now() - started),
     });
     res.end(output);
