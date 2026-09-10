@@ -2,7 +2,7 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'rating-2';
+const CACHE_VERSION = 'smart-1';
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
 
@@ -46,6 +46,25 @@ function certification(details, type) {
     return us?.release_dates?.find((x) => x.certification)?.certification || '';
   }
   return details.content_ratings?.results?.find((x) => x.iso_3166_1 === 'US')?.rating || '';
+}
+
+function choosePoster(details, smartLayout) {
+  const original = details.poster_path || '';
+  if (!smartLayout) return { path: original, source: 'tmdb-original' };
+
+  const candidates = Array.isArray(details.images?.posters) ? details.images.posters : [];
+  const textless = candidates
+    .filter((poster) => poster?.file_path && !poster.iso_639_1)
+    .sort((a, b) => {
+      const votes = Number(b.vote_count || 0) - Number(a.vote_count || 0);
+      if (votes !== 0) return votes;
+      return Number(b.vote_average || 0) - Number(a.vote_average || 0);
+    });
+
+  if (textless[0]?.file_path) {
+    return { path: textless[0].file_path, source: 'smart-textless' };
+  }
+  return { path: original, source: 'smart-fallback-original' };
 }
 
 function normalizeRatingSource(value) {
@@ -220,14 +239,17 @@ export async function onRequest(context) {
     if (!details.poster_path) return json({ error: 'TMDB has no poster for this title.' }, 404);
 
     const tags = new Set((url.searchParams.get('tags') || 'trend,rating').split(',').map((v) => v.trim()).filter(Boolean));
-    const smartLayout = url.searchParams.get('source') !== 'tmdb';
+    const smartLayout = url.searchParams.get('source') === 'smart';
+    const artwork = choosePoster(details, smartLayout);
+    if (!artwork.path) return json({ error: 'TMDB has no poster artwork for this title.' }, 404);
+
     const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
     const rating = tags.has('rating')
       ? await resolveRating(details, requestedRatingSource, env)
       : { value: '', label: '', source: requestedRatingSource, status: 'disabled' };
 
     const payload = {
-      posterPath: details.poster_path,
+      posterPath: artwork.path,
       title: String(details.title || details.name || '').slice(0, 44),
       rating: rating.value,
       ratingLabel: rating.label,
@@ -263,6 +285,7 @@ export async function onRequest(context) {
     headers.set('x-kollection-render-version', CACHE_VERSION);
     headers.set('x-kollection-rating-source', rating.source);
     headers.set('x-kollection-rating-status', rating.status);
+    headers.set('x-kollection-artwork-source', artwork.source);
     headers.set('x-kollection-tmdb-id', id);
     const response = new Response(rendered.body, { status: 200, headers });
     context.waitUntil(cache.put(cacheRequest, response.clone()));
