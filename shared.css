@@ -1450,3 +1450,72 @@ body .hero .actions .btn-secondary {
   }
 }
 
+/* ==================== STATIC INTERACTIONS — NO BUTTON/LINK MOVEMENT ==================== */
+/*
+   Keep hover/tap feedback visual only. Buttons and links may change color,
+   background, border or shadow, but should not physically shift or scale.
+   Intentional UI animations such as the hamburger-to-X lines, dropdown
+   opening, FAQ plus rotation and profile chevron rotation are not affected.
+*/
+html body a:hover,
+html body a:active,
+html body button:hover,
+html body button:active,
+html body .btn:hover,
+html body .btn:active,
+html body [role="button"]:hover,
+html body [role="button"]:active,
+html body .latest-update:hover,
+html body .latest-update:active,
+html body .faq-link:hover,
+html body .faq-link:active,
+html body #site-nav a:hover,
+html body #site-nav a:active,
+html body #site-nav button:hover,
+html body #site-nav button:active,
+html body #site-nav .wide-link:hover,
+html body #site-nav .wide-link:active,
+html body #site-nav .menu-link:hover,
+html body #site-nav .menu-link:active,
+html body #site-nav .menu-community a:hover,
+html body #site-nav .menu-community a:active,
+html body #site-nav .nuvio-social-link:hover,
+html body #site-nav .nuvio-social-link:active,
+html body #site-nav .nuvio-desktop-signin-button:hover,
+html body #site-nav .nuvio-desktop-signin-button:active,
+html body #site-nav .nuvio-desktop-profile-button:hover,
+html body #site-nav .nuvio-desktop-profile-button:active,
+html body #site-nav .nuvio-account-signout-button:hover,
+html body #site-nav .nuvio-account-signout-button:active,
+html body #site-nav .nuvio-mobile-login-row:hover,
+html body #site-nav .nuvio-mobile-login-row:active,
+html body #site-nav .nuvio-mobile-profile-chip:hover,
+html body #site-nav .nuvio-mobile-profile-chip:active,
+html body #site-nav .nuvio-mobile-signout-button:hover,
+html body #site-nav .nuvio-mobile-signout-button:active {
+  transform: none !important;
+  translate: none !important;
+  scale: none !important;
+  rotate: none !important;
+}
+
+/* Stop icon nudges inside ordinary navigation links as well. */
+html body #site-nav a:hover .nav-item-icon,
+html body #site-nav a:active .nav-item-icon,
+html body #site-nav .menu-link:hover .nav-item-icon,
+html body #site-nav .menu-link:active .nav-item-icon {
+  transform: none !important;
+  translate: none !important;
+  scale: none !important;
+}
+
+/* Don't advertise transform animation on controls that are now stationary. */
+html body a,
+html body button,
+html body .btn,
+html body [role="button"],
+html body .latest-update,
+html body .faq-link {
+  transition-property: color, background-color, background, border-color, box-shadow, opacity, filter !important;
+}
+
