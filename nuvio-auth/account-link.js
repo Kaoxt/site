@@ -83,6 +83,12 @@
         flex: 0 0 18px !important;
       }
 
+      /* The coffee cup glyph has more visual width than the account glyph. Nudge its
+         label so the text column aligns with the Account heading above it. */
+      #site-nav .nuvio-desktop-account-popover > .nuvio-social-link > span {
+        margin-left: 8px !important;
+      }
+
       /* Give Log Out the same bordered control treatment as Admin and Switch. */
       #site-nav .nuvio-account-signout-button {
         border: 1px solid rgba(255,255,255,.10) !important;
@@ -231,18 +237,9 @@
       current.appendChild(switchLink);
     }
 
-    /* Ensure Account is available in the compact menu, directly below the profile. */
-    let accountLink = slot.querySelector('[data-kollection-mobile-account-link]');
-    if (!accountLink) {
-      accountLink = document.createElement('a');
-      accountLink.className = 'nuvio-mobile-kollection-account-link';
-      accountLink.href = '/account';
-      accountLink.dataset.kollectionMobileAccountLink = 'true';
-      accountLink.innerHTML = `${icon}<span class="nuvio-row-copy"><strong>Account</strong><small>Saved setups & account details</small></span>`;
-      const bottomRow = slot.querySelector('.nuvio-mobile-bottom-row');
-      if (bottomRow) bottomRow.before(accountLink);
-      else current.after(accountLink);
-    }
+    /* Compact navigation now exposes Account as a primary link directly under FAQ.
+       Remove the older secondary Account row if it is present from a previous render. */
+    slot.querySelector('[data-kollection-mobile-account-link]')?.remove();
   }
 
   function sync() {
