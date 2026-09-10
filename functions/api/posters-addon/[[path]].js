@@ -1,4 +1,4 @@
-const POSTER_BASE = 'https://kollection.tv/api/posters';
+const POSTER_BASE = 'https://kollection.tv/api/posters-v2';
 
 function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
@@ -32,7 +32,7 @@ function parseConfig(token) {
   } catch (_) {
     throw new Error('Invalid Posters addon configuration.');
   }
-  if (!config || config.v !== 1 || typeof config.upstream !== 'string') {
+  if (!config || ![1, 2].includes(config.v) || typeof config.upstream !== 'string') {
     throw new Error('Invalid Posters addon configuration.');
   }
   const upstream = new URL(config.upstream);
@@ -44,7 +44,7 @@ function parseConfig(token) {
     throw new Error('Local/private upstreams are not supported.');
   }
   return {
-    v: 1,
+    v: 2,
     upstream: upstream.toString(),
     source: ['smart', 'tmdb', 'inherit'].includes(config.source) ? config.source : 'smart',
     tags: Array.isArray(config.tags) ? config.tags.filter((x) => typeof x === 'string') : ['trend', 'rating'],
@@ -54,7 +54,7 @@ function parseConfig(token) {
 
 async function fetchJson(url) {
   const response = await fetch(url, {
-    headers: { accept: 'application/json', 'user-agent': 'Kollection-Posters/1.0' },
+    headers: { accept: 'application/json', 'user-agent': 'Kollection-Posters/2.0' },
     cf: { cacheTtl: 300, cacheEverything: true },
   });
   if (!response.ok) throw new Error(`Upstream returned ${response.status}.`);
@@ -98,7 +98,6 @@ function posterUrl(config, type, id) {
   if (!tags.has('quality')) tags.add('trend');
   const params = new URLSearchParams({
     source: config.source,
-    smart: '1',
     tags: [...tags].sort().join(','),
     ratingSource: config.ratingSource,
   });
@@ -131,9 +130,9 @@ function mergedManifest(upstream, token, origin) {
   const types = [...new Set([...(Array.isArray(upstream.types) ? upstream.types : []), ...catalogs.map((c) => c.type)])];
   return {
     id: `tv.kollection.posters.${token.slice(0, 24)}`,
-    version: '1.0.0',
+    version: '2.0.0',
     name: `Posters • ${upstream.name || 'Wrapped Addon'}`,
-    description: 'The Kollection Posters wrapper. Catalog and metadata pass through while poster artwork is replaced with configured Kollection overlays.',
+    description: 'The Kollection Posters v2 wrapper. Catalog and metadata pass through while supported movie/show poster artwork is replaced with configured Kollection overlays.',
     logo: 'https://kollection.tv/favicon.ico',
     resources,
     types,
