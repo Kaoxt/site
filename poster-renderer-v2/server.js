@@ -6,23 +6,24 @@ const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w780';
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-function pillSvg(text, { width = 210, height = 58, fill = 'rgba(12,14,18,.82)', textColor = '#fff', fontSize = 28 } = {}) {
+function pillSvg(text, {
+  width = 210,
+  height = 58,
+  fill = '#0b0d12',
+  fillOpacity = 0.9,
+  stroke = '#ffffff',
+  strokeOpacity = 0.2,
+  textColor = '#ffffff',
+  fontSize = 28,
+} = {}) {
+  const safe = esc(text);
   return Buffer.from(`
     <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-      <rect x="1" y="1" width="${width - 2}" height="${height - 2}" rx="${Math.floor(height / 2)}" fill="${fill}" stroke="rgba(255,255,255,.14)"/>
-      <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="${textColor}" font-family="Arial,Helvetica,sans-serif" font-size="${fontSize}" font-weight="700">${esc(text)}</text>
-    </svg>`);
-}
-
-function bottomTextSvg(title, rating, genre) {
-  const safeTitle = esc(title || '');
-  const safeMeta = esc([genre, rating ? `★ ${rating}` : ''].filter(Boolean).join(' · '));
-  return Buffer.from(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="780" height="220">
-      <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(0,0,0,0)"/><stop offset="1" stop-color="rgba(0,0,0,.82)"/></linearGradient></defs>
-      <rect width="780" height="220" fill="url(#g)"/>
-      <text x="36" y="145" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="46" font-weight="700">${safeTitle}</text>
-      <text x="36" y="194" fill="rgba(255,255,255,.88)" font-family="Arial,Helvetica,sans-serif" font-size="28" font-weight="600">${safeMeta}</text>
+      <rect x="1" y="1" width="${width - 2}" height="${height - 2}" rx="${Math.floor(height / 2)}"
+        fill="${fill}" fill-opacity="${fillOpacity}" stroke="${stroke}" stroke-opacity="${strokeOpacity}" stroke-width="2"/>
+      <text x="${Math.floor(width / 2)}" y="${Math.floor(height / 2) + Math.floor(fontSize * 0.36)}"
+        text-anchor="middle" fill="${textColor}" font-family="DejaVu Sans, sans-serif"
+        font-size="${fontSize}" font-weight="700">${safe}</text>
     </svg>`);
 }
 
@@ -37,12 +38,10 @@ async function renderPoster(body) {
   const {
     posterPath,
     sourceUrl,
-    title = '',
     rating = '',
     genre = '',
     trend = '',
     age = '',
-    smartLayout = true,
     quality = '',
   } = body || {};
 
@@ -54,15 +53,57 @@ async function renderPoster(body) {
   const input = Buffer.from(await res.arrayBuffer());
 
   const composites = [];
-  if (trend) composites.push({ input: pillSvg(trend, { width: 220, height: 60 }), top: 24, left: quality ? 520 : 280 });
-  if (quality) composites.push({ input: pillSvg(quality, { width: 150, height: 60 }), top: 24, left: 606 });
-  if (age) composites.push({ input: pillSvg(age, { width: 140, height: 54, fontSize: 25 }), top: 98, left: 24 });
 
-  if (smartLayout) {
-    composites.push({ input: bottomTextSvg(title, rating, genre), top: 950, left: 0 });
-  } else {
-    if (rating) composites.push({ input: pillSvg(`★ ${rating}`, { width: 150, height: 58 }), top: 1100, left: 24 });
-    if (genre) composites.push({ input: pillSvg(genre, { width: 220, height: 58, fontSize: 25 }), top: 1100, left: 536 });
+  // Match the Posters page preview: age top-left, trend top-center,
+  // quality top-right, rating bottom-left, genre bottom-center.
+  if (age) {
+    composites.push({
+      input: pillSvg(age, { width: 138, height: 58, fontSize: 25 }),
+      top: 24,
+      left: 24,
+    });
+  }
+
+  if (quality) {
+    composites.push({
+      input: pillSvg(quality, { width: 150, height: 60, fontSize: 25 }),
+      top: 24,
+      left: 606,
+    });
+  }
+
+  if (trend) {
+    const trendWidth = 220;
+    const trendLeft = quality ? 362 : Math.round((780 - trendWidth) / 2);
+    composites.push({
+      input: pillSvg(trend, {
+        width: trendWidth,
+        height: 60,
+        fill: '#5b6cff',
+        fillOpacity: 0.94,
+        strokeOpacity: 0.18,
+        fontSize: 25,
+      }),
+      top: 24,
+      left: trendLeft,
+    });
+  }
+
+  if (rating) {
+    composites.push({
+      input: pillSvg(`★ ${rating}`, { width: 165, height: 62, fontSize: 27 }),
+      top: 1084,
+      left: 24,
+    });
+  }
+
+  if (genre) {
+    const genreWidth = 230;
+    composites.push({
+      input: pillSvg(genre, { width: genreWidth, height: 58, fontSize: 24 }),
+      top: 1088,
+      left: Math.round((780 - genreWidth) / 2),
+    });
   }
 
   return sharp(input)
@@ -76,7 +117,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-sharp' }));
+      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-sharp-overlay-2' }));
     }
 
     if (req.method !== 'POST' || req.url !== '/render') {
@@ -91,7 +132,7 @@ const server = http.createServer(async (req, res) => {
       'content-type': 'image/webp',
       'content-length': String(output.length),
       'cache-control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
-      'x-kollection-renderer': 'v2-sharp',
+      'x-kollection-renderer': 'v2-sharp-overlay-2',
       'x-kollection-render-ms': String(Date.now() - started),
     });
     res.end(output);
