@@ -70,12 +70,15 @@ body { margin: 0; }
 #accountActiveProfile .account-active-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .account-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
 .account-profiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
-.account-profile-row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; border: 1px solid var(--account-border); border-radius: 16px; padding: 14px; background: rgba(255,255,255,.018); min-width: 0; }
+.account-profile-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; border: 1px solid var(--account-border); border-radius: 16px; padding: 14px; background: rgba(255,255,255,.018); min-width: 0; }
 .account-profile-avatar { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; flex: 0 0 auto; font-weight: 800; color: white; background: var(--profile-color, #5666e8); overflow: hidden; }
 .account-profile-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .account-profile-copy { min-width: 0; }
 .account-profile-row strong { color: var(--account-text); }
 .account-profile-row small { display: block; margin-top: 2px; color: var(--account-muted); }
+.account-profile-switch { min-height: 34px; padding: 0 12px; border: 1px solid var(--account-border); border-radius: 999px; background: transparent; color: var(--account-text); font: inherit; font-size: 12px; font-weight: 760; cursor: pointer; white-space: nowrap; transition: background .16s ease, border-color .16s ease, color .16s ease; }
+.account-profile-switch:hover:not(:disabled) { background: rgba(99,102,241,.10); border-color: rgba(129,140,248,.34); }
+.account-profile-switch:disabled { color: var(--account-muted); cursor: default; background: rgba(255,255,255,.025); }
 .account-profile-editor { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-top: 2px; }
 .account-profile-url { min-width: 0; min-height: 40px; border: 1px solid var(--account-border); border-radius: 11px; background: rgba(255,255,255,.025); color: var(--account-text); padding: 0 12px; font: inherit; font-size: 13px; outline: none; }
 .account-profile-url:focus { border-color: rgba(111,124,255,.72); box-shadow: 0 0 0 3px rgba(111,124,255,.11); }
@@ -88,6 +91,7 @@ body { margin: 0; }
 
 html[data-theme="light"] .account-section-chip { border-color: rgba(0,0,0,.10); background: rgba(255,255,255,.72); color: #555860; }
 html[data-theme="light"] .account-profile-url { background: rgba(255,255,255,.72); }
+html[data-theme="light"] .account-profile-switch:disabled { background: rgba(0,0,0,.025); }
 
 @media (max-width: 760px) {
   .account-grid { grid-template-columns: 1fr; }
