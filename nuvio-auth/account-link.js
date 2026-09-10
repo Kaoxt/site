@@ -66,7 +66,7 @@
         outline: none !important;
       }
 
-      /* Keep Account and Buy me a coffee on the same left edge in desktop popover. */
+      /* Use the exact same icon/text column geometry for Account and coffee. */
       #site-nav .nuvio-desktop-account-popover > .nuvio-account-link-row,
       #site-nav .nuvio-desktop-account-popover > .nuvio-social-link {
         padding-left: 10px !important;
@@ -83,14 +83,11 @@
         flex: 0 0 18px !important;
       }
 
-      /* Align the coffee label to the Account text column, not merely the icon box.
-         The coffee glyph sits visually farther right inside its SVG, so this needs a
-         larger optical offset than the normal row gap. */
       #site-nav .nuvio-desktop-account-popover > .nuvio-social-link > span {
-        margin-left: 28px !important;
+        margin-left: 0 !important;
+        white-space: nowrap !important;
       }
 
-      /* Give Log Out the same bordered control treatment as Admin and Switch. */
       #site-nav .nuvio-account-signout-button {
         border: 1px solid rgba(255,255,255,.10) !important;
         border-radius: 12px !important;
@@ -168,7 +165,6 @@
     const slot = document.getElementById('nuvioDesktopAccount');
     if (!slot) return;
 
-    /* GitHub remains available in mobile navigation and the footer, but not desktop nav. */
     slot.querySelectorAll('a').forEach((link) => {
       if ((link.getAttribute('href') || '').replace(/\/$/, '') === GITHUB_URL) link.remove();
     });
@@ -176,7 +172,6 @@
     const popover = slot.querySelector('.nuvio-desktop-account-popover');
     if (!popover) return;
 
-    /* Landscape/desktop shows only the active profile. Switching happens on /account. */
     popover.querySelector('.nuvio-desktop-section-label')?.remove();
     popover.querySelector('.nuvio-desktop-profile-list')?.remove();
 
@@ -191,8 +186,6 @@
       current.appendChild(switchLink);
     }
 
-    /* The active-profile row already has its own bottom border, so remove the old
-       profile-list divider that would otherwise render a second line beneath it. */
     if (current?.nextElementSibling?.classList.contains('nuvio-desktop-menu-divider')) {
       current.nextElementSibling.remove();
     }
@@ -215,7 +208,6 @@
     const signedIn = slot?.querySelector('.nuvio-mobile-account, section');
     if (!signedIn) return;
 
-    /* Profile switching now lives on /account. Remove only the old switcher/chips. */
     slot.querySelectorAll('.nuvio-mobile-switch-label, .nuvio-mobile-profile-chips, .nuvio-mobile-profile-head').forEach((node) => {
       if (node.classList.contains('nuvio-mobile-profile-head')) {
         const current = node.querySelector('.nuvio-mobile-current-profile');
@@ -238,8 +230,6 @@
       current.appendChild(switchLink);
     }
 
-    /* Compact navigation now exposes Account as a primary link directly under FAQ.
-       Remove the older secondary Account row if it is present from a previous render. */
     slot.querySelector('[data-kollection-mobile-account-link]')?.remove();
   }
 
