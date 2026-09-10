@@ -8,6 +8,41 @@
   <meta name="theme-color" content="#050608" />
   <title>Account | The Kollection</title>
   <meta name="description" content="Manage your Kollection account, Nuvio profile connection, and saved collection setups." />
+
+  <style>
+    html, body { background: #050608; }
+    #accountBootLoader {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: grid;
+      place-items: center;
+      background: #050608;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity .22s ease, visibility .22s ease;
+    }
+    #accountBootLoader.is-ready {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .account-boot-spinner {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      border: 5px solid rgba(99,102,241,.18);
+      border-top-color: #7c83ff;
+      border-right-color: #6366f1;
+      animation: accountBootSpin .72s linear infinite;
+      box-sizing: border-box;
+    }
+    @keyframes accountBootSpin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      .account-boot-spinner { animation-duration: 1.35s; }
+    }
+  </style>
+
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/account/account.css?v=20260909-3" />
   <link rel="stylesheet" href="/account/profile-actions.css?v=20260909-1" />
@@ -17,6 +52,10 @@
   <script src="/components.js?v=20260909-1" defer></script>
 </head>
 <body>
+  <div id="accountBootLoader" role="status" aria-label="Loading account">
+    <div class="account-boot-spinner" aria-hidden="true"></div>
+  </div>
+
   <main class="page account-page secondary-page">
     <div id="site-nav" aria-label="Site navigation"></div>
 
@@ -80,5 +119,47 @@
   <script src="/account/account.js?v=20260909-5"></script>
   <script src="/account/profile-actions.js?v=20260909-1"></script>
   <script src="/account/saved-collections.js?v=20260908-1"></script>
+  <script>
+    (() => {
+      const loader = document.getElementById('accountBootLoader');
+      const signedIn = document.getElementById('accountSignedIn');
+      const signedOut = document.getElementById('accountSignedOut');
+      const profiles = document.getElementById('accountProfiles');
+      const profilesStatus = document.getElementById('accountProfilesStatus');
+      if (!loader) return;
+
+      let finished = false;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        loader.classList.add('is-ready');
+        setTimeout(() => loader.remove(), 260);
+        observer.disconnect();
+      };
+
+      const ready = () => {
+        if (signedOut && !signedOut.hidden) return true;
+        if (signedIn && !signedIn.hidden) {
+          if (profiles && profiles.children.length > 0) return true;
+          const status = String(profilesStatus?.textContent || '').trim();
+          if (status && !/^Loading Nuvio profiles/i.test(status)) return true;
+        }
+        return false;
+      };
+
+      const observer = new MutationObserver(() => {
+        if (ready()) requestAnimationFrame(() => requestAnimationFrame(finish));
+      });
+      [signedIn, signedOut, profiles, profilesStatus].filter(Boolean).forEach((node) => {
+        observer.observe(node, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
+      });
+
+      if (ready()) finish();
+      window.addEventListener('load', () => {
+        if (ready()) requestAnimationFrame(() => requestAnimationFrame(finish));
+      }, { once: true });
+      setTimeout(finish, 8000);
+    })();
+  </script>
 </body>
 </html>
