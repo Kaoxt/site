@@ -102,6 +102,15 @@
         outline: none !important;
       }
 
+      /* Never allow legacy generated Sign out text to appear beside Log Out. */
+      #site-nav .nuvio-mobile-signout-button::before,
+      #site-nav .nuvio-mobile-signout-button::after,
+      #site-nav [data-nuvio-signout-mobile]::before,
+      #site-nav [data-nuvio-signout-mobile]::after {
+        content: none !important;
+        display: none !important;
+      }
+
       #site-nav .nuvio-mobile-current-profile {
         width: 100% !important;
         display: grid !important;
@@ -228,6 +237,12 @@
       switchLink.dataset.kollectionProfileSwitchLink = 'true';
       switchLink.setAttribute('aria-label', 'Switch Nuvio profile on the Account page');
       current.appendChild(switchLink);
+    }
+
+    const signOut = slot.querySelector('[data-nuvio-signout-mobile]');
+    if (signOut) {
+      signOut.textContent = 'Log Out';
+      signOut.setAttribute('aria-label', 'Log out');
     }
 
     slot.querySelector('[data-kollection-mobile-account-link]')?.remove();
