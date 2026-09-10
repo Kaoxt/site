@@ -137,9 +137,10 @@
       .account-avatar-preview-copy strong { color:var(--account-text); font-size:15px; }
       .account-avatar-preview-copy small { color:var(--account-muted); font-size:12px; }
       .account-avatar-edit-field { margin-top:18px; }
-      .account-avatar-edit-row { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:10px; align-items:end; }
+      .account-avatar-edit-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; align-items:end; }
+      .account-avatar-edit-row .account-modal-field { grid-column:1 / -1; }
       .account-avatar-update,
-      .account-avatar-remove { min-height:48px; padding:0 16px; border-radius:12px; font:inherit; font-size:13px; font-weight:750; cursor:pointer; white-space:nowrap; }
+      .account-avatar-remove { width:100%; min-height:48px; padding:0 16px; border-radius:12px; font:inherit; font-size:13px; font-weight:750; cursor:pointer; white-space:nowrap; }
       .account-avatar-update { border:1px solid var(--account-border); background:rgba(255,255,255,.035); color:var(--account-text); }
       .account-avatar-update:hover { background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.18); }
       .account-avatar-remove { border:1px solid rgba(255,91,107,.34); background:rgba(255,91,107,.035); color:#ff707d; }
@@ -147,11 +148,10 @@
       .account-avatar-update:disabled,
       .account-avatar-remove:disabled { opacity:.55; cursor:default; }
       .account-avatar-help { margin:7px 0 0; color:var(--account-muted); font-size:12px; line-height:1.45; }
-      @media (max-width:700px) {
-        .account-avatar-edit-row { grid-template-columns:1fr 1fr; }
-        .account-avatar-edit-row .account-modal-field { grid-column:1 / -1; }
-        .account-avatar-update,
-        .account-avatar-remove { width:100%; }
+      @media (max-width:560px) {
+        .account-avatar-preview { width:60px; height:60px; flex-basis:60px; }
+        .account-avatar-edit-row { grid-template-columns:1fr; }
+        .account-avatar-edit-row .account-modal-field { grid-column:1; }
       }
     `;
     document.head.appendChild(style);
