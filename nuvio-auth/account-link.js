@@ -66,6 +66,38 @@
         outline: none !important;
       }
 
+      /* Keep Account and Buy me a coffee on the same left edge in desktop popover. */
+      #site-nav .nuvio-desktop-account-popover > .nuvio-account-link-row,
+      #site-nav .nuvio-desktop-account-popover > .nuvio-social-link {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        gap: 11px !important;
+      }
+
+      #site-nav .nuvio-desktop-account-popover > .nuvio-social-link .nuvio-social-svg,
+      #site-nav .nuvio-desktop-account-popover > .nuvio-account-link-row .nuvio-row-icon {
+        width: 18px !important;
+        height: 18px !important;
+        flex: 0 0 18px !important;
+      }
+
+      /* Give Log Out the same bordered control treatment as Admin and Switch. */
+      #site-nav .nuvio-account-signout-button {
+        border: 1px solid rgba(255,255,255,.10) !important;
+        border-radius: 12px !important;
+        background: rgba(255,255,255,.035) !important;
+        color: #d7d8dd !important;
+      }
+      #site-nav .nuvio-account-signout-button:hover,
+      #site-nav .nuvio-account-signout-button:focus-visible {
+        border-color: rgba(255,255,255,.18) !important;
+        background: rgba(255,255,255,.065) !important;
+        color: #fff !important;
+        outline: none !important;
+      }
+
       #site-nav .nuvio-mobile-current-profile {
         width: 100% !important;
         display: grid !important;
@@ -80,8 +112,33 @@
         min-width: 0 !important;
       }
 
+      #site-nav .nuvio-mobile-kollection-account-link {
+        width: 100% !important;
+        min-height: 50px !important;
+        padding: 0 2px 10px !important;
+        display: grid !important;
+        grid-template-columns: 18px minmax(0,1fr) !important;
+        align-items: center !important;
+        gap: 12px !important;
+        color: #cbccd2 !important;
+        text-decoration: none !important;
+      }
+      #site-nav .nuvio-mobile-kollection-account-link .nuvio-row-copy strong {
+        color: #f3f3f5 !important;
+        font-size: 14px !important;
+      }
+      #site-nav .nuvio-mobile-kollection-account-link .nuvio-row-copy small {
+        color: #8d8f97 !important;
+        font-size: 11px !important;
+      }
+
       body.light #site-nav .nuvio-desktop-switch-link,
       body.light #site-nav .nuvio-mobile-switch-link {
+        color: #4b4d55 !important;
+        border-color: rgba(0,0,0,.10) !important;
+        background: rgba(255,255,255,.72) !important;
+      }
+      body.light #site-nav .nuvio-account-signout-button {
         color: #4b4d55 !important;
         border-color: rgba(0,0,0,.10) !important;
         background: rgba(255,255,255,.72) !important;
@@ -151,8 +208,8 @@
     const signedIn = slot?.querySelector('.nuvio-mobile-account, section');
     if (!signedIn) return;
 
-    /* Profile switching now lives on /account. Remove the old inline switcher. */
-    slot.querySelectorAll('.nuvio-mobile-switch-label, .nuvio-mobile-profile-chips, .nuvio-mobile-profile-head, .nuvio-mobile-account-row').forEach((node) => {
+    /* Profile switching now lives on /account. Remove only the old switcher/chips. */
+    slot.querySelectorAll('.nuvio-mobile-switch-label, .nuvio-mobile-profile-chips, .nuvio-mobile-profile-head').forEach((node) => {
       if (node.classList.contains('nuvio-mobile-profile-head')) {
         const current = node.querySelector('.nuvio-mobile-current-profile');
         if (current) node.before(current);
@@ -172,6 +229,19 @@
       switchLink.dataset.kollectionProfileSwitchLink = 'true';
       switchLink.setAttribute('aria-label', 'Switch Nuvio profile on the Account page');
       current.appendChild(switchLink);
+    }
+
+    /* Ensure Account is available in the compact menu, directly below the profile. */
+    let accountLink = slot.querySelector('[data-kollection-mobile-account-link]');
+    if (!accountLink) {
+      accountLink = document.createElement('a');
+      accountLink.className = 'nuvio-mobile-kollection-account-link';
+      accountLink.href = '/account';
+      accountLink.dataset.kollectionMobileAccountLink = 'true';
+      accountLink.innerHTML = `${icon}<span class="nuvio-row-copy"><strong>Account</strong><small>Saved setups & account details</small></span>`;
+      const bottomRow = slot.querySelector('.nuvio-mobile-bottom-row');
+      if (bottomRow) bottomRow.before(accountLink);
+      else current.after(accountLink);
     }
   }
 
