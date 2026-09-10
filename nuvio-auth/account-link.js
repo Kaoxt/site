@@ -127,6 +127,12 @@
       current.appendChild(switchLink);
     }
 
+    /* The active-profile row already has its own bottom border, so remove the old
+       profile-list divider that would otherwise render a second line beneath it. */
+    if (current?.nextElementSibling?.classList.contains('nuvio-desktop-menu-divider')) {
+      current.nextElementSibling.remove();
+    }
+
     if (!popover.querySelector('[data-kollection-account-link]')) {
       const setup = [...popover.querySelectorAll('a')].find((a) => /set up collection/i.test(a.textContent || ''));
       if (setup) {
