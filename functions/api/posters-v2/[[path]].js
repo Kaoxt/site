@@ -2,7 +2,7 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'overlay-2';
+const CACHE_VERSION = 'overlay-3';
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data, null, 2), {
