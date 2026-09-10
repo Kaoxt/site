@@ -2,13 +2,21 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'rating-1';
+const CACHE_VERSION = 'rating-2';
+const DEFAULT_OMDB_CACHE_DAYS = 30;
+const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data, null, 2), {
     status,
     headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
   });
+}
+
+function positiveInt(value, fallback, min = 1, max = 1000000) {
+  const parsed = Number.parseInt(String(value ?? ''), 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(max, Math.max(min, parsed));
 }
 
 async function tmdbFetch(path, key) {
@@ -47,12 +55,81 @@ function normalizeRatingSource(value) {
     : 'average';
 }
 
-function tmdbRating(details, source) {
+function tmdbRating(details, source, status = 'ok') {
   const value = Number(details.vote_average);
   if (!Number.isFinite(value) || value <= 0) return { value: '', label: '', source, status: 'missing' };
   const formatted = value.toFixed(1);
-  if (source === 'tmdb') return { value: formatted, label: `TMDB ${formatted}`, source: 'tmdb', status: 'ok' };
-  return { value: formatted, label: `★ ${formatted}`, source, status: 'ok' };
+  if (source === 'tmdb') return { value: formatted, label: `TMDB ${formatted}`, source: 'tmdb', status };
+  return { value: formatted, label: `★ ${formatted}`, source, status };
+}
+
+function tmdbFallback(details, reason) {
+  const fallback = tmdbRating(details, 'tmdb', `fallback-${reason}`);
+  return { ...fallback, requestedSource: 'imdb' };
+}
+
+async function ensureRatingTables(db) {
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS poster_rating_cache (
+      provider TEXT NOT NULL,
+      item_id TEXT NOT NULL,
+      value TEXT NOT NULL,
+      label TEXT NOT NULL,
+      updated_at INTEGER NOT NULL,
+      PRIMARY KEY (provider, item_id)
+    );
+    CREATE TABLE IF NOT EXISTS poster_provider_usage_daily (
+      day TEXT NOT NULL,
+      provider TEXT NOT NULL,
+      lookups INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (day, provider)
+    );
+  `);
+}
+
+async function readCachedRating(db, provider, itemId, maxAgeSeconds) {
+  const cutoff = Math.floor(Date.now() / 1000) - maxAgeSeconds;
+  const row = await db.prepare(`
+    SELECT value, label, updated_at
+    FROM poster_rating_cache
+    WHERE provider = ?1 AND item_id = ?2 AND updated_at >= ?3
+  `).bind(provider, itemId, cutoff).first();
+  if (!row) return null;
+  return {
+    value: String(row.value || ''),
+    label: String(row.label || ''),
+    source: provider,
+    status: 'cache-hit',
+  };
+}
+
+async function reserveProviderLookup(db, provider, dailyLimit) {
+  const day = new Date().toISOString().slice(0, 10);
+  await db.prepare(`
+    INSERT INTO poster_provider_usage_daily (day, provider, lookups)
+    VALUES (?1, ?2, 0)
+    ON CONFLICT(day, provider) DO NOTHING
+  `).bind(day, provider).run();
+
+  const result = await db.prepare(`
+    UPDATE poster_provider_usage_daily
+    SET lookups = lookups + 1
+    WHERE day = ?1 AND provider = ?2 AND lookups < ?3
+  `).bind(day, provider, dailyLimit).run();
+
+  return Number(result?.meta?.changes || 0) > 0;
+}
+
+async function writeCachedRating(db, provider, itemId, value, label) {
+  const now = Math.floor(Date.now() / 1000);
+  await db.prepare(`
+    INSERT INTO poster_rating_cache (provider, item_id, value, label, updated_at)
+    VALUES (?1, ?2, ?3, ?4, ?5)
+    ON CONFLICT(provider, item_id) DO UPDATE SET
+      value = excluded.value,
+      label = excluded.label,
+      updated_at = excluded.updated_at
+  `).bind(provider, itemId, value, label, now).run();
 }
 
 async function imdbRating(details, env) {
@@ -60,16 +137,41 @@ async function imdbRating(details, env) {
   if (!imdbId) return { value: '', label: '', source: 'imdb', status: 'missing-id' };
   if (!env.OMDB_API_KEY) return { value: '', label: '', source: 'imdb', status: 'not-configured' };
 
+  // The D1 cache protects the OMDb allowance across every poster style and URL.
+  // If D1 is unavailable, fail safely to TMDB instead of making unmetered OMDb calls.
+  if (!env.DB) return tmdbFallback(details, 'rating-cache-unavailable');
+
+  const cacheDays = positiveInt(env.OMDB_RATING_CACHE_DAYS, DEFAULT_OMDB_CACHE_DAYS, 1, 365);
+  const dailyLimit = positiveInt(env.OMDB_MAX_LOOKUPS_PER_DAY, DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY, 1, 1000000);
+
+  try {
+    await ensureRatingTables(env.DB);
+    const cached = await readCachedRating(env.DB, 'imdb', imdbId, cacheDays * 86400);
+    if (cached) return cached;
+
+    const reserved = await reserveProviderLookup(env.DB, 'omdb', dailyLimit);
+    if (!reserved) return tmdbFallback(details, 'omdb-daily-limit');
+  } catch {
+    return tmdbFallback(details, 'rating-cache-error');
+  }
+
   const response = await fetch(`https://www.omdbapi.com/?apikey=${encodeURIComponent(env.OMDB_API_KEY)}&i=${encodeURIComponent(imdbId)}`, {
     headers: { accept: 'application/json' },
-    cf: { cacheTtl: 21600, cacheEverything: true },
   });
-  if (!response.ok) return { value: '', label: '', source: 'imdb', status: `upstream-${response.status}` };
+  if (!response.ok) return tmdbFallback(details, `omdb-${response.status}`);
+
   const data = await response.json();
   const value = Number.parseFloat(data?.imdbRating);
-  if (!Number.isFinite(value) || value <= 0) return { value: '', label: '', source: 'imdb', status: 'missing' };
+  if (!Number.isFinite(value) || value <= 0) return tmdbFallback(details, 'omdb-missing');
+
   const formatted = value.toFixed(1);
-  return { value: formatted, label: `IMDb ${formatted}`, source: 'imdb', status: 'ok' };
+  const label = `IMDb ${formatted}`;
+  try {
+    await writeCachedRating(env.DB, 'imdb', imdbId, formatted, label);
+  } catch {
+    // The current request can still use the fetched rating; future requests will retry safely.
+  }
+  return { value: formatted, label, source: 'imdb', status: 'upstream' };
 }
 
 async function resolveRating(details, requestedSource, env) {
