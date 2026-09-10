@@ -20,6 +20,25 @@ function positiveInt(value, fallback, min = 1, max = 1000000) {
   return Math.min(max, Math.max(min, parsed));
 }
 
+async function ensureRatingTables(db) {
+  await db.batch([
+    db.prepare(`CREATE TABLE IF NOT EXISTS poster_rating_cache (
+      provider TEXT NOT NULL,
+      item_id TEXT NOT NULL,
+      value TEXT NOT NULL,
+      label TEXT NOT NULL,
+      updated_at INTEGER NOT NULL,
+      PRIMARY KEY (provider, item_id)
+    )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS poster_provider_usage_daily (
+      day TEXT NOT NULL,
+      provider TEXT NOT NULL,
+      lookups INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (day, provider)
+    )`),
+  ]);
+}
+
 async function getOmdbUsage(env) {
   const dailyLimit = positiveInt(env.OMDB_MAX_LOOKUPS_PER_DAY, DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY, 1, 1000000);
   const cacheDays = positiveInt(env.OMDB_RATING_CACHE_DAYS, DEFAULT_OMDB_CACHE_DAYS, 1, 365);
@@ -38,34 +57,20 @@ async function getOmdbUsage(env) {
   if (!env.DB) return fallback;
 
   try {
-    await env.DB.exec(`
-      CREATE TABLE IF NOT EXISTS poster_rating_cache (
-        provider TEXT NOT NULL,
-        item_id TEXT NOT NULL,
-        value TEXT NOT NULL,
-        label TEXT NOT NULL,
-        updated_at INTEGER NOT NULL,
-        PRIMARY KEY (provider, item_id)
-      );
-      CREATE TABLE IF NOT EXISTS poster_provider_usage_daily (
-        day TEXT NOT NULL,
-        provider TEXT NOT NULL,
-        lookups INTEGER NOT NULL DEFAULT 0,
-        PRIMARY KEY (day, provider)
-      );
-    `);
+    await ensureRatingTables(env.DB);
 
-    const usage = await env.DB.prepare(`
-      SELECT lookups
-      FROM poster_provider_usage_daily
-      WHERE day = ?1 AND provider = 'omdb'
-    `).bind(day).first();
-
-    const cached = await env.DB.prepare(`
-      SELECT COUNT(*) AS count
-      FROM poster_rating_cache
-      WHERE provider = 'imdb'
-    `).first();
+    const [usage, cached] = await Promise.all([
+      env.DB.prepare(`
+        SELECT lookups
+        FROM poster_provider_usage_daily
+        WHERE day = ?1 AND provider = 'omdb'
+      `).bind(day).first(),
+      env.DB.prepare(`
+        SELECT COUNT(*) AS count
+        FROM poster_rating_cache
+        WHERE provider = 'imdb'
+      `).first(),
+    ]);
 
     const lookupsToday = Math.max(0, Number(usage?.lookups || 0));
     const cachedRatings = Math.max(0, Number(cached?.count || 0));
@@ -80,8 +85,8 @@ async function getOmdbUsage(env) {
       cacheDays,
       cachedRatings,
     };
-  } catch {
-    return { ...fallback, available: false };
+  } catch (error) {
+    return { ...fallback, available: false, error: error?.message || String(error) };
   }
 }
 
