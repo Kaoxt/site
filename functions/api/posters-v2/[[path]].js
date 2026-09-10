@@ -2,6 +2,7 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
+const CACHE_VERSION = 'overlay-2';
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data, null, 2), {
@@ -39,6 +40,12 @@ function certification(details, type) {
   return details.content_ratings?.results?.find((x) => x.iso_3166_1 === 'US')?.rating || '';
 }
 
+function cacheRequestFor(request) {
+  const cacheUrl = new URL(request.url);
+  cacheUrl.searchParams.set('__kollection_renderer', CACHE_VERSION);
+  return new Request(cacheUrl.toString(), request);
+}
+
 export async function onRequest(context) {
   const { request, env } = context;
   const url = new URL(request.url);
@@ -51,7 +58,8 @@ export async function onRequest(context) {
   if (!env.POSTERS_RENDERER_AUTH_TOKEN) return json({ error: 'POSTERS_RENDERER_AUTH_TOKEN is not configured.' }, 503);
 
   const cache = caches.default;
-  const cached = await cache.match(request);
+  const cacheRequest = cacheRequestFor(request);
+  const cached = await cache.match(cacheRequest);
   if (cached) return cached;
 
   const slot = await acquirePosterRenderSlot(env, request);
@@ -102,9 +110,10 @@ export async function onRequest(context) {
       ? 'public, max-age=900, s-maxage=1800, stale-while-revalidate=3600'
       : 'public, max-age=21600, s-maxage=86400, stale-while-revalidate=604800');
     headers.set('x-kollection-posters', 'v2-sharp');
+    headers.set('x-kollection-render-version', CACHE_VERSION);
     headers.set('x-kollection-tmdb-id', id);
     const response = new Response(rendered.body, { status: 200, headers });
-    context.waitUntil(cache.put(request, response.clone()));
+    context.waitUntil(cache.put(cacheRequest, response.clone()));
     return response;
   } catch (error) {
     return json({ error: error?.message || 'Posters v2 failed.' }, 502);
