@@ -51,6 +51,11 @@
         transition: color .16s ease, background .16s ease, border-color .16s ease !important;
       }
 
+      #site-nav .nuvio-desktop-switch-link {
+        margin-left: auto !important;
+        justify-self: end !important;
+      }
+
       #site-nav .nuvio-desktop-switch-link:hover,
       #site-nav .nuvio-desktop-switch-link:focus-visible,
       #site-nav .nuvio-mobile-switch-link:hover,
