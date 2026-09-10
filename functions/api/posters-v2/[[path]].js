@@ -69,22 +69,22 @@ function tmdbFallback(details, reason) {
 }
 
 async function ensureRatingTables(db) {
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS poster_rating_cache (
+  await db.batch([
+    db.prepare(`CREATE TABLE IF NOT EXISTS poster_rating_cache (
       provider TEXT NOT NULL,
       item_id TEXT NOT NULL,
       value TEXT NOT NULL,
       label TEXT NOT NULL,
       updated_at INTEGER NOT NULL,
       PRIMARY KEY (provider, item_id)
-    );
-    CREATE TABLE IF NOT EXISTS poster_provider_usage_daily (
+    )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS poster_provider_usage_daily (
       day TEXT NOT NULL,
       provider TEXT NOT NULL,
       lookups INTEGER NOT NULL DEFAULT 0,
       PRIMARY KEY (day, provider)
-    );
-  `);
+    )`),
+  ]);
 }
 
 async function readCachedRating(db, provider, itemId, maxAgeSeconds) {
