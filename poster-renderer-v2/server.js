@@ -6,7 +6,7 @@ const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w780';
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-function pillSvg(text, {
+async function pillImage(text, {
   width = 210,
   height = 58,
   fill = '#0b0d12',
@@ -16,15 +16,41 @@ function pillSvg(text, {
   textColor = '#ffffff',
   fontSize = 28,
 } = {}) {
-  const safe = esc(text);
-  return Buffer.from(`
+  // Keep the rounded badge background in SVG, but render the label itself
+  // through Sharp's native Pango text input. This avoids librsvg/SVG text
+  // inconsistencies inside the Cloudflare container.
+  const background = Buffer.from(`
     <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
       <rect x="1" y="1" width="${width - 2}" height="${height - 2}" rx="${Math.floor(height / 2)}"
         fill="${fill}" fill-opacity="${fillOpacity}" stroke="${stroke}" stroke-opacity="${strokeOpacity}" stroke-width="2"/>
-      <text x="${Math.floor(width / 2)}" y="${Math.floor(height / 2) + Math.floor(fontSize * 0.36)}"
-        text-anchor="middle" fill="${textColor}" font-family="DejaVu Sans, sans-serif"
-        font-size="${fontSize}" font-weight="700">${safe}</text>
     </svg>`);
+
+  const safeText = esc(text);
+  const textLayer = {
+    text: {
+      text: `<span foreground="${textColor}" weight="bold">${safeText}</span>`,
+      font: `DejaVu Sans ${fontSize}`,
+      width: Math.max(1, width - 24),
+      height: Math.max(1, height - 14),
+      align: 'center',
+      rgba: true,
+    },
+  };
+
+  return sharp({
+    create: {
+      width,
+      height,
+      channels: 4,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite([
+      { input: background, top: 0, left: 0 },
+      { input: textLayer, gravity: 'center' },
+    ])
+    .png()
+    .toBuffer();
 }
 
 async function readJson(req) {
@@ -58,7 +84,7 @@ async function renderPoster(body) {
   // quality top-right, rating bottom-left, genre bottom-center.
   if (age) {
     composites.push({
-      input: pillSvg(age, { width: 138, height: 58, fontSize: 25 }),
+      input: await pillImage(age, { width: 138, height: 58, fontSize: 25 }),
       top: 24,
       left: 24,
     });
@@ -66,7 +92,7 @@ async function renderPoster(body) {
 
   if (quality) {
     composites.push({
-      input: pillSvg(quality, { width: 150, height: 60, fontSize: 25 }),
+      input: await pillImage(quality, { width: 150, height: 60, fontSize: 25 }),
       top: 24,
       left: 606,
     });
@@ -76,7 +102,7 @@ async function renderPoster(body) {
     const trendWidth = 220;
     const trendLeft = quality ? 362 : Math.round((780 - trendWidth) / 2);
     composites.push({
-      input: pillSvg(trend, {
+      input: await pillImage(trend, {
         width: trendWidth,
         height: 60,
         fill: '#5b6cff',
@@ -91,7 +117,7 @@ async function renderPoster(body) {
 
   if (rating) {
     composites.push({
-      input: pillSvg(`★ ${rating}`, { width: 165, height: 62, fontSize: 27 }),
+      input: await pillImage(`★ ${rating}`, { width: 165, height: 62, fontSize: 27 }),
       top: 1084,
       left: 24,
     });
@@ -100,7 +126,7 @@ async function renderPoster(body) {
   if (genre) {
     const genreWidth = 230;
     composites.push({
-      input: pillSvg(genre, { width: genreWidth, height: 58, fontSize: 24 }),
+      input: await pillImage(genre, { width: genreWidth, height: 58, fontSize: 24 }),
       top: 1088,
       left: Math.round((780 - genreWidth) / 2),
     });
@@ -117,7 +143,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-sharp-overlay-2' }));
+      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-sharp-overlay-3' }));
     }
 
     if (req.method !== 'POST' || req.url !== '/render') {
@@ -132,7 +158,7 @@ const server = http.createServer(async (req, res) => {
       'content-type': 'image/webp',
       'content-length': String(output.length),
       'cache-control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
-      'x-kollection-renderer': 'v2-sharp-overlay-2',
+      'x-kollection-renderer': 'v2-sharp-overlay-3',
       'x-kollection-render-ms': String(Date.now() - started),
     });
     res.end(output);
