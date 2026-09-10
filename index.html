@@ -192,9 +192,14 @@
       font-weight: 700;
       font-size: 16px;
       border: 1px solid var(--line);
-      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+      transition: box-shadow .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
     }
-    .btn:hover { transform: translateY(-2px); }
+    .btn:hover,
+    .btn:active {
+      transform: none !important;
+      translate: none !important;
+      scale: none !important;
+    }
     .btn-primary { color: #111217; background: #f5f5f7; box-shadow: 0 16px 44px rgba(255,255,255,.07); }
     .btn-secondary { background: rgba(255,255,255,.055); }
     .btn-icon {
