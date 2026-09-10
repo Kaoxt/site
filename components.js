@@ -99,7 +99,7 @@
 
   const prepareNuvioNavigation = async () => {
     ensureStylesheet('nuvio-auth/nav-account.css');
-    ensureStylesheet('nuvio-auth/admin-nav.css?v=20260907-1');
+    ensureStylesheet('nuvio-auth/admin-nav.css?v=20260909-2');
 
     if (!window.KollectionNuvioAuth) {
       await loadScriptOnce('nuvio-auth/nuvio-auth.js', () => Boolean(window.KollectionNuvioAuth));
