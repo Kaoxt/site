@@ -84,7 +84,7 @@
       }
 
       #site-nav .nuvio-desktop-account-popover > .nuvio-social-link > span {
-        margin-left: 0 !important;
+        margin-left: 2px !important;
         white-space: nowrap !important;
       }
 
