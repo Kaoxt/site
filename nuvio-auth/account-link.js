@@ -83,10 +83,11 @@
         flex: 0 0 18px !important;
       }
 
-      /* The coffee cup glyph has more visual width than the account glyph. Nudge its
-         label so the text column aligns with the Account heading above it. */
+      /* Align the coffee label to the Account text column, not merely the icon box.
+         The coffee glyph sits visually farther right inside its SVG, so this needs a
+         larger optical offset than the normal row gap. */
       #site-nav .nuvio-desktop-account-popover > .nuvio-social-link > span {
-        margin-left: 8px !important;
+        margin-left: 28px !important;
       }
 
       /* Give Log Out the same bordered control treatment as Admin and Switch. */
