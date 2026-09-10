@@ -28,20 +28,11 @@
         line-height: 1.25 !important;
       }
 
-      #site-nav .nuvio-mobile-current-profile {
-        width: 100% !important;
-        display: grid !important;
-        grid-template-columns: auto minmax(0, 1fr) auto !important;
-        align-items: center !important;
-        gap: 12px !important;
-        margin: 0 !important;
-        padding-bottom: 10px !important;
+      #site-nav .nuvio-desktop-popover-user {
+        grid-template-columns: auto minmax(0,1fr) auto !important;
       }
 
-      #site-nav .nuvio-mobile-current-profile > div {
-        min-width: 0 !important;
-      }
-
+      #site-nav .nuvio-desktop-switch-link,
       #site-nav .nuvio-mobile-switch-link {
         min-height: 34px !important;
         padding: 0 12px !important;
@@ -60,6 +51,8 @@
         transition: color .16s ease, background .16s ease, border-color .16s ease !important;
       }
 
+      #site-nav .nuvio-desktop-switch-link:hover,
+      #site-nav .nuvio-desktop-switch-link:focus-visible,
       #site-nav .nuvio-mobile-switch-link:hover,
       #site-nav .nuvio-mobile-switch-link:focus-visible {
         color: #fff !important;
@@ -68,6 +61,21 @@
         outline: none !important;
       }
 
+      #site-nav .nuvio-mobile-current-profile {
+        width: 100% !important;
+        display: grid !important;
+        grid-template-columns: auto minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 12px !important;
+        margin: 0 !important;
+        padding-bottom: 10px !important;
+      }
+
+      #site-nav .nuvio-mobile-current-profile > div {
+        min-width: 0 !important;
+      }
+
+      body.light #site-nav .nuvio-desktop-switch-link,
       body.light #site-nav .nuvio-mobile-switch-link {
         color: #4b4d55 !important;
         border-color: rgba(0,0,0,.10) !important;
@@ -97,17 +105,34 @@
     });
 
     const popover = slot.querySelector('.nuvio-desktop-account-popover');
-    if (!popover || popover.querySelector('[data-kollection-account-link]')) return;
+    if (!popover) return;
 
-    const setup = [...popover.querySelectorAll('a')].find((a) => /set up collection/i.test(a.textContent || ''));
-    if (!setup) return;
+    /* Landscape/desktop shows only the active profile. Switching happens on /account. */
+    popover.querySelector('.nuvio-desktop-section-label')?.remove();
+    popover.querySelector('.nuvio-desktop-profile-list')?.remove();
 
-    const link = document.createElement('a');
-    link.className = 'nuvio-desktop-menu-row nuvio-account-link-row';
-    link.href = '/account';
-    link.dataset.kollectionAccountLink = 'true';
-    link.innerHTML = `${icon}<span class="nuvio-row-copy"><strong>Account</strong><small>Saved setups & account details</small></span>`;
-    setup.before(link);
+    const current = popover.querySelector('.nuvio-desktop-popover-user');
+    if (current && !current.querySelector('[data-kollection-profile-switch-link]')) {
+      const switchLink = document.createElement('a');
+      switchLink.className = 'nuvio-desktop-switch-link';
+      switchLink.href = '/account#profiles';
+      switchLink.textContent = 'Switch';
+      switchLink.dataset.kollectionProfileSwitchLink = 'true';
+      switchLink.setAttribute('aria-label', 'Switch Nuvio profile on the Account page');
+      current.appendChild(switchLink);
+    }
+
+    if (!popover.querySelector('[data-kollection-account-link]')) {
+      const setup = [...popover.querySelectorAll('a')].find((a) => /set up collection/i.test(a.textContent || ''));
+      if (setup) {
+        const link = document.createElement('a');
+        link.className = 'nuvio-desktop-menu-row nuvio-account-link-row';
+        link.href = '/account';
+        link.dataset.kollectionAccountLink = 'true';
+        link.innerHTML = `${icon}<span class="nuvio-row-copy"><strong>Account</strong><small>Saved setups & account details</small></span>`;
+        setup.before(link);
+      }
+    }
   }
 
   function syncMobile() {
