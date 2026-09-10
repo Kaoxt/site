@@ -116,7 +116,7 @@
     catch (error) { console.warn('[The Kollection] Nuvio navigation could not initialize.', error); }
 
     if (!window.KollectionAccountLink) {
-      await loadScriptOnce('nuvio-auth/account-link.js?v=20260908-1', () => Boolean(window.KollectionAccountLink));
+      await loadScriptOnce('nuvio-auth/account-link.js?v=20260909-2', () => Boolean(window.KollectionAccountLink));
     }
     window.KollectionAccountLink?.init?.();
 
@@ -205,13 +205,13 @@
     window.addEventListener('orientationchange', syncResponsiveNav, { passive: true });
   };
   const init = async () => {
-    ensureStylesheet('secondary-pages.css?v=20260908-2');
+    ensureStylesheet('secondary-pages.css?v=20260909-2');
     applyTheme(readTheme(), false);
     const navTarget = document.getElementById('site-nav');
     const footerTarget = document.getElementById('site-footer');
     const tasks = [];
     if (navTarget) tasks.push(loadFragment('nav.html?v=20260907-6', navTarget));
-    if (footerTarget) tasks.push(loadFragment('footer.html?v=20260906-5', footerTarget));
+    if (footerTarget) tasks.push(loadFragment('footer.html?v=20260909-1', footerTarget));
     if (tasks.length) await Promise.allSettled(tasks);
     setActiveNav();
     bindThemeButtons();
