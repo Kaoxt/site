@@ -4,9 +4,14 @@
   const DEFAULT_API_BASE = 'https://api.nuvio.tv';
   const DEFAULT_PUBLISHABLE_KEY = 'sb_publishable_1Clq8rlTVACkdcZuqr6_AD__xUUC_EN';
   const PROFILE_CLIENT_ID_KEY = 'kollection-nuvio-sync-client-id';
+  const PROFILE_KEY_PREFIX = 'kollection-nuvio-profile-id:';
+  const LAST_SYNC_KEY_PREFIX = 'kollection-nuvio-last-sync:';
   const MAX_PROFILES = 6;
   const els = {};
   let currentProfiles = [];
+  let currentUserId = '';
+  let selectedProfileId = null;
+  let currentAccessToken = '';
 
   const config = () => {
     const cfg = window.KOLLECTION_CONFIG || {};
@@ -25,7 +30,37 @@
   const formatDate = (value) => {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '—';
-    return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+    return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'medium' }).format(date);
+  };
+
+  const profileStorageKey = () => `${PROFILE_KEY_PREFIX}${String(currentUserId || 'default')}`;
+  const lastSyncStorageKey = () => `${LAST_SYNC_KEY_PREFIX}${String(currentUserId || 'default')}`;
+
+  const readSelectedProfileId = () => {
+    try {
+      const value = Number(localStorage.getItem(profileStorageKey()));
+      return Number.isFinite(value) && value >= 1 ? value : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const writeSelectedProfileId = (profileId) => {
+    try { localStorage.setItem(profileStorageKey(), String(profileId)); } catch {}
+  };
+
+  const readLastSync = () => {
+    try { return localStorage.getItem(lastSyncStorageKey()) || ''; }
+    catch { return ''; }
+  };
+
+  const writeLastSync = (value) => {
+    try { localStorage.setItem(lastSyncStorageKey(), String(value)); } catch {}
+  };
+
+  const setLastSync = (value) => {
+    if (!els.lastSync) return;
+    els.lastSync.textContent = `Last sync · ${value ? formatDate(value) : '—'}`;
   };
 
   async function rpc(name, body, accessToken) {
@@ -125,13 +160,56 @@
     return avatar;
   }
 
+  function renderActiveProfile(profile) {
+    if (!els.activeProfile || !profile) return;
+    const name = String(profile.name || `Profile ${profileIndex(profile)}`).trim() || 'Nuvio profile';
+    els.activeProfile.replaceChildren();
+    const avatar = makeAvatar(profile, name);
+    avatar.classList.add('account-active-avatar');
+    const label = document.createElement('span');
+    label.textContent = name;
+    els.activeProfile.append(avatar, label);
+  }
+
+  function syncSelectionUi() {
+    const rows = [...els.profiles.querySelectorAll('.account-profile-row')];
+    for (const row of rows) {
+      const id = Number(row.dataset.profileId);
+      const active = id === selectedProfileId;
+      row.classList.toggle('active-profile', active);
+      const button = row.querySelector('.account-profile-switch');
+      if (button) {
+        button.textContent = active ? 'Active' : 'Switch';
+        button.disabled = active;
+        button.setAttribute('aria-pressed', String(active));
+      }
+    }
+    const activeProfile = currentProfiles.find((profile) => profileIndex(profile) === selectedProfileId) || currentProfiles[0];
+    if (activeProfile) renderActiveProfile(activeProfile);
+  }
+
+  async function selectProfile(profileId) {
+    const profile = currentProfiles.find((item) => profileIndex(item) === Number(profileId));
+    if (!profile) return;
+    selectedProfileId = profileIndex(profile);
+    writeSelectedProfileId(selectedProfileId);
+    syncSelectionUi();
+
+    window.dispatchEvent(new CustomEvent('kollection:nuvio-profile-changed', {
+      detail: { profileId: selectedProfileId, profile },
+    }));
+
+    try { await window.KollectionNavAccount?.refresh?.(); } catch {}
+  }
+
   function renderProfile(profile, accessToken) {
     const id = profileIndex(profile);
     const name = String(profile.name || `Profile ${id || ''}`).trim() || 'Nuvio profile';
     const row = document.createElement('div');
     row.className = 'account-profile-row';
+    row.dataset.profileId = String(id);
 
-    const avatar = makeAvatar(profile, name);
+    let avatar = makeAvatar(profile, name);
     const copy = document.createElement('div');
     copy.className = 'account-profile-copy';
     const strong = document.createElement('strong');
@@ -139,6 +217,12 @@
     const small = document.createElement('small');
     small.textContent = 'Available for Set Up Collection';
     copy.append(strong, small);
+
+    const switchButton = document.createElement('button');
+    switchButton.type = 'button';
+    switchButton.className = 'account-profile-switch';
+    switchButton.textContent = 'Switch';
+    switchButton.addEventListener('click', () => selectProfile(id));
 
     const editor = document.createElement('div');
     editor.className = 'account-profile-editor';
@@ -151,23 +235,23 @@
     input.value = String(profile.avatar_url || profile.avatarUrl || '');
     input.setAttribute('aria-label', `New image URL for ${name}`);
 
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'account-profile-update';
-    button.textContent = 'Update icon';
+    const updateButton = document.createElement('button');
+    updateButton.type = 'button';
+    updateButton.className = 'account-profile-update';
+    updateButton.textContent = 'Update icon';
 
     const message = document.createElement('div');
     message.className = 'account-profile-message';
     message.setAttribute('role', 'status');
     message.setAttribute('aria-live', 'polite');
 
-    button.addEventListener('click', async () => {
+    updateButton.addEventListener('click', async () => {
       const url = input.value.trim();
       if (!/^https?:\/\//i.test(url)) {
         message.textContent = 'Enter a complete http:// or https:// image URL.';
         return;
       }
-      button.disabled = true;
+      updateButton.disabled = true;
       input.disabled = true;
       message.textContent = 'Updating Nuvio profile icon…';
       try {
@@ -176,19 +260,26 @@
         profile.avatarUrl = url;
         profile.avatar_id = null;
         profile.avatarId = null;
-        avatar.replaceWith(makeAvatar(profile, name));
+        const replacement = makeAvatar(profile, name);
+        avatar.replaceWith(replacement);
+        avatar = replacement;
+        if (id === selectedProfileId) renderActiveProfile(profile);
         message.textContent = 'Profile icon updated in Nuvio.';
-        window.dispatchEvent(new CustomEvent('kollection:nuvio-profile-changed', { detail: { profileId: id } }));
+        const now = new Date().toISOString();
+        writeLastSync(now);
+        setLastSync(now);
+        window.dispatchEvent(new CustomEvent('kollection:nuvio-profile-changed', { detail: { profileId: id, profile } }));
+        try { await window.KollectionNavAccount?.refresh?.(); } catch {}
       } catch (error) {
         message.textContent = error?.message || 'Could not update this Nuvio profile icon.';
       } finally {
-        button.disabled = false;
+        updateButton.disabled = false;
         input.disabled = false;
       }
     });
 
-    editor.append(input, button);
-    row.append(avatar, copy, editor, message);
+    editor.append(input, updateButton);
+    row.append(avatar, copy, switchButton, editor, message);
     return row;
   }
 
@@ -197,18 +288,34 @@
     els.profilesStatus.textContent = 'Loading Nuvio profiles…';
     try {
       const token = await window.KollectionNuvioAuth.getAccessToken();
-      const result = await rpc('sync_pull_profiles', {}, token.accessToken);
+      currentAccessToken = token.accessToken;
+      const result = await rpc('sync_pull_profiles', {}, currentAccessToken);
       currentProfiles = Array.isArray(result) ? result : (result?.profiles || []);
       if (!currentProfiles.length) {
+        els.activeProfile.textContent = '—';
         els.profilesStatus.textContent = 'No Nuvio profiles were returned for this account.';
         return;
       }
+
+      const validIds = currentProfiles.map(profileIndex).filter((id) => Number.isFinite(id) && id >= 1);
+      const storedId = readSelectedProfileId();
+      selectedProfileId = validIds.includes(storedId) ? storedId : validIds[0];
+      if (selectedProfileId) writeSelectedProfileId(selectedProfileId);
+
       for (const profile of currentProfiles) {
-        els.profiles.appendChild(renderProfile(profile, token.accessToken));
+        els.profiles.appendChild(renderProfile(profile, currentAccessToken));
       }
+      syncSelectionUi();
+
+      const now = new Date().toISOString();
+      writeLastSync(now);
+      setLastSync(now);
       els.profilesStatus.textContent = `${currentProfiles.length} profile${currentProfiles.length === 1 ? '' : 's'} available.`;
     } catch (error) {
       currentProfiles = [];
+      selectedProfileId = null;
+      els.activeProfile.textContent = '—';
+      setLastSync(readLastSync());
       els.profilesStatus.textContent = error?.message || 'Could not load Nuvio profiles.';
     }
   }
@@ -221,8 +328,10 @@
         setState('signedOut');
         return;
       }
+      currentUserId = session.user?.id || '';
       els.email.textContent = session.user?.email || 'Nuvio account';
-      els.expires.textContent = formatDate(session.expiresAt);
+      if (els.expires) els.expires.textContent = formatDate(session.expiresAt);
+      setLastSync(readLastSync());
       setState('signedIn');
       await loadProfiles();
     } catch (error) {
@@ -283,8 +392,12 @@
       await window.KollectionNuvioAuth.signOut();
       window.dispatchEvent(new CustomEvent('kollection:nuvio-signed-out'));
       currentProfiles = [];
+      currentUserId = '';
+      selectedProfileId = null;
+      currentAccessToken = '';
       els.profiles.innerHTML = '';
       els.profilesStatus.textContent = '';
+      els.activeProfile.textContent = '—';
       setState('signedOut');
     } catch (error) {
       els.profilesStatus.textContent = error?.message || 'Could not log out.';
@@ -305,6 +418,8 @@
     els.signOut = document.getElementById('accountSignOut');
     els.email = document.getElementById('accountEmail');
     els.expires = document.getElementById('accountExpires');
+    els.activeProfile = document.getElementById('accountActiveProfile');
+    els.lastSync = document.getElementById('accountLastSync');
     els.profiles = document.getElementById('accountProfiles');
     els.profilesStatus = document.getElementById('accountProfilesStatus');
 
