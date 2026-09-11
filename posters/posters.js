@@ -158,22 +158,9 @@
     trendInput.closest('.tag-option')?.classList.toggle('is-forced', forced);
   };
 
-  const refreshServicePreviews = (source, tags) => {
-    posterMocks.forEach((posterMock, index) => {
-      const sample = previewSamples[index];
-      const img = posterMock.querySelector('.poster-service-image');
-      if (!sample || !img) return;
-      posterMock.classList.remove('service-live');
-      posterMock.classList.add('service-loading');
-      img.hidden = true;
-      const params = new URLSearchParams({
-        source,
-        tags: [...tags].join(','),
-        ratingSource: selectedRatingSource(),
-        preview: '1'
-      });
-      img.src = `/api/posters-v2/${sample.type}/${sample.id}.webp?${params.toString()}`;
-    });
+  const refreshServicePreviews = () => {
+    // Preview rendering is intentionally handled by preview-controller.js.
+    // Tag/rating changes are client-side and do not invoke the Sharp renderer.
   };
 
   const refreshPreview = () => {
@@ -195,8 +182,6 @@
       const ratingMeta = posterMock.querySelector('.overlay-rating small');
       if (ratingMeta) ratingMeta.textContent = ratingShortLabel();
     });
-
-    refreshServicePreviews(source, enabledTags);
 
     const tagText = `${enabledTags.size} Smart Tag${enabledTags.size === 1 ? '' : 's'} enabled.`;
     const placementText = qualityOn
