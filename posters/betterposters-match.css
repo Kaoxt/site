@@ -26,6 +26,12 @@
   margin-top:14px;
 }
 
+/* Once the live WebP is loaded, never stack the old HTML mock badges over it.
+   The renderer already baked Trend/Rating/Genre/Age into the image. */
+.poster-mock.service-live .overlay{
+  display:none!important;
+}
+
 /* Poster options: one clean full-width stack, matching the reference hierarchy. */
 .compact-heading,
 .tag-options{
