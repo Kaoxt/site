@@ -7,12 +7,11 @@ const TMDB_LOGO_BASE = 'https://image.tmdb.org/t/p/original';
 const POSTER_WIDTH = 780;
 const POSTER_HEIGHT = 1170;
 const SAFE_MARGIN = 30;
-const TOP_GAP = 12;
-const TOP_ROW_GAP = 10;
-const TOP_TAG_HEIGHT = 58;
-const BOTTOM_INFO_Y = 1080;
-const SMART_LOGO_TOP_MIN = 820;
-const SMART_LOGO_BOTTOM_MAX = 1025;
+const SMART_TOP_HEIGHT = 54;
+const SMART_TOP_GAP = 10;
+const SMART_BOTTOM_INFO_TOP = 1084;
+const SMART_LOGO_ZONE_TOP = 785;
+const SMART_LOGO_ZONE_BOTTOM = 1025;
 const ORIGINAL_SECOND_ROW_TOP = SAFE_MARGIN + 76;
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({
@@ -27,60 +26,63 @@ function rgbToHex(r, g, b) {
 
 async function dynamicAccent(imageBuffer) {
   try {
-    const { dominant } = await sharp(imageBuffer).resize(48, 48, { fit: 'cover' }).stats();
-    const max = Math.max(dominant.r, dominant.g, dominant.b, 1);
-    const target = 118;
-    const scale = max > target ? target / max : 1;
-    let r = dominant.r * scale;
-    let g = dominant.g * scale;
-    let b = dominant.b * scale;
-    const spread = Math.max(r, g, b) - Math.min(r, g, b);
-    if (spread < 24) {
+    const sample = await sharp(imageBuffer)
+      .resize(64, 64, { fit: 'cover' })
+      .modulate({ saturation: 1.28, brightness: 0.92 })
+      .stats();
+    let { r, g, b } = sample.dominant;
+    const max = Math.max(r, g, b, 1);
+    const min = Math.min(r, g, b);
+    if (max - min < 22) {
       r *= 0.72;
       g *= 0.72;
       b *= 0.72;
+    } else {
+      const target = 132;
+      const scale = max > target ? target / max : 1;
+      r *= scale;
+      g *= scale;
+      b *= scale;
     }
     return rgbToHex(r, g, b);
   } catch {
-    return '#2f3038';
+    return '#34343c';
   }
 }
 
-function tagWidth(text, { min = 118, max = 240, perChar = 16 } = {}) {
-  return clamp(34 + String(text || '').length * perChar, min, max);
+function smartTagWidth(text, min = 118, max = 242) {
+  return clamp(38 + String(text || '').length * 15, min, max);
 }
 
-async function tagImage(text, {
-  width,
-  height = TOP_TAG_HEIGHT,
+async function smartTopTag(text, {
   fill = '#191a20',
-  fillOpacity = 0.93,
-  textColor = '#ffffff',
-  fontSize = 27,
-  radius = 9,
+  fillOpacity = 0.94,
+  width,
+  fontSize = 26,
 } = {}) {
-  const resolvedWidth = width || tagWidth(text);
+  const resolvedWidth = width || smartTagWidth(text);
   const background = Buffer.from(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="${resolvedWidth}" height="${height}">
-      <rect width="${resolvedWidth}" height="${height}" rx="${radius}" fill="${fill}" fill-opacity="${fillOpacity}"/>
+    <svg xmlns="http://www.w3.org/2000/svg" width="${resolvedWidth}" height="${SMART_TOP_HEIGHT}">
+      <path d="M0 0h${resolvedWidth}v${SMART_TOP_HEIGHT - 8}a8 8 0 0 1-8 8H8a8 8 0 0 1-8-8z"
+        fill="${fill}" fill-opacity="${fillOpacity}"/>
     </svg>`);
   const textLayer = {
     text: {
-      text: `<span foreground="${textColor}" weight="bold">${esc(text)}</span>`,
+      text: `<span foreground="#ffffff" weight="bold">${esc(text)}</span>`,
       font: `DejaVu Sans ${fontSize}`,
-      width: Math.max(1, resolvedWidth - 24),
-      height: Math.max(1, height - 10),
+      width: Math.max(1, resolvedWidth - 22),
+      height: SMART_TOP_HEIGHT - 6,
       align: 'center',
       rgba: true,
     },
   };
   const buffer = await sharp({
-    create: { width: resolvedWidth, height, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+    create: { width: resolvedWidth, height: SMART_TOP_HEIGHT, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
   }).composite([
     { input: background, top: 0, left: 0 },
     { input: textLayer, gravity: 'center' },
   ]).png().toBuffer();
-  return { buffer, width: resolvedWidth, height };
+  return { buffer, width: resolvedWidth, height: SMART_TOP_HEIGHT };
 }
 
 async function originalPillImage(text, {
@@ -91,24 +93,61 @@ async function originalPillImage(text, {
   textColor = '#ffffff',
   fontSize = 27,
 } = {}) {
-  return (await tagImage(text, {
-    width,
-    height,
-    fill,
-    fillOpacity,
-    textColor,
-    fontSize,
-    radius: Math.floor(height / 2),
-  })).buffer;
+  const background = Buffer.from(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+      <rect x="1" y="1" width="${width - 2}" height="${height - 2}" rx="${Math.floor(height / 2)}"
+        fill="${fill}" fill-opacity="${fillOpacity}" stroke="#ffffff" stroke-opacity="0.18" stroke-width="2"/>
+    </svg>`);
+  const textLayer = {
+    text: {
+      text: `<span foreground="${textColor}" weight="bold">${esc(text)}</span>`,
+      font: `DejaVu Sans ${fontSize}`,
+      width: Math.max(1, width - 24),
+      height: Math.max(1, height - 12),
+      align: 'center',
+      rgba: true,
+    },
+  };
+  return sharp({
+    create: { width, height, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+  }).composite([
+    { input: background, top: 0, left: 0 },
+    { input: textLayer, gravity: 'center' },
+  ]).png().toBuffer();
 }
 
-async function bottomInfoImage(text) {
-  if (!text) return null;
-  const shadow = { text: { text: `<span foreground="#000000" alpha="75%" weight="bold">${esc(text)}</span>`, font: 'DejaVu Sans 28', width: 700, height: 58, align: 'center', rgba: true } };
-  const foreground = { text: { text: `<span foreground="#e4e4e7" weight="bold">${esc(text)}</span>`, font: 'DejaVu Sans 28', width: 700, height: 58, align: 'center', rgba: true } };
-  return sharp({ create: { width: 700, height: 62, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
-    .composite([{ input: shadow, top: 3, left: 1 }, { input: foreground, top: 0, left: 0 }])
-    .png().toBuffer();
+async function smartBottomInfo(genre, ratingLabel) {
+  const parts = [];
+  if (genre) parts.push(genre);
+  if (ratingLabel) parts.push(`★ ${String(ratingLabel).replace(/^★\s*/, '').replace(/^(IMDb|TMDB)\s+/i, '')}`);
+  if (!parts.length) return null;
+  const text = parts.join(' • ');
+  const shadow = {
+    text: {
+      text: `<span foreground="#000000" alpha="80%" weight="bold">${esc(text)}</span>`,
+      font: 'DejaVu Sans 27',
+      width: 700,
+      height: 50,
+      align: 'center',
+      rgba: true,
+    },
+  };
+  const foreground = {
+    text: {
+      text: `<span foreground="#dedee4" weight="bold">${esc(text)}</span>`,
+      font: 'DejaVu Sans 27',
+      width: 700,
+      height: 50,
+      align: 'center',
+      rgba: true,
+    },
+  };
+  return sharp({
+    create: { width: 700, height: 54, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+  }).composite([
+    { input: shadow, top: 3, left: 1 },
+    { input: foreground, top: 0, left: 0 },
+  ]).png().toBuffer();
 }
 
 async function titleImage(title) {
@@ -130,8 +169,8 @@ async function smartLogoImage(logoPath) {
     const input = Buffer.from(await response.arrayBuffer());
     const meta = await sharp(input).metadata();
     if (!meta.width || !meta.height) return null;
-    const maxWidth = 620;
-    const maxHeight = 165;
+    const maxWidth = 600;
+    const maxHeight = 158;
     const scale = Math.min(maxWidth / meta.width, maxHeight / meta.height, 1);
     const width = Math.max(1, Math.round(meta.width * scale));
     const height = Math.max(1, Math.round(meta.height * scale));
@@ -142,26 +181,27 @@ async function smartLogoImage(logoPath) {
   }
 }
 
-function bottomLogoBackdrop(height = 390) {
+function smartBottomBackdrop() {
   return Buffer.from(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="${POSTER_WIDTH}" height="${height}">
+    <svg xmlns="http://www.w3.org/2000/svg" width="${POSTER_WIDTH}" height="420">
       <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="#000000" stop-opacity="0"/>
-        <stop offset="0.42" stop-color="#000000" stop-opacity="0.10"/>
-        <stop offset="0.70" stop-color="#000000" stop-opacity="0.30"/>
-        <stop offset="1" stop-color="#000000" stop-opacity="0.60"/>
+        <stop offset="0.56" stop-color="#000000" stop-opacity="0.10"/>
+        <stop offset="0.78" stop-color="#000000" stop-opacity="0.30"/>
+        <stop offset="1" stop-color="#000000" stop-opacity="0.64"/>
       </linearGradient></defs>
       <rect width="100%" height="100%" fill="url(#g)"/>
     </svg>`);
 }
 
-function packTopTags(items) {
-  const rows = [];
+function packSmartTopTags(items) {
+  if (!items.length) return [];
   const available = POSTER_WIDTH - SAFE_MARGIN * 2;
+  const rows = [];
   let row = [];
   let used = 0;
   for (const item of items) {
-    const next = row.length ? used + TOP_GAP + item.width : item.width;
+    const next = row.length ? used + SMART_TOP_GAP + item.width : item.width;
     if (row.length && next > available) {
       rows.push(row);
       row = [item];
@@ -172,14 +212,15 @@ function packTopTags(items) {
     }
   }
   if (row.length) rows.push(row);
+
   const placements = [];
   rows.forEach((itemsInRow, rowIndex) => {
-    const totalWidth = itemsInRow.reduce((sum, item) => sum + item.width, 0) + TOP_GAP * Math.max(0, itemsInRow.length - 1);
-    let left = Math.round((POSTER_WIDTH - totalWidth) / 2);
-    const top = SAFE_MARGIN + rowIndex * (TOP_TAG_HEIGHT + TOP_ROW_GAP);
+    const total = itemsInRow.reduce((sum, item) => sum + item.width, 0) + SMART_TOP_GAP * Math.max(0, itemsInRow.length - 1);
+    let left = Math.round((POSTER_WIDTH - total) / 2);
+    const top = rowIndex * (SMART_TOP_HEIGHT + 7);
     itemsInRow.forEach((item) => {
       placements.push({ ...item, left, top });
-      left += item.width + TOP_GAP;
+      left += item.width + SMART_TOP_GAP;
     });
   });
   return placements;
@@ -209,34 +250,30 @@ async function renderPoster(body) {
 
   if (smartLayout) {
     const dynamicFill = overlayColor === 'dynamic' ? await dynamicAccent(resized) : overlayColor;
-    composites.push({ input: bottomLogoBackdrop(), top: POSTER_HEIGHT - 390, left: 0 });
+    composites.push({ input: smartBottomBackdrop(), top: POSTER_HEIGHT - 420, left: 0 });
 
     const topTags = [];
-    if (age) topTags.push(await tagImage(age, { width: tagWidth(age, { min: 112, max: 170, perChar: 16 }), fill: '#191a20' }));
-    if (trend) topTags.push(await tagImage(trend, { width: tagWidth(trend, { min: 184, max: 244, perChar: 15 }), fill: dynamicFill, fillOpacity: 0.94 }));
-    if (quality) topTags.push(await tagImage(quality, { width: tagWidth(quality, { min: 120, max: 190, perChar: 15 }), fill: '#191a20' }));
-    for (const placement of packTopTags(topTags)) composites.push({ input: placement.buffer, top: placement.top, left: placement.left });
-
-    const bottomParts = [];
-    if (genre) bottomParts.push(genre);
-    if (resolvedRatingLabel) bottomParts.push(resolvedRatingLabel);
-    if (bottomParts.length) {
-      const info = await bottomInfoImage(bottomParts.join(' • '));
-      if (info) composites.push({ input: info, top: BOTTOM_INFO_Y, left: 40 });
+    if (trend) topTags.push(await smartTopTag(trend, { fill: dynamicFill, width: smartTagWidth(trend, 175, 238) }));
+    if (age) topTags.push(await smartTopTag(age, { fill: '#191a20', width: smartTagWidth(age, 104, 154), fontSize: 24 }));
+    if (quality) topTags.push(await smartTopTag(quality, { fill: '#191a20', width: smartTagWidth(quality, 112, 176), fontSize: 24 }));
+    for (const placement of packSmartTopTags(topTags)) {
+      composites.push({ input: placement.buffer, top: placement.top, left: placement.left });
     }
 
     const logo = await smartLogoImage(logoPath);
     if (logo) {
       const left = Math.round((POSTER_WIDTH - logo.width) / 2);
-      const centeredTop = Math.round((SMART_LOGO_TOP_MIN + SMART_LOGO_BOTTOM_MAX - logo.height) / 2);
-      const top = clamp(centeredTop, SMART_LOGO_TOP_MIN, SMART_LOGO_BOTTOM_MAX - logo.height);
+      const zoneHeight = SMART_LOGO_ZONE_BOTTOM - SMART_LOGO_ZONE_TOP;
+      const top = SMART_LOGO_ZONE_TOP + Math.round((zoneHeight - logo.height) / 2);
       composites.push({ input: logo.buffer, top, left });
     } else if (title) {
       const titleBuffer = await titleImage(title);
-      if (titleBuffer) composites.push({ input: titleBuffer, top: 855, left: 50 });
+      if (titleBuffer) composites.push({ input: titleBuffer, top: 825, left: 50 });
     }
+
+    const info = await smartBottomInfo(genre, resolvedRatingLabel);
+    if (info) composites.push({ input: info, top: SMART_BOTTOM_INFO_TOP, left: 40 });
   } else {
-    // TMDB Original keeps its own restrained pill layout and never uses the Smart/BetterPosters treatment.
     if (age) composites.push({ input: await originalPillImage(age, { width: 138, height: 58, fontSize: 25 }), top: SAFE_MARGIN, left: SAFE_MARGIN });
     if (quality) composites.push({ input: await originalPillImage(quality, { width: 150, height: 60, fontSize: 25 }), top: SAFE_MARGIN, left: POSTER_WIDTH - SAFE_MARGIN - 150 });
     if (trend) {
@@ -261,7 +298,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-smart-better-1' }));
+      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-smart-reference-2' }));
     }
     if (req.method !== 'POST' || req.url !== '/render') {
       res.writeHead(404, { 'content-type': 'application/json' });
@@ -274,7 +311,7 @@ const server = http.createServer(async (req, res) => {
       'content-type': 'image/webp',
       'content-length': String(output.length),
       'cache-control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
-      'x-kollection-renderer': 'v2-smart-better-1',
+      'x-kollection-renderer': 'v2-smart-reference-2',
       'x-kollection-render-ms': String(Date.now() - started),
     });
     res.end(output);
