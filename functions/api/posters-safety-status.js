@@ -106,9 +106,14 @@ export async function onRequestGet({ request, env }) {
 
   return json({
     ...status,
+    persistentCache: {
+      enabled: Boolean(env.POSTER_CACHE || env.IMAGES),
+      binding: env.POSTER_CACHE ? 'POSTER_CACHE' : (env.IMAGES ? 'IMAGES' : null),
+      strategy: 'edge -> R2 -> renderer',
+    },
     omdb,
     defaults: {
-      behavior: 'Cache hits bypass render budgets. New renders stop at the configured limits.',
+      behavior: 'Edge-cache and R2 hits bypass render budgets. The daily render budget is a safety cap for true cache misses.',
       budgetFallback: 'Original TMDB artwork is returned when the global render budget or concurrency guard blocks a render.',
       clientLimit: 'Per-client hourly overages receive HTTP 429.',
       omdbFallback: 'Cached IMDb ratings are reused. New OMDb lookups stop at the daily API guard and fall back to TMDB.',
