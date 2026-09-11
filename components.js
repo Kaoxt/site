@@ -206,6 +206,7 @@
   };
   const init = async () => {
     ensureStylesheet('secondary-pages.css?v=20260909-2');
+    ensureStylesheet('nav-interaction.css?v=20260911-1');
     applyTheme(readTheme(), false);
     const navTarget = document.getElementById('site-nav');
     const footerTarget = document.getElementById('site-footer');
