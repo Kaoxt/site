@@ -41,6 +41,7 @@
   let requestGeneration = 0;
 
   const selectedSource = () => document.querySelector('input[name="posterSource"]:checked')?.value || 'smart';
+  const selectedProvider = () => document.getElementById('artworkProvider')?.value || 'tmdb';
   const selectedRatingSource = () => document.getElementById('ratingSource')?.value || 'average';
   const selectedTags = () => [...document.querySelectorAll('.tag-option input[type="checkbox"]:checked')].map((input) => input.value);
 
@@ -53,12 +54,27 @@
     });
   }
 
+  function updateDescription() {
+    const source = selectedSource();
+    const provider = selectedProvider();
+    const tags = selectedTags();
+    const providerLabel = provider === 'tmdb' ? 'TMDB' : provider;
+    const styleLabel = source === 'smart' ? 'Smart Posters' : 'Original Posters';
+    const description = document.getElementById('previewDescription');
+    if (description) {
+      description.textContent = `${styleLabel} using ${providerLabel} artwork. ${tags.length} Smart Tag${tags.length === 1 ? '' : 's'} enabled.`;
+    }
+  }
+
   function refresh() {
     if (samples.length < 3) return;
     const generation = ++requestGeneration;
     const source = selectedSource();
+    const provider = selectedProvider();
     const tags = selectedTags();
     const ratingSource = selectedRatingSource();
+
+    updateDescription();
 
     posterMocks.forEach((posterMock, index) => {
       const img = posterMock.querySelector('.poster-service-image');
@@ -86,10 +102,11 @@
 
       const params = new URLSearchParams({
         source,
+        provider,
         tags: tags.join(','),
         ratingSource,
         preview: '1',
-        previewVersion: `overlay-scale-2-${source}`,
+        previewVersion: `poster-style-provider-1-${source}-${provider}`,
       });
       img.src = `/api/posters-v2/${sample.type}/${sample.id}.webp?${params.toString()}`;
     });
@@ -98,7 +115,7 @@
   async function loadSamples() {
     setLoading();
     try {
-      const response = await fetch('/api/posters-preview-samples?previewVersion=2', {
+      const response = await fetch('/api/posters-preview-samples?previewVersion=3', {
         headers: { accept: 'application/json' },
         cache: 'no-store',
       });
@@ -125,6 +142,10 @@
       setLoading();
       queueMicrotask(refresh);
     });
+  });
+  document.getElementById('artworkProvider')?.addEventListener('change', () => {
+    setLoading();
+    queueMicrotask(refresh);
   });
   document.getElementById('ratingSource')?.addEventListener('change', () => {
     setLoading();
