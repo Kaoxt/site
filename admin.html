@@ -16,7 +16,7 @@
 <script src="/components.js?v=20260906-1" defer></script>
   <script src="/set-up-collection/config.js?v=20260906-1"></script>
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
-  <script src="/admin/admin-hub.js?v=20260910-omdb-1" defer></script>
+  <script src="/admin/admin-hub.js?v=20260911-poster-cache-1" defer></script>
 </head>
 <body>
   <main class="page admin-page admin-hub-page">
@@ -125,7 +125,7 @@
           <div>
             <div class="kicker">WORKERS · POSTERS</div>
             <h2 id="workersUsageHeading">Usage & Safety</h2>
-            <p>Kollection's live application meter for poster rendering and IMDb rating lookups. Cloudflare billing totals may update separately.</p>
+            <p>Kollection's live safety meter for true poster cache misses and IMDb rating lookups. Edge-cache and persistent R2 hits do not consume the render safety cap.</p>
           </div>
           <button class="button-secondary workers-refresh" id="workersUsageRefresh" type="button">Refresh</button>
         </div>
@@ -134,9 +134,9 @@
 
         <div class="workers-usage-grid">
           <article class="workers-stat-card">
-            <span>Today's renders</span>
+            <span>Today's new renders</span>
             <strong id="workersDailyRenders">—</strong>
-            <small id="workersDailyLimit">of — daily budget</small>
+            <small id="workersDailyLimit">of — daily safety cap</small>
           </article>
           <article class="workers-stat-card">
             <span>Budget used</span>
@@ -159,6 +159,11 @@
             <small id="workersRendererDetail">Checking…</small>
           </article>
           <article class="workers-stat-card">
+            <span>Persistent poster cache</span>
+            <strong id="workersPersistentCache">—</strong>
+            <small id="workersPersistentCacheDetail">Checking R2…</small>
+          </article>
+          <article class="workers-stat-card">
             <span>Active renders</span>
             <strong id="workersActiveRenders">—</strong>
             <small id="workersConcurrencyLimit">of — concurrent</small>
@@ -167,7 +172,7 @@
 
         <div class="workers-meter-wrap" aria-label="Poster render budget usage">
           <div class="workers-meter-labels">
-            <span>Daily render budget</span>
+            <span>Daily render safety cap</span>
             <strong id="workersMeterText">—</strong>
           </div>
           <div class="workers-meter">
@@ -186,7 +191,7 @@
         <div class="workers-usage-foot">
           <span id="workersClientLimit">Per-client hourly limit: —</span>
           <span id="omdbRemaining">OMDb remaining today: —</span>
-          <span>Cached posters and cached IMDb ratings do not consume their respective daily guards.</span>
+          <span>Edge-cache and R2 poster hits do not consume the render safety cap. The cap remains as emergency protection for unexpected cache misses.</span>
         </div>
       </section>
     </div>
