@@ -26,6 +26,8 @@
   const downloadBtn = document.getElementById('downloadBtn');
   const copyStatus = document.getElementById('copyStatus');
   const generateHint = document.getElementById('generateHint');
+  const artworkProvider = document.getElementById('artworkProvider');
+  const SETTINGS_KEY = 'kollection-posters-settings-v1';
 
   const ratingSources = [
     ['average', 'Score (average)'],
@@ -53,6 +55,57 @@
   ratingCard?.classList.add('rating-card');
   ratingCard?.append(ratingSourceRow);
   const ratingSource = ratingSourceRow.querySelector('#ratingSource');
+
+  const readSavedSettings = () => {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      const value = raw ? JSON.parse(raw) : null;
+      return value && typeof value === 'object' ? value : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const saveSettings = () => {
+    try {
+      const source = document.querySelector('input[name="posterSource"]:checked')?.value || 'smart';
+      const tags = tagInputs.filter((input) => input.checked).map((input) => input.value);
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+        version: 1,
+        source,
+        tags,
+        ratingSource: ratingSource?.value || 'average',
+        artworkProvider: artworkProvider?.value || 'tmdb',
+      }));
+    } catch {}
+  };
+
+  const restoreSettings = () => {
+    const saved = readSavedSettings();
+    if (!saved) return;
+
+    if (typeof saved.source === 'string') {
+      const source = sourceInputs.find((input) => input.value === saved.source);
+      if (source) source.checked = true;
+    }
+
+    if (Array.isArray(saved.tags)) {
+      const tagSet = new Set(saved.tags.map(String));
+      tagInputs.forEach((input) => { input.checked = tagSet.has(input.value); });
+    }
+
+    if (ratingSource && typeof saved.ratingSource === 'string') {
+      const option = [...ratingSource.options].find((item) => item.value === saved.ratingSource);
+      if (option) ratingSource.value = option.value;
+    }
+
+    if (artworkProvider && typeof saved.artworkProvider === 'string') {
+      const option = [...artworkProvider.options].find((item) => item.value === saved.artworkProvider && !item.disabled);
+      if (option) artworkProvider.value = option.value;
+    }
+  };
+
+  restoreSettings();
 
   const previewSamples = [
     { type: 'movie', id: '27205' },
@@ -290,9 +343,15 @@
     jsonPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   };
 
-  sourceInputs.forEach((input) => input.addEventListener('change', refreshPreview));
-  tagInputs.forEach((input) => input.addEventListener('change', refreshPreview));
-  ratingSource?.addEventListener('change', refreshPreview);
+  const persistAndRefresh = () => {
+    refreshPreview();
+    saveSettings();
+  };
+
+  sourceInputs.forEach((input) => input.addEventListener('change', persistAndRefresh));
+  tagInputs.forEach((input) => input.addEventListener('change', persistAndRefresh));
+  ratingSource?.addEventListener('change', persistAndRefresh);
+  artworkProvider?.addEventListener('change', saveSettings);
 
   configFile.addEventListener('change', async () => {
     const file = configFile.files?.[0];
@@ -352,4 +411,5 @@
   });
 
   refreshPreview();
+  saveSettings();
 })();
