@@ -33,28 +33,49 @@
   const currentCatalogTab = () => catalogTabs.find((tab) => tab.classList.contains('active'))?.dataset.catalogTab || 'default';
   const currentDiscoverMode = () => discoverTabs.find((tab) => tab.classList.contains('active'))?.textContent.trim() === 'Browse Users' ? 'browse-users' : 'search-lists';
 
-  const getCatalogSelection = () => ({
-    mode: currentCatalogTab(),
-    defaultCatalogs: catalogCards.map((card) => ({
+  const syncSelectedStyles = () => {
+    catalogCards.forEach((card) => card.classList.toggle('selected', Boolean(card.querySelector('input')?.checked)));
+    recommendedButtons.forEach((button) => button.setAttribute('aria-pressed', String(button.classList.contains('selected'))));
+  };
+
+  const getCatalogSelection = () => {
+    const defaultCatalogs = catalogCards.map((card) => ({
       id: card.querySelector('input')?.value || '',
       name: card.querySelector('strong')?.textContent.trim() || '',
       provider: card.querySelector('small')?.textContent.trim() || '',
       enabled: Boolean(card.querySelector('input')?.checked),
-    })),
-    discover: {
-      mode: currentDiscoverMode(),
-      query: searchInput?.value.trim() || '',
-      recommendedUsers: recommendedButtons.filter((button) => button.classList.contains('selected')).map((button) => button.textContent.trim()),
-    },
-  });
+    }));
+    const recommendedUsers = recommendedButtons
+      .filter((button) => button.classList.contains('selected'))
+      .map((button) => button.textContent.trim());
+    const query = searchInput?.value.trim() || '';
+    const mode = currentCatalogTab();
+
+    return {
+      mode,
+      defaultCatalogs,
+      enabledCatalogs: defaultCatalogs.filter((item) => item.enabled).map((item) => item.id),
+      discover: {
+        mode: currentDiscoverMode(),
+        query,
+        recommendedUsers,
+        active: mode === 'discover' && Boolean(query || recommendedUsers.length),
+      },
+    };
+  };
 
   const saveState = () => {
+    syncSelectedStyles();
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ version: 2, ...getCatalogSelection() })); } catch {}
   };
 
   function setTab(name, persist = true) {
     const resolved = name === 'discover' ? 'discover' : 'default';
-    catalogTabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.catalogTab === resolved));
+    catalogTabs.forEach((tab) => {
+      const active = tab.dataset.catalogTab === resolved;
+      tab.classList.toggle('active', active);
+      tab.setAttribute('aria-selected', String(active));
+    });
     catalogPanels.forEach((panel) => { panel.hidden = panel.dataset.catalogPanel !== resolved; });
     if (persist) saveState();
   }
@@ -62,24 +83,26 @@
   const restoreState = () => {
     try {
       const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
-      if (!saved || typeof saved !== 'object') return;
-      if (Array.isArray(saved.defaultCatalogs)) {
-        const byId = new Map(saved.defaultCatalogs.map((item) => [item.id, item]));
-        catalogCards.forEach((card) => {
-          const input = card.querySelector('input');
-          const item = byId.get(input?.value);
-          if (input && item && typeof item.enabled === 'boolean') input.checked = item.enabled;
+      if (saved && typeof saved === 'object') {
+        if (Array.isArray(saved.defaultCatalogs)) {
+          const byId = new Map(saved.defaultCatalogs.map((item) => [item.id, item]));
+          catalogCards.forEach((card) => {
+            const input = card.querySelector('input');
+            const item = byId.get(input?.value);
+            if (input && item && typeof item.enabled === 'boolean') input.checked = item.enabled;
+          });
+        }
+        if (searchInput && typeof saved.discover?.query === 'string') searchInput.value = saved.discover.query;
+        const selectedUsers = new Set(Array.isArray(saved.discover?.recommendedUsers) ? saved.discover.recommendedUsers : []);
+        recommendedButtons.forEach((button) => button.classList.toggle('selected', selectedUsers.has(button.textContent.trim())));
+        discoverTabs.forEach((tab) => {
+          const mode = tab.textContent.trim() === 'Browse Users' ? 'browse-users' : 'search-lists';
+          tab.classList.toggle('active', mode === (saved.discover?.mode || 'search-lists'));
         });
+        setTab(saved.mode, false);
       }
-      if (searchInput && typeof saved.discover?.query === 'string') searchInput.value = saved.discover.query;
-      const selectedUsers = new Set(Array.isArray(saved.discover?.recommendedUsers) ? saved.discover.recommendedUsers : []);
-      recommendedButtons.forEach((button) => button.classList.toggle('selected', selectedUsers.has(button.textContent.trim())));
-      discoverTabs.forEach((tab) => {
-        const mode = tab.textContent.trim() === 'Browse Users' ? 'browse-users' : 'search-lists';
-        tab.classList.toggle('active', mode === (saved.discover?.mode || 'search-lists'));
-      });
-      setTab(saved.mode, false);
     } catch {}
+    syncSelectedStyles();
   };
 
   const openCatalogStep = () => {
@@ -96,10 +119,8 @@
     usageChoice.hidden = true;
     catalogStep.hidden = true;
     configurator.hidden = false;
-    const routeKicker = document.getElementById('routeKicker');
-    const routeTitle = document.getElementById('routeTitle');
-    if (routeKicker) routeKicker.textContent = 'SMART OVERLAY POSTERS';
-    if (routeTitle) routeTitle.textContent = 'Configure Posters';
+    document.getElementById('routeKicker').textContent = 'SMART OVERLAY POSTERS';
+    document.getElementById('routeTitle').textContent = 'Configure Posters';
     window.KollectionPosterPreview?.refresh?.({ hard: true });
     configurator.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
