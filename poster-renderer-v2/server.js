@@ -7,6 +7,8 @@ const TMDB_LOGO_BASE = 'https://image.tmdb.org/t/p/original';
 const POSTER_WIDTH = 780;
 const POSTER_HEIGHT = 1170;
 const SAFE_MARGIN = 30;
+const SMART_BADGE_TOP = 845;
+const SMART_TITLE_BOTTOM = POSTER_HEIGHT - SAFE_MARGIN;
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -80,7 +82,7 @@ async function smartLogoImage(logoPath) {
     if (!meta.width || !meta.height) return null;
 
     const maxWidth = 620;
-    const maxHeight = 165;
+    const maxHeight = 155;
     const scale = Math.min(maxWidth / meta.width, maxHeight / meta.height, 1);
     const width = Math.max(1, Math.round(meta.width * scale));
     const height = Math.max(1, Math.round(meta.height * scale));
@@ -95,14 +97,15 @@ async function smartLogoImage(logoPath) {
   }
 }
 
-function bottomLogoBackdrop(height = 260) {
+function bottomLogoBackdrop(height = 325) {
   return Buffer.from(`
     <svg xmlns="http://www.w3.org/2000/svg" width="${POSTER_WIDTH}" height="${height}">
       <defs>
         <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="#000000" stop-opacity="0"/>
-          <stop offset="0.45" stop-color="#000000" stop-opacity="0.18"/>
-          <stop offset="1" stop-color="#000000" stop-opacity="0.68"/>
+          <stop offset="0.40" stop-color="#000000" stop-opacity="0.14"/>
+          <stop offset="0.68" stop-color="#000000" stop-opacity="0.34"/>
+          <stop offset="1" stop-color="#000000" stop-opacity="0.72"/>
         </linearGradient>
       </defs>
       <rect width="100%" height="100%" fill="url(#g)"/>
@@ -146,6 +149,17 @@ async function renderPoster(body) {
   const input = Buffer.from(await res.arrayBuffer());
 
   const composites = [];
+  const resolvedRatingLabel = ratingLabel || (rating ? `★ ${rating}` : '');
+
+  if (smartLayout) {
+    // Smart Layout reserves the very bottom of the poster for the title/logo.
+    // Metadata sits above that title zone so badges never cover or touch the movie name.
+    composites.push({
+      input: bottomLogoBackdrop(),
+      top: POSTER_HEIGHT - 325,
+      left: 0,
+    });
+  }
 
   if (age) {
     composites.push({
@@ -181,13 +195,12 @@ async function renderPoster(body) {
     });
   }
 
-  const resolvedRatingLabel = ratingLabel || (rating ? `★ ${rating}` : '');
   if (resolvedRatingLabel) {
     const width = ratingBadgeWidth(resolvedRatingLabel);
     const height = 62;
     composites.push({
       input: await pillImage(resolvedRatingLabel, { width, height, fontSize: 27 }),
-      top: POSTER_HEIGHT - SAFE_MARGIN - height,
+      top: smartLayout ? SMART_BADGE_TOP : POSTER_HEIGHT - SAFE_MARGIN - height,
       left: SAFE_MARGIN,
     });
   }
@@ -197,32 +210,24 @@ async function renderPoster(body) {
     const height = 58;
     composites.push({
       input: await pillImage(genre, { width: genreWidth, height, fontSize: 24 }),
-      top: POSTER_HEIGHT - SAFE_MARGIN - height,
-      left: Math.round((POSTER_WIDTH - genreWidth) / 2),
+      top: smartLayout ? SMART_BADGE_TOP + 2 : POSTER_HEIGHT - SAFE_MARGIN - height,
+      left: smartLayout ? POSTER_WIDTH - SAFE_MARGIN - genreWidth : Math.round((POSTER_WIDTH - genreWidth) / 2),
     });
   }
 
   if (smartLayout) {
-    const hasBottomTags = Boolean(resolvedRatingLabel || genre);
     const logo = await smartLogoImage(logoPath);
-    const titleTopBase = hasBottomTags ? POSTER_HEIGHT - 290 : POSTER_HEIGHT - 215;
-
-    composites.push({
-      input: bottomLogoBackdrop(hasBottomTags ? 300 : 245),
-      top: hasBottomTags ? POSTER_HEIGHT - 300 : POSTER_HEIGHT - 245,
-      left: 0,
-    });
 
     if (logo) {
       const left = Math.round((POSTER_WIDTH - logo.width) / 2);
-      const top = Math.max(760, titleTopBase + Math.round((165 - logo.height) / 2));
+      const top = Math.max(940, SMART_TITLE_BOTTOM - logo.height);
       composites.push({ input: logo.buffer, top, left });
     } else if (title) {
       const titleBuffer = await titleImage(title);
       if (titleBuffer) {
         composites.push({
           input: titleBuffer,
-          top: titleTopBase,
+          top: SMART_TITLE_BOTTOM - 150,
           left: 50,
         });
       }
@@ -240,7 +245,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-sharp-smart-logo-1' }));
+      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-sharp-smart-logo-2' }));
     }
 
     if (req.method !== 'POST' || req.url !== '/render') {
@@ -255,7 +260,7 @@ const server = http.createServer(async (req, res) => {
       'content-type': 'image/webp',
       'content-length': String(output.length),
       'cache-control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
-      'x-kollection-renderer': 'v2-sharp-smart-logo-1',
+      'x-kollection-renderer': 'v2-sharp-smart-logo-2',
       'x-kollection-render-ms': String(Date.now() - started),
     });
     res.end(output);
