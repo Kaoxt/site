@@ -8,8 +8,6 @@ const POSTER_WIDTH = 780;
 const POSTER_HEIGHT = 1170;
 const SAFE_MARGIN = 30;
 
-// BetterPosters reference proportions: the top tag is roughly 9% of poster
-// height and close to half the poster width for a normal "#X Today" label.
 const SMART_TOP_HEIGHT = 108;
 const SMART_TOP_GAP = 14;
 const SMART_BOTTOM_INFO_TOP = 1072;
@@ -19,7 +17,6 @@ const SMART_LOGO_ZONE_BOTTOM = 1005;
 
 const ORIGINAL_TOP = 30;
 const ORIGINAL_BADGE_HEIGHT = 100;
-const ORIGINAL_SECOND_ROW_TOP = ORIGINAL_TOP + ORIGINAL_BADGE_HEIGHT + 16;
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -306,15 +303,12 @@ async function renderPoster(body) {
       const left = Math.round((POSTER_WIDTH - width) / 2);
       composites.push({ input: await originalBadgeImage(trend, { width, height: 104, fill: '#5b6cff', fillOpacity: 0.95, fontSize: 48, radius: 16 }), top: ORIGINAL_TOP, left });
     }
-    if (resolvedRatingLabel) {
-      const length = String(resolvedRatingLabel).length;
-      const width = length <= 6 ? 235 : length <= 10 ? 285 : 330;
-      composites.push({ input: await originalBadgeImage(resolvedRatingLabel, { width, fontSize: 44 }), top: ORIGINAL_SECOND_ROW_TOP, left: SAFE_MARGIN });
-    }
-    if (genre) {
-      const width = 300;
-      composites.push({ input: await originalBadgeImage(genre, { width, fontSize: 42 }), top: ORIGINAL_SECOND_ROW_TOP, left: POSTER_WIDTH - SAFE_MARGIN - width });
-    }
+
+    // Match BetterPosters' bottom metadata behavior: the active bottom tags form
+    // one centered line. Rating-only is centered; Genre-only is centered; when
+    // both are enabled they share the centered "Genre • ★ Rating" line.
+    const info = await smartBottomInfo(genre, resolvedRatingLabel);
+    if (info) composites.push({ input: info, top: SMART_BOTTOM_INFO_TOP, left: 30 });
   }
 
   return sharp(resized).composite(composites).webp({ quality: 88, effort: 4 }).toBuffer();
@@ -324,7 +318,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-bp-layout-3' }));
+      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-bp-layout-4' }));
     }
     if (req.method !== 'POST' || req.url !== '/render') {
       res.writeHead(404, { 'content-type': 'application/json' });
@@ -337,7 +331,7 @@ const server = http.createServer(async (req, res) => {
       'content-type': 'image/webp',
       'content-length': String(output.length),
       'cache-control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
-      'x-kollection-renderer': 'v2-bp-layout-3',
+      'x-kollection-renderer': 'v2-bp-layout-4',
       'x-kollection-render-ms': String(Date.now() - started),
     });
     res.end(output);
