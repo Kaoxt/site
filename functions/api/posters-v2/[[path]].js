@@ -2,7 +2,7 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'smart-1';
+const CACHE_VERSION = 'smart-logo-1';
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
 
@@ -61,10 +61,35 @@ function choosePoster(details, smartLayout) {
       return Number(b.vote_average || 0) - Number(a.vote_average || 0);
     });
 
-  if (textless[0]?.file_path) {
-    return { path: textless[0].file_path, source: 'smart-textless' };
-  }
+  if (textless[0]?.file_path) return { path: textless[0].file_path, source: 'smart-textless' };
   return { path: original, source: 'smart-fallback-original' };
+}
+
+function chooseLogo(details, smartLayout) {
+  if (!smartLayout) return { path: '', source: 'disabled' };
+  const logos = Array.isArray(details.images?.logos) ? details.images.logos : [];
+  if (!logos.length) return { path: '', source: 'title-fallback' };
+
+  const languageRank = (logo) => {
+    const language = String(logo?.iso_639_1 || '').toLowerCase();
+    if (language === 'en') return 3;
+    if (!language) return 2;
+    return 1;
+  };
+
+  const ranked = logos
+    .filter((logo) => logo?.file_path)
+    .sort((a, b) => {
+      const language = languageRank(b) - languageRank(a);
+      if (language !== 0) return language;
+      const votes = Number(b.vote_count || 0) - Number(a.vote_count || 0);
+      if (votes !== 0) return votes;
+      return Number(b.vote_average || 0) - Number(a.vote_average || 0);
+    });
+
+  return ranked[0]?.file_path
+    ? { path: ranked[0].file_path, source: 'tmdb-logo' }
+    : { path: '', source: 'title-fallback' };
 }
 
 function normalizeRatingSource(value) {
@@ -155,9 +180,6 @@ async function imdbRating(details, env) {
   const imdbId = details.external_ids?.imdb_id || '';
   if (!imdbId) return { value: '', label: '', source: 'imdb', status: 'missing-id' };
   if (!env.OMDB_API_KEY) return { value: '', label: '', source: 'imdb', status: 'not-configured' };
-
-  // The D1 cache protects the OMDb allowance across every poster style and URL.
-  // If D1 is unavailable, fail safely to TMDB instead of making unmetered OMDb calls.
   if (!env.DB) return tmdbFallback(details, 'rating-cache-unavailable');
 
   const cacheDays = positiveInt(env.OMDB_RATING_CACHE_DAYS, DEFAULT_OMDB_CACHE_DAYS, 1, 365);
@@ -197,9 +219,6 @@ async function resolveRating(details, requestedSource, env) {
   const source = normalizeRatingSource(requestedSource);
   if (source === 'imdb') return imdbRating(details, env);
   if (source === 'tmdb' || source === 'score' || source === 'average') return tmdbRating(details, source);
-
-  // These providers do not currently have a configured, reliable upstream in Kollection.
-  // Returning no badge is preferable to silently showing a TMDB score under the wrong label.
   return { value: '', label: '', source, status: 'unsupported' };
 }
 
@@ -241,6 +260,7 @@ export async function onRequest(context) {
     const tags = new Set((url.searchParams.get('tags') || 'trend,rating').split(',').map((v) => v.trim()).filter(Boolean));
     const smartLayout = url.searchParams.get('source') === 'smart';
     const artwork = choosePoster(details, smartLayout);
+    const logo = chooseLogo(details, smartLayout);
     if (!artwork.path) return json({ error: 'TMDB has no poster artwork for this title.' }, 404);
 
     const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
@@ -250,7 +270,8 @@ export async function onRequest(context) {
 
     const payload = {
       posterPath: artwork.path,
-      title: String(details.title || details.name || '').slice(0, 44),
+      logoPath: logo.path,
+      title: String(details.title || details.name || '').slice(0, 80),
       rating: rating.value,
       ratingLabel: rating.label,
       genre: tags.has('genre') ? (details.genres?.[0]?.name || '') : '',
@@ -286,6 +307,7 @@ export async function onRequest(context) {
     headers.set('x-kollection-rating-source', rating.source);
     headers.set('x-kollection-rating-status', rating.status);
     headers.set('x-kollection-artwork-source', artwork.source);
+    headers.set('x-kollection-logo-source', logo.source);
     headers.set('x-kollection-tmdb-id', id);
     const response = new Response(rendered.body, { status: 200, headers });
     context.waitUntil(cache.put(cacheRequest, response.clone()));
