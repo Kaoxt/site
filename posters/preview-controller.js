@@ -27,10 +27,10 @@
       width:54px;
       height:54px;
       margin:-27px 0 0 -27px;
-      border-radius:50%;
       border:5px solid rgba(99,102,241,.18);
       border-top-color:#7c83ff;
       border-right-color:#6366f1;
+      border-radius:50%;
       box-sizing:border-box;
       animation:kollectionPosterSpin .72s linear infinite;
     }
@@ -47,9 +47,25 @@
   const selectedRatingSource = () => document.getElementById('ratingSource')?.value || 'average';
   const selectedTags = () => [...document.querySelectorAll('.tag-option input[type="checkbox"]:checked')].map((input) => input.value);
 
+  function syncUiState() {
+    const trend = document.querySelector('.tag-option input[value="trend"]');
+    if (trend) {
+      trend.disabled = false;
+      trend.closest('.tag-option')?.classList.remove('is-forced');
+    }
+
+    document.querySelectorAll('input[name="posterSource"]').forEach((input) => {
+      input.closest('.choice-card')?.classList.toggle('selected', input.checked);
+    });
+
+    const rating = document.querySelector('.tag-option input[value="rating"]');
+    const row = document.querySelector('.rating-source-row');
+    if (row) row.hidden = !rating?.checked;
+  }
+
   function setLoading() {
     posterMocks.forEach((posterMock) => {
-      posterMock.classList.remove('service-live');
+      posterMock.classList.remove('service-live', 'service-loading');
       posterMock.classList.add('preview-refreshing');
       const img = posterMock.querySelector('.poster-service-image');
       if (img) img.hidden = false;
@@ -69,7 +85,9 @@
   }
 
   function refresh() {
+    syncUiState();
     if (samples.length < 3) return;
+
     const generation = ++requestGeneration;
     const source = selectedSource();
     const provider = selectedProvider();
@@ -83,7 +101,7 @@
       const sample = samples[index];
       if (!img || !sample) return;
 
-      posterMock.classList.remove('service-live');
+      posterMock.classList.remove('service-live', 'service-loading');
       posterMock.classList.add('preview-refreshing');
       img.hidden = false;
 
@@ -108,16 +126,17 @@
         tags: tags.join(','),
         ratingSource,
         preview: '1',
-        previewVersion: `poster-controls-2-${source}-${provider}`,
+        previewVersion: `bp-proportion-1-${source}-${provider}-${tags.join('-') || 'none'}-${ratingSource}`,
       });
       img.src = `/api/posters-v2/${sample.type}/${sample.id}.webp?${params.toString()}`;
     });
   }
 
   async function loadSamples() {
+    syncUiState();
     setLoading();
     try {
-      const response = await fetch('/api/posters-preview-samples?previewVersion=4', {
+      const response = await fetch('/api/posters-preview-samples?previewVersion=5', {
         headers: { accept: 'application/json' },
         cache: 'no-store',
       });
@@ -141,20 +160,31 @@
 
   window.KollectionPosterPreview = { refresh, setLoading, updateDescription };
 
-  document.querySelectorAll('input[name="posterSource"], .tag-option input[type="checkbox"]').forEach((input) => {
-    input.addEventListener('change', () => {
+  document.addEventListener('change', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
+    const relevant = target.matches('input[name="posterSource"], .tag-option input[type="checkbox"], #artworkProvider, #ratingSource');
+    if (!relevant) return;
+
+    // Prevent the legacy preview code from racing the live preview and replacing
+    // the initially-selected tag set with an older cached request.
+    event.stopImmediatePropagation();
+    syncUiState();
+    setLoading();
+    queueMicrotask(refresh);
+  }, true);
+
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest?.('[data-usage]');
+    if (!button) return;
+    // The legacy route code reveals the configurator during this click. Refresh
+    // again afterwards so the first visible posters already contain all defaults.
+    setTimeout(() => {
+      syncUiState();
       setLoading();
-      queueMicrotask(refresh);
-    });
-  });
-  document.getElementById('artworkProvider')?.addEventListener('change', () => {
-    setLoading();
-    queueMicrotask(refresh);
-  });
-  document.getElementById('ratingSource')?.addEventListener('change', () => {
-    setLoading();
-    queueMicrotask(refresh);
-  });
+      refresh();
+    }, 0);
+  }, true);
 
   loadSamples();
 })();
