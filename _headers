@@ -46,3 +46,10 @@
 
 /nuvio-auth/admin-nav.css
   Cache-Control: no-cache, max-age=0, must-revalidate
+
+# Posters is under active development; always revalidate the configurator assets.
+/posters.html
+  Cache-Control: no-cache, max-age=0, must-revalidate
+
+/posters/*
+  Cache-Control: no-cache, max-age=0, must-revalidate
