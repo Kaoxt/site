@@ -11,7 +11,7 @@
     resultUrl: '',
     width: 0,
     height: 0,
-    quality: 82,
+    quality: 86,
   };
 
   const el = {
@@ -415,7 +415,7 @@
 
   if (el.qualitySlider) {
     const updateQuality = () => {
-      state.quality = Number(el.qualitySlider.value) || 82;
+      state.quality = Number(el.qualitySlider.value) || 86;
       if (el.qualityValue) el.qualityValue.textContent = `${state.quality}%`;
     };
     el.qualitySlider.addEventListener('input', updateQuality);
