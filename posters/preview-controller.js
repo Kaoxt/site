@@ -126,7 +126,7 @@
         tags: tags.join(','),
         ratingSource,
         preview: '1',
-        previewVersion: `bp-layout-2-${source}-${provider}-${tags.join('-') || 'none'}-${ratingSource}`,
+        previewVersion: `bp-match-3-${source}-${provider}-${tags.join('-') || 'none'}-${ratingSource}`,
       });
       img.src = `/api/posters-v2/${sample.type}/${sample.id}.webp?${params.toString()}`;
     });
@@ -166,8 +166,6 @@
     const relevant = target.matches('input[name="posterSource"], .tag-option input[type="checkbox"], #artworkProvider, #ratingSource');
     if (!relevant) return;
 
-    // Prevent the legacy preview code from racing the live preview and replacing
-    // the initially-selected tag set with an older cached request.
     event.stopImmediatePropagation();
     syncUiState();
     setLoading();
@@ -177,8 +175,6 @@
   document.addEventListener('click', (event) => {
     const button = event.target.closest?.('[data-usage]');
     if (!button) return;
-    // The legacy route code reveals the configurator during this click. Refresh
-    // again afterwards so the first visible posters already contain all defaults.
     setTimeout(() => {
       syncUiState();
       setLoading();
