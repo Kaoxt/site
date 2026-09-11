@@ -48,12 +48,19 @@
     }
     .client-preview-tag{
       display:inline-flex;align-items:center;justify-content:center;
-      min-height:40px;padding:7px 13px;
+      height:35px;min-height:35px;padding:0 12px;
       border-radius:0 0 7px 7px;
       background:rgba(18,18,20,.78);
-      color:#fff;text-shadow:0 2px 7px rgba(0,0,0,.82);
-      font-size:clamp(13px,2.1vw,20px);font-weight:800;line-height:1;
-      white-space:nowrap;backdrop-filter:blur(4px);
+      color:#fff;
+      font-family:Inter,"Segoe UI",Arial,sans-serif;
+      font-size:clamp(12px,1.9vw,18px);
+      font-weight:700;
+      line-height:1;
+      letter-spacing:-.015em;
+      white-space:nowrap;
+      text-shadow:0 2px 6px rgba(0,0,0,.72);
+      backdrop-filter:blur(4px);
+      box-sizing:border-box;
     }
     .client-preview-quality{font-size:clamp(11px,1.7vw,16px);min-width:44px}
     .client-preview-age{
@@ -80,11 +87,11 @@
 
     @media(max-width:700px){
       .client-preview-top{gap:5px;width:calc(100% - 8px)}
-      .client-preview-tag{min-height:34px;padding:6px 9px;border-radius:0 0 6px 6px}
+      .client-preview-tag{height:31px;min-height:31px;padding:0 9px;border-radius:0 0 6px 6px}
       .client-preview-bottom{bottom:7px;width:calc(100% - 12px)}
     }
     @media(max-width:520px){
-      .client-preview-tag{min-height:31px;padding:5px 7px}
+      .client-preview-tag{height:29px;min-height:29px;padding:0 7px}
       .client-preview-bottom{bottom:6px}
     }
     @media(prefers-reduced-motion:reduce){.poster-mock.preview-refreshing::before{animation:none}}
