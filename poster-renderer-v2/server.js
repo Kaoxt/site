@@ -12,7 +12,7 @@ const SAFE_MARGIN = 30;
 // height and close to half the poster width for a normal "#X Today" label.
 const SMART_TOP_HEIGHT = 108;
 const SMART_TOP_GAP = 14;
-const SMART_BOTTOM_INFO_TOP = 1047;
+const SMART_BOTTOM_INFO_TOP = 1072;
 const SMART_AGE_TOP = 680;
 const SMART_LOGO_ZONE_TOP = 748;
 const SMART_LOGO_ZONE_BOTTOM = 1005;
@@ -132,28 +132,28 @@ async function smartBottomInfo(genre, ratingLabel) {
   const text = parts.join(' • ');
   const shadow = {
     text: {
-      text: `<span foreground="#000000" alpha="82%" weight="bold">${esc(text)}</span>`,
-      font: 'DejaVu Sans 58',
+      text: `<span foreground="#000000" alpha="78%" weight="semibold">${esc(text)}</span>`,
+      font: 'DejaVu Sans 44',
       width: 720,
-      height: 96,
+      height: 72,
       align: 'center',
       rgba: true,
     },
   };
   const foreground = {
     text: {
-      text: `<span foreground="#e5e5e8" weight="bold">${esc(text)}</span>`,
-      font: 'DejaVu Sans 58',
+      text: `<span foreground="#d4d4d8" weight="semibold">${esc(text)}</span>`,
+      font: 'DejaVu Sans 44',
       width: 720,
-      height: 96,
+      height: 72,
       align: 'center',
       rgba: true,
     },
   };
   return sharp({
-    create: { width: 720, height: 102, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+    create: { width: 720, height: 76, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
   }).composite([
-    { input: shadow, top: 5, left: 1 },
+    { input: shadow, top: 4, left: 1 },
     { input: foreground, top: 0, left: 0 },
   ]).png().toBuffer();
 }
@@ -267,9 +267,6 @@ async function renderPoster(body) {
       composites.push({ input: placement.buffer, top: placement.top, left: placement.left });
     }
 
-    // BetterPosters keeps certification close to the title treatment instead of
-    // grouping it with the top tags. Reserve a centered slot immediately above
-    // the title/logo so Trend/Quality stay visually separate.
     if (age) {
       const width = smartTagWidth(age, 150, 220);
       const ageBadge = await originalBadgeImage(age, {
@@ -327,7 +324,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-bp-layout-2' }));
+      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-bp-layout-3' }));
     }
     if (req.method !== 'POST' || req.url !== '/render') {
       res.writeHead(404, { 'content-type': 'application/json' });
@@ -340,7 +337,7 @@ const server = http.createServer(async (req, res) => {
       'content-type': 'image/webp',
       'content-length': String(output.length),
       'cache-control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
-      'x-kollection-renderer': 'v2-bp-layout-2',
+      'x-kollection-renderer': 'v2-bp-layout-3',
       'x-kollection-render-ms': String(Date.now() - started),
     });
     res.end(output);
