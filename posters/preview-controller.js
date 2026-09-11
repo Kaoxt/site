@@ -34,8 +34,23 @@
       box-sizing:border-box;
       animation:kollectionPosterSpin .72s linear infinite;
     }
+    .poster-mock.preview-updating::after{
+      content:"";
+      position:absolute;
+      right:10px;
+      bottom:10px;
+      z-index:8;
+      width:18px;
+      height:18px;
+      border:3px solid rgba(99,102,241,.2);
+      border-top-color:#7c83ff;
+      border-radius:50%;
+      box-sizing:border-box;
+      animation:kollectionPosterSpin .72s linear infinite;
+      pointer-events:none;
+    }
     @keyframes kollectionPosterSpin{to{transform:rotate(360deg)}}
-    @media(prefers-reduced-motion:reduce){.poster-mock.preview-refreshing::after{animation-duration:1.35s}}
+    @media(prefers-reduced-motion:reduce){.poster-mock.preview-refreshing::after,.poster-mock.preview-updating::after{animation-duration:1.35s}}
   `;
   document.head.appendChild(style);
 
@@ -65,10 +80,17 @@
 
   function setLoading() {
     posterMocks.forEach((posterMock) => {
-      posterMock.classList.remove('service-live', 'service-loading');
+      posterMock.classList.remove('service-live', 'service-loading', 'preview-updating');
       posterMock.classList.add('preview-refreshing');
       const img = posterMock.querySelector('.poster-service-image');
       if (img) img.hidden = false;
+    });
+  }
+
+  function setUpdating() {
+    posterMocks.forEach((posterMock) => {
+      posterMock.classList.remove('preview-refreshing', 'service-loading');
+      if (posterMock.classList.contains('service-live')) posterMock.classList.add('preview-updating');
     });
   }
 
@@ -84,7 +106,7 @@
     }
   }
 
-  function refresh() {
+  function refresh({ hard = false } = {}) {
     syncUiState();
     if (samples.length < 3) return;
 
@@ -97,28 +119,22 @@
     updateDescription();
 
     posterMocks.forEach((posterMock, index) => {
-      const img = posterMock.querySelector('.poster-service-image');
+      const currentImg = posterMock.querySelector('.poster-service-image');
       const sample = samples[index];
-      if (!img || !sample) return;
+      if (!currentImg || !sample) return;
 
-      posterMock.classList.remove('service-live', 'service-loading');
-      posterMock.classList.add('preview-refreshing');
-      img.hidden = false;
-
-      const onLoad = () => {
-        if (generation !== requestGeneration) return;
+      if (hard || !posterMock.classList.contains('service-live')) {
+        posterMock.classList.remove('service-live', 'service-loading', 'preview-updating');
+        posterMock.classList.add('preview-refreshing');
+      } else {
         posterMock.classList.remove('preview-refreshing', 'service-loading');
-        posterMock.classList.add('service-live');
-        img.style.visibility = '';
-      };
-      const onError = () => {
-        if (generation !== requestGeneration) return;
-        posterMock.classList.remove('preview-refreshing', 'service-loading', 'service-live');
-        img.hidden = true;
-      };
+        posterMock.classList.add('preview-updating');
+      }
 
-      img.addEventListener('load', onLoad, { once: true });
-      img.addEventListener('error', onError, { once: true });
+      const nextImg = new Image();
+      nextImg.className = 'poster-service-image';
+      nextImg.alt = currentImg.alt || 'Live poster preview';
+      nextImg.decoding = 'async';
 
       const params = new URLSearchParams({
         source,
@@ -126,9 +142,24 @@
         tags: tags.join(','),
         ratingSource,
         preview: '1',
-        previewVersion: `bp-match-3-${source}-${provider}-${tags.join('-') || 'none'}-${ratingSource}`,
+        previewVersion: `bp-match-4-${source}-${provider}-${tags.join('-') || 'none'}-${ratingSource}`,
       });
-      img.src = `/api/posters-v2/${sample.type}/${sample.id}.webp?${params.toString()}`;
+
+      nextImg.addEventListener('load', () => {
+        if (generation !== requestGeneration) return;
+        currentImg.replaceWith(nextImg);
+        nextImg.hidden = false;
+        nextImg.style.visibility = '';
+        posterMock.classList.remove('preview-refreshing', 'preview-updating', 'service-loading');
+        posterMock.classList.add('service-live');
+      }, { once: true });
+
+      nextImg.addEventListener('error', () => {
+        if (generation !== requestGeneration) return;
+        posterMock.classList.remove('preview-refreshing', 'preview-updating', 'service-loading');
+      }, { once: true });
+
+      nextImg.src = `/api/posters-v2/${sample.type}/${sample.id}.webp?${params.toString()}`;
     });
   }
 
@@ -155,10 +186,10 @@
         { type: 'tv', id: '1399' },
       ];
     }
-    refresh();
+    refresh({ hard: true });
   }
 
-  window.KollectionPosterPreview = { refresh, setLoading, updateDescription };
+  window.KollectionPosterPreview = { refresh, setLoading, setUpdating, updateDescription };
 
   document.addEventListener('change', (event) => {
     const target = event.target;
@@ -168,8 +199,12 @@
 
     event.stopImmediatePropagation();
     syncUiState();
-    setLoading();
-    queueMicrotask(refresh);
+
+    const hardChange = target.matches('input[name="posterSource"], #artworkProvider');
+    if (hardChange) setLoading();
+    else setUpdating();
+
+    queueMicrotask(() => refresh({ hard: hardChange }));
   }, true);
 
   document.addEventListener('click', (event) => {
@@ -178,7 +213,7 @@
     setTimeout(() => {
       syncUiState();
       setLoading();
-      refresh();
+      refresh({ hard: true });
     }, 0);
   }, true);
 
