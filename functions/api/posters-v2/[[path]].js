@@ -2,9 +2,10 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'smart-reference-2';
+const CACHE_VERSION = 'production-cache-1';
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
+const ALLOWED_TAGS = ['trend', 'rating', 'genre', 'quality', 'hdr', 'audio', 'age'];
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data, null, 2), {
@@ -97,6 +98,11 @@ function normalizeRatingSource(value) {
   return ['average', 'score', 'imdb', 'letterboxd', 'mal', 'rogerebert', 'tomatometer', 'popcornmeter', 'tmdb'].includes(source)
     ? source
     : 'average';
+}
+
+function normalizeTags(value) {
+  const requested = new Set(String(value || 'trend,rating').split(',').map((v) => v.trim().toLowerCase()).filter(Boolean));
+  return ALLOWED_TAGS.filter((tag) => requested.has(tag));
 }
 
 function tmdbRating(details, source, status = 'ok') {
@@ -204,8 +210,28 @@ async function resolveRating(details, requestedSource, env) {
 }
 
 function cacheRequestFor(request) {
-  const cacheUrl = new URL(request.url);
+  const incoming = new URL(request.url);
+  const preview = incoming.searchParams.get('preview') === '1';
+  const cacheUrl = new URL(`${incoming.origin}${incoming.pathname}`);
+  const source = incoming.searchParams.get('source') === 'smart' ? 'smart' : 'tmdb';
+  const provider = incoming.searchParams.get('provider') || 'tmdb';
+  const tags = normalizeTags(incoming.searchParams.get('tags'));
+  const ratingSource = normalizeRatingSource(incoming.searchParams.get('ratingSource'));
+  const overlayColor = incoming.searchParams.get('overlayColor') || 'dynamic';
+
+  cacheUrl.searchParams.set('source', source);
+  cacheUrl.searchParams.set('provider', provider);
+  cacheUrl.searchParams.set('tags', tags.join(','));
+  cacheUrl.searchParams.set('ratingSource', ratingSource);
+  cacheUrl.searchParams.set('overlayColor', overlayColor);
   cacheUrl.searchParams.set('__kollection_renderer', CACHE_VERSION);
+  cacheUrl.searchParams.set('__kollection_scope', preview ? 'preview' : 'production');
+
+  if (preview) {
+    cacheUrl.searchParams.set('preview', '1');
+    cacheUrl.searchParams.set('previewVersion', incoming.searchParams.get('previewVersion') || 'default');
+  }
+
   return new Request(cacheUrl.toString(), request);
 }
 
@@ -219,10 +245,16 @@ export async function onRequest(context) {
   if (!env.TMDB_API_KEY) return json({ error: 'TMDB_API_KEY is not configured.' }, 503);
   if (!env.POSTERS_RENDERER_AUTH_TOKEN) return json({ error: 'POSTERS_RENDERER_AUTH_TOKEN is not configured.' }, 503);
 
+  const preview = url.searchParams.get('preview') === '1';
   const cache = caches.default;
   const cacheRequest = cacheRequestFor(request);
   const cached = await cache.match(cacheRequest);
-  if (cached) return cached;
+  if (cached) {
+    const headers = new Headers(cached.headers);
+    headers.set('x-kollection-cache', 'HIT');
+    headers.set('x-kollection-cache-scope', preview ? 'preview' : 'production');
+    return new Response(cached.body, { status: cached.status, headers });
+  }
 
   const slot = await acquirePosterRenderSlot(env, request);
   if (!slot.allowed) return json({ error: 'Poster render budget blocked this uncached render.', reason: slot.reason }, slot.reason === 'client-hourly-limit' ? 429 : 503);
@@ -234,7 +266,7 @@ export async function onRequest(context) {
     const details = await tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null`, env.TMDB_API_KEY);
     if (!details.poster_path) return json({ error: 'TMDB has no poster for this title.' }, 404);
 
-    const tags = new Set((url.searchParams.get('tags') || 'trend,rating').split(',').map((v) => v.trim()).filter(Boolean));
+    const tags = new Set(normalizeTags(url.searchParams.get('tags')));
     const smartLayout = url.searchParams.get('source') === 'smart';
     const artwork = choosePoster(details, smartLayout);
     const logo = chooseLogo(details, smartLayout);
@@ -269,9 +301,17 @@ export async function onRequest(context) {
 
     const headers = new Headers(rendered.headers);
     headers.set('content-type', 'image/webp');
-    headers.set('cache-control', payload.trend ? 'public, max-age=900, s-maxage=1800, stale-while-revalidate=3600' : 'public, max-age=21600, s-maxage=86400, stale-while-revalidate=604800');
+    if (preview) {
+      headers.set('cache-control', payload.trend ? 'public, max-age=30, s-maxage=300' : 'public, max-age=60, s-maxage=600');
+    } else if (payload.trend) {
+      headers.set('cache-control', 'public, max-age=900, s-maxage=1800, stale-while-revalidate=21600');
+    } else {
+      headers.set('cache-control', 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000');
+    }
     headers.set('x-kollection-posters', 'v2-sharp');
     headers.set('x-kollection-render-version', CACHE_VERSION);
+    headers.set('x-kollection-cache', 'MISS');
+    headers.set('x-kollection-cache-scope', preview ? 'preview' : 'production');
     headers.set('x-kollection-rating-source', rating.source);
     headers.set('x-kollection-rating-status', rating.status);
     headers.set('x-kollection-artwork-source', artwork.source);
