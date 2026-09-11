@@ -60,6 +60,60 @@
 }
 .poster-mock.tags-off .overlay,.poster-mock .overlay.tag-hidden{display:none!important}
 
+/* Live preview states: never flash the old placeholder while a newly-selected render is loading. */
+.poster-mock.service-loading .poster-art,
+.poster-mock.service-loading .overlay,
+.poster-mock.service-live .overlay{
+  opacity:0!important;
+  visibility:hidden!important;
+}
+.poster-mock.service-loading{
+  isolation:isolate;
+  overflow:hidden;
+  background:#11121a!important;
+}
+.poster-mock.service-loading::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:8;
+  background:
+    radial-gradient(circle at 50% 42%,rgba(99,102,241,.34),transparent 42%),
+    linear-gradient(110deg,#151622 8%,#22233b 30%,#5b5ce2 46%,#272847 60%,#151622 84%);
+  background-size:220% 100%;
+  animation:posterPreviewPulse 1.25s ease-in-out infinite;
+}
+.poster-mock.service-loading::after{
+  content:"Loading preview…"!important;
+  position:absolute!important;
+  inset:50% auto auto 50%!important;
+  transform:translate(-50%,-50%)!important;
+  z-index:9!important;
+  width:max-content!important;
+  max-width:85%!important;
+  padding:8px 12px!important;
+  border:1px solid rgba(165,180,252,.38)!important;
+  border-radius:9px!important;
+  background:rgba(38,39,78,.82)!important;
+  color:#eef0ff!important;
+  box-shadow:0 8px 28px rgba(45,46,110,.34)!important;
+  font-size:10px!important;
+  font-weight:800!important;
+  letter-spacing:.04em!important;
+  text-transform:uppercase!important;
+}
+.poster-mock.service-live .poster-service-image{
+  opacity:1;
+  transition:opacity .16s ease;
+}
+@keyframes posterPreviewPulse{
+  0%{background-position:0 0}
+  100%{background-position:100% 0}
+}
+@media(prefers-reduced-motion:reduce){
+  .poster-mock.service-loading::before{animation:none}
+}
+
 /* BetterPosters-style settings rows with native switch behavior. */
 #tagOptions .tag-grid{display:grid;grid-template-columns:1fr;gap:12px}
 #tagOptions .tag-option{
