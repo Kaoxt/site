@@ -3,6 +3,7 @@ import sharp from 'sharp';
 
 const PORT = Number(process.env.PORT || 8080);
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w780';
+const TMDB_LOGO_BASE = 'https://image.tmdb.org/t/p/original';
 const POSTER_WIDTH = 780;
 const POSTER_HEIGHT = 1170;
 const SAFE_MARGIN = 30;
@@ -69,6 +70,45 @@ async function titleImage(title) {
   }).png().toBuffer();
 }
 
+async function smartLogoImage(logoPath) {
+  if (!logoPath) return null;
+  try {
+    const response = await fetch(`${TMDB_LOGO_BASE}${logoPath}`, { headers: { accept: 'image/*' } });
+    if (!response.ok) return null;
+    const input = Buffer.from(await response.arrayBuffer());
+    const meta = await sharp(input).metadata();
+    if (!meta.width || !meta.height) return null;
+
+    const maxWidth = 620;
+    const maxHeight = 165;
+    const scale = Math.min(maxWidth / meta.width, maxHeight / meta.height, 1);
+    const width = Math.max(1, Math.round(meta.width * scale));
+    const height = Math.max(1, Math.round(meta.height * scale));
+    const buffer = await sharp(input)
+      .resize(width, height, { fit: 'inside', withoutEnlargement: true })
+      .png()
+      .toBuffer();
+
+    return { buffer, width, height };
+  } catch {
+    return null;
+  }
+}
+
+function bottomLogoBackdrop(height = 260) {
+  return Buffer.from(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="${POSTER_WIDTH}" height="${height}">
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#000000" stop-opacity="0"/>
+          <stop offset="0.45" stop-color="#000000" stop-opacity="0.18"/>
+          <stop offset="1" stop-color="#000000" stop-opacity="0.68"/>
+        </linearGradient>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#g)"/>
+    </svg>`);
+}
+
 function ratingBadgeWidth(label) {
   const length = String(label || '').length;
   if (length <= 6) return 165;
@@ -87,6 +127,7 @@ async function renderPoster(body) {
   const {
     posterPath,
     sourceUrl,
+    logoPath = '',
     title = '',
     smartLayout = false,
     rating = '',
@@ -161,15 +202,30 @@ async function renderPoster(body) {
     });
   }
 
-  if (smartLayout && title) {
-    const titleBuffer = await titleImage(title);
-    if (titleBuffer) {
-      const hasBottomTags = Boolean(resolvedRatingLabel || genre);
-      composites.push({
-        input: titleBuffer,
-        top: hasBottomTags ? POSTER_HEIGHT - 250 : POSTER_HEIGHT - 180,
-        left: 50,
-      });
+  if (smartLayout) {
+    const hasBottomTags = Boolean(resolvedRatingLabel || genre);
+    const logo = await smartLogoImage(logoPath);
+    const titleTopBase = hasBottomTags ? POSTER_HEIGHT - 290 : POSTER_HEIGHT - 215;
+
+    composites.push({
+      input: bottomLogoBackdrop(hasBottomTags ? 300 : 245),
+      top: hasBottomTags ? POSTER_HEIGHT - 300 : POSTER_HEIGHT - 245,
+      left: 0,
+    });
+
+    if (logo) {
+      const left = Math.round((POSTER_WIDTH - logo.width) / 2);
+      const top = Math.max(760, titleTopBase + Math.round((165 - logo.height) / 2));
+      composites.push({ input: logo.buffer, top, left });
+    } else if (title) {
+      const titleBuffer = await titleImage(title);
+      if (titleBuffer) {
+        composites.push({
+          input: titleBuffer,
+          top: titleTopBase,
+          left: 50,
+        });
+      }
     }
   }
 
@@ -184,7 +240,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-sharp-smart-1' }));
+      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-sharp-smart-logo-1' }));
     }
 
     if (req.method !== 'POST' || req.url !== '/render') {
@@ -199,7 +255,7 @@ const server = http.createServer(async (req, res) => {
       'content-type': 'image/webp',
       'content-length': String(output.length),
       'cache-control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
-      'x-kollection-renderer': 'v2-sharp-smart-1',
+      'x-kollection-renderer': 'v2-sharp-smart-logo-1',
       'x-kollection-render-ms': String(Date.now() - started),
     });
     res.end(output);
