@@ -10,7 +10,7 @@
   <meta name="description" content="Create smart movie and TV poster overlays for AIOmetadata, Nuvio, Stremio, and The Kollection." />
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/secondary-pages.css?v=20260909-3" />
-  <link rel="stylesheet" href="/posters/styles.css?v=20260909-7" />
+  <link rel="stylesheet" href="/posters/styles.css?v=20260910-1" />
   <link rel="stylesheet" href="/posters/overlays.css?v=20260909-4" />
   <link rel="stylesheet" href="/posters/addon.css?v=20260909-1" />
   <script src="/components.js?v=20260908-3" defer></script>
@@ -86,36 +86,49 @@
             <div class="overlay overlay-genre" data-tag="genre">ADVENTURE</div>
           </div>
         </div>
-        <div class="preview-description" id="previewDescription">Using Smart Layout artwork. 2 Smart Tags enabled.</div>
+        <div class="preview-description" id="previewDescription">Smart Posters using TMDB artwork. 2 Smart Tags enabled.</div>
         <div class="preview-legend">
           <span><i></i> Live previews are rendered through The Kollection poster service</span>
-          <span><i></i> TMDB Original mode keeps the original poster/title placement</span>
+          <span><i></i> Original Posters keep the provider's original poster/title placement</span>
         </div>
       </section>
 
       <section class="posters-shell" aria-label="Configure Posters">
         <div class="posters-config">
           <div class="section-heading">
-            <span class="section-kicker">POSTER SOURCE</span>
-            <h2>Choose how artwork is handled</h2>
-            <p>Smart Layout is the default. It prefers textless TMDB artwork when available and adds a clean title treatment above the fixed Smart Tag area. TMDB Original preserves the poster exactly as TMDB provides it.</p>
+            <span class="section-kicker">POSTER STYLE</span>
+            <h2>Choose your poster style</h2>
+            <p>Poster style controls how The Kollection formats the artwork. Artwork provider is selected separately below.</p>
           </div>
 
-          <div class="choice-grid" id="posterSourceChoices">
+          <div class="choice-grid poster-style-grid" id="posterSourceChoices">
             <label class="choice-card selected">
               <input type="radio" name="posterSource" value="smart" checked />
-              <span class="choice-title">Smart Layout</span>
-              <span class="choice-copy">Default. Prefers textless TMDB artwork when available, then adds the title near the bottom so Smart Tags have a cleaner fixed layout.</span>
+              <span class="choice-title">Smart Posters</span>
+              <span class="choice-copy">Default. Prefers suitable textless artwork when available, places the official title/logo near the bottom, and keeps Smart Tags clear of the title.</span>
             </label>
             <label class="choice-card">
               <input type="radio" name="posterSource" value="tmdb" />
-              <span class="choice-title">TMDB Original</span>
-              <span class="choice-copy">Uses TMDB poster artwork exactly as provided. The existing title placement is not moved, and Smart Tags stay in their fixed positions.</span>
+              <span class="choice-title">Original Posters</span>
+              <span class="choice-copy">Keeps the selected provider's original poster composition and title placement, then adds the Original-style overlays without relocating the title.</span>
             </label>
-            <label class="choice-card">
-              <input type="radio" name="posterSource" value="inherit" />
-              <span class="choice-title">Use AIOmetadata setting</span>
-              <span class="choice-copy">Keep the poster provider already selected in the imported config, or AIOmetadata's own default when no config is imported.</span>
+          </div>
+
+          <div class="provider-block">
+            <div class="provider-copy">
+              <span class="section-kicker">ARTWORK PROVIDER</span>
+              <strong>Choose where poster artwork comes from</strong>
+              <small>TMDB is available now. Additional providers will become selectable as their artwork APIs are added.</small>
+            </div>
+            <label class="provider-field" for="artworkProvider">
+              <span>Provider</span>
+              <select id="artworkProvider" aria-label="Artwork provider">
+                <option value="tmdb" selected>The Movie Database (TMDB)</option>
+                <option value="tvdb" disabled>TheTVDB — Coming soon</option>
+                <option value="fanart" disabled>Fanart.tv — Coming soon</option>
+                <option value="cinemeta" disabled>IMDb / Cinemeta — Coming soon</option>
+                <option value="inherit" disabled>Use AIOmetadata provider — Coming soon</option>
+              </select>
             </label>
           </div>
 
@@ -137,7 +150,7 @@
               <label class="tag-option"><input type="checkbox" value="audio" /><span><strong>Audio</strong><small>Atmos / premium audio when available</small></span></label>
               <label class="tag-option"><input type="checkbox" value="age" /><span><strong>Age Rating</strong><small>Certification badge</small></span></label>
             </div>
-            <p class="fixed-note">Tag positions are fixed. In TMDB Original mode, tags are not moved to avoid artwork or title text.</p>
+            <p class="fixed-note">Smart Posters reserve a title zone. Original Posters keep the provider artwork/title placement and use their own overlay positions.</p>
           </div>
 
           <div class="divider"></div>
@@ -181,7 +194,7 @@
   </main>
 
   <script src="/posters/posters.js?v=20260909-9"></script>
-  <script src="/posters/preview-controller.js?v=20260910-3"></script>
+  <script src="/posters/preview-controller.js?v=20260910-4"></script>
   <script src="/posters/rating-sources-status.js?v=20260910-1"></script>
   <script src="/posters/addon.js?v=20260909-1"></script>
 </body>
