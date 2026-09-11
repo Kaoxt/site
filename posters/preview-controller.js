@@ -83,7 +83,7 @@
         tags: tags.join(','),
         ratingSource,
         preview: '1',
-        previewVersion: '20260910-2',
+        previewVersion: 'overlay-scale-1',
       });
       img.src = `/api/posters-v2/${sample.type}/${sample.id}.webp?${params.toString()}`;
     });
