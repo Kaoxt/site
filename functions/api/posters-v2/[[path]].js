@@ -2,7 +2,7 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'original-safe-1';
+const CACHE_VERSION = 'smart-better-1';
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
 
@@ -139,12 +139,7 @@ async function readCachedRating(db, provider, itemId, maxAgeSeconds) {
     WHERE provider = ?1 AND item_id = ?2 AND updated_at >= ?3
   `).bind(provider, itemId, cutoff).first();
   if (!row) return null;
-  return {
-    value: String(row.value || ''),
-    label: String(row.label || ''),
-    source: provider,
-    status: 'cache-hit',
-  };
+  return { value: String(row.value || ''), label: String(row.label || ''), source: provider, status: 'cache-hit' };
 }
 
 async function reserveProviderLookup(db, provider, dailyLimit) {
@@ -154,13 +149,11 @@ async function reserveProviderLookup(db, provider, dailyLimit) {
     VALUES (?1, ?2, 0)
     ON CONFLICT(day, provider) DO NOTHING
   `).bind(day, provider).run();
-
   const result = await db.prepare(`
     UPDATE poster_provider_usage_daily
     SET lookups = lookups + 1
     WHERE day = ?1 AND provider = ?2 AND lookups < ?3
   `).bind(day, provider, dailyLimit).run();
-
   return Number(result?.meta?.changes || 0) > 0;
 }
 
@@ -181,37 +174,25 @@ async function imdbRating(details, env) {
   if (!imdbId) return { value: '', label: '', source: 'imdb', status: 'missing-id' };
   if (!env.OMDB_API_KEY) return { value: '', label: '', source: 'imdb', status: 'not-configured' };
   if (!env.DB) return tmdbFallback(details, 'rating-cache-unavailable');
-
   const cacheDays = positiveInt(env.OMDB_RATING_CACHE_DAYS, DEFAULT_OMDB_CACHE_DAYS, 1, 365);
   const dailyLimit = positiveInt(env.OMDB_MAX_LOOKUPS_PER_DAY, DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY, 1, 1000000);
-
   try {
     await ensureRatingTables(env.DB);
     const cached = await readCachedRating(env.DB, 'imdb', imdbId, cacheDays * 86400);
     if (cached) return cached;
-
     const reserved = await reserveProviderLookup(env.DB, 'omdb', dailyLimit);
     if (!reserved) return tmdbFallback(details, 'omdb-daily-limit');
   } catch {
     return tmdbFallback(details, 'rating-cache-error');
   }
-
-  const response = await fetch(`https://www.omdbapi.com/?apikey=${encodeURIComponent(env.OMDB_API_KEY)}&i=${encodeURIComponent(imdbId)}`, {
-    headers: { accept: 'application/json' },
-  });
+  const response = await fetch(`https://www.omdbapi.com/?apikey=${encodeURIComponent(env.OMDB_API_KEY)}&i=${encodeURIComponent(imdbId)}`, { headers: { accept: 'application/json' } });
   if (!response.ok) return tmdbFallback(details, `omdb-${response.status}`);
-
   const data = await response.json();
   const value = Number.parseFloat(data?.imdbRating);
   if (!Number.isFinite(value) || value <= 0) return tmdbFallback(details, 'omdb-missing');
-
   const formatted = value.toFixed(1);
   const label = `IMDb ${formatted}`;
-  try {
-    await writeCachedRating(env.DB, 'imdb', imdbId, formatted, label);
-  } catch {
-    // The current request can still use the fetched rating; future requests will retry safely.
-  }
+  try { await writeCachedRating(env.DB, 'imdb', imdbId, formatted, label); } catch {}
   return { value: formatted, label, source: 'imdb', status: 'upstream' };
 }
 
@@ -234,7 +215,6 @@ export async function onRequest(context) {
   const parts = url.pathname.split('/').filter(Boolean);
   const type = parts[2] === 'tv' || parts[2] === 'series' ? 'tv' : 'movie';
   const rawId = String(parts[3] || '').replace(/\.webp$/i, '');
-
   if (!rawId) return json({ error: 'Expected /api/posters-v2/movie/27205.webp' }, 400);
   if (!env.TMDB_API_KEY) return json({ error: 'TMDB_API_KEY is not configured.' }, 503);
   if (!env.POSTERS_RENDERER_AUTH_TOKEN) return json({ error: 'POSTERS_RENDERER_AUTH_TOKEN is not configured.' }, 503);
@@ -245,14 +225,11 @@ export async function onRequest(context) {
   if (cached) return cached;
 
   const slot = await acquirePosterRenderSlot(env, request);
-  if (!slot.allowed) {
-    return json({ error: 'Poster render budget blocked this uncached render.', reason: slot.reason }, slot.reason === 'client-hourly-limit' ? 429 : 503);
-  }
+  if (!slot.allowed) return json({ error: 'Poster render budget blocked this uncached render.', reason: slot.reason }, slot.reason === 'client-hourly-limit' ? 429 : 503);
 
   try {
     const id = await resolveTmdbId(type, rawId, env.TMDB_API_KEY);
     if (!id) return json({ error: 'Could not resolve TMDB/IMDb id.' }, 404);
-
     const append = type === 'movie' ? 'images,release_dates,external_ids' : 'images,content_ratings,external_ids';
     const details = await tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null`, env.TMDB_API_KEY);
     if (!details.poster_path) return json({ error: 'TMDB has no poster for this title.' }, 404);
@@ -264,10 +241,7 @@ export async function onRequest(context) {
     if (!artwork.path) return json({ error: 'TMDB has no poster artwork for this title.' }, 404);
 
     const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
-    const rating = tags.has('rating')
-      ? await resolveRating(details, requestedRatingSource, env)
-      : { value: '', label: '', source: requestedRatingSource, status: 'disabled' };
-
+    const rating = tags.has('rating') ? await resolveRating(details, requestedRatingSource, env) : { value: '', label: '', source: requestedRatingSource, status: 'disabled' };
     const payload = {
       posterPath: artwork.path,
       logoPath: logo.path,
@@ -279,19 +253,15 @@ export async function onRequest(context) {
       trend: tags.has('trend') ? await trendLabel(type, id, env.TMDB_API_KEY) : '',
       quality: '',
       smartLayout,
+      overlayColor: url.searchParams.get('overlayColor') || 'dynamic',
     };
 
     const rendererBase = String(env.POSTERS_V2_RENDERER_URL || DEFAULT_RENDERER_URL).replace(/\/$/, '');
     const rendered = await fetch(`${rendererBase}/render`, {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        accept: 'image/webp',
-        'x-kollection-render-key': String(env.POSTERS_RENDERER_AUTH_TOKEN),
-      },
+      headers: { 'content-type': 'application/json', accept: 'image/webp', 'x-kollection-render-key': String(env.POSTERS_RENDERER_AUTH_TOKEN) },
       body: JSON.stringify(payload),
     });
-
     if (!rendered.ok) {
       const message = await rendered.text().catch(() => '');
       return json({ error: 'Sharp renderer failed.', status: rendered.status, detail: message.slice(0, 500) }, 502);
@@ -299,9 +269,7 @@ export async function onRequest(context) {
 
     const headers = new Headers(rendered.headers);
     headers.set('content-type', 'image/webp');
-    headers.set('cache-control', payload.trend
-      ? 'public, max-age=900, s-maxage=1800, stale-while-revalidate=3600'
-      : 'public, max-age=21600, s-maxage=86400, stale-while-revalidate=604800');
+    headers.set('cache-control', payload.trend ? 'public, max-age=900, s-maxage=1800, stale-while-revalidate=3600' : 'public, max-age=21600, s-maxage=86400, stale-while-revalidate=604800');
     headers.set('x-kollection-posters', 'v2-sharp');
     headers.set('x-kollection-render-version', CACHE_VERSION);
     headers.set('x-kollection-rating-source', rating.source);
