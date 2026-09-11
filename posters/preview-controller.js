@@ -126,7 +126,7 @@
         tags: tags.join(','),
         ratingSource,
         preview: '1',
-        previewVersion: `bp-proportion-1-${source}-${provider}-${tags.join('-') || 'none'}-${ratingSource}`,
+        previewVersion: `bp-layout-2-${source}-${provider}-${tags.join('-') || 'none'}-${ratingSource}`,
       });
       img.src = `/api/posters-v2/${sample.type}/${sample.id}.webp?${params.toString()}`;
     });
