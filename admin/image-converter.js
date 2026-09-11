@@ -246,6 +246,16 @@
     }
   }
 
+  async function isRealWebP(blob) {
+    if (!blob || blob.size < 12) return false;
+
+    const header = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
+    const ascii = (start, length) =>
+      String.fromCharCode(...header.slice(start, start + length));
+
+    return ascii(0, 4) === 'RIFF' && ascii(8, 4) === 'WEBP';
+  }
+
   async function convertToWebP() {
     if (!state.file) {
       setMessage('Choose a PNG before converting.');
@@ -297,6 +307,11 @@
 
       if (!blob || blob.type !== 'image/webp') {
         throw new Error('This browser could not create a WebP file.');
+      }
+
+      const realWebP = await isRealWebP(blob);
+      if (!realWebP) {
+        throw new Error('Conversion was blocked because the browser returned a file that was not truly encoded as WebP.');
       }
 
       state.resultBlob = blob;
@@ -424,8 +439,13 @@
 
   el.convertButton.addEventListener('click', convertToWebP);
 
-  el.downloadButton.addEventListener('click', () => {
+  el.downloadButton.addEventListener('click', async () => {
     if (!state.resultBlob || !state.resultUrl || !state.file) return;
+
+    if (!(await isRealWebP(state.resultBlob))) {
+      setMessage('Download blocked because the converted file is not a valid WebP.');
+      return;
+    }
 
     const link = document.createElement('a');
     link.href = state.resultUrl;
