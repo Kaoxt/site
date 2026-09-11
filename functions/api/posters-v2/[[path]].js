@@ -302,7 +302,11 @@ export async function onRequest(context) {
 
     const headers = new Headers(rendered.headers);
     headers.set('content-type', 'image/webp');
-    if (preview) {
+    if (preview && tags.size === 0) {
+      // Client-side configurator previews request artwork/logo/title only.
+      // Those base renders are reusable across users and tag combinations, so cache them aggressively.
+      headers.set('cache-control', 'public, max-age=3600, s-maxage=604800, stale-while-revalidate=2592000');
+    } else if (preview) {
       headers.set('cache-control', payload.trend ? 'public, max-age=30, s-maxage=300' : 'public, max-age=60, s-maxage=600');
     } else if (payload.trend) {
       headers.set('cache-control', 'public, max-age=900, s-maxage=1800, stale-while-revalidate=21600');
