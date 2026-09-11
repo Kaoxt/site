@@ -2,7 +2,7 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'production-cache-5';
+const CACHE_VERSION = 'production-cache-6';
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
 const ALLOWED_TAGS = ['trend', 'rating', 'genre', 'quality', 'age'];
@@ -103,6 +103,96 @@ function normalizeRatingSource(value) {
 function normalizeTags(value) {
   const requested = new Set(String(value || 'trend,rating').split(',').map((v) => v.trim().toLowerCase()).filter(Boolean));
   return ALLOWED_TAGS.filter((tag) => requested.has(tag));
+}
+
+function posterCacheBucket(env) {
+  return env?.POSTER_CACHE || env?.IMAGES || null;
+}
+
+async function sha256Hex(value) {
+  const bytes = new TextEncoder().encode(String(value));
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function posterVariant(url, preview) {
+  return {
+    version: CACHE_VERSION,
+    scope: preview ? 'preview' : 'production',
+    source: url.searchParams.get('source') === 'smart' ? 'smart' : 'tmdb',
+    provider: url.searchParams.get('provider') || 'tmdb',
+    tags: normalizeTags(url.searchParams.get('tags')),
+    ratingSource: normalizeRatingSource(url.searchParams.get('ratingSource')),
+    overlayColor: url.searchParams.get('overlayColor') || 'dynamic',
+  };
+}
+
+async function persistentPosterKey(type, id, url, preview) {
+  const variant = posterVariant(url, preview);
+  const hash = await sha256Hex(JSON.stringify(variant));
+  return `poster-cache/${variant.scope}/${type}/${id}/${hash}.webp`;
+}
+
+function posterCacheControl(preview, tags, hasTrendValue = false) {
+  const tagSet = tags instanceof Set ? tags : new Set(tags || []);
+  if (preview && tagSet.size === 0) {
+    return 'public, max-age=3600, s-maxage=604800, stale-while-revalidate=2592000';
+  }
+  if (preview) {
+    return hasTrendValue || tagSet.has('trend')
+      ? 'public, max-age=30, s-maxage=300'
+      : 'public, max-age=60, s-maxage=600';
+  }
+  if (hasTrendValue || tagSet.has('trend')) {
+    return 'public, max-age=900, s-maxage=1800, stale-while-revalidate=21600';
+  }
+  return 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000';
+}
+
+function todayUtc() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function readPersistentPoster(env, key, tags) {
+  const bucket = posterCacheBucket(env);
+  if (!bucket) return null;
+
+  try {
+    const object = await bucket.get(key);
+    if (!object) return null;
+
+    const tagSet = tags instanceof Set ? tags : new Set(tags || []);
+    if (tagSet.has('trend')) {
+      const storedDay = String(object.customMetadata?.trendDay || '');
+      if (storedDay !== todayUtc()) return null;
+    }
+
+    return object;
+  } catch {
+    return null;
+  }
+}
+
+async function writePersistentPoster(env, key, bytes, cacheControl, tags) {
+  const bucket = posterCacheBucket(env);
+  if (!bucket) return false;
+
+  const tagSet = tags instanceof Set ? tags : new Set(tags || []);
+  try {
+    await bucket.put(key, bytes, {
+      httpMetadata: {
+        contentType: 'image/webp',
+        cacheControl,
+      },
+      customMetadata: {
+        rendererVersion: CACHE_VERSION,
+        trendDay: tagSet.has('trend') ? todayUtc() : '',
+      },
+    });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function tmdbRating(details, source, status = 'ok') {
@@ -253,20 +343,41 @@ export async function onRequest(context) {
     const headers = new Headers(cached.headers);
     headers.set('x-kollection-cache', 'HIT');
     headers.set('x-kollection-cache-scope', preview ? 'preview' : 'production');
+    headers.set('x-kollection-persistent-cache', 'BYPASS');
     return new Response(cached.body, { status: cached.status, headers });
+  }
+
+  const id = await resolveTmdbId(type, rawId, env.TMDB_API_KEY);
+  if (!id) return json({ error: 'Could not resolve TMDB/IMDb id.' }, 404);
+
+  const requestedTags = new Set(normalizeTags(url.searchParams.get('tags')));
+  const persistentKey = await persistentPosterKey(type, id, url, preview);
+  const persistent = await readPersistentPoster(env, persistentKey, requestedTags);
+  if (persistent) {
+    const headers = new Headers();
+    persistent.writeHttpMetadata(headers);
+    headers.set('content-type', 'image/webp');
+    headers.set('cache-control', posterCacheControl(preview, requestedTags, requestedTags.has('trend')));
+    headers.set('etag', persistent.httpEtag);
+    headers.set('x-kollection-cache', 'MISS');
+    headers.set('x-kollection-persistent-cache', 'HIT');
+    headers.set('x-kollection-cache-scope', preview ? 'preview' : 'production');
+    headers.set('x-kollection-render-version', CACHE_VERSION);
+
+    const response = new Response(persistent.body, { status: 200, headers });
+    context.waitUntil(cache.put(cacheRequest, response.clone()));
+    return response;
   }
 
   const slot = await acquirePosterRenderSlot(env, request);
   if (!slot.allowed) return json({ error: 'Poster render budget blocked this uncached render.', reason: slot.reason }, slot.reason === 'client-hourly-limit' ? 429 : 503);
 
   try {
-    const id = await resolveTmdbId(type, rawId, env.TMDB_API_KEY);
-    if (!id) return json({ error: 'Could not resolve TMDB/IMDb id.' }, 404);
     const append = type === 'movie' ? 'images,release_dates,external_ids' : 'images,content_ratings,external_ids';
     const details = await tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null`, env.TMDB_API_KEY);
     if (!details.poster_path) return json({ error: 'TMDB has no poster for this title.' }, 404);
 
-    const tags = new Set(normalizeTags(url.searchParams.get('tags')));
+    const tags = requestedTags;
     const smartLayout = url.searchParams.get('source') === 'smart';
     const artwork = choosePoster(details, smartLayout);
     const smartTextless = smartLayout && artwork.source === 'smart-textless';
@@ -300,30 +411,27 @@ export async function onRequest(context) {
       return json({ error: 'Sharp renderer failed.', status: rendered.status, detail: message.slice(0, 500) }, 502);
     }
 
+    const output = await rendered.arrayBuffer();
+    const cacheControl = posterCacheControl(preview, tags, Boolean(payload.trend));
     const headers = new Headers(rendered.headers);
     headers.set('content-type', 'image/webp');
-    if (preview && tags.size === 0) {
-      // Client-side configurator previews request artwork/logo/title only.
-      // Those base renders are reusable across users and tag combinations, so cache them aggressively.
-      headers.set('cache-control', 'public, max-age=3600, s-maxage=604800, stale-while-revalidate=2592000');
-    } else if (preview) {
-      headers.set('cache-control', payload.trend ? 'public, max-age=30, s-maxage=300' : 'public, max-age=60, s-maxage=600');
-    } else if (payload.trend) {
-      headers.set('cache-control', 'public, max-age=900, s-maxage=1800, stale-while-revalidate=21600');
-    } else {
-      headers.set('cache-control', 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000');
-    }
+    headers.set('cache-control', cacheControl);
     headers.set('x-kollection-posters', 'v2-sharp');
     headers.set('x-kollection-render-version', CACHE_VERSION);
     headers.set('x-kollection-cache', 'MISS');
+    headers.set('x-kollection-persistent-cache', 'MISS');
     headers.set('x-kollection-cache-scope', preview ? 'preview' : 'production');
     headers.set('x-kollection-rating-source', rating.source);
     headers.set('x-kollection-rating-status', rating.status);
     headers.set('x-kollection-artwork-source', artwork.source);
     headers.set('x-kollection-logo-source', logo.source);
     headers.set('x-kollection-tmdb-id', id);
-    const response = new Response(rendered.body, { status: 200, headers });
-    context.waitUntil(cache.put(cacheRequest, response.clone()));
+
+    const response = new Response(output, { status: 200, headers });
+    context.waitUntil(Promise.all([
+      cache.put(cacheRequest, response.clone()),
+      writePersistentPoster(env, persistentKey, output.slice(0), cacheControl, tags),
+    ]));
     return response;
   } catch (error) {
     return json({ error: error?.message || 'Posters v2 failed.' }, 502);
