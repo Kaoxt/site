@@ -13,6 +13,7 @@ const SAFE_MARGIN = 30;
 const SMART_TOP_HEIGHT = 108;
 const SMART_TOP_GAP = 14;
 const SMART_BOTTOM_INFO_TOP = 1047;
+const SMART_AGE_TOP = 680;
 const SMART_LOGO_ZONE_TOP = 748;
 const SMART_LOGO_ZONE_BOTTOM = 1005;
 
@@ -261,10 +262,25 @@ async function renderPoster(body) {
 
     const topTags = [];
     if (trend) topTags.push(await smartTopTag(trend, { fill: dynamicFill, width: smartTagWidth(trend, 350, 410) }));
-    if (age) topTags.push(await smartTopTag(age, { fill: '#191a20', width: smartTagWidth(age, 190, 250), fontSize: 46 }));
     if (quality) topTags.push(await smartTopTag(quality, { fill: '#191a20', width: smartTagWidth(quality, 190, 260), fontSize: 46 }));
     for (const placement of packSmartTopTags(topTags)) {
       composites.push({ input: placement.buffer, top: placement.top, left: placement.left });
+    }
+
+    // BetterPosters keeps certification close to the title treatment instead of
+    // grouping it with the top tags. Reserve a centered slot immediately above
+    // the title/logo so Trend/Quality stay visually separate.
+    if (age) {
+      const width = smartTagWidth(age, 150, 220);
+      const ageBadge = await originalBadgeImage(age, {
+        width,
+        height: 64,
+        fill: '#111216',
+        fillOpacity: 0.76,
+        fontSize: 34,
+        radius: 10,
+      });
+      composites.push({ input: ageBadge, top: SMART_AGE_TOP, left: Math.round((POSTER_WIDTH - width) / 2) });
     }
 
     const logo = await smartLogoImage(logoPath);
@@ -311,7 +327,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-bp-proportion-1' }));
+      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-bp-layout-2' }));
     }
     if (req.method !== 'POST' || req.url !== '/render') {
       res.writeHead(404, { 'content-type': 'application/json' });
@@ -324,7 +340,7 @@ const server = http.createServer(async (req, res) => {
       'content-type': 'image/webp',
       'content-length': String(output.length),
       'cache-control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
-      'x-kollection-renderer': 'v2-bp-proportion-1',
+      'x-kollection-renderer': 'v2-bp-layout-2',
       'x-kollection-render-ms': String(Date.now() - started),
     });
     res.end(output);
