@@ -37,18 +37,24 @@
   `;
   document.head.appendChild(style);
 
-  let samples = [
-    { type: 'movie', id: '27205' },
-    { type: 'movie', id: '155' },
-    { type: 'tv', id: '1399' },
-  ];
+  let samples = [];
   let requestGeneration = 0;
 
   const selectedSource = () => document.querySelector('input[name="posterSource"]:checked')?.value || 'smart';
   const selectedRatingSource = () => document.getElementById('ratingSource')?.value || 'average';
   const selectedTags = () => [...document.querySelectorAll('.tag-option input[type="checkbox"]:checked')].map((input) => input.value);
 
+  function setLoading() {
+    posterMocks.forEach((posterMock) => {
+      posterMock.classList.remove('service-live');
+      posterMock.classList.add('preview-refreshing');
+      const img = posterMock.querySelector('.poster-service-image');
+      if (img) img.hidden = false;
+    });
+  }
+
   function refresh() {
+    if (samples.length < 3) return;
     const generation = ++requestGeneration;
     const source = selectedSource();
     const tags = selectedTags();
@@ -83,27 +89,47 @@
         tags: tags.join(','),
         ratingSource,
         preview: '1',
-        previewVersion: 'overlay-scale-1',
+        previewVersion: `overlay-scale-2-${source}`,
       });
       img.src = `/api/posters-v2/${sample.type}/${sample.id}.webp?${params.toString()}`;
     });
   }
 
   async function loadSamples() {
+    setLoading();
     try {
-      const response = await fetch('/api/posters-preview-samples', { headers: { accept: 'application/json' } });
+      const response = await fetch('/api/posters-preview-samples?previewVersion=2', {
+        headers: { accept: 'application/json' },
+        cache: 'no-store',
+      });
       if (response.ok) {
         const data = await response.json();
-        if (Array.isArray(data?.samples) && data.samples.length >= 3) samples = data.samples.slice(0, 3);
+        if (Array.isArray(data?.samples) && data.samples.length >= 3) {
+          samples = data.samples.slice(0, 3);
+        }
       }
     } catch {}
+
+    if (samples.length < 3) {
+      samples = [
+        { type: 'movie', id: '27205' },
+        { type: 'movie', id: '155' },
+        { type: 'tv', id: '1399' },
+      ];
+    }
     refresh();
   }
 
   document.querySelectorAll('input[name="posterSource"], .tag-option input[type="checkbox"]').forEach((input) => {
-    input.addEventListener('change', () => queueMicrotask(refresh));
+    input.addEventListener('change', () => {
+      setLoading();
+      queueMicrotask(refresh);
+    });
   });
-  document.getElementById('ratingSource')?.addEventListener('change', () => queueMicrotask(refresh));
+  document.getElementById('ratingSource')?.addEventListener('change', () => {
+    setLoading();
+    queueMicrotask(refresh);
+  });
 
   loadSamples();
 })();
