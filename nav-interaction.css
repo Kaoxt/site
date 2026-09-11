@@ -1,0 +1,33 @@
+/* Prevent Android/iOS long-press/tap highlight from painting across the shared nav. */
+#site-nav,
+#site-nav * {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+#site-nav .nav,
+#site-nav .brand,
+#site-nav .brand img,
+#site-nav .desktop-nav,
+#site-nav .nav-actions,
+#site-nav .theme-toggle,
+#site-nav .menu-wrap,
+#site-nav .menu,
+#site-nav .menu-glyph,
+#site-nav .menu-line {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+#site-nav .brand,
+#site-nav .brand img,
+#site-nav .theme-toggle,
+#site-nav .menu {
+  -webkit-user-drag: none !important;
+}
+
+#site-nav .nav::selection,
+#site-nav .nav *::selection {
+  background: transparent !important;
+  color: inherit !important;
+}
