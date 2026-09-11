@@ -124,35 +124,34 @@ async function originalBadgeImage(text, {
 async function smartBottomInfo(genre, ratingLabel) {
   const parts = [];
   if (genre) parts.push(genre);
-  if (ratingLabel) parts.push(`★ ${String(ratingLabel).replace(/^★\s*/, '').replace(/^(IMDb|TMDB)\s+/i, '')}`);
+  if (ratingLabel) parts.push(`★ ${String(ratingLabel).replace(/^★\\s*/, '').replace(/^(IMDb|TMDB)\\s+/i, '')}`);
   if (!parts.length) return null;
+
   const text = parts.join(' • ');
-  const shadow = {
-    text: {
-      text: `<span foreground="#000000" alpha="78%" weight="semibold">${esc(text)}</span>`,
-      font: 'DejaVu Sans 44',
-      width: 720,
-      height: 72,
-      align: 'center',
-      rgba: true,
-    },
-  };
-  const foreground = {
-    text: {
-      text: `<span foreground="#d4d4d8" weight="semibold">${esc(text)}</span>`,
-      font: 'DejaVu Sans 44',
-      width: 720,
-      height: 72,
-      align: 'center',
-      rgba: true,
-    },
-  };
-  return sharp({
-    create: { width: 720, height: 76, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
-  }).composite([
-    { input: shadow, top: 4, left: 1 },
-    { input: foreground, top: 0, left: 0 },
-  ]).png().toBuffer();
+  const safeText = esc(text);
+
+  // SVG text-anchor gives us a true geometric center, independent of rendered text width.
+  const svg = Buffer.from(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="720" height="76" viewBox="0 0 720 76">
+      <defs>
+        <filter id="shadow" x="-20%" y="-40%" width="140%" height="180%">
+          <feDropShadow dx="1" dy="4" stdDeviation="2.3" flood-color="#000000" flood-opacity="0.78"/>
+        </filter>
+      </defs>
+      <text
+        x="360"
+        y="39"
+        text-anchor="middle"
+        dominant-baseline="middle"
+        font-family="DejaVu Sans"
+        font-size="44"
+        font-weight="600"
+        fill="#d4d4d8"
+        filter="url(#shadow)"
+      >${safeText}</text>
+    </svg>`);
+
+  return sharp(svg).png().toBuffer();
 }
 
 async function titleImage(title) {
@@ -318,7 +317,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-bp-layout-4' }));
+      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-bp-layout-5' }));
     }
     if (req.method !== 'POST' || req.url !== '/render') {
       res.writeHead(404, { 'content-type': 'application/json' });
@@ -331,7 +330,7 @@ const server = http.createServer(async (req, res) => {
       'content-type': 'image/webp',
       'content-length': String(output.length),
       'cache-control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
-      'x-kollection-renderer': 'v2-bp-layout-4',
+      'x-kollection-renderer': 'v2-bp-layout-5',
       'x-kollection-render-ms': String(Date.now() - started),
     });
     res.end(output);
