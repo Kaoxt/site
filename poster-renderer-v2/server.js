@@ -63,6 +63,7 @@ async function smartTopTag(text, {
   fillOpacity = 0.94,
   width,
   fontSize = 46,
+  textColor = '#ffffff',
 } = {}) {
   const resolvedWidth = width || smartTagWidth(text);
   const safeText = esc(text);
@@ -86,7 +87,7 @@ async function smartTopTag(text, {
         font-size="${fontSize}"
         font-weight="700"
         letter-spacing="-0.4"
-        fill="#ffffff"
+        fill="${textColor}"
       >${safeText}</text>
     </svg>`);
 
@@ -261,11 +262,43 @@ async function renderPoster(body) {
     const dynamicFill = overlayColor === 'dynamic' ? await dynamicAccent(resized) : overlayColor;
     composites.push({ input: smartBottomBackdrop(), top: POSTER_HEIGHT - 450, left: 0 });
 
-    const topTags = [];
-    if (trend) topTags.push(await smartTopTag(trend, { fill: dynamicFill, width: smartTagWidth(trend, 350, 410) }));
-    if (quality) topTags.push(await smartTopTag(quality, { fill: '#191a20', width: smartTagWidth(quality, 190, 260), fontSize: 40 }));
-    for (const placement of packSmartTopTags(topTags)) {
-      composites.push({ input: placement.buffer, top: placement.top, left: placement.left });
+    if (quality) {
+      // BetterPosters-style split top layout: trend on the left, quality on the right.
+      if (trend) {
+        const trendTag = await smartTopTag(trend, {
+          fill: dynamicFill,
+          width: smartTagWidth(trend, 350, 410),
+        });
+        composites.push({
+          input: trendTag.buffer,
+          top: 0,
+          left: SAFE_MARGIN,
+        });
+      }
+
+      const qualityTag = await smartTopTag(quality, {
+        fill: '#f3f4f6',
+        fillOpacity: 0.96,
+        width: smartTagWidth(quality, 120, 175),
+        fontSize: 40,
+        textColor: '#111111',
+      });
+      composites.push({
+        input: qualityTag.buffer,
+        top: 0,
+        left: POSTER_WIDTH - SAFE_MARGIN - qualityTag.width,
+      });
+    } else if (trend) {
+      // Without Quality, Trend remains centered.
+      const trendTag = await smartTopTag(trend, {
+        fill: dynamicFill,
+        width: smartTagWidth(trend, 350, 410),
+      });
+      composites.push({
+        input: trendTag.buffer,
+        top: 0,
+        left: Math.round((POSTER_WIDTH - trendTag.width) / 2),
+      });
     }
 
     if (age) {
@@ -322,7 +355,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-bp-layout-6' }));
+      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-bp-layout-7' }));
     }
     if (req.method !== 'POST' || req.url !== '/render') {
       res.writeHead(404, { 'content-type': 'application/json' });
@@ -335,7 +368,7 @@ const server = http.createServer(async (req, res) => {
       'content-type': 'image/webp',
       'content-length': String(output.length),
       'cache-control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
-      'x-kollection-renderer': 'v2-bp-layout-6',
+      'x-kollection-renderer': 'v2-bp-layout-7',
       'x-kollection-render-ms': String(Date.now() - started),
     });
     res.end(output);
