@@ -24,168 +24,48 @@
       <div data-page-chip>Poster Configurator</div>
       <h1 data-page-title>Posters</h1>
       <p data-page-subtitle>Add smart tags to movie and TV posters without locking your setup to one app. Use Posters by itself or later as part of Set Up Collection.</p>
-      <div class="hero-pills">
-        <span>AIOmetadata compatible</span>
-        <span>Movies + TV</span>
-        <span>Nuvio + Stremio</span>
-      </div>
+      <div class="hero-pills"><span>AIOmetadata compatible</span><span>Movies + TV</span><span>Nuvio + Stremio</span></div>
     </header>
 
     <section id="postersUsageChoice" class="posters-usage" data-page-content aria-label="Choose how to use Posters">
       <div class="usage-progress" aria-hidden="true"><span class="active"></span><span></span><span></span><span></span></div>
       <div class="usage-kicker">HOW DO YOU WANT TO USE POSTERS?</div>
-      <button class="usage-card" type="button" data-usage="setup">
-        <span><strong>Posters Setup</strong><small>Configure poster style, Smart Tags, previews, and your Posters settings.</small></span>
-        <span class="usage-arrow" aria-hidden="true">›</span>
-      </button>
-      <button class="usage-card" type="button" data-usage="addon">
-        <span><strong>AIOmetadata / Other Addon</strong><small>I already have catalogs — help me generate the poster URL and JSON settings.</small></span>
-        <span class="usage-arrow" aria-hidden="true">›</span>
-      </button>
+      <button class="usage-card" type="button" data-usage="setup"><span><strong>Posters Setup</strong><small>Configure poster style, Smart Tags, previews, and your Posters settings.</small></span><span class="usage-arrow" aria-hidden="true">›</span></button>
+      <button class="usage-card" type="button" data-usage="addon"><span><strong>AIOmetadata / Other Addon</strong><small>I already have catalogs — help me generate the poster URL and JSON settings.</small></span><span class="usage-arrow" aria-hidden="true">›</span></button>
     </section>
 
     <section id="postersConfigurator" class="posters-configurator" data-page-content hidden>
-      <div class="config-routebar">
-        <button id="postersBackBtn" class="route-back" type="button">‹ Back</button>
-        <div><span id="routeKicker">POSTERS SETUP</span><strong id="routeTitle">Configure Posters</strong></div>
-      </div>
-
+      <div class="config-routebar"><button id="postersBackBtn" class="route-back" type="button">‹ Back</button><div><span id="routeKicker">POSTERS SETUP</span><strong id="routeTitle">Configure Posters</strong></div></div>
       <section class="poster-preview-panel preview-top" aria-label="Poster preview examples">
-        <div class="preview-heading">
-          <span class="section-kicker">LIVE PREVIEW</span>
-          <strong>See your Smart Tags before you generate anything</strong>
-        </div>
+        <div class="preview-heading"><span class="section-kicker">LIVE PREVIEW</span><strong>See your Smart Tags before you generate anything</strong></div>
         <div class="poster-preview-grid">
-          <div class="poster-mock poster-example-one">
-            <div class="poster-art"><span class="mock-title">NEBULA<br />RUN</span><span class="mock-subtitle">Science Fiction</span></div>
-            <div class="overlay overlay-trend" data-tag="trend">#3 TODAY</div>
-            <div class="overlay overlay-rating" data-tag="rating"><b>8.7</b><small>AVG</small></div>
-            <div class="overlay overlay-quality" data-tag="quality">4K</div>
-            <div class="overlay overlay-age" data-tag="age">PG-13</div>
-            <div class="overlay overlay-genre" data-tag="genre">SCI-FI</div>
-          </div>
-          <div class="poster-mock poster-example-two">
-            <div class="poster-art"><span class="mock-title">AFTER<br />LIGHT</span><span class="mock-subtitle">Drama</span></div>
-            <div class="overlay overlay-trend" data-tag="trend">#2 TODAY</div>
-            <div class="overlay overlay-rating" data-tag="rating"><b>7.9</b><small>AVG</small></div>
-            <div class="overlay overlay-quality" data-tag="quality">HD</div>
-            <div class="overlay overlay-age" data-tag="age">TV-14</div>
-            <div class="overlay overlay-genre" data-tag="genre">DRAMA</div>
-          </div>
-          <div class="poster-mock poster-example-three">
-            <div class="poster-art"><span class="mock-title">NORTH<br />BOUND</span><span class="mock-subtitle">Adventure</span></div>
-            <div class="overlay overlay-trend" data-tag="trend">#7 TODAY</div>
-            <div class="overlay overlay-rating" data-tag="rating"><b>8.2</b><small>AVG</small></div>
-            <div class="overlay overlay-quality" data-tag="quality">4K</div>
-            <div class="overlay overlay-age" data-tag="age">PG</div>
-            <div class="overlay overlay-genre" data-tag="genre">ADVENTURE</div>
-          </div>
+          <div class="poster-mock poster-example-one"><div class="poster-art"><span class="mock-title">NEBULA<br />RUN</span><span class="mock-subtitle">Science Fiction</span></div><div class="overlay overlay-trend" data-tag="trend">#3 TODAY</div><div class="overlay overlay-rating" data-tag="rating"><b>8.7</b><small>AVG</small></div><div class="overlay overlay-quality" data-tag="quality">4K</div><div class="overlay overlay-age" data-tag="age">PG-13</div><div class="overlay overlay-genre" data-tag="genre">SCI-FI</div></div>
+          <div class="poster-mock poster-example-two"><div class="poster-art"><span class="mock-title">AFTER<br />LIGHT</span><span class="mock-subtitle">Drama</span></div><div class="overlay overlay-trend" data-tag="trend">#2 TODAY</div><div class="overlay overlay-rating" data-tag="rating"><b>7.9</b><small>AVG</small></div><div class="overlay overlay-quality" data-tag="quality">HD</div><div class="overlay overlay-age" data-tag="age">TV-14</div><div class="overlay overlay-genre" data-tag="genre">DRAMA</div></div>
+          <div class="poster-mock poster-example-three"><div class="poster-art"><span class="mock-title">NORTH<br />BOUND</span><span class="mock-subtitle">Adventure</span></div><div class="overlay overlay-trend" data-tag="trend">#7 TODAY</div><div class="overlay overlay-rating" data-tag="rating"><b>8.2</b><small>AVG</small></div><div class="overlay overlay-quality" data-tag="quality">4K</div><div class="overlay overlay-age" data-tag="age">PG</div><div class="overlay overlay-genre" data-tag="genre">ADVENTURE</div></div>
         </div>
-        <div class="preview-description" id="previewDescription">Smart Posters using TMDB artwork. 2 Smart Tags enabled.</div>
-        <div class="preview-legend">
-          <span><i></i> Live previews are rendered through The Kollection poster service</span>
-          <span><i></i> Original Posters keep the provider's original poster/title placement</span>
-        </div>
+        <div class="preview-description" id="previewDescription">Smart Overlay Posters using TMDB artwork. 2 Smart Tags enabled.</div>
+        <div class="preview-legend"><span><i></i> Live previews are rendered through The Kollection poster service</span><span><i></i> Original Posters keep the provider's original poster/title placement</span></div>
       </section>
 
-      <section class="posters-shell" aria-label="Configure Posters">
-        <div class="posters-config">
-          <div class="section-heading">
-            <span class="section-kicker">POSTER STYLE</span>
-            <h2>Choose your poster style</h2>
-            <p>Poster style controls how The Kollection formats the artwork. Artwork provider is selected separately below.</p>
-          </div>
-
-          <div class="choice-grid poster-style-grid" id="posterSourceChoices">
-            <label class="choice-card selected">
-              <input type="radio" name="posterSource" value="smart" checked />
-              <span class="choice-title">Smart Posters</span>
-              <span class="choice-copy">Default. Prefers suitable textless artwork when available, places the official title/logo near the bottom, and keeps Smart Tags clear of the title.</span>
-            </label>
-            <label class="choice-card">
-              <input type="radio" name="posterSource" value="tmdb" />
-              <span class="choice-title">Original Posters</span>
-              <span class="choice-copy">Keeps the selected provider's original poster composition and title placement, then adds the Original-style overlays without relocating the title.</span>
-            </label>
-          </div>
-
-          <div class="provider-block">
-            <div class="provider-copy">
-              <span class="section-kicker">ARTWORK PROVIDER</span>
-              <strong>Choose where poster artwork comes from</strong>
-              <small>TMDB is available now. Additional providers will become selectable as their artwork APIs are added.</small>
-            </div>
-            <label class="provider-field" for="artworkProvider">
-              <span>Provider</span>
-              <select id="artworkProvider" aria-label="Artwork provider">
-                <option value="tmdb" selected>The Movie Database (TMDB)</option>
-                <option value="tvdb" disabled>TheTVDB — Coming soon</option>
-                <option value="fanart" disabled>Fanart.tv — Coming soon</option>
-                <option value="cinemeta" disabled>IMDb / Cinemeta — Coming soon</option>
-                <option value="inherit" disabled>Use AIOmetadata provider — Coming soon</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="section-heading compact-heading">
-            <span class="section-kicker">SMART TAGS</span>
-            <h2>Choose your poster overlays</h2>
-            <p>Posters includes overlays by default. Trend Tags and Rating start on; turn on any additional tags you want.</p>
-          </div>
-
-          <div id="tagOptions" class="tag-options" aria-disabled="false">
-            <div class="tag-grid">
-              <label class="tag-option"><input type="checkbox" value="trend" checked /><span><strong>Trend Tags</strong><small>Trending, New, IMDb #3</small></span></label>
-              <label class="tag-option"><input type="checkbox" value="quality" /><span><strong>Quality Tags</strong><small>4K, HD badges</small></span></label>
-              <label class="tag-option"><input type="checkbox" value="genre" /><span><strong>Genre</strong><small>Genre label at bottom</small></span></label>
-              <label class="tag-option"><input type="checkbox" value="rating" checked /><span><strong>Rating</strong><small>Star rating at bottom</small></span></label>
-              <label class="tag-option"><input type="checkbox" value="age" /><span><strong>Age Rating</strong><small>PG-13, TV-MA, R</small></span></label>
-            </div>
-            <p class="fixed-note">Smart Posters reserve a title zone. Original Posters keep the provider artwork/title placement and use their own overlay positions.</p>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="section-heading compact-heading">
-            <span class="section-kicker">AIOmetadata JSON</span>
-            <h2>Bring your existing configuration</h2>
-            <p>Importing a config lets Posters preserve everything else and modify only the poster-related fields.</p>
-          </div>
-          <div class="import-row">
-            <label class="file-button" for="configFile">Import JSON</label>
-            <input id="configFile" type="file" accept="application/json,.json" />
-            <button id="clearImport" class="secondary-button" type="button" hidden>Clear import</button>
-            <span id="importStatus" class="import-status">No config imported</span>
-          </div>
-
-          <div class="generate-box">
-            <div>
-              <strong>Generate your configuration</strong>
-              <span id="generateHint">You can generate a Posters configuration now. Import an AIOmetadata JSON first to preserve a complete existing setup.</span>
-            </div>
-            <button id="generateBtn" class="primary-button" type="button">Generate JSON</button>
-          </div>
-
-          <div id="jsonPanel" class="json-panel" hidden>
-            <div class="json-toolbar">
-              <span>Generated JSON</span>
-              <div>
-                <button id="copyBtn" class="secondary-button" type="button">Copy JSON</button>
-                <button id="downloadBtn" class="secondary-button" type="button">Download JSON</button>
-              </div>
-            </div>
-            <pre id="jsonOutput"></pre>
-            <span id="copyStatus" class="copy-status" role="status" aria-live="polite"></span>
-          </div>
+      <section class="posters-shell" aria-label="Configure Posters"><div class="posters-config">
+        <div class="section-heading"><span class="section-kicker">POSTER STYLE</span><h2>Choose your poster style</h2><p>Poster style controls how The Kollection formats the artwork. Artwork provider is selected separately below.</p></div>
+        <div class="choice-grid poster-style-grid" id="posterSourceChoices">
+          <label class="choice-card selected"><input type="radio" name="posterSource" value="smart" checked /><span class="choice-title">Smart Overlay Posters</span><span class="choice-copy">Adds polished, adaptive overlays to the selected provider's poster artwork. Smart Tags automatically arrange themselves based on which tags are enabled.</span></label>
+          <label class="choice-card"><input type="radio" name="posterSource" value="tmdb" /><span class="choice-title">Original Posters</span><span class="choice-copy">Keeps the selected provider's original poster composition and title placement, then adds the Original-style overlays without relocating the title.</span></label>
         </div>
-      </section>
+        <div class="provider-block"><div class="provider-copy"><span class="section-kicker">ARTWORK PROVIDER</span><strong>Choose where poster artwork comes from</strong><small>TMDB is available now. Additional providers will become selectable as their artwork APIs are added.</small></div><label class="provider-field" for="artworkProvider"><span>Provider</span><select id="artworkProvider" aria-label="Artwork provider"><option value="tmdb" selected>The Movie Database (TMDB)</option><option value="tvdb" disabled>TheTVDB — Coming soon</option><option value="fanart" disabled>Fanart.tv — Coming soon</option><option value="cinemeta" disabled>IMDb / Cinemeta — Coming soon</option><option value="inherit" disabled>Use AIOmetadata provider — Coming soon</option></select></label></div>
+        <div class="divider"></div>
+        <div class="section-heading compact-heading"><span class="section-kicker">SMART TAGS</span><h2>Choose your poster overlays</h2><p>Posters includes overlays by default. Trend Tags and Rating start on; turn on any additional tags you want.</p></div>
+        <div id="tagOptions" class="tag-options" aria-disabled="false"><div class="tag-grid"><label class="tag-option"><input type="checkbox" value="trend" checked /><span><strong>Trend Tags</strong><small>Trending, New, IMDb #3</small></span></label><label class="tag-option"><input type="checkbox" value="quality" /><span><strong>Quality Tags</strong><small>4K, HD badges</small></span></label><label class="tag-option"><input type="checkbox" value="genre" /><span><strong>Genre</strong><small>Genre label at bottom</small></span></label><label class="tag-option"><input type="checkbox" value="rating" checked /><span><strong>Rating</strong><small>Star rating at bottom</small></span></label><label class="tag-option"><input type="checkbox" value="age" /><span><strong>Age Rating</strong><small>PG-13, TV-MA, R</small></span></label></div><p class="fixed-note">Smart Overlay Posters use adaptive tag placement. Original Posters keep the provider artwork/title placement and use their own overlay positions.</p></div>
+        <div class="divider"></div>
+        <div class="section-heading compact-heading"><span class="section-kicker">AIOmetadata JSON</span><h2>Bring your existing configuration</h2><p>Importing a config lets Posters preserve everything else and modify only the poster-related fields.</p></div>
+        <div class="import-row"><label class="file-button" for="configFile">Import JSON</label><input id="configFile" type="file" accept="application/json,.json" /><button id="clearImport" class="secondary-button" type="button" hidden>Clear import</button><span id="importStatus" class="import-status">No config imported</span></div>
+        <div class="generate-box"><div><strong>Generate your configuration</strong><span id="generateHint">You can generate a Posters configuration now. Import an AIOmetadata JSON first to preserve a complete existing setup.</span></div><button id="generateBtn" class="primary-button" type="button">Generate JSON</button></div>
+        <div id="jsonPanel" class="json-panel" hidden><div class="json-toolbar"><span>Generated JSON</span><div><button id="copyBtn" class="secondary-button" type="button">Copy JSON</button><button id="downloadBtn" class="secondary-button" type="button">Download JSON</button></div></div><pre id="jsonOutput"></pre><span id="copyStatus" class="copy-status" role="status" aria-live="polite"></span></div>
+      </div></section>
     </section>
-
     <div id="site-footer"></div>
   </main>
-
   <script src="/posters/posters.js?v=20260911-13"></script>
   <script src="/posters/preview-controller.js?v=20260911-14"></script>
   <script src="/posters/rating-sources-status.js?v=20260910-1"></script>
