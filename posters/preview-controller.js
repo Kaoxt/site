@@ -40,6 +40,7 @@
     @keyframes posterPreviewPulse{0%{background-position:0 0}100%{background-position:100% 0}}
 
     .client-preview-layer{position:absolute;inset:0;z-index:5;pointer-events:none}
+    .client-preview-layer [hidden]{display:none!important}
     .client-preview-top{
       position:absolute;top:0;left:50%;transform:translateX(-50%);
       display:flex;align-items:flex-start;justify-content:center;gap:7px;
@@ -144,12 +145,15 @@
 
       trend.textContent = sample.trend || `#${index + 1} Today`;
       trend.hidden = !tags.has('trend');
+      trend.style.display = tags.has('trend') ? '' : 'none';
 
       quality.textContent = sample.quality || '4K';
       quality.hidden = !tags.has('quality');
+      quality.style.display = tags.has('quality') ? '' : 'none';
 
       age.textContent = sample.age || (sample.type === 'tv' ? 'TV-14' : 'PG-13');
       age.hidden = !tags.has('age');
+      age.style.display = tags.has('age') ? '' : 'none';
 
       const bottomParts = [];
       if (tags.has('genre') && sample.genre) bottomParts.push(sample.genre);
