@@ -8,7 +8,7 @@ const POSTER_WIDTH = 780;
 const POSTER_HEIGHT = 1170;
 const SAFE_MARGIN = 30;
 
-const SMART_TOP_HEIGHT = 94;
+const SMART_TOP_HEIGHT = 80;
 const SMART_TOP_GAP = 14;
 const SMART_BOTTOM_INFO_TOP = 1078;
 const SMART_AGE_TOP = 680;
@@ -48,10 +48,10 @@ function smartTagWidth(text, min = 220, max = 430) {
   return clamp(78 + String(text || '').length * 30, min, max);
 }
 
-async function smartTopTag(text, { fill = '#191a20', fillOpacity = 0.94, width, fontSize = 46, textColor = '#ffffff' } = {}) {
+async function smartTopTag(text, { fill = '#191a20', fillOpacity = 0.94, width, fontSize = 40, textColor = '#ffffff' } = {}) {
   const resolvedWidth = width || smartTagWidth(text);
   const safeText = esc(text);
-  const radius = 13;
+  const radius = 11;
   const svg = Buffer.from(`
     <svg xmlns="http://www.w3.org/2000/svg" width="${resolvedWidth}" height="${SMART_TOP_HEIGHT}" viewBox="0 0 ${resolvedWidth} ${SMART_TOP_HEIGHT}">
       <path d="M0 0h${resolvedWidth}v${SMART_TOP_HEIGHT - radius}a${radius} ${radius} 0 0 1-${radius} ${radius}H${radius}A${radius} ${radius} 0 0 1 0 ${SMART_TOP_HEIGHT - radius}z" fill="${fill}" fill-opacity="${fillOpacity}"/>
@@ -138,7 +138,7 @@ async function renderPoster(body) {
         const trendTag = await smartTopTag(trend, { fill: dynamicFill, width: smartTagWidth(trend, 350, 410) });
         composites.push({ input: trendTag.buffer, top: 0, left: SAFE_MARGIN });
       }
-      const qualityTag = await smartTopTag(quality, { fill: '#f3f4f6', fillOpacity: 0.96, width: smartTagWidth(quality, 120, 175), fontSize: 40, textColor: '#111111' });
+      const qualityTag = await smartTopTag(quality, { fill: '#f3f4f6', fillOpacity: 0.96, width: smartTagWidth(quality, 120, 175), fontSize: 34, textColor: '#111111' });
       composites.push({ input: qualityTag.buffer, top: 0, left: POSTER_WIDTH - SAFE_MARGIN - qualityTag.width });
     } else if (trend) {
       const trendTag = await smartTopTag(trend, { fill: dynamicFill, width: smartTagWidth(trend, 350, 410) });
@@ -169,7 +169,7 @@ async function renderPoster(body) {
     }
     if (trend) {
       const width = 360;
-      composites.push({ input: await originalBadgeImage(trend, { width, height: 104, fill: '#5b6cff', fillOpacity: 0.95, fontSize: 48, radius: 16 }), top: ORIGINAL_TOP, left: Math.round((POSTER_WIDTH - width) / 2) });
+      composites.push({ input: await originalBadgeImage(trend, { width, height: 82, fill: '#5b6cff', fillOpacity: 0.95, fontSize: 40, radius: 12 }), top: ORIGINAL_TOP, left: Math.round((POSTER_WIDTH - width) / 2) });
     }
     const info = await smartBottomInfo(genre, resolvedRatingLabel);
     if (info) composites.push({ input: info, top: SMART_BOTTOM_INFO_TOP, left: 30 });
@@ -182,7 +182,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-bp-layout-8' }));
+      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-bp-layout-9' }));
     }
     if (req.method !== 'POST' || req.url !== '/render') {
       res.writeHead(404, { 'content-type': 'application/json' });
@@ -191,7 +191,7 @@ const server = http.createServer(async (req, res) => {
     const body = await readJson(req);
     const started = Date.now();
     const output = await renderPoster(body);
-    res.writeHead(200, { 'content-type': 'image/webp', 'content-length': String(output.length), 'cache-control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800', 'x-kollection-renderer': 'v2-bp-layout-8', 'x-kollection-render-ms': String(Date.now() - started) });
+    res.writeHead(200, { 'content-type': 'image/webp', 'content-length': String(output.length), 'cache-control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800', 'x-kollection-renderer': 'v2-bp-layout-9', 'x-kollection-render-ms': String(Date.now() - started) });
     res.end(output);
   } catch (error) {
     res.writeHead(400, { 'content-type': 'application/json', 'cache-control': 'no-store' });
