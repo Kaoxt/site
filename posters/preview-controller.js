@@ -6,6 +6,7 @@
 
   const style = document.createElement('style');
   style.textContent = `
+    @import url('/posters/provider.css?v=20260910-1');
     .poster-mock.preview-refreshing{overflow:hidden;background:#0d0f18}
     .poster-mock.preview-refreshing .poster-art,
     .poster-mock.preview-refreshing .overlay,
