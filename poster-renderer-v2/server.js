@@ -8,7 +8,7 @@ const POSTER_WIDTH = 780;
 const POSTER_HEIGHT = 1170;
 const SAFE_MARGIN = 30;
 
-const SMART_TOP_HEIGHT = 108;
+const SMART_TOP_HEIGHT = 94;
 const SMART_TOP_GAP = 14;
 const SMART_BOTTOM_INFO_TOP = 1072;
 const SMART_AGE_TOP = 680;
@@ -62,30 +62,35 @@ async function smartTopTag(text, {
   fill = '#191a20',
   fillOpacity = 0.94,
   width,
-  fontSize = 52,
+  fontSize = 46,
 } = {}) {
   const resolvedWidth = width || smartTagWidth(text);
-  const background = Buffer.from(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="${resolvedWidth}" height="${SMART_TOP_HEIGHT}">
-      <path d="M0 0h${resolvedWidth}v${SMART_TOP_HEIGHT - 14}a14 14 0 0 1-14 14H14A14 14 0 0 1 0 ${SMART_TOP_HEIGHT - 14}z"
-        fill="${fill}" fill-opacity="${fillOpacity}"/>
+  const safeText = esc(text);
+  const radius = 13;
+
+  // SVG text-anchor + dominant-baseline keeps the label optically centered
+  // and avoids the slightly low Pango baseline from the older renderer.
+  const svg = Buffer.from(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="${resolvedWidth}" height="${SMART_TOP_HEIGHT}" viewBox="0 0 ${resolvedWidth} ${SMART_TOP_HEIGHT}">
+      <path
+        d="M0 0h${resolvedWidth}v${SMART_TOP_HEIGHT - radius}a${radius} ${radius} 0 0 1-${radius} ${radius}H${radius}A${radius} ${radius} 0 0 1 0 ${SMART_TOP_HEIGHT - radius}z"
+        fill="${fill}"
+        fill-opacity="${fillOpacity}"
+      />
+      <text
+        x="${resolvedWidth / 2}"
+        y="${SMART_TOP_HEIGHT / 2}"
+        text-anchor="middle"
+        dominant-baseline="middle"
+        font-family="DejaVu Sans"
+        font-size="${fontSize}"
+        font-weight="700"
+        letter-spacing="-0.4"
+        fill="#ffffff"
+      >${safeText}</text>
     </svg>`);
-  const textLayer = {
-    text: {
-      text: `<span foreground="#ffffff" weight="bold">${esc(text)}</span>`,
-      font: `DejaVu Sans ${fontSize}`,
-      width: Math.max(1, resolvedWidth - 34),
-      height: SMART_TOP_HEIGHT - 10,
-      align: 'center',
-      rgba: true,
-    },
-  };
-  const buffer = await sharp({
-    create: { width: resolvedWidth, height: SMART_TOP_HEIGHT, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
-  }).composite([
-    { input: background, top: 0, left: 0 },
-    { input: textLayer, gravity: 'center' },
-  ]).png().toBuffer();
+
+  const buffer = await sharp(svg).png().toBuffer();
   return { buffer, width: resolvedWidth, height: SMART_TOP_HEIGHT };
 }
 
@@ -258,7 +263,7 @@ async function renderPoster(body) {
 
     const topTags = [];
     if (trend) topTags.push(await smartTopTag(trend, { fill: dynamicFill, width: smartTagWidth(trend, 350, 410) }));
-    if (quality) topTags.push(await smartTopTag(quality, { fill: '#191a20', width: smartTagWidth(quality, 190, 260), fontSize: 46 }));
+    if (quality) topTags.push(await smartTopTag(quality, { fill: '#191a20', width: smartTagWidth(quality, 190, 260), fontSize: 40 }));
     for (const placement of packSmartTopTags(topTags)) {
       composites.push({ input: placement.buffer, top: placement.top, left: placement.left });
     }
@@ -317,7 +322,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-bp-layout-5' }));
+      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-bp-layout-6' }));
     }
     if (req.method !== 'POST' || req.url !== '/render') {
       res.writeHead(404, { 'content-type': 'application/json' });
@@ -330,7 +335,7 @@ const server = http.createServer(async (req, res) => {
       'content-type': 'image/webp',
       'content-length': String(output.length),
       'cache-control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
-      'x-kollection-renderer': 'v2-bp-layout-5',
+      'x-kollection-renderer': 'v2-bp-layout-6',
       'x-kollection-render-ms': String(Date.now() - started),
     });
     res.end(output);
