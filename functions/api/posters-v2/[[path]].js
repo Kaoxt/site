@@ -2,10 +2,10 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'production-cache-1';
+const CACHE_VERSION = 'production-cache-2';
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
-const ALLOWED_TAGS = ['trend', 'rating', 'genre', 'quality', 'hdr', 'audio', 'age'];
+const ALLOWED_TAGS = ['trend', 'rating', 'genre', 'quality', 'age'];
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data, null, 2), {
@@ -55,7 +55,7 @@ function choosePoster(details, smartLayout) {
 
   const candidates = Array.isArray(details.images?.posters) ? details.images.posters : [];
   const textless = candidates
-    .filter((poster) => poster?.file_path && !poster.iso_639_1)
+    .filter((poster) => poster?.file_path && !poster.iso_639_1 && poster.file_path !== original)
     .sort((a, b) => {
       const votes = Number(b.vote_count || 0) - Number(a.vote_count || 0);
       if (votes !== 0) return votes;
@@ -66,8 +66,8 @@ function choosePoster(details, smartLayout) {
   return { path: original, source: 'smart-fallback-original' };
 }
 
-function chooseLogo(details, smartLayout) {
-  if (!smartLayout) return { path: '', source: 'disabled' };
+function chooseLogo(details, enabled) {
+  if (!enabled) return { path: '', source: 'disabled' };
   const logos = Array.isArray(details.images?.logos) ? details.images.logos : [];
   if (!logos.length) return { path: '', source: 'title-fallback' };
 
@@ -269,7 +269,8 @@ export async function onRequest(context) {
     const tags = new Set(normalizeTags(url.searchParams.get('tags')));
     const smartLayout = url.searchParams.get('source') === 'smart';
     const artwork = choosePoster(details, smartLayout);
-    const logo = chooseLogo(details, smartLayout);
+    const smartTextless = smartLayout && artwork.source === 'smart-textless';
+    const logo = chooseLogo(details, smartTextless);
     if (!artwork.path) return json({ error: 'TMDB has no poster artwork for this title.' }, 404);
 
     const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
@@ -277,7 +278,7 @@ export async function onRequest(context) {
     const payload = {
       posterPath: artwork.path,
       logoPath: logo.path,
-      title: String(details.title || details.name || '').slice(0, 80),
+      title: smartTextless ? String(details.title || details.name || '').slice(0, 80) : '',
       rating: rating.value,
       ratingLabel: rating.label,
       genre: tags.has('genre') ? (details.genres?.[0]?.name || '') : '',
