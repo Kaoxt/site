@@ -9,6 +9,7 @@ const POSTER_HEIGHT = 1170;
 const SAFE_MARGIN = 30;
 const SMART_BADGE_TOP = 845;
 const SMART_TITLE_BOTTOM = POSTER_HEIGHT - SAFE_MARGIN;
+const ORIGINAL_SECOND_ROW_TOP = SAFE_MARGIN + 76;
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -200,7 +201,7 @@ async function renderPoster(body) {
     const height = 62;
     composites.push({
       input: await pillImage(resolvedRatingLabel, { width, height, fontSize: 27 }),
-      top: smartLayout ? SMART_BADGE_TOP : POSTER_HEIGHT - SAFE_MARGIN - height,
+      top: smartLayout ? SMART_BADGE_TOP : ORIGINAL_SECOND_ROW_TOP,
       left: SAFE_MARGIN,
     });
   }
@@ -210,8 +211,10 @@ async function renderPoster(body) {
     const height = 58;
     composites.push({
       input: await pillImage(genre, { width: genreWidth, height, fontSize: 24 }),
-      top: smartLayout ? SMART_BADGE_TOP + 2 : POSTER_HEIGHT - SAFE_MARGIN - height,
-      left: smartLayout ? POSTER_WIDTH - SAFE_MARGIN - genreWidth : Math.round((POSTER_WIDTH - genreWidth) / 2),
+      top: smartLayout ? SMART_BADGE_TOP + 2 : ORIGINAL_SECOND_ROW_TOP + 2,
+      left: smartLayout
+        ? POSTER_WIDTH - SAFE_MARGIN - genreWidth
+        : POSTER_WIDTH - SAFE_MARGIN - genreWidth,
     });
   }
 
@@ -245,7 +248,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-sharp-smart-logo-2' }));
+      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-sharp-original-safe-1' }));
     }
 
     if (req.method !== 'POST' || req.url !== '/render') {
@@ -260,7 +263,7 @@ const server = http.createServer(async (req, res) => {
       'content-type': 'image/webp',
       'content-length': String(output.length),
       'cache-control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
-      'x-kollection-renderer': 'v2-sharp-smart-logo-2',
+      'x-kollection-renderer': 'v2-sharp-original-safe-1',
       'x-kollection-render-ms': String(Date.now() - started),
     });
     res.end(output);
