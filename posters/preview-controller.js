@@ -142,7 +142,7 @@
         tags: tags.join(','),
         ratingSource,
         preview: '1',
-        previewVersion: `bp-match-4-${source}-${provider}-${tags.join('-') || 'none'}-${ratingSource}`,
+        previewVersion: `bp-match-5-${source}-${provider}-${tags.join('-') || 'none'}-${ratingSource}`,
       });
 
       nextImg.addEventListener('load', () => {
