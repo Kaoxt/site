@@ -11,6 +11,7 @@
     resultUrl: '',
     width: 0,
     height: 0,
+    quality: 82,
   };
 
   const el = {
@@ -43,6 +44,8 @@
     originalSize: $('originalSize'),
 
     conversionControls: $('conversionControls'),
+    qualitySlider: $('qualitySlider'),
+    qualityValue: $('qualityValue'),
     convertButton: $('convertButton'),
 
     resultSection: $('resultSection'),
@@ -289,7 +292,7 @@
       }
 
       const blob = await new Promise((resolve) => {
-        canvas.toBlob(resolve, 'image/webp', 1.0);
+        canvas.toBlob(resolve, 'image/webp', Math.min(1, Math.max(0.01, state.quality / 100)));
       });
 
       if (!blob || blob.type !== 'image/webp') {
@@ -409,6 +412,15 @@
     useFile(el.pngInput.files?.[0]);
   });
 
+
+  if (el.qualitySlider) {
+    const updateQuality = () => {
+      state.quality = Number(el.qualitySlider.value) || 82;
+      if (el.qualityValue) el.qualityValue.textContent = `${state.quality}%`;
+    };
+    el.qualitySlider.addEventListener('input', updateQuality);
+    updateQuality();
+  }
 
   el.convertButton.addEventListener('click', convertToWebP);
 
