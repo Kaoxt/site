@@ -2,7 +2,7 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'production-cache-2';
+const CACHE_VERSION = 'production-cache-3';
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
 const ALLOWED_TAGS = ['trend', 'rating', 'genre', 'quality', 'age'];
@@ -275,13 +275,23 @@ export async function onRequest(context) {
 
     const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
     const rating = tags.has('rating') ? await resolveRating(details, requestedRatingSource, env) : { value: '', label: '', source: requestedRatingSource, status: 'disabled' };
+
+    // BetterPosters-style bottom metadata:
+    // the renderer's genre slot is centered at the bottom, while its rating slot sits left.
+    // Use the centered slot for Rating by itself, or combine Genre + Rating when both are enabled.
+    const selectedGenre = tags.has('genre') ? (details.genres?.[0]?.name || '') : '';
+    const bottomMetaParts = [];
+    if (selectedGenre) bottomMetaParts.push(selectedGenre);
+    if (tags.has('rating') && rating.label) bottomMetaParts.push(rating.label);
+    const bottomMeta = bottomMetaParts.join(' · ');
+
     const payload = {
       posterPath: artwork.path,
       logoPath: logo.path,
       title: smartTextless ? String(details.title || details.name || '').slice(0, 80) : '',
-      rating: rating.value,
-      ratingLabel: rating.label,
-      genre: tags.has('genre') ? (details.genres?.[0]?.name || '') : '',
+      rating: '',
+      ratingLabel: '',
+      genre: bottomMeta,
       age: tags.has('age') ? certification(details, type) : '',
       trend: tags.has('trend') ? await trendLabel(type, id, env.TMDB_API_KEY) : '',
       quality: '',
