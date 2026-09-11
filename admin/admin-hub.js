@@ -24,6 +24,8 @@
     workersUsagePercent: $('workersUsagePercent'),
     workersRendererState: $('workersRendererState'),
     workersRendererDetail: $('workersRendererDetail'),
+    workersPersistentCache: $('workersPersistentCache'),
+    workersPersistentCacheDetail: $('workersPersistentCacheDetail'),
     workersActiveRenders: $('workersActiveRenders'),
     workersConcurrencyLimit: $('workersConcurrencyLimit'),
     workersMeterText: $('workersMeterText'),
@@ -74,8 +76,10 @@
     const omdbCached = Math.max(0, Number(omdb.cachedRatings ?? 0));
     const omdbCacheDays = Math.max(0, Number(omdb.cacheDays ?? 0));
 
+    const persistentCache = data?.persistentCache || {};
+
     el.workersDailyRenders.textContent = daily.toLocaleString();
-    el.workersDailyLimit.textContent = `of ${maxDaily.toLocaleString()} daily budget`;
+    el.workersDailyLimit.textContent = `of ${maxDaily.toLocaleString()} daily safety cap`;
     el.workersUsagePercent.textContent = `${percent.toFixed(percent >= 10 ? 0 : 1)}%`;
     el.workersActiveRenders.textContent = Number(data?.activeRenders ?? 0).toLocaleString();
     el.workersConcurrencyLimit.textContent = `of ${Number(data?.maxConcurrent ?? 0).toLocaleString()} concurrent`;
@@ -90,6 +94,15 @@
     if (el.omdbRemaining) el.omdbRemaining.textContent = omdb.available === false
       ? 'OMDb usage meter unavailable'
       : `OMDb remaining today: ${omdbRemaining.toLocaleString()}`;
+
+    if (el.workersPersistentCache) {
+      el.workersPersistentCache.textContent = persistentCache.enabled ? 'Enabled' : 'Not configured';
+    }
+    if (el.workersPersistentCacheDetail) {
+      el.workersPersistentCacheDetail.textContent = persistentCache.enabled
+        ? `Edge → R2 → renderer · ${persistentCache.binding || 'R2'} binding`
+        : 'Renderer falls back to edge cache only';
+    }
 
     el.workersUsage.classList.toggle('is-conservation', conservation && !hardStop);
     el.workersUsage.classList.toggle('is-hard-stop', hardStop || !enabled);
