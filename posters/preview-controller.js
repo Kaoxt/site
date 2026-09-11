@@ -42,9 +42,29 @@
     .client-preview-layer{position:absolute;inset:0;z-index:5;pointer-events:none}
     .client-preview-layer [hidden]{display:none!important}
     .client-preview-top{
-      position:absolute;top:0;left:50%;transform:translateX(-50%);
-      display:flex;align-items:flex-start;justify-content:center;gap:7px;
-      width:calc(100% - 12px);
+      position:absolute;
+      top:0;
+      left:0;
+      right:0;
+      height:35px;
+      width:100%;
+      pointer-events:none;
+    }
+    .client-preview-top .client-preview-trend,
+    .client-preview-top .client-preview-quality{
+      position:absolute;
+      top:0;
+    }
+    .client-preview-top.center-layout .client-preview-trend{
+      left:50%;
+      transform:translateX(-50%);
+    }
+    .client-preview-top.split-layout .client-preview-trend{
+      left:10px;
+      transform:none;
+    }
+    .client-preview-top.split-layout .client-preview-quality{
+      right:10px;
     }
     .client-preview-tag{
       display:inline-flex;align-items:center;justify-content:center;
@@ -86,7 +106,8 @@
     }
 
     @media(max-width:700px){
-      .client-preview-top{gap:5px;width:calc(100% - 8px)}
+      .client-preview-top.split-layout .client-preview-trend{left:7px}
+      .client-preview-top.split-layout .client-preview-quality{right:7px}
       .client-preview-tag{height:31px;min-height:31px;padding:0 9px;border-radius:0 0 6px 6px}
       .client-preview-bottom{bottom:7px;width:calc(100% - 12px)}
     }
@@ -145,18 +166,23 @@
     posterMocks.forEach((posterMock, index) => {
       const sample = sampleFor(index);
       const layer = ensureClientLayer(posterMock);
+      const top = layer.querySelector('.client-preview-top');
       const trend = layer.querySelector('.client-preview-trend');
       const quality = layer.querySelector('.client-preview-quality');
       const age = layer.querySelector('.client-preview-age');
       const bottom = layer.querySelector('.client-preview-bottom');
+
+      const qualityOn = tags.has('quality');
+      top.classList.toggle('split-layout', qualityOn);
+      top.classList.toggle('center-layout', !qualityOn);
 
       trend.textContent = sample.trend || `#${index + 1} Today`;
       trend.hidden = !tags.has('trend');
       trend.style.display = tags.has('trend') ? '' : 'none';
 
       quality.textContent = sample.quality || '4K';
-      quality.hidden = !tags.has('quality');
-      quality.style.display = tags.has('quality') ? '' : 'none';
+      quality.hidden = !qualityOn;
+      quality.style.display = qualityOn ? '' : 'none';
 
       age.textContent = sample.age || (sample.type === 'tv' ? 'TV-14' : 'PG-13');
       age.hidden = !tags.has('age');
