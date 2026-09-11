@@ -17,7 +17,7 @@
   <script src="/components.js?v=20260906-1" defer></script>
   <script src="/set-up-collection/config.js?v=20260906-1"></script>
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
-  <script src="/admin/image-converter.js?v=20260911-1" defer></script>
+  <script src="/admin/image-converter.js?v=20260911-2" defer></script>
 </head>
 <body>
   <main class="page admin-page converter-page">
@@ -142,11 +142,11 @@
               <div class="webp-quality-head">
                 <div>
                   <strong>Compression Quality</strong>
-                  <span>82% is the recommended balance for strong size reduction with very little visible quality loss.</span>
+                  <span>86% is the recommended balance for Shutterstock-like visual quality with strong file-size reduction.</span>
                 </div>
-                <output id="qualityValue" for="qualitySlider">82%</output>
+                <output id="qualityValue" for="qualitySlider">86%</output>
               </div>
-              <input id="qualitySlider" class="webp-quality-slider" type="range" min="60" max="100" step="1" value="82" aria-label="WebP compression quality" />
+              <input id="qualitySlider" class="webp-quality-slider" type="range" min="60" max="100" step="1" value="86" aria-label="WebP compression quality" />
               <div class="webp-quality-scale" aria-hidden="true"><span>Smaller file</span><span>Higher quality</span></div>
             </div>
 
@@ -220,7 +220,7 @@
           <article>
             <div class="step-number">2</div>
             <h3>Convert to WebP</h3>
-            <p>Your PNG is converted locally using the selected WebP compression quality. The default 82% setting is tuned for much smaller files while preserving strong visual quality.</p>
+            <p>Your PNG is converted locally using the selected WebP compression quality. The default 86% setting is tuned to closely match Shutterstock-style visual quality while still reducing file size significantly.</p>
           </article>
 
           <article>
