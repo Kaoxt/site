@@ -7,7 +7,7 @@
   const style = document.createElement('style');
   style.textContent = `
     @import url('/posters/provider.css?v=20260910-1');
-    .poster-mock.preview-refreshing{overflow:hidden;background:#0d0f18}
+    .poster-mock.preview-refreshing{overflow:hidden;background:#050608}
     .poster-mock.preview-refreshing .poster-art,
     .poster-mock.preview-refreshing .overlay,
     .poster-mock.preview-refreshing .poster-service-image{visibility:hidden!important}
@@ -16,9 +16,7 @@
       position:absolute;
       inset:0;
       z-index:7;
-      background:
-        radial-gradient(circle at 50% 38%,rgba(99,102,241,.24),transparent 42%),
-        linear-gradient(145deg,rgba(67,56,202,.24),rgba(15,17,28,.96) 58%,rgba(49,46,129,.28));
+      background:#050608;
     }
     .poster-mock.preview-refreshing::after{
       content:"";
@@ -26,15 +24,18 @@
       left:50%;
       top:50%;
       z-index:8;
-      width:24px;
-      height:24px;
-      margin:-12px 0 0 -12px;
-      border:3px solid rgba(255,255,255,.22);
-      border-top-color:#8b8df8;
+      width:54px;
+      height:54px;
+      margin:-27px 0 0 -27px;
       border-radius:50%;
-      animation:kollectionPosterSpin .7s linear infinite;
+      border:5px solid rgba(99,102,241,.18);
+      border-top-color:#7c83ff;
+      border-right-color:#6366f1;
+      box-sizing:border-box;
+      animation:kollectionPosterSpin .72s linear infinite;
     }
     @keyframes kollectionPosterSpin{to{transform:rotate(360deg)}}
+    @media(prefers-reduced-motion:reduce){.poster-mock.preview-refreshing::after{animation-duration:1.35s}}
   `;
   document.head.appendChild(style);
 
@@ -107,7 +108,7 @@
         tags: tags.join(','),
         ratingSource,
         preview: '1',
-        previewVersion: `poster-style-provider-1-${source}-${provider}`,
+        previewVersion: `poster-controls-2-${source}-${provider}`,
       });
       img.src = `/api/posters-v2/${sample.type}/${sample.id}.webp?${params.toString()}`;
     });
@@ -116,7 +117,7 @@
   async function loadSamples() {
     setLoading();
     try {
-      const response = await fetch('/api/posters-preview-samples?previewVersion=3', {
+      const response = await fetch('/api/posters-preview-samples?previewVersion=4', {
         headers: { accept: 'application/json' },
         cache: 'no-store',
       });
@@ -137,6 +138,8 @@
     }
     refresh();
   }
+
+  window.KollectionPosterPreview = { refresh, setLoading, updateDescription };
 
   document.querySelectorAll('input[name="posterSource"], .tag-option input[type="checkbox"]').forEach((input) => {
     input.addEventListener('change', () => {
