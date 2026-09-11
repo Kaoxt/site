@@ -8,14 +8,16 @@ const POSTER_WIDTH = 780;
 const POSTER_HEIGHT = 1170;
 const SAFE_MARGIN = 30;
 
-const SMART_TOP_HEIGHT = 76;
-const SMART_TOP_GAP = 12;
-const SMART_BOTTOM_INFO_TOP = 1064;
-const SMART_LOGO_ZONE_TOP = 770;
-const SMART_LOGO_ZONE_BOTTOM = 1018;
+// BetterPosters reference proportions: the top tag is roughly 9% of poster
+// height and close to half the poster width for a normal "#X Today" label.
+const SMART_TOP_HEIGHT = 108;
+const SMART_TOP_GAP = 14;
+const SMART_BOTTOM_INFO_TOP = 1047;
+const SMART_LOGO_ZONE_TOP = 748;
+const SMART_LOGO_ZONE_BOTTOM = 1005;
 
-const ORIGINAL_TOP = 32;
-const ORIGINAL_BADGE_HEIGHT = 74;
+const ORIGINAL_TOP = 30;
+const ORIGINAL_BADGE_HEIGHT = 100;
 const ORIGINAL_SECOND_ROW_TOP = ORIGINAL_TOP + ORIGINAL_BADGE_HEIGHT + 16;
 
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({
@@ -54,28 +56,28 @@ async function dynamicAccent(imageBuffer) {
   }
 }
 
-function smartTagWidth(text, min = 150, max = 320) {
-  return clamp(52 + String(text || '').length * 19, min, max);
+function smartTagWidth(text, min = 220, max = 430) {
+  return clamp(78 + String(text || '').length * 30, min, max);
 }
 
 async function smartTopTag(text, {
   fill = '#191a20',
   fillOpacity = 0.94,
   width,
-  fontSize = 34,
+  fontSize = 52,
 } = {}) {
   const resolvedWidth = width || smartTagWidth(text);
   const background = Buffer.from(`
     <svg xmlns="http://www.w3.org/2000/svg" width="${resolvedWidth}" height="${SMART_TOP_HEIGHT}">
-      <path d="M0 0h${resolvedWidth}v${SMART_TOP_HEIGHT - 10}a10 10 0 0 1-10 10H10A10 10 0 0 1 0 ${SMART_TOP_HEIGHT - 10}z"
+      <path d="M0 0h${resolvedWidth}v${SMART_TOP_HEIGHT - 14}a14 14 0 0 1-14 14H14A14 14 0 0 1 0 ${SMART_TOP_HEIGHT - 14}z"
         fill="${fill}" fill-opacity="${fillOpacity}"/>
     </svg>`);
   const textLayer = {
     text: {
       text: `<span foreground="#ffffff" weight="bold">${esc(text)}</span>`,
       font: `DejaVu Sans ${fontSize}`,
-      width: Math.max(1, resolvedWidth - 28),
-      height: SMART_TOP_HEIGHT - 8,
+      width: Math.max(1, resolvedWidth - 34),
+      height: SMART_TOP_HEIGHT - 10,
       align: 'center',
       rgba: true,
     },
@@ -90,13 +92,13 @@ async function smartTopTag(text, {
 }
 
 async function originalBadgeImage(text, {
-  width = 220,
+  width = 250,
   height = ORIGINAL_BADGE_HEIGHT,
   fill = '#101116',
   fillOpacity = 0.93,
   textColor = '#ffffff',
-  fontSize = 32,
-  radius = 14,
+  fontSize = 44,
+  radius = 16,
 } = {}) {
   const background = Buffer.from(`
     <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
@@ -107,8 +109,8 @@ async function originalBadgeImage(text, {
     text: {
       text: `<span foreground="${textColor}" weight="bold">${esc(text)}</span>`,
       font: `DejaVu Sans ${fontSize}`,
-      width: Math.max(1, width - 28),
-      height: Math.max(1, height - 12),
+      width: Math.max(1, width - 34),
+      height: Math.max(1, height - 14),
       align: 'center',
       rgba: true,
     },
@@ -130,9 +132,9 @@ async function smartBottomInfo(genre, ratingLabel) {
   const shadow = {
     text: {
       text: `<span foreground="#000000" alpha="82%" weight="bold">${esc(text)}</span>`,
-      font: 'DejaVu Sans 36',
+      font: 'DejaVu Sans 58',
       width: 720,
-      height: 68,
+      height: 96,
       align: 'center',
       rgba: true,
     },
@@ -140,17 +142,17 @@ async function smartBottomInfo(genre, ratingLabel) {
   const foreground = {
     text: {
       text: `<span foreground="#e5e5e8" weight="bold">${esc(text)}</span>`,
-      font: 'DejaVu Sans 36',
+      font: 'DejaVu Sans 58',
       width: 720,
-      height: 68,
+      height: 96,
       align: 'center',
       rgba: true,
     },
   };
   return sharp({
-    create: { width: 720, height: 72, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+    create: { width: 720, height: 102, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
   }).composite([
-    { input: shadow, top: 4, left: 1 },
+    { input: shadow, top: 5, left: 1 },
     { input: foreground, top: 0, left: 0 },
   ]).png().toBuffer();
 }
@@ -158,10 +160,10 @@ async function smartBottomInfo(genre, ratingLabel) {
 async function titleImage(title) {
   const text = String(title || '').trim();
   if (!text) return null;
-  const fontSize = text.length > 30 ? 40 : text.length > 20 ? 46 : 54;
-  const shadow = { text: { text: `<span foreground="#000000" alpha="78%" weight="bold">${esc(text)}</span>`, font: `DejaVu Sans ${fontSize}`, width: 700, height: 170, align: 'center', rgba: true } };
-  const foreground = { text: { text: `<span foreground="#ffffff" weight="bold">${esc(text)}</span>`, font: `DejaVu Sans ${fontSize}`, width: 700, height: 170, align: 'center', rgba: true } };
-  return sharp({ create: { width: 700, height: 174, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+  const fontSize = text.length > 30 ? 42 : text.length > 20 ? 50 : 60;
+  const shadow = { text: { text: `<span foreground="#000000" alpha="78%" weight="bold">${esc(text)}</span>`, font: `DejaVu Sans ${fontSize}`, width: 700, height: 180, align: 'center', rgba: true } };
+  const foreground = { text: { text: `<span foreground="#ffffff" weight="bold">${esc(text)}</span>`, font: `DejaVu Sans ${fontSize}`, width: 700, height: 180, align: 'center', rgba: true } };
+  return sharp({ create: { width: 700, height: 184, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
     .composite([{ input: shadow, top: 4, left: 1 }, { input: foreground, top: 0, left: 0 }])
     .png().toBuffer();
 }
@@ -174,8 +176,8 @@ async function smartLogoImage(logoPath) {
     const input = Buffer.from(await response.arrayBuffer());
     const meta = await sharp(input).metadata();
     if (!meta.width || !meta.height) return null;
-    const maxWidth = 660;
-    const maxHeight = 198;
+    const maxWidth = 680;
+    const maxHeight = 215;
     const scale = Math.min(maxWidth / meta.width, maxHeight / meta.height, 1);
     const width = Math.max(1, Math.round(meta.width * scale));
     const height = Math.max(1, Math.round(meta.height * scale));
@@ -222,7 +224,7 @@ function packSmartTopTags(items) {
   rows.forEach((itemsInRow, rowIndex) => {
     const total = itemsInRow.reduce((sum, item) => sum + item.width, 0) + SMART_TOP_GAP * Math.max(0, itemsInRow.length - 1);
     let left = Math.round((POSTER_WIDTH - total) / 2);
-    const top = rowIndex * (SMART_TOP_HEIGHT + 10);
+    const top = rowIndex * (SMART_TOP_HEIGHT + 12);
     itemsInRow.forEach((item) => {
       placements.push({ ...item, left, top });
       left += item.width + SMART_TOP_GAP;
@@ -258,9 +260,9 @@ async function renderPoster(body) {
     composites.push({ input: smartBottomBackdrop(), top: POSTER_HEIGHT - 450, left: 0 });
 
     const topTags = [];
-    if (trend) topTags.push(await smartTopTag(trend, { fill: dynamicFill, width: smartTagWidth(trend, 230, 310) }));
-    if (age) topTags.push(await smartTopTag(age, { fill: '#191a20', width: smartTagWidth(age, 145, 205), fontSize: 31 }));
-    if (quality) topTags.push(await smartTopTag(quality, { fill: '#191a20', width: smartTagWidth(quality, 150, 215), fontSize: 31 }));
+    if (trend) topTags.push(await smartTopTag(trend, { fill: dynamicFill, width: smartTagWidth(trend, 350, 410) }));
+    if (age) topTags.push(await smartTopTag(age, { fill: '#191a20', width: smartTagWidth(age, 190, 250), fontSize: 46 }));
+    if (quality) topTags.push(await smartTopTag(quality, { fill: '#191a20', width: smartTagWidth(quality, 190, 260), fontSize: 46 }));
     for (const placement of packSmartTopTags(topTags)) {
       composites.push({ input: placement.buffer, top: placement.top, left: placement.left });
     }
@@ -273,33 +275,32 @@ async function renderPoster(body) {
       composites.push({ input: logo.buffer, top, left });
     } else if (title) {
       const titleBuffer = await titleImage(title);
-      if (titleBuffer) composites.push({ input: titleBuffer, top: 810, left: 40 });
+      if (titleBuffer) composites.push({ input: titleBuffer, top: 800, left: 40 });
     }
 
     const info = await smartBottomInfo(genre, resolvedRatingLabel);
     if (info) composites.push({ input: info, top: SMART_BOTTOM_INFO_TOP, left: 30 });
   } else {
-    // Original artwork keeps its own layout, but uses a larger modern rounded-rectangle treatment.
     if (age) {
-      composites.push({ input: await originalBadgeImage(age, { width: 160, fontSize: 31 }), top: ORIGINAL_TOP, left: SAFE_MARGIN });
+      composites.push({ input: await originalBadgeImage(age, { width: 190, fontSize: 42 }), top: ORIGINAL_TOP, left: SAFE_MARGIN });
     }
     if (quality) {
-      const width = 170;
-      composites.push({ input: await originalBadgeImage(quality, { width, fontSize: 31 }), top: ORIGINAL_TOP, left: POSTER_WIDTH - SAFE_MARGIN - width });
+      const width = 205;
+      composites.push({ input: await originalBadgeImage(quality, { width, fontSize: 42 }), top: ORIGINAL_TOP, left: POSTER_WIDTH - SAFE_MARGIN - width });
     }
     if (trend) {
-      const width = 280;
+      const width = 360;
       const left = Math.round((POSTER_WIDTH - width) / 2);
-      composites.push({ input: await originalBadgeImage(trend, { width, height: 76, fill: '#5b6cff', fillOpacity: 0.95, fontSize: 34, radius: 14 }), top: ORIGINAL_TOP, left });
+      composites.push({ input: await originalBadgeImage(trend, { width, height: 104, fill: '#5b6cff', fillOpacity: 0.95, fontSize: 48, radius: 16 }), top: ORIGINAL_TOP, left });
     }
     if (resolvedRatingLabel) {
       const length = String(resolvedRatingLabel).length;
-      const width = length <= 6 ? 205 : length <= 10 ? 250 : 300;
-      composites.push({ input: await originalBadgeImage(resolvedRatingLabel, { width, fontSize: 33 }), top: ORIGINAL_SECOND_ROW_TOP, left: SAFE_MARGIN });
+      const width = length <= 6 ? 235 : length <= 10 ? 285 : 330;
+      composites.push({ input: await originalBadgeImage(resolvedRatingLabel, { width, fontSize: 44 }), top: ORIGINAL_SECOND_ROW_TOP, left: SAFE_MARGIN });
     }
     if (genre) {
-      const width = 270;
-      composites.push({ input: await originalBadgeImage(genre, { width, fontSize: 31 }), top: ORIGINAL_SECOND_ROW_TOP, left: POSTER_WIDTH - SAFE_MARGIN - width });
+      const width = 300;
+      composites.push({ input: await originalBadgeImage(genre, { width, fontSize: 42 }), top: ORIGINAL_SECOND_ROW_TOP, left: POSTER_WIDTH - SAFE_MARGIN - width });
     }
   }
 
@@ -310,7 +311,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/health') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-overlay-scale-1' }));
+      return res.end(JSON.stringify({ ok: true, renderer: 'kollection-posters-v2-bp-proportion-1' }));
     }
     if (req.method !== 'POST' || req.url !== '/render') {
       res.writeHead(404, { 'content-type': 'application/json' });
@@ -323,7 +324,7 @@ const server = http.createServer(async (req, res) => {
       'content-type': 'image/webp',
       'content-length': String(output.length),
       'cache-control': 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800',
-      'x-kollection-renderer': 'v2-overlay-scale-1',
+      'x-kollection-renderer': 'v2-bp-proportion-1',
       'x-kollection-render-ms': String(Date.now() - started),
     });
     res.end(output);
