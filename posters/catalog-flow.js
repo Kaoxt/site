@@ -107,7 +107,7 @@
   const syncConnectionUi = () => {
     const saved = readConnections();
     const hasKey = Boolean(saved.mdblistApiKey);
-    mdblistToggleBtn.textContent = hasKey ? 'Key Saved' : 'Add Key';
+    mdblistToggleBtn.textContent = hasKey ? 'Connected' : 'Add Key';
     mdblistToggleBtn.classList.toggle('is-connected', hasKey);
     if (hasKey) mdblistKeyStatus.textContent = 'MDBList API key saved in this browser.';
     const params = new URLSearchParams(location.search);
