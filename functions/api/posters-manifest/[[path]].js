@@ -44,6 +44,7 @@ function parseConfig(token) {
 function posterUrl(config, type, id) {
   const params = new URLSearchParams({
     source: config.source,
+    provider: 'tmdb-bp11',
     tags: [...new Set(config.tags)].sort().join(','),
     ratingSource: config.ratingSource,
     language: config.language,
