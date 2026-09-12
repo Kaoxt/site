@@ -19,10 +19,14 @@
   let timer = 0;
   let generation = 0;
   let selected = [];
+  let activeRecommendedLabel = '';
 
   const style = document.createElement('style');
   style.textContent = `
-    .discover-live{display:grid;gap:12px;margin-top:6px}
+    .discover-live{display:grid;gap:12px;margin-top:14px}
+    .discover-list-head{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:28px}
+    .discover-list-head strong{font-size:14px;line-height:1.2;color:#f3f4f6}
+    .discover-list-head[hidden]{display:none}
     .discover-status{min-height:22px;color:#777b84;font-size:13px;line-height:1.4}
     .discover-status.is-error{color:#ef9a9a}
     .discover-results{display:grid;gap:10px}
@@ -38,14 +42,18 @@
     .discover-user{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px;border:1px solid rgba(255,255,255,.11);border-radius:14px;background:#101113}
     .discover-user button{border:0;border-radius:10px;padding:10px 13px;background:#fff;color:#111;font:inherit;font-weight:800;cursor:pointer}
     .discover-loading{display:inline-flex;align-items:center;gap:8px}.discover-loading:before{content:'';width:13px;height:13px;border:2px solid rgba(124,131,255,.25);border-top-color:#7c83ff;border-radius:50%;animation:discoverSpin .7s linear infinite}@keyframes discoverSpin{to{transform:rotate(360deg)}}
-    .recommended-users button.selected{background:#31343a;box-shadow:inset 0 0 0 1px rgba(67,219,122,.4);color:#fff}
+    .recommended-users button.selected{background:#31343a;box-shadow:inset 0 0 0 1px rgba(67,219,122,.55);color:#fff}
   `;
   document.head.appendChild(style);
 
   const root = document.createElement('div');
   root.className = 'discover-live';
-  root.innerHTML = '<div class="discover-status" role="status" aria-live="polite"></div><div class="discover-results"></div>';
-  discoverPanel.insertBefore(root, discoverPanel.querySelector('.recommended-label'));
+  root.innerHTML = '<div class="discover-list-head" hidden><strong></strong></div><div class="discover-status" role="status" aria-live="polite"></div><div class="discover-results"></div>';
+  const recommendedUsers = discoverPanel.querySelector('.recommended-users');
+  if (recommendedUsers) recommendedUsers.insertAdjacentElement('afterend', root);
+  else discoverPanel.appendChild(root);
+  const listHead = root.querySelector('.discover-list-head');
+  const listHeadTitle = listHead.querySelector('strong');
   const status = root.querySelector('.discover-status');
   const results = root.querySelector('.discover-results');
 
@@ -69,8 +77,20 @@
     status.classList.toggle('discover-loading', loading);
   }
 
-  function renderLists(items, providerInfo = {}) {
+  function setListHeading(username, label = '') {
+    if (!username) {
+      listHead.hidden = true;
+      listHeadTitle.textContent = '';
+      return;
+    }
+    const display = label || username;
+    listHeadTitle.textContent = `@${display}'s Lists`;
+    listHead.hidden = false;
+  }
+
+  function renderLists(items, providerInfo = {}, username = '') {
     results.innerHTML = '';
+    setListHeading(username, activeRecommendedLabel);
     if (!items.length) {
       const details = [];
       if (providerInfo?.mdblist?.error) details.push('MDBList: ' + providerInfo.mdblist.error);
@@ -85,7 +105,7 @@
       const key = selectedKey(item);
       label.innerHTML = `<input type="checkbox" ${selectedSet.has(key) ? 'checked' : ''}><span class="discover-result-copy"><strong></strong><small></small></span><span class="discover-provider"></span>`;
       label.querySelector('strong').textContent = item.name || item.slug || 'Untitled list';
-      const meta = [item.username, item.itemCount ? `${item.itemCount} items` : ''].filter(Boolean).join(' • ');
+      const meta = [item.provider || '', item.itemCount ? `${item.itemCount} items` : ''].filter(Boolean).join(' • ');
       label.querySelector('small').textContent = meta;
       label.querySelector('.discover-provider').textContent = item.provider || '';
       label.querySelector('input').addEventListener('change', (event) => {
@@ -103,6 +123,7 @@
 
   function renderUsers(users) {
     results.innerHTML = '';
+    setListHeading('');
     if (!users.length) {
       setStatus('No matching public Trakt or MDBList user found.');
       return;
@@ -114,6 +135,7 @@
       row.querySelector('strong').textContent = user.name || user.username;
       row.querySelector('small').textContent = `${user.provider} • @${user.username}`;
       row.querySelector('button').addEventListener('click', () => {
+        activeRecommendedLabel = user.username;
         searchInput.value = user.username;
         modeButtons.forEach((button) => button.classList.toggle('active', button.dataset.discoverMode === 'smart-lists'));
         runSearch(user.username, 'lists', String(user.provider || '').toLowerCase());
@@ -127,6 +149,7 @@
     const username = String(value || '').trim().replace(/^@/, '');
     if (username.length < 2) {
       results.innerHTML = '';
+      setListHeading('');
       setStatus('Enter a Trakt or MDBList username to search.');
       return;
     }
@@ -152,17 +175,20 @@
       } else {
         const items = Array.isArray(data.items) ? data.items : [];
         const filteredItems = providerFilter ? items.filter((item) => String(item.provider || '').toLowerCase() === providerFilter) : items;
-        renderLists(filteredItems, data.providers || {});
+        renderLists(filteredItems, data.providers || {}, username);
       }
     } catch (error) {
       if (requestId !== generation) return;
       results.innerHTML = '';
+      setListHeading(username, activeRecommendedLabel);
       setStatus(error?.message || 'Could not search right now.', true);
     }
   }
 
   function scheduleSearch() {
     clearTimeout(timer);
+    activeRecommendedLabel = '';
+    recommendedButtons.forEach((button) => button.classList.remove('selected'));
     timer = setTimeout(() => runSearch(), 450);
   }
 
@@ -212,6 +238,7 @@
       provider: button.dataset.provider || '',
       username: button.dataset.username || button.textContent.trim(),
     };
+    activeRecommendedLabel = label;
     recommendedButtons.forEach((item) => item.classList.toggle('selected', item === button));
     searchInput.value = profile.username;
     modeButtons.forEach((item) => item.classList.toggle('active', item.dataset.discoverMode === 'smart-lists'));
