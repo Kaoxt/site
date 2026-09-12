@@ -1,5 +1,5 @@
 import { assertSameOrigin, readSession, refreshSessionIfNeeded } from '../../../_lib/nuvio-session.js';
-import { encryptedSecretsFromRow, normalizeName, parseRow, requireDb, sanitizeConfig, storageConfig } from '../../../_lib/saved-collections.js';
+import { encryptedSecretsFromRow, normalizeName, parseRow, savedCollectionsDb, sanitizeConfig, storageConfig } from '../../../_lib/saved-collections.js';
 import { decryptSavedSecrets, encryptSavedSecrets, normalizeSavedSecrets } from '../../../_lib/saved-secrets.js';
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
@@ -10,15 +10,16 @@ async function accountSession(context) {
   return refreshSessionIfNeeded(current, context.env || {});
 }
 const SELECT = `id, name, config_json, draft_step, last_nuvio_profile_id, last_nuvio_profile_name, last_applied_at, created_at, updated_at`;
+const TABLE = 'saved_collections_v2';
 async function ownedRow(db, id, userId) {
-  return db.prepare(`SELECT ${SELECT} FROM saved_collections WHERE id = ?1 AND user_id = ?2`).bind(id, userId).first();
+  return db.prepare(`SELECT ${SELECT} FROM ${TABLE} WHERE id = ?1 AND user_id = ?2`).bind(id, userId).first();
 }
 
 export async function onRequestGet(context) {
   try {
     const auth = await accountSession(context);
     if (!auth.session) return json({ error: 'Sign in with Nuvio first.' }, 401, auth.cookie ? { 'Set-Cookie': auth.cookie } : {});
-    const row = await ownedRow(requireDb(context.env), context.params.id, auth.session.id);
+    const row = await ownedRow(await savedCollectionsDb(context.env), context.params.id, auth.session.id);
     if (!row) return json({ error: 'Saved collection not found.' }, 404);
     const collection = parseRow(row);
     collection.secrets = await decryptSavedSecrets(encryptedSecretsFromRow(row), context.env || {});
@@ -32,7 +33,7 @@ async function update(context) {
     if (!assertSameOrigin(context.request)) return json({ error: 'Invalid request origin.' }, 403);
     const auth = await accountSession(context);
     if (!auth.session) return json({ error: 'Sign in with Nuvio first.' }, 401, auth.cookie ? { 'Set-Cookie': auth.cookie } : {});
-    const db = requireDb(context.env);
+    const db = await savedCollectionsDb(context.env);
     const existing = await ownedRow(db, context.params.id, auth.session.id);
     if (!existing) return json({ error: 'Saved collection not found.' }, 404);
     const input = await context.request.json().catch(() => ({}));
@@ -52,7 +53,7 @@ async function update(context) {
     const configJson = storageConfig(clean, encryptedSecrets);
     const updatedAt = new Date().toISOString();
     await db.prepare(
-      `UPDATE saved_collections SET name=?1, config_json=?2, draft_step=?3, last_nuvio_profile_id=?4, last_nuvio_profile_name=?5, updated_at=?6 WHERE id=?7 AND user_id=?8`
+      `UPDATE ${TABLE} SET name=?1, config_json=?2, draft_step=?3, last_nuvio_profile_id=?4, last_nuvio_profile_name=?5, updated_at=?6 WHERE id=?7 AND user_id=?8`
     ).bind(name, configJson, draftStep, profileId, profileName || null, updatedAt, context.params.id, auth.session.id).run();
     return json({ collection: { id: context.params.id, name, draftStep, nuvioProfileId: profileId == null ? null : Number(profileId), nuvioProfileName: profileName, lastAppliedAt: existing.last_applied_at || null, config: clean, secretsSaved: Boolean(encryptedSecrets), createdAt: existing.created_at, updatedAt } }, 200, auth.cookie ? { 'Set-Cookie': auth.cookie } : {});
   } catch (error) { console.error(error); return json({ error: error?.message || 'Could not update saved collection.' }, 400); }
@@ -62,7 +63,8 @@ export async function onRequestDelete(context) {
     if (!assertSameOrigin(context.request)) return json({ error: 'Invalid request origin.' }, 403);
     const auth = await accountSession(context);
     if (!auth.session) return json({ error: 'Sign in with Nuvio first.' }, 401, auth.cookie ? { 'Set-Cookie': auth.cookie } : {});
-    const result = await requireDb(context.env).prepare('DELETE FROM saved_collections WHERE id=?1 AND user_id=?2').bind(context.params.id, auth.session.id).run();
+    const db = await savedCollectionsDb(context.env);
+    const result = await db.prepare(`DELETE FROM ${TABLE} WHERE id=?1 AND user_id=?2`).bind(context.params.id, auth.session.id).run();
     if (!result.meta?.changes) return json({ error: 'Saved collection not found.' }, 404);
     return json({ deleted: true }, 200, auth.cookie ? { 'Set-Cookie': auth.cookie } : {});
   } catch (error) { console.error(error); return json({ error: error?.message || 'Could not delete saved collection.' }, 500); }
