@@ -25,6 +25,26 @@
 
     const intro = step.querySelector('.connection-intro p');
     if (intro) intro.textContent = 'Add your MDBList API key to use your own lists, or continue with public MDBList lists.';
+
+    const keyPanel = step.querySelector('#mdblistKeyPanel');
+    const status = step.querySelector('#mdblistKeyStatus');
+    if (keyPanel && status && !keyPanel.querySelector('.mdblist-get-key')) {
+      const help = document.createElement('div');
+      help.className = 'mdblist-key-help';
+      help.innerHTML = '<a class="mdblist-get-key" href="https://mdblist.com/preferences/#api" target="_blank" rel="noopener noreferrer">Get an API key from MDBList ↗</a>';
+      status.after(help);
+    }
+
+    if (!document.getElementById('mdblistOnlyStyles')) {
+      const style = document.createElement('style');
+      style.id = 'mdblistOnlyStyles';
+      style.textContent = `
+        .mdblist-key-help{margin-top:2px;grid-column:1/-1}
+        .mdblist-get-key{display:inline-flex;align-items:center;gap:5px;color:#9ca1ff;font-size:12px;font-weight:700;text-decoration:none;line-height:1.4}
+        .mdblist-get-key:hover,.mdblist-get-key:focus-visible{color:#bec1ff;text-decoration:underline;text-underline-offset:3px}
+      `;
+      document.head.appendChild(style);
+    }
   }
 
   function stripTraktFromGeneratedJson() {
