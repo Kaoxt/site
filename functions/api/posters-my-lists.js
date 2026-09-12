@@ -13,7 +13,20 @@ function json(data, status = 200) {
 const clean = (value) => String(value || '').trim().replace(/^@/, '');
 const slugify = (value) => clean(value).toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '');
 
-function normalizeLists(payload, fallbackUsername = '') {
+function parseListUrl(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return {};
+  try {
+    const url = new URL(raw, 'https://mdblist.com');
+    const match = url.pathname.match(/^\/lists\/([^/]+)\/([^/?#]+)/i);
+    if (!match) return {};
+    return { username: decodeURIComponent(match[1]), slug: decodeURIComponent(match[2]) };
+  } catch {
+    return {};
+  }
+}
+
+function normalizeLists(payload) {
   const source = Array.isArray(payload)
     ? payload
     : Array.isArray(payload?.lists)
@@ -24,18 +37,24 @@ function normalizeLists(payload, fallbackUsername = '') {
           ? payload.items
           : [];
 
-  return source.map((item) => {
+  const seen = new Set();
+  const items = [];
+  for (const item of source) {
+    const fromUrl = parseListUrl(item?.url || item?.list_url || item?.share_url || '');
     const owner = clean(
       item?.username ||
       item?.user?.username ||
       item?.user ||
       item?.owner?.username ||
       item?.owner ||
-      fallbackUsername
+      fromUrl.username
     );
-    const slug = clean(item?.slug || item?.list_slug || item?.name_slug || item?.id || slugify(item?.name || item?.title));
-    if (!owner || !slug) return null;
-    return {
+    const slug = clean(item?.slug || item?.list_slug || item?.name_slug || fromUrl.slug || item?.id || slugify(item?.name || item?.title));
+    if (!owner || !slug) continue;
+    const key = `${owner}:${slug}`.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    items.push({
       id: `mdblist:${owner}:${slug}`,
       provider: 'MDBList',
       username: owner,
@@ -44,30 +63,12 @@ function normalizeLists(payload, fallbackUsername = '') {
       itemCount: Number(item?.items || item?.item_count || item?.count || 0) || 0,
       likes: Number(item?.likes || item?.like_count || 0) || 0,
       slug,
-      url: String(item?.url || `https://mdblist.com/lists/${encodeURIComponent(owner)}/${encodeURIComponent(slug)}`),
+      url: String(item?.url || item?.list_url || `https://mdblist.com/lists/${encodeURIComponent(owner)}/${encodeURIComponent(slug)}`),
       personal: true,
-    };
-  }).filter(Boolean);
-}
-
-async function fetchJson(path, apiKey) {
-  const joiner = path.includes('?') ? '&' : '?';
-  const response = await fetch(`${API}${path}${joiner}apikey=${encodeURIComponent(apiKey)}`, {
-    headers: { accept: 'application/json', 'user-agent': 'The Kollection/1.0' },
-  });
-  if (!response.ok) return null;
-  return response.json().catch(() => null);
-}
-
-function usernameFromUser(user) {
-  return clean(
-    user?.username ||
-    user?.user_name ||
-    user?.user?.username ||
-    user?.profile?.username ||
-    user?.trakt_username ||
-    user?.name
-  );
+    });
+    if (items.length >= 500) break;
+  }
+  return items;
 }
 
 export async function onRequestPost({ request }) {
@@ -77,29 +78,17 @@ export async function onRequestPost({ request }) {
   if (!apiKey || apiKey.length > 256) return json({ error: 'A valid MDBList API key is required.' }, 400);
 
   try {
-    const user = await fetchJson('/user', apiKey);
-    if (!user || user?.response === false) return json({ error: 'MDBList rejected this API key.' }, 401);
-
-    const username = usernameFromUser(user);
-    const embedded = normalizeLists(user?.lists || user?.my_lists || [], username);
-    if (embedded.length) return json({ username, items: embedded });
-
-    const attempts = [];
-    if (username) {
-      attempts.push(`/lists/${encodeURIComponent(username)}`);
-      attempts.push(`/lists/users/?username=${encodeURIComponent(username)}`);
-    }
-    attempts.push('/user/lists');
-    attempts.push('/lists/user');
-    attempts.push('/lists');
-
-    for (const path of attempts) {
-      const payload = await fetchJson(path, apiKey);
-      const items = normalizeLists(payload, username);
-      if (items.length) return json({ username: username || items[0]?.username || '', items });
+    const response = await fetch(`${API}/lists/user?apikey=${encodeURIComponent(apiKey)}`, {
+      headers: { accept: 'application/json', 'user-agent': 'The Kollection/1.0' },
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      const message = payload?.detail || payload?.error || payload?.message || `MDBList returned ${response.status}.`;
+      return json({ error: String(message) }, response.status === 401 || response.status === 403 ? 401 : 502);
     }
 
-    return json({ username, items: [] });
+    const items = normalizeLists(payload);
+    return json({ items, count: items.length });
   } catch (error) {
     return json({ error: error?.message || 'Could not load MDBList My Lists.' }, 502);
   }
