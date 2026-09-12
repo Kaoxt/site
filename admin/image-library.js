@@ -38,9 +38,11 @@
     coverFile: $('coverFile'),
     backdropFile: $('backdropFile'),
     logoFile: $('logoFile'),
+    asIsFile: $('asIsFile'),
     coverFileName: $('coverFileName'),
     backdropFileName: $('backdropFileName'),
     logoFileName: $('logoFileName'),
+    asIsFileName: $('asIsFileName'),
     uploadPathPreview: $('uploadPathPreview'),
     uploadButton: $('uploadButton'),
     uploadResult: $('uploadResult'),
@@ -435,6 +437,7 @@
     if (el.coverFile.files?.[0]) names.push('cover.webp');
     if (el.backdropFile.files?.[0]) names.push('backdrop.webp');
     if (el.logoFile.files?.[0]) names.push('logo.webp');
+    if (el.asIsFile.files?.[0]) names.push(el.asIsFile.files[0].name);
 
     el.uploadPathPreview.textContent =
       `images/${category}/${folder}/${names.length ? names.join(', ') : '…'}`;
@@ -444,6 +447,7 @@
     [el.coverFile, el.coverFileName],
     [el.backdropFile, el.backdropFileName],
     [el.logoFile, el.logoFileName],
+    [el.asIsFile, el.asIsFileName],
   ].forEach(([input, label]) => {
     input.addEventListener('change', () => {
       updateFileLabel(input, label);
@@ -470,6 +474,7 @@
       ['cover.webp', el.coverFile.files?.[0]],
       ['backdrop.webp', el.backdropFile.files?.[0]],
       ['logo.webp', el.logoFile.files?.[0]],
+      [el.asIsFile.files?.[0]?.name || '', el.asIsFile.files?.[0]],
     ].filter(([, file]) => Boolean(file));
 
     if (!category) {
@@ -513,6 +518,7 @@
     if (el.coverFile.files?.[0]) form.set('cover', el.coverFile.files[0]);
     if (el.backdropFile.files?.[0]) form.set('backdrop', el.backdropFile.files[0]);
     if (el.logoFile.files?.[0]) form.set('logo', el.logoFile.files[0]);
+    if (el.asIsFile.files?.[0]) form.set('asIs', el.asIsFile.files[0]);
 
     const oldText = el.uploadButton.textContent;
     el.uploadButton.disabled = true;
@@ -545,11 +551,12 @@
 
       el.uploadResult.hidden = false;
 
-      [el.coverFile, el.backdropFile, el.logoFile].forEach((input) => { input.value = ''; });
+      [el.coverFile, el.backdropFile, el.logoFile, el.asIsFile].forEach((input) => { input.value = ''; });
       [
         [el.coverFile, el.coverFileName],
         [el.backdropFile, el.backdropFileName],
         [el.logoFile, el.logoFileName],
+        [el.asIsFile, el.asIsFileName],
       ].forEach(([input, label]) => updateFileLabel(input, label));
 
       const uploadedCategory = category;
