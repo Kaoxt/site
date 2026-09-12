@@ -658,3 +658,29 @@ body.light .image-library-page .copy-url-button {
 .new-folder-field[hidden] {
   display: none !important;
 }
+
+
+/* Upload submit/cancel actions */
+.upload-submit-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.upload-submit-actions .button-secondary,
+.upload-submit-actions .button-primary {
+  min-width: 110px;
+}
+
+@media (max-width: 820px) {
+  .upload-submit-actions {
+    width: 100%;
+  }
+
+  .upload-submit-actions .button-secondary,
+  .upload-submit-actions .button-primary {
+    flex: 1 1 0;
+    width: auto;
+  }
+}
