@@ -1,5 +1,5 @@
 import { assertSameOrigin, readSession, refreshSessionIfNeeded } from '../../_lib/nuvio-session.js';
-import { normalizeName, parseRow, requireDb, sanitizeConfig, storageConfig } from '../../_lib/saved-collections.js';
+import { normalizeName, parseRow, savedCollectionsDb, sanitizeConfig, storageConfig } from '../../_lib/saved-collections.js';
 import { encryptSavedSecrets } from '../../_lib/saved-secrets.js';
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
@@ -10,13 +10,15 @@ async function accountSession(context) {
   return refreshSessionIfNeeded(current, context.env || {});
 }
 const SELECT = `id, name, config_json, draft_step, last_nuvio_profile_id, last_nuvio_profile_name, last_applied_at, created_at, updated_at`;
+const TABLE = 'saved_collections_v2';
 
 export async function onRequestGet(context) {
   try {
     const auth = await accountSession(context);
     if (!auth.session) return json({ error: 'Sign in with Nuvio first.' }, 401, auth.cookie ? { 'Set-Cookie': auth.cookie } : {});
-    const result = await requireDb(context.env).prepare(
-      `SELECT ${SELECT} FROM saved_collections WHERE user_id = ?1 ORDER BY updated_at DESC`
+    const db = await savedCollectionsDb(context.env);
+    const result = await db.prepare(
+      `SELECT ${SELECT} FROM ${TABLE} WHERE user_id = ?1 ORDER BY updated_at DESC`
     ).bind(auth.session.id).all();
     return json({ collections: (result.results || []).map(parseRow) }, 200, auth.cookie ? { 'Set-Cookie': auth.cookie } : {});
   } catch (error) {
@@ -40,8 +42,9 @@ export async function onRequestPost(context) {
     const profileId = Number.isFinite(Number(input.nuvioProfileId)) ? Number(input.nuvioProfileId) : null;
     const profileName = String(input.nuvioProfileName || '').trim().slice(0, 120);
     const now = new Date().toISOString();
-    await requireDb(context.env).prepare(
-      `INSERT INTO saved_collections (id, user_id, name, config_json, draft_step, last_nuvio_profile_id, last_nuvio_profile_name, created_at, updated_at)
+    const db = await savedCollectionsDb(context.env);
+    await db.prepare(
+      `INSERT INTO ${TABLE} (id, user_id, name, config_json, draft_step, last_nuvio_profile_id, last_nuvio_profile_name, created_at, updated_at)
        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?8)`
     ).bind(id, auth.session.id, name, configJson, draftStep, profileId, profileName || null, now).run();
     return json({ collection: { id, name, draftStep, nuvioProfileId: profileId, nuvioProfileName: profileName, config: clean, secretsSaved: Boolean(encryptedSecrets), createdAt: now, updatedAt: now } }, 201, auth.cookie ? { 'Set-Cookie': auth.cookie } : {});
