@@ -10,6 +10,8 @@
   const catalogPanels = [...catalogStep.querySelectorAll('[data-catalog-panel]')];
   const catalogCards = [...catalogStep.querySelectorAll('.catalog-card')];
   const discoverTabsWrap = catalogStep.querySelector('.discover-tabs');
+  const discoverSearchTools = catalogStep.querySelector('.discover-search-tools');
+  const discoverChoiceButtons = [...catalogStep.querySelectorAll('[data-discover-choice]')];
   const discoverTabs = [...catalogStep.querySelectorAll('.discover-tabs button')];
   const searchInput = catalogStep.querySelector('.catalog-search input');
   const recommendedButtons = [...catalogStep.querySelectorAll('.recommended-users button')];
@@ -88,8 +90,13 @@
       tab.setAttribute('aria-selected', String(active));
     });
     catalogPanels.forEach((panel) => { panel.hidden = panel.dataset.catalogPanel !== resolved; });
-    if (discoverTabsWrap) discoverTabsWrap.hidden = resolved !== 'discover';
-    if (resolved === 'discover') setDiscoverMode(currentDiscoverMode(), false);
+    if (resolved !== 'discover') {
+      if (discoverSearchTools) discoverSearchTools.hidden = true;
+    } else {
+      if (discoverSearchTools) discoverSearchTools.hidden = true;
+      discoverChoiceButtons.forEach((button) => button.classList.remove('selected'));
+      setDiscoverMode(currentDiscoverMode(), false);
+    }
     if (persist) saveState();
   }
 
