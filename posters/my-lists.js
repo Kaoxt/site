@@ -23,7 +23,7 @@
   myPanel.dataset.catalogPanel = 'my-lists';
   myPanel.hidden = true;
   myPanel.innerHTML = `
-    <div class="popular-lists-heading"><strong>My Lists</strong><small>Your MDBList lists from your connected account.</small></div>
+    <div class="popular-lists-heading"><strong>My Lists</strong><small>Your lists directly from MDBList.</small></div>
     <div id="myListsStatus" class="discover-results-status"></div>
     <div id="myListsResults" class="discover-result-list"></div>`;
   step.querySelector('[data-catalog-panel="discover"]')?.before(myPanel);
@@ -83,10 +83,12 @@
       });
       results.appendChild(label);
     }
-    setStatus(items.length ? `${items.length} MDBList list${items.length === 1 ? '' : 's'} found.` : 'No MDBList lists were found for this API key.');
+    setStatus(items.length ? `${items.length} MDBList list${items.length === 1 ? '' : 's'} found.` : 'No lists were found in MDBList My Lists for this API key.');
   }
 
-  function showMyLists() {
+  function showMyLists(event) {
+    event?.preventDefault?.();
+    event?.stopImmediatePropagation?.();
     [...step.querySelectorAll('.catalog-tab')].forEach((tab) => {
       const active = tab === myTab;
       tab.classList.toggle('active', active);
@@ -95,6 +97,7 @@
     [...step.querySelectorAll('[data-catalog-panel]')].forEach((panel) => { panel.hidden = panel !== myPanel; });
     const discoverTabs = step.querySelector('.discover-tabs');
     if (discoverTabs) discoverTabs.hidden = true;
+    document.dispatchEvent(new CustomEvent('kollection:catalog-tab', { detail: { tab: 'my-lists' } }));
     loadMyLists();
   }
 
@@ -105,7 +108,7 @@
       return;
     }
     if (!force && loadedForKey === key && items.length) return;
-    setStatus('Loading your MDBList lists…');
+    setStatus('Loading your MDBList My Lists…');
     results.innerHTML = '';
     try {
       const response = await fetch('/api/posters-my-lists', {
@@ -120,7 +123,7 @@
       loadedForKey = key;
       render();
     } catch (error) {
-      setStatus(error?.message || 'Could not load your MDBList lists.', true);
+      setStatus(error?.message || 'Could not load your MDBList My Lists.', true);
     }
   }
 
