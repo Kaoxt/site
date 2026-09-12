@@ -2,10 +2,25 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'production-cache-7';
+const CACHE_VERSION = 'production-cache-8';
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
 const ALLOWED_TAGS = ['trend', 'rating', 'genre', 'quality', 'age'];
+const OVERLAY_LANGUAGES = ['en', 'es', 'fr', 'de', 'it', 'pt', 'ja', 'ko'];
+
+const TODAY_LABELS = {
+  en: 'Today', es: 'Hoy', fr: "Aujourd’hui", de: 'Heute', it: 'Oggi', pt: 'Hoje', ja: '今日', ko: '오늘',
+};
+
+const GENRE_TRANSLATIONS = {
+  es: { Action:'Acción', Adventure:'Aventura', Animation:'Animación', Comedy:'Comedia', Crime:'Crimen', Documentary:'Documental', Drama:'Drama', Family:'Familia', Fantasy:'Fantasía', History:'Historia', Horror:'Terror', Music:'Música', Mystery:'Misterio', Romance:'Romance', 'Science Fiction':'Ciencia ficción', 'TV Movie':'Película de TV', Thriller:'Suspenso', War:'Guerra', Western:'Western', 'Action & Adventure':'Acción y aventura', Kids:'Infantil', News:'Noticias', Reality:'Reality', 'Sci-Fi & Fantasy':'Ciencia ficción y fantasía', Soap:'Telenovela', Talk:'Talk show', 'War & Politics':'Guerra y política' },
+  fr: { Action:'Action', Adventure:'Aventure', Animation:'Animation', Comedy:'Comédie', Crime:'Crime', Documentary:'Documentaire', Drama:'Drame', Family:'Familial', Fantasy:'Fantastique', History:'Histoire', Horror:'Horreur', Music:'Musique', Mystery:'Mystère', Romance:'Romance', 'Science Fiction':'Science-fiction', 'TV Movie':'Téléfilm', Thriller:'Thriller', War:'Guerre', Western:'Western', 'Action & Adventure':'Action et aventure', Kids:'Jeunesse', News:'Actualités', Reality:'Téléréalité', 'Sci-Fi & Fantasy':'Science-fiction et fantastique', Soap:'Feuilleton', Talk:'Talk-show', 'War & Politics':'Guerre et politique' },
+  de: { Action:'Action', Adventure:'Abenteuer', Animation:'Animation', Comedy:'Komödie', Crime:'Krimi', Documentary:'Dokumentation', Drama:'Drama', Family:'Familie', Fantasy:'Fantasy', History:'Historie', Horror:'Horror', Music:'Musik', Mystery:'Mystery', Romance:'Romanze', 'Science Fiction':'Science-Fiction', 'TV Movie':'TV-Film', Thriller:'Thriller', War:'Krieg', Western:'Western', 'Action & Adventure':'Action & Abenteuer', Kids:'Kinder', News:'Nachrichten', Reality:'Reality', 'Sci-Fi & Fantasy':'Sci-Fi & Fantasy', Soap:'Soap', Talk:'Talk', 'War & Politics':'Krieg & Politik' },
+  it: { Action:'Azione', Adventure:'Avventura', Animation:'Animazione', Comedy:'Commedia', Crime:'Crime', Documentary:'Documentario', Drama:'Dramma', Family:'Famiglia', Fantasy:'Fantasy', History:'Storia', Horror:'Horror', Music:'Musica', Mystery:'Mistero', Romance:'Romance', 'Science Fiction':'Fantascienza', 'TV Movie':'Film TV', Thriller:'Thriller', War:'Guerra', Western:'Western', 'Action & Adventure':'Azione e avventura', Kids:'Bambini', News:'Notizie', Reality:'Reality', 'Sci-Fi & Fantasy':'Sci-Fi e fantasy', Soap:'Soap', Talk:'Talk', 'War & Politics':'Guerra e politica' },
+  pt: { Action:'Ação', Adventure:'Aventura', Animation:'Animação', Comedy:'Comédia', Crime:'Crime', Documentary:'Documentário', Drama:'Drama', Family:'Família', Fantasy:'Fantasia', History:'História', Horror:'Terror', Music:'Música', Mystery:'Mistério', Romance:'Romance', 'Science Fiction':'Ficção científica', 'TV Movie':'Filme de TV', Thriller:'Suspense', War:'Guerra', Western:'Faroeste', 'Action & Adventure':'Ação e aventura', Kids:'Infantil', News:'Notícias', Reality:'Reality', 'Sci-Fi & Fantasy':'Ficção científica e fantasia', Soap:'Novela', Talk:'Talk show', 'War & Politics':'Guerra e política' },
+  ja: { Action:'アクション', Adventure:'アドベンチャー', Animation:'アニメーション', Comedy:'コメディ', Crime:'犯罪', Documentary:'ドキュメンタリー', Drama:'ドラマ', Family:'ファミリー', Fantasy:'ファンタジー', History:'歴史', Horror:'ホラー', Music:'音楽', Mystery:'ミステリー', Romance:'ロマンス', 'Science Fiction':'SF', 'TV Movie':'テレビ映画', Thriller:'スリラー', War:'戦争', Western:'西部劇', 'Action & Adventure':'アクション・アドベンチャー', Kids:'キッズ', News:'ニュース', Reality:'リアリティ', 'Sci-Fi & Fantasy':'SF・ファンタジー', Soap:'ソープ', Talk:'トーク', 'War & Politics':'戦争・政治' },
+  ko: { Action:'액션', Adventure:'모험', Animation:'애니메이션', Comedy:'코미디', Crime:'범죄', Documentary:'다큐멘터리', Drama:'드라마', Family:'가족', Fantasy:'판타지', History:'역사', Horror:'공포', Music:'음악', Mystery:'미스터리', Romance:'로맨스', 'Science Fiction':'SF', 'TV Movie':'TV 영화', Thriller:'스릴러', War:'전쟁', Western:'서부', 'Action & Adventure':'액션 & 어드벤처', Kids:'키즈', News:'뉴스', Reality:'리얼리티', 'Sci-Fi & Fantasy':'SF & 판타지', Soap:'연속극', Talk:'토크', 'War & Politics':'전쟁 & 정치' },
+};
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data, null, 2), {
@@ -18,6 +33,16 @@ function positiveInt(value, fallback, min = 1, max = 1000000) {
   const parsed = Number.parseInt(String(value ?? ''), 10);
   if (!Number.isFinite(parsed)) return fallback;
   return Math.min(max, Math.max(min, parsed));
+}
+
+function normalizeOverlayLanguage(value) {
+  const language = String(value || 'en').toLowerCase().split('-')[0];
+  return OVERLAY_LANGUAGES.includes(language) ? language : 'en';
+}
+
+function localizeGenre(name, language) {
+  if (!name || language === 'en') return name || '';
+  return GENRE_TRANSLATIONS[language]?.[name] || name;
 }
 
 async function tmdbFetch(path, key) {
@@ -35,10 +60,10 @@ async function resolveTmdbId(type, rawId, key) {
   return list?.[0]?.id ? String(list[0].id) : null;
 }
 
-async function trendLabel(type, id, key) {
+async function trendLabel(type, id, key, language = 'en') {
   const data = await tmdbFetch(`/trending/${type}/day?language=en-US&page=1`, key);
   const index = (data.results || []).findIndex((item) => String(item.id) === String(id));
-  return index >= 0 ? `#${index + 1} Today` : '';
+  return index >= 0 ? `#${index + 1} ${TODAY_LABELS[language] || TODAY_LABELS.en}` : '';
 }
 
 function certification(details, type) {
@@ -123,6 +148,7 @@ function posterVariant(url, preview) {
     provider: url.searchParams.get('provider') || 'tmdb',
     tags: normalizeTags(url.searchParams.get('tags')),
     ratingSource: normalizeRatingSource(url.searchParams.get('ratingSource')),
+    language: normalizeOverlayLanguage(url.searchParams.get('language')),
     overlayColor: url.searchParams.get('overlayColor') || 'dynamic',
   };
 }
@@ -307,12 +333,14 @@ function cacheRequestFor(request) {
   const provider = incoming.searchParams.get('provider') || 'tmdb';
   const tags = normalizeTags(incoming.searchParams.get('tags'));
   const ratingSource = normalizeRatingSource(incoming.searchParams.get('ratingSource'));
+  const language = normalizeOverlayLanguage(incoming.searchParams.get('language'));
   const overlayColor = incoming.searchParams.get('overlayColor') || 'dynamic';
 
   cacheUrl.searchParams.set('source', source);
   cacheUrl.searchParams.set('provider', provider);
   cacheUrl.searchParams.set('tags', tags.join(','));
   cacheUrl.searchParams.set('ratingSource', ratingSource);
+  cacheUrl.searchParams.set('language', language);
   cacheUrl.searchParams.set('overlayColor', overlayColor);
   cacheUrl.searchParams.set('__kollection_renderer', CACHE_VERSION);
   cacheUrl.searchParams.set('__kollection_scope', preview ? 'preview' : 'production');
@@ -351,6 +379,7 @@ export async function onRequest(context) {
   if (!id) return json({ error: 'Could not resolve TMDB/IMDb id.' }, 404);
 
   const requestedTags = new Set(normalizeTags(url.searchParams.get('tags')));
+  const overlayLanguage = normalizeOverlayLanguage(url.searchParams.get('language'));
   const persistentKey = await persistentPosterKey(type, id, url, preview);
   const persistent = await readPersistentPoster(env, persistentKey, requestedTags);
   if (persistent) {
@@ -363,6 +392,7 @@ export async function onRequest(context) {
     headers.set('x-kollection-persistent-cache', 'HIT');
     headers.set('x-kollection-cache-scope', preview ? 'preview' : 'production');
     headers.set('x-kollection-render-version', CACHE_VERSION);
+    headers.set('x-kollection-overlay-language', overlayLanguage);
 
     const response = new Response(persistent.body, { status: 200, headers });
     context.waitUntil(cache.put(cacheRequest, response.clone()));
@@ -374,7 +404,7 @@ export async function onRequest(context) {
 
   try {
     const append = type === 'movie' ? 'images,release_dates,external_ids' : 'images,content_ratings,external_ids';
-    const details = await tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null`, env.TMDB_API_KEY);
+    const details = await tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null&language=en-US`, env.TMDB_API_KEY);
     if (!details.poster_path) return json({ error: 'TMDB has no poster for this title.' }, 404);
 
     const tags = requestedTags;
@@ -392,9 +422,9 @@ export async function onRequest(context) {
       title: smartTextless ? String(details.title || details.name || '').slice(0, 80) : '',
       rating: rating.value,
       ratingLabel: rating.label,
-      genre: tags.has('genre') ? (details.genres?.[0]?.name || '') : '',
+      genre: tags.has('genre') ? localizeGenre(details.genres?.[0]?.name || '', overlayLanguage) : '',
       age: tags.has('age') ? certification(details, type) : '',
-      trend: tags.has('trend') ? await trendLabel(type, id, env.TMDB_API_KEY) : '',
+      trend: tags.has('trend') ? await trendLabel(type, id, env.TMDB_API_KEY, overlayLanguage) : '',
       quality: '',
       smartLayout,
       overlayColor: url.searchParams.get('overlayColor') || 'dynamic',
@@ -426,6 +456,7 @@ export async function onRequest(context) {
     headers.set('x-kollection-artwork-source', artwork.source);
     headers.set('x-kollection-logo-source', logo.source);
     headers.set('x-kollection-tmdb-id', id);
+    headers.set('x-kollection-overlay-language', overlayLanguage);
 
     const response = new Response(output, { status: 200, headers });
     context.waitUntil(Promise.all([
