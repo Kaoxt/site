@@ -5,65 +5,66 @@
   if (!step) return;
 
   const discoverPanel = step.querySelector('[data-catalog-panel="discover"]');
-  const searchInput = discoverPanel?.querySelector('.catalog-search input');
-  const modeButtons = [...(step.querySelectorAll('.discover-tabs button') || [])];
-  const discoverSearchTools = step.querySelector('.discover-search-tools');
-  const discoverChoiceButtons = [...step.querySelectorAll('[data-discover-choice]')];
-  const popularListsButton = document.getElementById('popularListsButton');
-  const popularListsResults = document.getElementById('popularListsResults');
+  const popularSearch = document.getElementById('popularListSearch');
+  const popularResults = document.getElementById('popularListsResults');
+  const userSearch = document.getElementById('browseUserSearch');
+  const userResults = document.getElementById('userListsResults');
   const recommendedButtons = [...(discoverPanel?.querySelectorAll('.recommended-users button') || [])];
-  if (!discoverPanel || !searchInput) return;
+  if (!discoverPanel || !popularSearch || !popularResults || !userSearch || !userResults) return;
 
-  const STORE_KEY = 'kollection-posters-discover-live-v1';
+  const STORE_KEY = 'kollection-posters-discover-live-v2';
   const RECOMMENDED_PROFILES = {
     snoak: { provider: 'mdblist', username: 'snoak' },
     gary: { provider: 'mdblist', username: 'garycrawfordgc' },
     kaoxt: { provider: 'mdblist', username: 'kaoxt' },
   };
-  let timer = 0;
-  let generation = 0;
+
   let selected = [];
+  let popularItems = [];
+  let popularLoaded = false;
+  let userTimer = 0;
+  let userGeneration = 0;
   let activeRecommendedLabel = '';
-  let activeProvider = '';
 
   const style = document.createElement('style');
   style.textContent = `
-    .discover-live{display:grid;gap:12px;margin-top:14px}
-    .discover-list-head{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:28px}
-    .discover-list-head strong{font-size:14px;line-height:1.2;color:#f3f4f6}
-    .discover-list-head[hidden]{display:none}
-    .discover-status{min-height:22px;color:#777b84;font-size:13px;line-height:1.4}
-    .discover-status.is-error{color:#ef9a9a}
-    .discover-results{display:grid;gap:10px}
-    .discover-result{display:flex;align-items:center;gap:14px;min-height:78px;padding:14px 16px;border:1px solid rgba(255,255,255,.11);border-radius:14px;background:#101113;cursor:pointer}
+    .discover-results-status{min-height:20px;color:#777b84;font-size:12px;line-height:1.4;margin:2px 0 4px}
+    .discover-results-status.is-error{color:#ef9a9a}
+    .discover-results-status.is-loading{display:inline-flex;align-items:center;gap:8px}
+    .discover-results-status.is-loading:before{content:'';width:12px;height:12px;border:2px solid rgba(124,131,255,.25);border-top-color:#7c83ff;border-radius:50%;animation:discoverSpin .7s linear infinite}
+    @keyframes discoverSpin{to{transform:rotate(360deg)}}
+    .discover-result-list{display:grid;gap:9px}
+    .discover-result{display:flex;align-items:center;gap:13px;min-height:68px;padding:12px 14px;border:1px solid rgba(255,255,255,.11);border-radius:13px;background:#101113;cursor:pointer}
     .discover-result:hover{border-color:rgba(255,255,255,.18);background:#131416}
-    .discover-result input{appearance:none;width:30px;height:30px;flex:0 0 30px;border:2px solid #4a4d53;border-radius:8px;background:#17181b;display:grid;place-items:center}
+    .discover-result input{appearance:none;width:27px;height:27px;flex:0 0 27px;border:2px solid #4a4d53;border-radius:7px;background:#17181b;display:grid;place-items:center}
     .discover-result input:checked{border-color:#43db7a;background:#43db7a}
-    .discover-result input:checked:after{content:'✓';color:#07150c;font-size:20px;font-weight:900}
-    .discover-result-copy{display:grid;gap:4px;min-width:0}
-    .discover-result-copy strong{font-size:16px;line-height:1.2;color:#f3f4f6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .discover-result-copy small{font-size:13px;color:#71747c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .discover-provider{margin-left:auto;flex:0 0 auto;padding:6px 9px;border:1px solid rgba(255,255,255,.1);border-radius:999px;color:#979aa3;font-size:11px;font-weight:800;letter-spacing:.02em}
-    .discover-user{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px;border:1px solid rgba(255,255,255,.11);border-radius:14px;background:#101113}
-    .discover-user button{border:0;border-radius:10px;padding:10px 13px;background:#fff;color:#111;font:inherit;font-weight:800;cursor:pointer}
-    .discover-loading{display:inline-flex;align-items:center;gap:8px}.discover-loading:before{content:'';width:13px;height:13px;border:2px solid rgba(124,131,255,.25);border-top-color:#7c83ff;border-radius:50%;animation:discoverSpin .7s linear infinite}@keyframes discoverSpin{to{transform:rotate(360deg)}}
+    .discover-result input:checked:after{content:'✓';color:#07150c;font-size:18px;font-weight:900}
+    .discover-result-copy{display:grid;gap:3px;min-width:0}
+    .discover-result-copy strong{font-size:14px;line-height:1.25;color:#f3f4f6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .discover-result-copy small{font-size:12px;color:#71747c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .discover-provider{margin-left:auto;flex:0 0 auto;padding:5px 8px;border:1px solid rgba(255,255,255,.09);border-radius:999px;color:#858892;font-size:10px;font-weight:800}
+    .user-list-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}
+    .user-list-head strong{font-size:13px;color:#f3f4f6}
+    .user-list-head[hidden]{display:none}
     .recommended-users button.selected{background:#31343a;box-shadow:inset 0 0 0 1px rgba(67,219,122,.55);color:#fff}
   `;
   document.head.appendChild(style);
 
-  const root = document.createElement('div');
-  root.className = 'discover-live';
-  root.innerHTML = '<div class="discover-list-head" hidden><strong></strong></div><div class="discover-status" role="status" aria-live="polite"></div><div class="discover-results"></div>';
-  const recommendedUsers = discoverPanel.querySelector('.recommended-users');
-  if (recommendedUsers) recommendedUsers.insertAdjacentElement('afterend', root);
-  else discoverPanel.appendChild(root);
-  const listHead = root.querySelector('.discover-list-head');
-  const listHeadTitle = listHead.querySelector('strong');
-  const status = root.querySelector('.discover-status');
-  const results = root.querySelector('.discover-results');
+  const popularStatus = document.createElement('div');
+  popularStatus.className = 'discover-results-status';
+  popularResults.before(popularStatus);
+  popularResults.classList.add('discover-result-list');
 
-  const currentMode = () => modeButtons.find((button) => button.classList.contains('active'))?.dataset.discoverMode === 'browse-users' ? 'users' : 'lists';
-  const selectedKey = (item) => `${item.provider}:${item.username}:${item.slug || item.url || item.name}`;
+  const userHead = document.createElement('div');
+  userHead.className = 'user-list-head';
+  userHead.hidden = true;
+  userHead.innerHTML = '<strong></strong>';
+  const userStatus = document.createElement('div');
+  userStatus.className = 'discover-results-status';
+  userResults.before(userHead, userStatus);
+  userResults.classList.add('discover-result-list');
+
+  const selectedKey = (item) => `${String(item.provider || '').toLowerCase()}:${item.username || ''}:${item.slug || item.url || item.name}`;
 
   function readState() {
     try {
@@ -73,46 +74,29 @@
   }
 
   function writeState() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify({ version: 1, selected })); } catch {}
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ version: 2, selected })); } catch {}
   }
 
-  function setStatus(text, error = false, loading = false) {
-    status.textContent = text || '';
-    status.classList.toggle('is-error', error);
-    status.classList.toggle('discover-loading', loading);
+  function setStatus(node, text, { error = false, loading = false } = {}) {
+    node.textContent = text || '';
+    node.classList.toggle('is-error', error);
+    node.classList.toggle('is-loading', loading);
   }
 
-  function setListHeading(username, label = '') {
-    if (!username) {
-      listHead.hidden = true;
-      listHeadTitle.textContent = '';
-      return;
-    }
-    const display = label || username;
-    listHeadTitle.textContent = `@${display}'s Lists`;
-    listHead.hidden = false;
-  }
-
-  function renderLists(items, providerInfo = {}, username = '') {
-    results.innerHTML = '';
-    setListHeading(username, activeRecommendedLabel);
-    if (!items.length) {
-      const details = [];
-      if (providerInfo?.mdblist?.error) details.push('MDBList: ' + providerInfo.mdblist.error);
-      if (providerInfo?.trakt?.error) details.push('Trakt: ' + providerInfo.trakt.error);
-      setStatus(details.length ? `No lists found. ${details.join(' · ')}` : 'No public lists found for that username.', Boolean(details.length));
-      return;
-    }
+  function renderListCards(container, items) {
+    container.innerHTML = '';
     const selectedSet = new Set(selected.map(selectedKey));
     items.forEach((item) => {
+      const key = selectedKey(item);
       const label = document.createElement('label');
       label.className = 'discover-result';
-      const key = selectedKey(item);
-      label.innerHTML = `<input type="checkbox" ${selectedSet.has(key) ? 'checked' : ''}><span class="discover-result-copy"><strong></strong><small></small></span><span class="discover-provider"></span>`;
+      label.innerHTML = `<input type="checkbox" ${selectedSet.has(key) ? 'checked' : ''}><span class="discover-result-copy"><strong></strong><small></small></span><span class="discover-provider">MDBList</span>`;
       label.querySelector('strong').textContent = item.name || item.slug || 'Untitled list';
-      const meta = [item.provider || '', item.itemCount ? `${item.itemCount} items` : ''].filter(Boolean).join(' • ');
-      label.querySelector('small').textContent = meta;
-      label.querySelector('.discover-provider').textContent = item.provider || '';
+      const meta = [];
+      if (item.username) meta.push(`@${item.username}`);
+      if (Number(item.itemCount || 0) > 0) meta.push(`${Number(item.itemCount)} items`);
+      if (Number(item.likes || 0) > 0) meta.push(`${Number(item.likes)} likes`);
+      label.querySelector('small').textContent = meta.length ? meta.join(' • ') : 'MDBList public list';
       label.querySelector('input').addEventListener('change', (event) => {
         if (event.target.checked) {
           if (!selected.some((entry) => selectedKey(entry) === key)) selected.push(item);
@@ -121,80 +105,75 @@
         }
         writeState();
       });
-      results.appendChild(label);
+      container.appendChild(label);
     });
-    setStatus(`${items.length} public list${items.length === 1 ? '' : 's'} found. Select any you want to include.`);
   }
 
-  function renderUsers(users) {
-    results.innerHTML = '';
-    setListHeading('');
-    if (!users.length) {
-      setStatus('No matching public Trakt or MDBList user found.');
-      return;
-    }
-    users.forEach((user) => {
-      const row = document.createElement('div');
-      row.className = 'discover-user';
-      row.innerHTML = '<span class="discover-result-copy"><strong></strong><small></small></span><button type="button">View lists</button>';
-      row.querySelector('strong').textContent = user.name || user.username;
-      row.querySelector('small').textContent = `${user.provider} • @${user.username}`;
-      row.querySelector('button').addEventListener('click', () => {
-        activeRecommendedLabel = user.username;
-        searchInput.value = user.username;
-        modeButtons.forEach((button) => button.classList.toggle('active', button.dataset.discoverMode === 'smart-lists'));
-        runSearch(user.username, 'lists', String(user.provider || '').toLowerCase());
-      });
-      results.appendChild(row);
-    });
-    setStatus(`${users.length} matching account${users.length === 1 ? '' : 's'} found.`);
+  function filterPopular() {
+    const query = popularSearch.value.trim().toLowerCase();
+    const filtered = query ? popularItems.filter((item) => `${item.name} ${item.username} ${item.slug}`.toLowerCase().includes(query)) : popularItems;
+    renderListCards(popularResults, filtered);
+    setStatus(popularStatus, filtered.length ? `${filtered.length} popular MDBList list${filtered.length === 1 ? '' : 's'}.` : 'No popular lists match that search.');
   }
 
-  async function runSearch(value = searchInput.value, forcedMode = '', provider = '') {
-    const username = String(value || '').trim().replace(/^@/, '');
-    if (username.length < 2) {
-      results.innerHTML = '';
-      setListHeading('');
-      setStatus('Enter a Trakt or MDBList username to search.');
-      return;
-    }
-    const mode = forcedMode || currentMode();
-    const providerFilter = String(provider || activeProvider || '').toLowerCase();
-    const requestId = ++generation;
-    const providerLabel = providerFilter === 'mdblist' ? 'MDBList ' : providerFilter === 'trakt' ? 'Trakt ' : '';
-    setStatus(mode === 'users' ? `Looking for @${username}…` : `Loading ${providerLabel}public lists for @${username}…`, false, true);
+  async function loadPopularLists(force = false) {
+    if (popularLoaded && !force) return;
+    setStatus(popularStatus, 'Loading MDBList popular lists…', { loading: true });
+    popularResults.innerHTML = '';
     try {
-      const query = new URLSearchParams({ username, mode });
-      if (providerFilter) query.set('provider', providerFilter);
-      const response = await fetch(`/api/posters-discover?${query.toString()}`, {
-        headers: { accept: 'application/json' },
-        cache: 'no-store',
-      });
+      const response = await fetch('/api/posters-toplists', { headers: { accept: 'application/json' }, cache: 'no-store' });
       const data = await response.json().catch(() => ({}));
-      if (requestId !== generation) return;
-      if (!response.ok) throw new Error(data?.error || `Search failed (${response.status})`);
-      if (mode === 'users') {
-        const users = Array.isArray(data.users) ? data.users : [];
-        const filteredUsers = providerFilter ? users.filter((user) => String(user.provider || '').toLowerCase() === providerFilter) : users;
-        renderUsers(filteredUsers);
-      } else {
-        const items = Array.isArray(data.items) ? data.items : [];
-        const filteredItems = providerFilter ? items.filter((item) => String(item.provider || '').toLowerCase() === providerFilter) : items;
-        renderLists(filteredItems, data.providers || {}, username);
-      }
+      if (!response.ok) throw new Error(data?.error || `Could not load popular lists (${response.status})`);
+      popularItems = Array.isArray(data.items) ? data.items : [];
+      popularLoaded = true;
+      filterPopular();
     } catch (error) {
-      if (requestId !== generation) return;
-      results.innerHTML = '';
-      setListHeading(username, activeRecommendedLabel);
-      setStatus(error?.message || 'Could not search right now.', true);
+      setStatus(popularStatus, error?.message || 'Could not load MDBList popular lists.', { error: true });
     }
   }
 
-  function scheduleSearch() {
-    clearTimeout(timer);
+  function setUserHeading(username, label = '') {
+    if (!username) {
+      userHead.hidden = true;
+      userHead.querySelector('strong').textContent = '';
+      return;
+    }
+    userHead.querySelector('strong').textContent = `@${label || username}'s Lists`;
+    userHead.hidden = false;
+  }
+
+  async function loadUserLists(username, label = '') {
+    const cleanUsername = String(username || '').trim().replace(/^@/, '');
+    if (cleanUsername.length < 2) {
+      userResults.innerHTML = '';
+      setUserHeading('');
+      setStatus(userStatus, 'Enter an MDBList username to view public lists.');
+      return;
+    }
+    const requestId = ++userGeneration;
+    setUserHeading(cleanUsername, label);
+    setStatus(userStatus, `Loading MDBList lists for @${cleanUsername}…`, { loading: true });
+    userResults.innerHTML = '';
+    try {
+      const params = new URLSearchParams({ username: cleanUsername, mode: 'lists', provider: 'mdblist' });
+      const response = await fetch(`/api/posters-discover?${params}`, { headers: { accept: 'application/json' }, cache: 'no-store' });
+      const data = await response.json().catch(() => ({}));
+      if (requestId !== userGeneration) return;
+      if (!response.ok) throw new Error(data?.error || `Search failed (${response.status})`);
+      const items = (Array.isArray(data.items) ? data.items : []).filter((item) => String(item.provider || '').toLowerCase() === 'mdblist');
+      renderListCards(userResults, items);
+      setStatus(userStatus, items.length ? `${items.length} public MDBList list${items.length === 1 ? '' : 's'} found.` : 'No public MDBList lists found for that user.');
+    } catch (error) {
+      if (requestId !== userGeneration) return;
+      setStatus(userStatus, error?.message || 'Could not load that MDBList user.', { error: true });
+    }
+  }
+
+  function scheduleUserSearch() {
+    clearTimeout(userTimer);
     activeRecommendedLabel = '';
     recommendedButtons.forEach((button) => button.classList.remove('selected'));
-    timer = setTimeout(() => runSearch(), 450);
+    userTimer = setTimeout(() => loadUserLists(userSearch.value), 450);
   }
 
   function augmentGeneratedJson() {
@@ -204,134 +183,63 @@
       const data = JSON.parse(output.textContent);
       const payload = selected.map((item) => ({
         id: item.id,
-        provider: item.provider,
-        username: item.username,
+        provider: item.provider || 'MDBList',
+        username: item.username || '',
         name: item.name,
         slug: item.slug || '',
         url: item.url || '',
         itemCount: Number(item.itemCount || 0) || 0,
       }));
-      if (data.config && typeof data.config === 'object') {
-        data.config.discoveredLists = payload;
-      } else if (data.kollectionPosters && typeof data.kollectionPosters === 'object') {
-        data.kollectionPosters.discoveredLists = payload;
-      } else {
-        data.discoveredLists = payload;
-      }
+      if (data.config && typeof data.config === 'object') data.config.discoveredLists = payload;
+      else if (data.kollectionPosters && typeof data.kollectionPosters === 'object') data.kollectionPosters.discoveredLists = payload;
+      else data.discoveredLists = payload;
       const text = JSON.stringify(data, null, 2);
       output.textContent = text;
       output.dataset.generatedJson = text;
     } catch {}
   }
 
-
-  function renderPopularLists(items) {
-    if (!popularListsResults) return;
-    popularListsResults.innerHTML = '';
-    if (!items.length) {
-      popularListsResults.innerHTML = '<div class="discover-status is-error">No popular MDBList lists were available right now.</div>';
-      popularListsResults.hidden = false;
-      return;
-    }
-    const selectedSet = new Set(selected.map(selectedKey));
-    const heading = document.createElement('div');
-    heading.className = 'popular-lists-heading';
-    heading.innerHTML = '<strong>Popular MDBList Lists</strong><small>Select any lists you want to include.</small>';
-    popularListsResults.appendChild(heading);
-    items.slice(0, 40).forEach((item) => {
-      const label = document.createElement('label');
-      label.className = 'discover-result';
-      const key = selectedKey(item);
-      label.innerHTML = `<input type="checkbox" ${selectedSet.has(key) ? 'checked' : ''}><span class="discover-result-copy"><strong></strong><small></small></span><span class="discover-provider">MDBList</span>`;
-      label.querySelector('strong').textContent = item.name || item.slug || 'Untitled list';
-      label.querySelector('small').textContent = item.username ? `@${item.username}` : 'Popular public list';
-      label.querySelector('input').addEventListener('change', (event) => {
-        if (event.target.checked) {
-          if (!selected.some((entry) => selectedKey(entry) === key)) selected.push(item);
-        } else {
-          selected = selected.filter((entry) => selectedKey(entry) !== key);
-        }
-        writeState();
-      });
-      popularListsResults.appendChild(label);
-    });
-    popularListsResults.hidden = false;
-  }
-
-  async function loadPopularLists() {
-    if (!popularListsButton || !popularListsResults) return;
-    popularListsButton.disabled = true;
-    popularListsResults.hidden = false;
-    popularListsResults.innerHTML = '<div class="discover-status discover-loading">Loading popular MDBList lists…</div>';
-    try {
-      const response = await fetch('/api/posters-discover?mode=toplists&provider=mdblist', {
-        headers: { accept: 'application/json' },
-        cache: 'no-store',
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data?.error || `Could not load lists (${response.status})`);
-      renderPopularLists(Array.isArray(data.items) ? data.items : []);
-    } catch (error) {
-      popularListsResults.innerHTML = `<div class="discover-status is-error">${String(error?.message || 'Could not load MDBList popular lists.')}</div>`;
-    } finally {
-      popularListsButton.disabled = false;
-    }
-  }
-
-  popularListsButton?.addEventListener('click', loadPopularLists);
-
-  discoverChoiceButtons.forEach((button) => button.addEventListener('click', () => {
-    if (button.disabled) return;
-    activeProvider = button.dataset.discoverChoice === 'trakt' ? 'trakt' : 'mdblist';
-    discoverChoiceButtons.forEach((item) => item.classList.toggle('selected', item === button));
-    if (discoverSearchTools) discoverSearchTools.hidden = false;
-    searchInput.placeholder = activeProvider === 'trakt' ? 'Enter Trakt username…' : 'Enter MDBList username…';
-    if (activeProvider === 'trakt') {
-      recommendedButtons.forEach((item) => item.hidden = true);
-      const label = discoverPanel.querySelector('.recommended-label');
-      if (label) label.hidden = true;
-    } else {
-      recommendedButtons.forEach((item) => item.hidden = false);
-      const label = discoverPanel.querySelector('.recommended-label');
-      if (label) label.hidden = false;
-    }
-    results.innerHTML = '';
-    setListHeading('');
-    setStatus(`Enter a ${activeProvider === 'trakt' ? 'Trakt' : 'MDBList'} username to search.`);
-    discoverSearchTools.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }));
-
-  searchInput.addEventListener('input', scheduleSearch);
-  searchInput.addEventListener('keydown', (event) => {
+  popularSearch.addEventListener('input', filterPopular);
+  userSearch.addEventListener('input', scheduleUserSearch);
+  userSearch.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
       event.preventDefault();
-      clearTimeout(timer);
-      runSearch();
+      clearTimeout(userTimer);
+      loadUserLists(userSearch.value);
     }
   });
 
-  modeButtons.forEach((button) => button.addEventListener('click', () => {
-    if (searchInput.value.trim().length >= 2) setTimeout(() => runSearch(), 0);
-  }));
-
   recommendedButtons.forEach((button) => button.addEventListener('click', () => {
     const label = button.textContent.trim().toLowerCase();
-    const profile = RECOMMENDED_PROFILES[label] || {
-      provider: button.dataset.provider || '',
-      username: button.dataset.username || button.textContent.trim(),
-    };
+    const profile = RECOMMENDED_PROFILES[label] || { username: button.dataset.username || label };
     activeRecommendedLabel = label;
     recommendedButtons.forEach((item) => item.classList.toggle('selected', item === button));
-    searchInput.value = profile.username;
-    modeButtons.forEach((item) => item.classList.toggle('active', item.dataset.discoverMode === 'smart-lists'));
-    setTimeout(() => runSearch(profile.username, 'lists', profile.provider), 0);
+    userSearch.value = profile.username;
+    loadUserLists(profile.username, label);
   }));
+
+  document.addEventListener('kollection:discover-mode', (event) => {
+    const mode = event.detail?.mode;
+    if (mode === 'smart-lists') loadPopularLists();
+    if (mode === 'browse-users' && activeRecommendedLabel) {
+      const profile = RECOMMENDED_PROFILES[activeRecommendedLabel];
+      if (profile) loadUserLists(profile.username, activeRecommendedLabel);
+    }
+  });
+
+  document.addEventListener('kollection:catalog-tab', (event) => {
+    if (event.detail?.tab === 'discover') loadPopularLists();
+  });
 
   document.getElementById('generateBtn')?.addEventListener('click', () => setTimeout(augmentGeneratedJson, 0));
   document.getElementById('copyBtn')?.addEventListener('click', augmentGeneratedJson, true);
   document.getElementById('downloadBtn')?.addEventListener('click', augmentGeneratedJson, true);
 
   readState();
-  setStatus('Enter a Trakt or MDBList username to load their public lists.');
-  window.KollectionPosterDiscover = { search: runSearch, getSelected: () => selected.slice() };
+  setStatus(userStatus, 'Choose a recommended MDBList user or enter a username.');
+  window.KollectionPosterDiscover = {
+    loadPopularLists,
+    loadUserLists,
+    getSelected: () => selected.slice(),
+  };
 })();
