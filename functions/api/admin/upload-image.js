@@ -298,9 +298,15 @@ export async function onRequestPost(context) {
     );
 
     const url = new URL(context.request.url);
+    const uploadedAt = new Date().toISOString();
     const files = selected.map((item) => ({
       key: item.key,
+      path: item.key.replace(/^images\//, ''),
       url: publicUrl(url.origin, item.key),
+      filename: item.filename,
+      category,
+      folder,
+      uploaded: uploadedAt,
     }));
 
     /* If an image was replaced, remove the old page-cache copy now. */
