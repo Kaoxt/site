@@ -16,13 +16,14 @@ function response(body, status = 200) {
   });
 }
 
-function publicUrl(origin, key) {
+function publicUrl(origin, key, version = '') {
   const encoded = key
     .split('/')
     .map((part) => encodeURIComponent(part))
     .join('/');
 
-  return `${origin}/${encoded}`;
+  const suffix = version ? `?v=${encodeURIComponent(version)}` : '';
+  return `${origin}/${encoded}${suffix}`;
 }
 
 function metadataFor(object, origin) {
@@ -38,7 +39,7 @@ function metadataFor(object, origin) {
   return {
     key,
     path: key.replace(/^images\//, ''),
-    url: publicUrl(origin, key),
+    url: publicUrl(origin, key, object.httpEtag || object.etag || ''),
     filename,
     category,
     folder,
