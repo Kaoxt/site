@@ -6,7 +6,12 @@
   if (!configurator || !tagOptions) return;
 
   const CONNECTIONS_KEY = 'kollection-posters-connections-v1';
-  const SETTINGS_KEY = 'kollection-posters-final-v1';
+  const SETTINGS_KEY = 'kollection-posters-final-v2';
+  const LEGACY_SETTINGS_KEY = 'kollection-posters-final-v1';
+  const LANGUAGE_KEY_PREFIX = 'kollection-posters-language:';
+
+  let signedInUserId = '';
+  let sessionChecked = false;
 
   const finalPanel = document.createElement('section');
   finalPanel.className = 'posters-final-manifest';
@@ -25,6 +30,10 @@
         <option value="ko">Korean</option>
       </select>
       <small class="overlay-language-note">Changes generated overlay text such as Today and Genre labels. It does not change the catalog title language.</small>
+      <label id="rememberLanguageRow" class="remember-language-row" hidden>
+        <input id="rememberPostersLanguage" type="checkbox" />
+        <span><strong>Remember language</strong><small>Use this overlay language the next time you return to Posters on this browser.</small></span>
+      </label>
     </div>
     <div class="final-block">
       <span class="section-kicker">LIST SORT</span>
@@ -54,6 +63,12 @@
     .final-block{display:grid;gap:13px}
     .final-select{width:100%;min-height:48px;border:1px solid rgba(255,255,255,.14);border-radius:11px;background:#151618;color:#fff;padding:0 15px;font:inherit;font-size:14px;outline:0}
     .overlay-language-note{color:#686b73;font-size:11px;line-height:1.45}
+    .remember-language-row{display:flex;align-items:flex-start;gap:11px;padding:11px 12px;border:1px solid rgba(255,255,255,.09);border-radius:11px;background:rgba(255,255,255,.025);cursor:pointer}
+    .remember-language-row[hidden]{display:none!important}
+    .remember-language-row input{appearance:none;width:19px;height:19px;flex:0 0 19px;margin:1px 0 0;border:1.5px solid rgba(255,255,255,.28);border-radius:5px;background:#111216;display:grid;place-items:center}
+    .remember-language-row input:checked{border-color:#6d70ff;background:#6466ed}
+    .remember-language-row input:checked:after{content:'✓';color:#fff;font-size:13px;font-weight:900;line-height:1}
+    .remember-language-row span{display:grid;gap:2px}.remember-language-row strong{color:#f4f5f7;font-size:12px}.remember-language-row small{color:#727680;font-size:10px;line-height:1.4}
     .sort-options{display:grid;gap:9px}
     .sort-option{display:flex;align-items:center;gap:13px;min-height:64px;padding:12px 15px;border:1px solid rgba(255,255,255,.11);border-radius:12px;background:#101113;cursor:pointer}
     .sort-option:has(input:checked){border-color:rgba(67,219,122,.34);background:rgba(23,73,39,.22)}
@@ -80,6 +95,8 @@
   });
 
   const language = document.getElementById('postersLanguage');
+  const rememberLanguageRow = document.getElementById('rememberLanguageRow');
+  const rememberLanguage = document.getElementById('rememberPostersLanguage');
   const status = document.getElementById('postersManifestStatus');
   const copyButton = document.getElementById('copyPostersManifest');
   const bottomBack = document.getElementById('manifestBackBtn');
@@ -101,19 +118,84 @@
     catch { return {}; }
   }
 
+  function languageStorageKey() {
+    return signedInUserId ? `${LANGUAGE_KEY_PREFIX}${signedInUserId}` : '';
+  }
+
+  function readRememberedLanguage() {
+    if (!signedInUserId) return '';
+    try {
+      const value = localStorage.getItem(languageStorageKey()) || '';
+      return [...language.options].some((option) => option.value === value) ? value : '';
+    } catch {
+      return '';
+    }
+  }
+
+  function writeRememberedLanguage(value) {
+    if (!signedInUserId) return;
+    try {
+      if (rememberLanguage?.checked) localStorage.setItem(languageStorageKey(), value);
+      else localStorage.removeItem(languageStorageKey());
+    } catch {}
+  }
+
+  function clearLegacyVisitorLanguage() {
+    try {
+      const legacy = JSON.parse(localStorage.getItem(LEGACY_SETTINGS_KEY) || '{}') || {};
+      if (Object.prototype.hasOwnProperty.call(legacy, 'language')) {
+        delete legacy.language;
+        localStorage.setItem(LEGACY_SETTINGS_KEY, JSON.stringify(legacy));
+      }
+    } catch {}
+  }
+
   function saveFinalSettings() {
     const data = {
-      language: language?.value || 'en',
       sort: document.querySelector('input[name="postersListSort"]:checked')?.value || 'shuffle',
     };
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(data)); } catch {}
+    writeRememberedLanguage(language?.value || 'en');
   }
 
-  function restoreFinalSettings() {
+  function restoreSortSetting() {
     const saved = readFinalSettings();
-    if (language && saved.language && [...language.options].some((o) => o.value === saved.language)) language.value = saved.language;
     const sort = document.querySelector(`input[name="postersListSort"][value="${CSS.escape(saved.sort || 'shuffle')}"]`);
     if (sort) sort.checked = true;
+  }
+
+  async function resolveSession() {
+    let session = null;
+    try {
+      if (window.KollectionNuvioAuth?.getSession) session = await window.KollectionNuvioAuth.getSession();
+      else {
+        const response = await fetch('/api/auth/session', { credentials: 'same-origin', cache: 'no-store' });
+        if (response.ok) session = await response.json();
+      }
+    } catch {}
+
+    sessionChecked = true;
+    signedInUserId = session?.authenticated && session?.user?.id ? String(session.user.id) : '';
+
+    if (!signedInUserId) {
+      language.value = 'en';
+      rememberLanguage.checked = false;
+      rememberLanguageRow.hidden = true;
+      clearLegacyVisitorLanguage();
+      window.KollectionPosterPreview?.refresh?.({ hard: false });
+      return;
+    }
+
+    rememberLanguageRow.hidden = false;
+    const remembered = readRememberedLanguage();
+    if (remembered) {
+      language.value = remembered;
+      rememberLanguage.checked = true;
+    } else {
+      language.value = 'en';
+      rememberLanguage.checked = false;
+    }
+    window.KollectionPosterPreview?.refresh?.({ hard: false });
   }
 
   function getDefaultCatalogs() {
@@ -166,8 +248,25 @@
 
   copyButton?.addEventListener('click', copyManifest);
   bottomBack?.addEventListener('click', () => document.getElementById('postersBackBtn')?.click());
-  language?.addEventListener('change', saveFinalSettings);
+  language?.addEventListener('change', () => {
+    if (sessionChecked && !signedInUserId) {
+      // Visitors can use another language for the current visit, but it is not persisted.
+      try {
+        const current = readFinalSettings();
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify({ sort: current.sort || 'shuffle' }));
+      } catch {}
+    } else if (signedInUserId && rememberLanguage?.checked) {
+      writeRememberedLanguage(language.value || 'en');
+    }
+  });
+  rememberLanguage?.addEventListener('change', () => {
+    if (!signedInUserId) return;
+    writeRememberedLanguage(language?.value || 'en');
+  });
   document.querySelectorAll('input[name="postersListSort"]').forEach((input) => input.addEventListener('change', saveFinalSettings));
 
-  restoreFinalSettings();
+  restoreSortSetting();
+  language.value = 'en';
+  clearLegacyVisitorLanguage();
+  resolveSession();
 })();
