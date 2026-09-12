@@ -85,13 +85,14 @@ function bytesBase64(bytes) {
   return btoa(binary);
 }
 
-function publicUrl(origin, key) {
+function publicUrl(origin, key, version = '') {
   const encoded = key
     .split('/')
     .map((part) => encodeURIComponent(part))
     .join('/');
 
-  return `${origin}/${encoded}`;
+  const suffix = version ? `?v=${encodeURIComponent(version)}` : '';
+  return `${origin}/${encoded}${suffix}`;
 }
 
 async function commitBinaryFiles({ token, files, message }) {
@@ -299,10 +300,11 @@ export async function onRequestPost(context) {
 
     const url = new URL(context.request.url);
     const uploadedAt = new Date().toISOString();
+    const versionToken = Date.now().toString(36);
     const files = selected.map((item) => ({
       key: item.key,
       path: item.key.replace(/^images\//, ''),
-      url: publicUrl(url.origin, item.key),
+      url: publicUrl(url.origin, item.key, versionToken),
       filename: item.filename,
       category,
       folder,
@@ -314,7 +316,7 @@ export async function onRequestPost(context) {
     context.waitUntil(
       Promise.all(
         files.map((item) =>
-          cache.delete(new Request(item.url, { method: 'GET' })).catch(() => false)
+          cache.delete(new Request(item.url.split('?')[0], { method: 'GET' })).catch(() => false)
         )
       )
     );
