@@ -11,6 +11,8 @@
     profileName: '',
     aiSetupMode: 'built-in',
     aiHostPreference: '',
+    aiHostMode: '',
+    aiSelfHostUrl: '',
     aiCustomFileName: '',
     bingecatSkipped: false,
     bingecatManifestUrl: '',
@@ -56,7 +58,19 @@
     else if ($('#builtInTab')?.classList.contains('active')) snapshot.aiSetupMode = 'built-in';
 
     const host = $('#aiHost');
-    if (host) snapshot.aiHostPreference = host.value || snapshot.aiHostPreference || '';
+    const selfHost = $('#aiSelfHostUrl');
+    if (host) {
+      if (host.value === '__self_host__') {
+        snapshot.aiHostMode = 'self';
+        if (selfHost?.value?.trim()) {
+          snapshot.aiSelfHostUrl = selfHost.value.trim();
+          snapshot.aiHostPreference = selfHost.value.trim();
+        }
+      } else if (host.value) {
+        snapshot.aiHostMode = 'managed';
+        snapshot.aiHostPreference = host.value;
+      }
+    }
 
     const customFile = $('.file-status b');
     if (customFile) snapshot.aiCustomFileName = customFile.textContent.trim();
@@ -80,6 +94,8 @@
       version: 1,
       aiSetupMode: snapshot.aiSetupMode === 'custom' ? 'custom' : 'built-in',
       aiHostPreference: snapshot.aiHostPreference || '',
+      aiHostMode: snapshot.aiHostMode || '',
+      aiSelfHostUrl: snapshot.aiSelfHostUrl || '',
       aiCustomFileName: snapshot.aiCustomFileName || '',
       bingecatSkipped: Boolean(snapshot.bingecatSkipped),
       bingecatManifestUrl: snapshot.bingecatManifestUrl || '',
@@ -200,9 +216,20 @@
         return;
       }
       const host = $('#aiHost');
-      if (host && snapshot.aiHostPreference && [...host.options].some((o) => o.value === snapshot.aiHostPreference)) {
-        host.value = snapshot.aiHostPreference;
-        dispatchChange(host);
+      if (host && snapshot.aiHostPreference) {
+        const exact = [...host.options].some((o) => o.value === snapshot.aiHostPreference);
+        if (snapshot.aiHostMode === 'self' || (!exact && snapshot.aiHostPreference)) {
+          host.value = '__self_host__';
+          dispatchChange(host);
+          const selfHost = $('#aiSelfHostUrl');
+          if (selfHost) {
+            selfHost.value = snapshot.aiSelfHostUrl || snapshot.aiHostPreference;
+            selfHost.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        } else if (exact) {
+          host.value = snapshot.aiHostPreference;
+          dispatchChange(host);
+        }
       }
       if (targetStep > 2) {
         showResumeNotice(desiredCustom
