@@ -90,7 +90,7 @@ function normalizePosterId(id) {
   return '';
 }
 
-function posterUrl(config, type, id) {
+function posterUrl(config, type, id, sourceUrl = '') {
   const normalizedId = normalizePosterId(id);
   if (!normalizedId) return '';
   const mediaType = type === 'series' || type === 'tv' ? 'tv' : 'movie';
@@ -101,12 +101,19 @@ function posterUrl(config, type, id) {
     tags: [...tags].sort().join(','),
     ratingSource: config.ratingSource,
   });
+  try {
+    const original = new URL(String(sourceUrl || ''));
+    if (original.protocol === 'https:' && !original.username && !original.password && original.toString().length <= 1800) {
+      params.set('sourceUrl', original.toString());
+      params.set('overlayOnly', '1');
+    }
+  } catch {}
   return `${POSTER_BASE}/${mediaType}/${encodeURIComponent(normalizedId)}.webp?${params}`;
 }
 
 function rewriteMetaItem(item, config, fallbackType) {
   if (!item || typeof item !== 'object') return item;
-  const replacement = posterUrl(config, item.type || fallbackType, item.id);
+  const replacement = posterUrl(config, item.type || fallbackType, item.id, item.poster);
   return replacement ? { ...item, poster: replacement } : item;
 }
 
