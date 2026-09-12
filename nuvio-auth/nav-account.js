@@ -324,7 +324,7 @@
             ${socialLink(COFFEE_URL, 'Buy me a coffee', coffeeIcon())}
 
             <div class="nuvio-desktop-menu-divider bottom"></div>
-            <button class="nuvio-account-signout-button" type="button" data-nuvio-signout-desktop>Sign out</button>
+            <button class="nuvio-account-signout-button" type="button" data-nuvio-signout-desktop>Log Out</button>
           </div>
         </div>`;
 
@@ -381,7 +381,7 @@
               ${socialLink(GITHUB_URL, 'GitHub', githubIcon())}
               ${socialLink(COFFEE_URL, 'Buy me a coffee', coffeeIcon())}
             </div>
-            <button class="nuvio-mobile-signout-button" type="button" data-nuvio-signout-mobile>Sign out</button>
+            <button class="nuvio-mobile-signout-button" type="button" data-nuvio-signout-mobile>Log Out</button>
           </div>
         </section>`;
 
