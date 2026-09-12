@@ -136,7 +136,9 @@
     const providerLabel = providerFilter === 'mdblist' ? 'MDBList ' : providerFilter === 'trakt' ? 'Trakt ' : '';
     setStatus(mode === 'users' ? `Looking for @${username}…` : `Loading ${providerLabel}public lists for @${username}…`, false, true);
     try {
-      const response = await fetch(`/api/posters-discover?username=${encodeURIComponent(username)}&mode=${mode}`, {
+      const query = new URLSearchParams({ username, mode });
+      if (providerFilter) query.set('provider', providerFilter);
+      const response = await fetch(`/api/posters-discover?${query.toString()}`, {
         headers: { accept: 'application/json' },
         cache: 'no-store',
       });
