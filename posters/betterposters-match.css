@@ -6,3 +6,23 @@
 
 @media(max-width:700px){.posters-config{padding:24px 18px 30px}.poster-preview-grid{gap:10px}.tag-option{min-height:104px;padding:21px 20px}.tag-option strong{font-size:18px}.tag-option small{font-size:13px}.tag-option>input[type="checkbox"]{width:66px;height:40px;background:radial-gradient(circle at 20px 20px,#fff 0 14px,transparent 15px),#36373b}.tag-option>input[type="checkbox"]:checked{background:radial-gradient(circle at 46px 20px,#fff 0 14px,transparent 15px),#43db7a}.rating-source-row{grid-template-columns:1fr 46%;gap:16px}.rating-source-select{min-height:54px;font-size:16px}.posters-catalog-step{padding:0 16px}.catalog-shell{margin-top:16px}.catalog-nav-group{gap:7px;margin-bottom:16px}.catalog-tab,.discover-tabs button{min-height:48px;font-size:14px}.catalog-card{min-height:70px;padding:12px 14px}.catalog-card strong{font-size:15px}.catalog-card small{font-size:12px}.catalog-actions{margin-top:24px}}
 @media(max-width:520px){.rating-source-row{grid-template-columns:1fr}.posters-catalog-step{padding:0 14px}.catalog-card{min-height:66px}.catalog-card input{width:27px;height:27px;flex-basis:27px}.catalog-card input:checked:after{font-size:18px}.catalog-card strong{font-size:14px}.catalog-intro{font-size:12px}.catalog-search input{font-size:13px}}
+
+
+/* Catalog first-level Default / Discover and Discover source cards */
+.default-search-lists{display:grid;gap:12px;margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.09)}
+.discover-option-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.discover-option-card{width:100%;min-height:86px;padding:14px 16px;border:1px solid rgba(255,255,255,.11);border-radius:14px;background:#101113;color:#fff;display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:13px;text-align:left;font:inherit;cursor:pointer}
+.discover-option-card:hover:not(:disabled),.discover-option-card.selected{border-color:rgba(124,131,255,.52);background:#15161a}
+.discover-option-card:disabled{opacity:.45;cursor:not-allowed}
+.discover-option-icon{width:40px;height:40px;border-radius:10px;background:#202126;display:grid;place-items:center;font-weight:900;color:#b9bcff}
+.discover-option-card>span:nth-child(2){display:grid;gap:4px}
+.discover-option-card strong{font-size:15px;line-height:1.2}
+.discover-option-card small{color:#777b84;font-size:12px;line-height:1.35}
+.discover-search-tools{display:grid;gap:12px;margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.09)}
+.discover-search-tools[hidden]{display:none!important}
+.popular-lists-results{display:grid;gap:10px}
+.popular-lists-results[hidden]{display:none!important}
+.popular-lists-heading{display:grid;gap:3px;margin:4px 0 2px}
+.popular-lists-heading strong{font-size:14px}
+.popular-lists-heading small{font-size:12px;color:#777b84}
+@media(max-width:600px){.discover-option-grid{grid-template-columns:1fr}.discover-option-card{min-height:78px}}
