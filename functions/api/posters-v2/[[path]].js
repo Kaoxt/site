@@ -2,7 +2,7 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'production-cache-9';
+const CACHE_VERSION = 'production-cache-10';
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
 const ALLOWED_TAGS = ['trend', 'rating', 'genre', 'quality', 'age'];
@@ -130,6 +130,20 @@ function normalizeTags(value) {
   return ALLOWED_TAGS.filter((tag) => requested.has(tag));
 }
 
+function normalizeSourceUrl(value) {
+  try {
+    const url = new URL(String(value || ''));
+    if (url.protocol !== 'https:' || url.username || url.password || url.toString().length > 1800) return '';
+    const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+    if (!host || host === 'localhost' || host.endsWith('.local') || host === '::1' || host === '0.0.0.0' ||
+        /^127\./.test(host) || /^10\./.test(host) || /^192\.168\./.test(host) ||
+        /^169\.254\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host)) return '';
+    return url.toString();
+  } catch {
+    return '';
+  }
+}
+
 function posterCacheBucket(env) {
   return env?.POSTER_CACHE || env?.IMAGES || null;
 }
@@ -150,6 +164,8 @@ function posterVariant(url, preview) {
     ratingSource: normalizeRatingSource(url.searchParams.get('ratingSource')),
     language: normalizeOverlayLanguage(url.searchParams.get('language')),
     overlayColor: url.searchParams.get('overlayColor') || 'dynamic',
+    sourceUrl: normalizeSourceUrl(url.searchParams.get('sourceUrl')),
+    overlayOnly: url.searchParams.get('overlayOnly') === '1',
   };
 }
 
@@ -335,6 +351,8 @@ function cacheRequestFor(request) {
   const ratingSource = normalizeRatingSource(incoming.searchParams.get('ratingSource'));
   const language = normalizeOverlayLanguage(incoming.searchParams.get('language'));
   const overlayColor = incoming.searchParams.get('overlayColor') || 'dynamic';
+  const sourceUrl = normalizeSourceUrl(incoming.searchParams.get('sourceUrl'));
+  const overlayOnly = incoming.searchParams.get('overlayOnly') === '1';
 
   cacheUrl.searchParams.set('source', source);
   cacheUrl.searchParams.set('provider', provider);
@@ -342,6 +360,8 @@ function cacheRequestFor(request) {
   cacheUrl.searchParams.set('ratingSource', ratingSource);
   cacheUrl.searchParams.set('language', language);
   cacheUrl.searchParams.set('overlayColor', overlayColor);
+  if (sourceUrl) cacheUrl.searchParams.set('sourceUrl', sourceUrl);
+  if (overlayOnly) cacheUrl.searchParams.set('overlayOnly', '1');
   cacheUrl.searchParams.set('__kollection_renderer', CACHE_VERSION);
   cacheUrl.searchParams.set('__kollection_scope', preview ? 'preview' : 'production');
 
@@ -379,6 +399,8 @@ export async function onRequest(context) {
   if (!id) return json({ error: 'Could not resolve TMDB/IMDb id.' }, 404);
 
   const requestedTags = new Set(normalizeTags(url.searchParams.get('tags')));
+  const sourceUrl = normalizeSourceUrl(url.searchParams.get('sourceUrl'));
+  const overlayOnly = sourceUrl && url.searchParams.get('overlayOnly') === '1';
   const overlayLanguage = normalizeOverlayLanguage(url.searchParams.get('language'));
   const persistentKey = await persistentPosterKey(type, id, url, preview);
   const persistent = await readPersistentPoster(env, persistentKey, requestedTags);
@@ -405,20 +427,22 @@ export async function onRequest(context) {
   try {
     const append = type === 'movie' ? 'images,release_dates,external_ids' : 'images,content_ratings,external_ids';
     const details = await tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null&language=en-US`, env.TMDB_API_KEY);
-    if (!details.poster_path) return json({ error: 'TMDB has no poster for this title.' }, 404);
+    if (!details.poster_path && !sourceUrl) return json({ error: 'TMDB has no poster for this title.' }, 404);
 
     const tags = requestedTags;
     const smartLayout = url.searchParams.get('source') === 'smart';
-    const artwork = choosePoster(details, smartLayout);
-    const smartTextless = smartLayout && artwork.source === 'smart-textless';
+    const artwork = sourceUrl ? { path: '', source: 'upstream-addon' } : choosePoster(details, smartLayout);
+    const smartTextless = !overlayOnly && smartLayout && artwork.source === 'smart-textless';
     const logo = chooseLogo(details, smartTextless);
-    if (!artwork.path) return json({ error: 'TMDB has no poster artwork for this title.' }, 404);
+    if (!artwork.path && !sourceUrl) return json({ error: 'TMDB has no poster artwork for this title.' }, 404);
 
     const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
     const rating = tags.has('rating') ? await resolveRating(details, requestedRatingSource, env) : { value: '', label: '', source: requestedRatingSource, status: 'disabled' };
     const payload = {
       posterPath: artwork.path,
-      logoPath: logo.path,
+      sourceUrl,
+      overlayOnly: Boolean(overlayOnly),
+      logoPath: overlayOnly ? '' : logo.path,
       title: smartTextless ? String(details.title || details.name || '').slice(0, 80) : '',
       rating: rating.value,
       ratingLabel: rating.label,
