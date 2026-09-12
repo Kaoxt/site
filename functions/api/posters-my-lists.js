@@ -43,6 +43,7 @@ function normalizeLists(payload) {
     const fromUrl = parseListUrl(item?.url || item?.list_url || item?.share_url || '');
     const owner = clean(
       item?.username ||
+      item?.user_name ||
       item?.user?.username ||
       item?.user ||
       item?.owner?.username ||
