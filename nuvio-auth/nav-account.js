@@ -8,6 +8,7 @@
   const PROFILE_KEY_PREFIX = 'kollection-nuvio-profile-id:';
   const GITHUB_URL = 'https://github.com/Kaoxt/The-Kollection';
   const COFFEE_URL = 'https://ko-fi.com/kaoxt';
+  const FAQ_URL = '/faq.html';
   const SETUP_URL = '/set-up-collection';
 
   let initialized = false;
@@ -59,6 +60,13 @@
       <path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17"></path>
       <path d="M8 5.5c.8-.5.8-1.1 0-1.7"></path>
       <path d="M12 5.5c.8-.5.8-1.1 0-1.7"></path>
+    </svg>`;
+
+  const faqIcon = () => `
+    <svg viewBox="0 0 24 24" aria-hidden="true" class="nuvio-social-svg faq">
+      <circle cx="12" cy="12" r="9"></circle>
+      <path d="M9.7 9a2.55 2.55 0 0 1 4.95.85c0 1.85-1.65 2.25-2.35 3.15-.35.45-.3.85-.3 1.25"></path>
+      <path d="M12 17.5h.01"></path>
     </svg>`;
 
   const setupIcon = () => `
@@ -229,8 +237,9 @@
     }));
   }
 
-  function socialLink(url, label, icon, compact = false) {
-    return `<a class="nuvio-social-link ${compact ? 'compact' : ''}" href="${url}" target="_blank" rel="noopener" aria-label="${esc(label)}">${icon}<span>${esc(label)}</span></a>`;
+  function socialLink(url, label, icon, compact = false, external = true) {
+    const target = external ? ' target="_blank" rel="noopener"' : '';
+    return `<a class="nuvio-social-link ${compact ? 'compact' : ''}" href="${url}"${target} aria-label="${esc(label)}">${icon}<span>${esc(label)}</span></a>`;
   }
 
   async function renderSignedOut() {
@@ -241,6 +250,7 @@
         <div class="nuvio-desktop-guest-actions">
           ${socialLink(GITHUB_URL, 'GitHub', githubIcon(), true)}
           ${socialLink(COFFEE_URL, 'Buy me a coffee', coffeeIcon(), true)}
+          ${socialLink(FAQ_URL, 'FAQ', faqIcon(), true, false)}
           <button class="nuvio-desktop-signin-button" type="button" data-nuvio-signin-desktop>
             <span>Log in</span>
           </button>
@@ -322,6 +332,7 @@
 
             ${socialLink(GITHUB_URL, 'GitHub', githubIcon())}
             ${socialLink(COFFEE_URL, 'Buy me a coffee', coffeeIcon())}
+            ${socialLink(FAQ_URL, 'FAQ', faqIcon(), false, false)}
 
             <div class="nuvio-desktop-menu-divider bottom"></div>
             <button class="nuvio-account-signout-button" type="button" data-nuvio-signout-desktop>Log Out</button>
