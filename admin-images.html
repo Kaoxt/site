@@ -12,12 +12,12 @@
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/admin/admin.css?v=20260906-1" />
   <link rel="stylesheet" href="/admin/admin-pages.css?v=20260907-4" />
-  <link rel="stylesheet" href="/admin/image-library.css?v=20260907-3" />
+  <link rel="stylesheet" href="/admin/image-library.css?v=20260911-4" />
 
   <script src="/components.js?v=20260906-1" defer></script>
   <script src="/set-up-collection/config.js?v=20260906-1"></script>
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
-  <script src="/admin/image-library.js?v=20260907-3" defer></script>
+  <script src="/admin/image-library.js?v=20260911-4" defer></script>
 </head>
 <body>
   <main class="page admin-page image-library-page">
@@ -144,6 +144,13 @@
                 <span class="artwork-size">logo.webp</span>
                 <input id="logoFile" name="logo" type="file" accept=".webp,image/webp" />
                 <strong id="logoFileName">Choose WebP</strong>
+              </label>
+
+              <label class="artwork-file-box">
+                <span class="artwork-kind">Keep Filename</span>
+                <span class="artwork-size">Uploads the WebP using its current filename</span>
+                <input id="asIsFile" name="asIs" type="file" accept=".webp,image/webp" />
+                <strong id="asIsFileName">Choose WebP</strong>
               </label>
             </div>
 
