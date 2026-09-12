@@ -21,7 +21,7 @@
   const copyBtn = document.getElementById('copyBtn');
   const downloadBtn = document.getElementById('downloadBtn');
   const copyStatus = document.getElementById('copyStatus');
-  const SETTINGS_KEY = 'kollection-posters-catalogs-v2';
+  const SETTINGS_KEY = 'kollection-posters-catalogs-v3';
   let smartFlowActive = false;
 
   const catalogIds = ['trending-movies', 'trending-series', 'popular-movies', 'popular-series', 'top-rated', 'coming-soon'];
@@ -31,7 +31,7 @@
   });
 
   const currentCatalogTab = () => catalogTabs.find((tab) => tab.classList.contains('active'))?.dataset.catalogTab || 'default';
-  const currentDiscoverMode = () => discoverTabs.find((tab) => tab.classList.contains('active'))?.textContent.trim() === 'Browse Users' ? 'browse-users' : 'search-lists';
+  const currentDiscoverMode = () => discoverTabs.find((tab) => tab.classList.contains('active'))?.dataset.discoverMode || 'smart-lists';
 
   const syncSelectedStyles = () => {
     catalogCards.forEach((card) => card.classList.toggle('selected', Boolean(card.querySelector('input')?.checked)));
@@ -45,9 +45,8 @@
       provider: card.querySelector('small')?.textContent.trim() || '',
       enabled: Boolean(card.querySelector('input')?.checked),
     }));
-    const recommendedUsers = recommendedButtons
-      .filter((button) => button.classList.contains('selected'))
-      .map((button) => button.textContent.trim());
+    const selectedRecommendedUser = recommendedButtons.find((button) => button.classList.contains('selected')) || null;
+    const recommendedUsers = selectedRecommendedUser ? [selectedRecommendedUser.textContent.trim()] : [];
     const query = searchInput?.value.trim() || '';
     const mode = currentCatalogTab();
 
@@ -66,7 +65,7 @@
 
   const saveState = () => {
     syncSelectedStyles();
-    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ version: 2, ...getCatalogSelection() })); } catch {}
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ version: 3, ...getCatalogSelection() })); } catch {}
   };
 
   function setTab(name, persist = true) {
@@ -77,6 +76,17 @@
       tab.setAttribute('aria-selected', String(active));
     });
     catalogPanels.forEach((panel) => { panel.hidden = panel.dataset.catalogPanel !== resolved; });
+    if (persist) saveState();
+  }
+
+  function setDiscoverMode(mode, persist = true) {
+    const resolved = mode === 'browse-users' ? 'browse-users' : 'smart-lists';
+    discoverTabs.forEach((tab) => {
+      const active = tab.dataset.discoverMode === resolved;
+      tab.classList.toggle('active', active);
+      tab.setAttribute('aria-selected', String(active));
+    });
+    setTab('discover', false);
     if (persist) saveState();
   }
 
@@ -93,12 +103,9 @@
           });
         }
         if (searchInput && typeof saved.discover?.query === 'string') searchInput.value = saved.discover.query;
-        const selectedUsers = new Set(Array.isArray(saved.discover?.recommendedUsers) ? saved.discover.recommendedUsers : []);
-        recommendedButtons.forEach((button) => button.classList.toggle('selected', selectedUsers.has(button.textContent.trim())));
-        discoverTabs.forEach((tab) => {
-          const mode = tab.textContent.trim() === 'Browse Users' ? 'browse-users' : 'search-lists';
-          tab.classList.toggle('active', mode === (saved.discover?.mode || 'search-lists'));
-        });
+        const selectedUser = Array.isArray(saved.discover?.recommendedUsers) ? saved.discover.recommendedUsers[0] : '';
+        recommendedButtons.forEach((button) => button.classList.toggle('selected', button.textContent.trim() === selectedUser));
+        discoverTabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.discoverMode === (saved.discover?.mode || 'smart-lists')));
         setTab(saved.mode, false);
       }
     } catch {}
@@ -153,12 +160,10 @@
 
   catalogTabs.forEach((tab) => tab.addEventListener('click', () => setTab(tab.dataset.catalogTab)));
   catalogCards.forEach((card) => card.querySelector('input')?.addEventListener('change', saveState));
-  discoverTabs.forEach((tab) => tab.addEventListener('click', () => {
-    discoverTabs.forEach((item) => item.classList.toggle('active', item === tab));
-    saveState();
-  }));
+  discoverTabs.forEach((tab) => tab.addEventListener('click', () => setDiscoverMode(tab.dataset.discoverMode)));
   recommendedButtons.forEach((button) => button.addEventListener('click', () => {
-    button.classList.toggle('selected');
+    recommendedButtons.forEach((item) => item.classList.toggle('selected', item === button));
+    setDiscoverMode('smart-lists', false);
     saveState();
   }));
   searchInput?.addEventListener('input', saveState);
