@@ -29,7 +29,7 @@ function extractPopularLists(html) {
   while ((match = anchorRegex.exec(html)) && items.length < 120) {
     const username = decodeURIComponent(match[1] || '').trim();
     const slug = decodeURIComponent(match[2] || '').trim();
-    if (!username || !slug) continue;
+    if (!username || !slug || username === 'official') continue;
     const key = `${username.toLowerCase()}:${slug.toLowerCase()}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -54,23 +54,34 @@ function extractPopularLists(html) {
   return items;
 }
 
+async function fetchHtml(url) {
+  const response = await fetch(url, {
+    headers: {
+      accept: 'text/html,application/xhtml+xml',
+      'user-agent': 'Mozilla/5.0 TheKollection/1.0',
+    },
+  });
+  if (!response.ok) throw new Error(`MDBList ${response.status}`);
+  return response.text();
+}
+
 export async function onRequestGet() {
   try {
-    const response = await fetch('https://mdblist.com/toplists/', {
-      headers: {
-        accept: 'text/html,application/xhtml+xml',
-        'user-agent': 'Mozilla/5.0 TheKollection/1.0',
-      },
-    });
-    if (!response.ok) throw new Error(`MDBList ${response.status}`);
-    const html = await response.text();
-    const items = extractPopularLists(html);
+    let sourceUrl = 'https://mdblist.com/toplists/';
+    let html = await fetchHtml(sourceUrl);
+    let items = extractPopularLists(html);
+
+    if (!items.length) {
+      sourceUrl = 'https://mdblist.com/';
+      html = await fetchHtml(sourceUrl);
+      items = extractPopularLists(html);
+    }
 
     if (!items.length) {
       return json({ error: 'MDBList popular lists are temporarily unavailable.', items: [] }, 502);
     }
 
-    return json({ source: 'MDBList', url: 'https://mdblist.com/toplists/', items });
+    return json({ source: 'MDBList', url: sourceUrl, items });
   } catch (error) {
     return json({ error: error?.message || 'Could not load MDBList popular lists.', items: [] }, 502);
   }
