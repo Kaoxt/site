@@ -42,8 +42,10 @@ async function traktLists(username, clientId) {
     });
     if (!response.ok) throw new Error(`Trakt ${response.status}`);
     const data = await response.json();
-    const items = (Array.isArray(data) ? data : []).map((item) => normalizeTraktList(item, username)).filter(Boolean).slice(0, 40);
-    return { items, available: true };
+    return {
+      items: (Array.isArray(data) ? data : []).map((item) => normalizeTraktList(item, username)).filter(Boolean).slice(0, 40),
+      available: true,
+    };
   } catch (error) {
     return { items: [], available: true, error: error?.message || 'Trakt lookup failed.' };
   }
@@ -110,7 +112,7 @@ async function mdblistLists(username, apiKey) {
   }
 
   try {
-    const response = await fetch(`https://mdblist.com/lists/${encodeURIComponent(username)}`, {
+    const response = await fetch(`https://mdblist.com/lists/${encodeURIComponent(username)}/`, {
       headers: { accept: 'text/html', 'user-agent': 'Mozilla/5.0 TheKollection/1.0' },
     });
     if (!response.ok) throw new Error(`MDBList ${response.status}`);
@@ -142,9 +144,11 @@ async function traktUser(username, clientId) {
 
 async function mdblistUser(username) {
   try {
-    const response = await fetch(`https://mdblist.com/lists/${encodeURIComponent(username)}`, { headers: { accept: 'text/html', 'user-agent': 'Mozilla/5.0 TheKollection/1.0' } });
+    const response = await fetch(`https://mdblist.com/@${encodeURIComponent(username)}`, {
+      headers: { accept: 'text/html', 'user-agent': 'Mozilla/5.0 TheKollection/1.0' },
+    });
     if (!response.ok) return null;
-    return { provider: 'MDBList', username, name: username, url: `https://mdblist.com/lists/${encodeURIComponent(username)}` };
+    return { provider: 'MDBList', username, name: username, url: `https://mdblist.com/@${encodeURIComponent(username)}` };
   } catch { return null; }
 }
 
@@ -152,25 +156,34 @@ export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   const username = clean(url.searchParams.get('username'));
   const mode = url.searchParams.get('mode') === 'users' ? 'users' : 'lists';
+  const provider = clean(url.searchParams.get('provider')).toLowerCase();
   if (!username || username.length > 64) return json({ error: 'A valid username is required.' }, 400);
+  if (provider && !['mdblist', 'trakt'].includes(provider)) return json({ error: 'Unsupported provider.' }, 400);
 
   if (mode === 'users') {
-    const users = (await Promise.all([
-      traktUser(username, env.TRAKT_CLIENT_ID),
-      mdblistUser(username),
-    ])).filter(Boolean);
-    return json({ username, mode, users });
+    const users = [];
+    if (!provider || provider === 'trakt') {
+      const user = await traktUser(username, env.TRAKT_CLIENT_ID);
+      if (user) users.push(user);
+    }
+    if (!provider || provider === 'mdblist') {
+      const user = await mdblistUser(username);
+      if (user) users.push(user);
+    }
+    return json({ username, mode, provider: provider || 'all', users });
   }
 
-  const [trakt, mdblist] = await Promise.all([
-    traktLists(username, env.TRAKT_CLIENT_ID),
-    mdblistLists(username, env.MDBLIST_API_KEY),
-  ]);
-  const items = [...trakt.items, ...mdblist.items];
+  let trakt = { items: [], available: false, error: null };
+  let mdblist = { items: [], available: false, error: null };
+
+  if (!provider || provider === 'trakt') trakt = await traktLists(username, env.TRAKT_CLIENT_ID);
+  if (!provider || provider === 'mdblist') mdblist = await mdblistLists(username, env.MDBLIST_API_KEY);
+
   return json({
     username,
     mode,
-    items,
+    provider: provider || 'all',
+    items: [...trakt.items, ...mdblist.items],
     providers: {
       trakt: { available: trakt.available, error: trakt.error || null },
       mdblist: { available: mdblist.available, error: mdblist.error || null },
