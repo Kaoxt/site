@@ -6,7 +6,7 @@
 
   const discoverPanel = step.querySelector('[data-catalog-panel="discover"]');
   const searchInput = discoverPanel?.querySelector('.catalog-search input');
-  const modeButtons = [...(discoverPanel?.querySelectorAll('.discover-tabs button') || [])];
+  const modeButtons = [...(step.querySelectorAll('.discover-tabs button') || [])];
   const recommendedButtons = [...(discoverPanel?.querySelectorAll('.recommended-users button') || [])];
   if (!discoverPanel || !searchInput) return;
 
@@ -49,7 +49,7 @@
   const status = root.querySelector('.discover-status');
   const results = root.querySelector('.discover-results');
 
-  const currentMode = () => modeButtons.find((button) => button.classList.contains('active'))?.textContent.trim() === 'Browse Users' ? 'users' : 'lists';
+  const currentMode = () => modeButtons.find((button) => button.classList.contains('active'))?.dataset.discoverMode === 'browse-users' ? 'users' : 'lists';
   const selectedKey = (item) => `${item.provider}:${item.username}:${item.slug || item.url || item.name}`;
 
   function readState() {
@@ -73,8 +73,8 @@
     results.innerHTML = '';
     if (!items.length) {
       const details = [];
-      if (providerInfo?.trakt?.error) details.push('Trakt: ' + providerInfo.trakt.error);
       if (providerInfo?.mdblist?.error) details.push('MDBList: ' + providerInfo.mdblist.error);
+      if (providerInfo?.trakt?.error) details.push('Trakt: ' + providerInfo.trakt.error);
       setStatus(details.length ? `No lists found. ${details.join(' · ')}` : 'No public lists found for that username.', Boolean(details.length));
       return;
     }
@@ -115,7 +115,7 @@
       row.querySelector('small').textContent = `${user.provider} • @${user.username}`;
       row.querySelector('button').addEventListener('click', () => {
         searchInput.value = user.username;
-        modeButtons.forEach((button) => button.classList.toggle('active', button.textContent.trim() === 'Search Lists'));
+        modeButtons.forEach((button) => button.classList.toggle('active', button.dataset.discoverMode === 'smart-lists'));
         runSearch(user.username, 'lists', String(user.provider || '').toLowerCase());
       });
       results.appendChild(row);
@@ -212,8 +212,9 @@
       provider: button.dataset.provider || '',
       username: button.dataset.username || button.textContent.trim(),
     };
+    recommendedButtons.forEach((item) => item.classList.toggle('selected', item === button));
     searchInput.value = profile.username;
-    modeButtons.forEach((item) => item.classList.toggle('active', item.textContent.trim() === 'Search Lists'));
+    modeButtons.forEach((item) => item.classList.toggle('active', item.dataset.discoverMode === 'smart-lists'));
     setTimeout(() => runSearch(profile.username, 'lists', profile.provider), 0);
   }));
 
