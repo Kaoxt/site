@@ -9,6 +9,7 @@
   const catalogTabs = [...catalogStep.querySelectorAll('[data-catalog-tab]')];
   const catalogPanels = [...catalogStep.querySelectorAll('[data-catalog-panel]')];
   const catalogCards = [...catalogStep.querySelectorAll('.catalog-card')];
+  const discoverTabsWrap = catalogStep.querySelector('.discover-tabs');
   const discoverTabs = [...catalogStep.querySelectorAll('.discover-tabs button')];
   const searchInput = catalogStep.querySelector('.catalog-search input');
   const recommendedButtons = [...catalogStep.querySelectorAll('.recommended-users button')];
@@ -21,7 +22,7 @@
   const copyBtn = document.getElementById('copyBtn');
   const downloadBtn = document.getElementById('downloadBtn');
   const copyStatus = document.getElementById('copyStatus');
-  const SETTINGS_KEY = 'kollection-posters-catalogs-v3';
+  const SETTINGS_KEY = 'kollection-posters-catalogs-v4';
   let smartFlowActive = false;
 
   const catalogIds = ['trending-movies', 'trending-series', 'popular-movies', 'popular-series', 'top-rated', 'coming-soon'];
@@ -31,7 +32,7 @@
   });
 
   const currentCatalogTab = () => catalogTabs.find((tab) => tab.classList.contains('active'))?.dataset.catalogTab || 'default';
-  const currentDiscoverMode = () => discoverTabs.find((tab) => tab.classList.contains('active'))?.dataset.discoverMode || 'smart-lists';
+  const currentDiscoverMode = () => discoverTabs.find((tab) => tab.classList.contains('active'))?.dataset.discoverMode || 'search-lists';
 
   const syncSelectedStyles = () => {
     catalogCards.forEach((card) => card.classList.toggle('selected', Boolean(card.querySelector('input')?.checked)));
@@ -58,15 +59,26 @@
         mode: currentDiscoverMode(),
         query,
         recommendedUsers,
-        active: mode === 'discover' && Boolean(query || recommendedUsers.length),
+        active: mode === 'discover',
       },
     };
   };
 
   const saveState = () => {
     syncSelectedStyles();
-    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ version: 3, ...getCatalogSelection() })); } catch {}
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ version: 4, ...getCatalogSelection() })); } catch {}
   };
+
+  function setDiscoverMode(mode, persist = true) {
+    const resolved = mode === 'browse-users' ? 'browse-users' : 'search-lists';
+    discoverTabs.forEach((tab) => {
+      const active = tab.dataset.discoverMode === resolved;
+      tab.classList.toggle('active', active);
+      tab.setAttribute('aria-selected', String(active));
+    });
+    if (persist) saveState();
+    window.dispatchEvent(new CustomEvent('kollection:discover-mode', { detail: { mode: resolved } }));
+  }
 
   function setTab(name, persist = true) {
     const resolved = name === 'discover' ? 'discover' : 'default';
@@ -76,17 +88,8 @@
       tab.setAttribute('aria-selected', String(active));
     });
     catalogPanels.forEach((panel) => { panel.hidden = panel.dataset.catalogPanel !== resolved; });
-    if (persist) saveState();
-  }
-
-  function setDiscoverMode(mode, persist = true) {
-    const resolved = mode === 'browse-users' ? 'browse-users' : 'smart-lists';
-    discoverTabs.forEach((tab) => {
-      const active = tab.dataset.discoverMode === resolved;
-      tab.classList.toggle('active', active);
-      tab.setAttribute('aria-selected', String(active));
-    });
-    setTab('discover', false);
+    if (discoverTabsWrap) discoverTabsWrap.hidden = resolved !== 'discover';
+    if (resolved === 'discover') setDiscoverMode(currentDiscoverMode(), false);
     if (persist) saveState();
   }
 
@@ -105,10 +108,10 @@
         if (searchInput && typeof saved.discover?.query === 'string') searchInput.value = saved.discover.query;
         const selectedUser = Array.isArray(saved.discover?.recommendedUsers) ? saved.discover.recommendedUsers[0] : '';
         recommendedButtons.forEach((button) => button.classList.toggle('selected', button.textContent.trim() === selectedUser));
-        discoverTabs.forEach((tab) => tab.classList.toggle('active', tab.dataset.discoverMode === (saved.discover?.mode || 'smart-lists')));
-        setTab(saved.mode, false);
+        setDiscoverMode(saved.discover?.mode || 'search-lists', false);
       }
     } catch {}
+    setTab('default', false);
     syncSelectedStyles();
   };
 
@@ -117,6 +120,8 @@
     usageChoice.hidden = true;
     configurator.hidden = true;
     catalogStep.hidden = false;
+    setTab('default', false);
+    setDiscoverMode('search-lists', false);
     catalogStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -155,6 +160,7 @@
     event.stopImmediatePropagation();
     configurator.hidden = true;
     catalogStep.hidden = false;
+    setTab('default', false);
     catalogStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, true);
 
@@ -163,7 +169,7 @@
   discoverTabs.forEach((tab) => tab.addEventListener('click', () => setDiscoverMode(tab.dataset.discoverMode)));
   recommendedButtons.forEach((button) => button.addEventListener('click', () => {
     recommendedButtons.forEach((item) => item.classList.toggle('selected', item === button));
-    setDiscoverMode('smart-lists', false);
+    setDiscoverMode('browse-users', false);
     saveState();
   }));
   searchInput?.addEventListener('input', saveState);
@@ -176,13 +182,9 @@
     try {
       const data = JSON.parse(jsonOutput.textContent);
       const catalogs = getCatalogSelection();
-      if (data.config && typeof data.config === 'object') {
-        data.config.catalogSelection = catalogs;
-      } else if (data.kollectionPosters && typeof data.kollectionPosters === 'object') {
-        data.kollectionPosters.catalogSelection = catalogs;
-      } else {
-        data.catalogSelection = catalogs;
-      }
+      if (data.config && typeof data.config === 'object') data.config.catalogSelection = catalogs;
+      else if (data.kollectionPosters && typeof data.kollectionPosters === 'object') data.kollectionPosters.catalogSelection = catalogs;
+      else data.catalogSelection = catalogs;
       const text = JSON.stringify(data, null, 2);
       jsonOutput.textContent = text;
       jsonOutput.dataset.generatedJson = text;
