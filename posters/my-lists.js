@@ -137,6 +137,23 @@
     }
   }
 
+  function mergeWithDiscoverSelections() {
+    const discover = window.KollectionPosterDiscover;
+    if (!discover?.getSelected || discover.__myListsMerged) return;
+    const originalGetSelected = discover.getSelected.bind(discover);
+    discover.getSelected = () => {
+      const merged = [...originalGetSelected(), ...selected];
+      const seen = new Set();
+      return merged.filter((item) => {
+        const key = selectedKey(item);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    };
+    discover.__myListsMerged = true;
+  }
+
   myTab.addEventListener('click', showMyLists);
   document.addEventListener('kollection:catalog-tab', (event) => {
     if (event.detail?.tab !== 'my-lists') myPanel.hidden = true;
@@ -146,6 +163,7 @@
 
   readState();
   syncAvailability();
+  mergeWithDiscoverSelections();
 
   window.KollectionPosterMyLists = {
     getSelected: () => selected.slice(),
