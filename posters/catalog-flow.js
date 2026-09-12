@@ -10,11 +10,8 @@
   const catalogPanels = [...catalogStep.querySelectorAll('[data-catalog-panel]')];
   const catalogCards = [...catalogStep.querySelectorAll('.catalog-card')];
   const discoverTabsWrap = catalogStep.querySelector('.discover-tabs');
-  const discoverSearchTools = catalogStep.querySelector('.discover-search-tools');
-  const discoverChoiceButtons = [...catalogStep.querySelectorAll('[data-discover-choice]')];
   const discoverTabs = [...catalogStep.querySelectorAll('.discover-tabs button')];
-  const searchInput = catalogStep.querySelector('.catalog-search input');
-  const recommendedButtons = [...catalogStep.querySelectorAll('.recommended-users button')];
+  const discoverViews = [...catalogStep.querySelectorAll('[data-discover-view]')];
   const nextBtn = document.getElementById('catalogNextBtn');
   const backBtn = document.getElementById('catalogBackBtn');
   const backBottomBtn = document.getElementById('catalogBackBottomBtn');
@@ -34,11 +31,10 @@
   });
 
   const currentCatalogTab = () => catalogTabs.find((tab) => tab.classList.contains('active'))?.dataset.catalogTab || 'default';
-  const currentDiscoverMode = () => discoverTabs.find((tab) => tab.classList.contains('active'))?.dataset.discoverMode || 'search-lists';
+  const currentDiscoverMode = () => discoverTabs.find((tab) => tab.classList.contains('active'))?.dataset.discoverMode || 'smart-lists';
 
   const syncSelectedStyles = () => {
     catalogCards.forEach((card) => card.classList.toggle('selected', Boolean(card.querySelector('input')?.checked)));
-    recommendedButtons.forEach((button) => button.setAttribute('aria-pressed', String(button.classList.contains('selected'))));
   };
 
   const getCatalogSelection = () => {
@@ -48,38 +44,36 @@
       provider: card.querySelector('small')?.textContent.trim() || '',
       enabled: Boolean(card.querySelector('input')?.checked),
     }));
-    const selectedRecommendedUser = recommendedButtons.find((button) => button.classList.contains('selected')) || null;
-    const recommendedUsers = selectedRecommendedUser ? [selectedRecommendedUser.textContent.trim()] : [];
-    const query = searchInput?.value.trim() || '';
-    const mode = currentCatalogTab();
-
     return {
-      mode,
+      mode: currentCatalogTab(),
       defaultCatalogs,
       enabledCatalogs: defaultCatalogs.filter((item) => item.enabled).map((item) => item.id),
       discover: {
         mode: currentDiscoverMode(),
-        query,
-        recommendedUsers,
-        active: mode === 'discover',
+        selectedLists: window.KollectionPosterDiscover?.getSelected?.() || [],
       },
     };
   };
 
   const saveState = () => {
     syncSelectedStyles();
-    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({ version: 4, ...getCatalogSelection() })); } catch {}
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({ version: 4, ...getCatalogSelection() }));
+    } catch {}
   };
 
   function setDiscoverMode(mode, persist = true) {
-    const resolved = mode === 'browse-users' ? 'browse-users' : 'search-lists';
+    const resolved = mode === 'browse-users' ? 'browse-users' : 'smart-lists';
     discoverTabs.forEach((tab) => {
       const active = tab.dataset.discoverMode === resolved;
       tab.classList.toggle('active', active);
       tab.setAttribute('aria-selected', String(active));
     });
+    discoverViews.forEach((view) => {
+      view.hidden = view.dataset.discoverView !== resolved;
+    });
     if (persist) saveState();
-    window.dispatchEvent(new CustomEvent('kollection:discover-mode', { detail: { mode: resolved } }));
+    document.dispatchEvent(new CustomEvent('kollection:discover-mode', { detail: { mode: resolved } }));
   }
 
   function setTab(name, persist = true) {
@@ -89,36 +83,27 @@
       tab.classList.toggle('active', active);
       tab.setAttribute('aria-selected', String(active));
     });
-    catalogPanels.forEach((panel) => { panel.hidden = panel.dataset.catalogPanel !== resolved; });
-    if (resolved !== 'discover') {
-      if (discoverSearchTools) discoverSearchTools.hidden = true;
-    } else {
-      if (discoverSearchTools) discoverSearchTools.hidden = true;
-      discoverChoiceButtons.forEach((button) => button.classList.remove('selected'));
-      setDiscoverMode(currentDiscoverMode(), false);
-    }
+    catalogPanels.forEach((panel) => {
+      panel.hidden = panel.dataset.catalogPanel !== resolved;
+    });
+    if (discoverTabsWrap) discoverTabsWrap.hidden = resolved !== 'discover';
+    if (resolved === 'discover') setDiscoverMode(currentDiscoverMode(), false);
     if (persist) saveState();
+    document.dispatchEvent(new CustomEvent('kollection:catalog-tab', { detail: { tab: resolved } }));
   }
 
-  const restoreState = () => {
+  const restoreSelections = () => {
     try {
       const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null');
-      if (saved && typeof saved === 'object') {
-        if (Array.isArray(saved.defaultCatalogs)) {
-          const byId = new Map(saved.defaultCatalogs.map((item) => [item.id, item]));
-          catalogCards.forEach((card) => {
-            const input = card.querySelector('input');
-            const item = byId.get(input?.value);
-            if (input && item && typeof item.enabled === 'boolean') input.checked = item.enabled;
-          });
-        }
-        if (searchInput && typeof saved.discover?.query === 'string') searchInput.value = saved.discover.query;
-        const selectedUser = Array.isArray(saved.discover?.recommendedUsers) ? saved.discover.recommendedUsers[0] : '';
-        recommendedButtons.forEach((button) => button.classList.toggle('selected', button.textContent.trim() === selectedUser));
-        setDiscoverMode(saved.discover?.mode || 'search-lists', false);
+      if (saved && Array.isArray(saved.defaultCatalogs)) {
+        const byId = new Map(saved.defaultCatalogs.map((item) => [item.id, item]));
+        catalogCards.forEach((card) => {
+          const input = card.querySelector('input');
+          const item = byId.get(input?.value);
+          if (input && item && typeof item.enabled === 'boolean') input.checked = item.enabled;
+        });
       }
     } catch {}
-    setTab('default', false);
     syncSelectedStyles();
   };
 
@@ -127,8 +112,8 @@
     usageChoice.hidden = true;
     configurator.hidden = true;
     catalogStep.hidden = false;
+    setDiscoverMode('smart-lists', false);
     setTab('default', false);
-    setDiscoverMode('search-lists', false);
     catalogStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -138,8 +123,10 @@
     usageChoice.hidden = true;
     catalogStep.hidden = true;
     configurator.hidden = false;
-    document.getElementById('routeKicker').textContent = 'SMART OVERLAY POSTERS';
-    document.getElementById('routeTitle').textContent = 'Configure Posters';
+    const routeKicker = document.getElementById('routeKicker');
+    const routeTitle = document.getElementById('routeTitle');
+    if (routeKicker) routeKicker.textContent = 'SMART OVERLAY POSTERS';
+    if (routeTitle) routeTitle.textContent = 'Configure Posters';
     window.KollectionPosterPreview?.refresh?.({ hard: true });
     configurator.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -172,14 +159,8 @@
   }, true);
 
   catalogTabs.forEach((tab) => tab.addEventListener('click', () => setTab(tab.dataset.catalogTab)));
-  catalogCards.forEach((card) => card.querySelector('input')?.addEventListener('change', saveState));
   discoverTabs.forEach((tab) => tab.addEventListener('click', () => setDiscoverMode(tab.dataset.discoverMode)));
-  recommendedButtons.forEach((button) => button.addEventListener('click', () => {
-    recommendedButtons.forEach((item) => item.classList.toggle('selected', item === button));
-    setDiscoverMode('browse-users', false);
-    saveState();
-  }));
-  searchInput?.addEventListener('input', saveState);
+  catalogCards.forEach((card) => card.querySelector('input')?.addEventListener('change', saveState));
   nextBtn?.addEventListener('click', openConfigurator);
   backBtn?.addEventListener('click', returnToUsage);
   backBottomBtn?.addEventListener('click', returnToUsage);
@@ -237,5 +218,7 @@
     URL.revokeObjectURL(url);
   }, true);
 
-  restoreState();
+  restoreSelections();
+  setDiscoverMode('smart-lists', false);
+  setTab('default', false);
 })();
