@@ -36,7 +36,7 @@ function parseConfig(token) {
     source: ['smart', 'tmdb'].includes(raw.source) ? raw.source : 'smart',
     tags: Array.isArray(raw.tags) ? raw.tags.map(String).filter(Boolean).slice(0, 8) : ['trend', 'rating'],
     ratingSource: String(raw.ratingSource || 'average'),
-    language: String(raw.language || 'en').slice(0, 12),
+    language: ['en', 'es', 'fr', 'de', 'it', 'pt', 'ja', 'ko'].includes(String(raw.language || '').toLowerCase()) ? String(raw.language).toLowerCase() : 'en',
     sort: ['shuffle', 'list', 'newest', 'oldest'].includes(raw.sort) ? raw.sort : 'shuffle',
   };
 }
@@ -46,6 +46,7 @@ function posterUrl(config, type, id) {
     source: config.source,
     tags: [...new Set(config.tags)].sort().join(','),
     ratingSource: config.ratingSource,
+    language: config.language,
   });
   const mediaType = type === 'series' ? 'tv' : 'movie';
   return `${POSTER_BASE}/${mediaType}/${encodeURIComponent(id)}.webp?${params}`;
@@ -129,7 +130,6 @@ async function fetchMdbList(config, username, slug, type) {
 async function fetchTmdbDefault(config, id, env) {
   const key = String(env.TMDB_API_KEY || '').trim();
   if (!key) return [];
-  const lang = config.language || 'en';
   const map = {
     'trending-movies': ['movie', 'https://api.themoviedb.org/3/trending/movie/day'],
     'trending-series': ['series', 'https://api.themoviedb.org/3/trending/tv/day'],
@@ -142,7 +142,7 @@ async function fetchTmdbDefault(config, id, env) {
   if (!entry) return [];
   const url = new URL(entry[1]);
   url.searchParams.set('api_key', key);
-  url.searchParams.set('language', lang);
+  url.searchParams.set('language', 'en-US');
   const response = await fetch(url, { headers: { accept: 'application/json' }, cf: { cacheTtl: 300, cacheEverything: true } });
   if (!response.ok) return [];
   const payload = await response.json().catch(() => ({}));
