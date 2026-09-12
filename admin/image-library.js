@@ -46,6 +46,7 @@
     logoFileName: $('logoFileName'),
     asIsFileName: $('asIsFileName'),
     uploadPathPreview: $('uploadPathPreview'),
+    cancelUploadButton: $('cancelUploadButton'),
     uploadButton: $('uploadButton'),
     uploadResult: $('uploadResult'),
 
@@ -181,10 +182,15 @@
   async function fetchPage(cursor = '') {
     const params = new URLSearchParams();
     if (cursor) params.set('cursor', cursor);
+    params.set('_t', String(Date.now()));
 
     const res = await fetch(`/api/admin/images?${params.toString()}`, {
       credentials: 'same-origin',
-      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+      headers: {
+        Accept: 'application/json',
+        'Cache-Control': 'no-cache',
+      },
     });
 
     const data = await res.json().catch(() => null);
@@ -523,6 +529,38 @@
   });
   el.uploadFolder.addEventListener('input', updateUploadPreview);
 
+  function resetUploadSelections() {
+    clearMessage(el.uploadMessage);
+    el.uploadResult.hidden = true;
+    el.uploadResult.innerHTML = '';
+
+    el.uploadCategorySelect.value = '';
+    el.uploadNewCategory.value = '';
+    syncNewCategoryField();
+
+    populateUploadFolders();
+    el.uploadFolderSelect.value = '';
+    el.uploadFolder.value = '';
+    syncNewFolderField();
+
+    [el.coverFile, el.backdropFile, el.logoFile, el.asIsFile].forEach((input) => {
+      input.value = '';
+    });
+
+    [
+      [el.coverFile, el.coverFileName],
+      [el.backdropFile, el.backdropFileName],
+      [el.logoFile, el.logoFileName],
+      [el.asIsFile, el.asIsFileName],
+    ].forEach(([input, label]) => updateFileLabel(input, label));
+
+    updateUploadPreview();
+  }
+
+  if (el.cancelUploadButton) {
+    el.cancelUploadButton.addEventListener('click', resetUploadSelections);
+  }
+
   el.uploadForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     clearMessage(el.uploadMessage);
@@ -590,7 +628,7 @@
 
     const oldText = el.uploadButton.textContent;
     el.uploadButton.disabled = true;
-    el.uploadButton.textContent = 'Uploading…';
+    el.uploadButton.textContent = 'Submitting…';
 
     try {
       const res = await fetch('/api/admin/upload-image', {
@@ -603,6 +641,25 @@
 
       if (!res.ok) {
         throw new Error(data?.error || `Upload failed (${res.status}).`);
+      }
+
+      const uploadedNow = (data?.files || []).map((item) => ({
+        ...item,
+        path: item.path || String(item.key || '').replace(/^images\//, ''),
+        filename: item.filename || String(item.key || '').split('/').pop() || '',
+        category: item.category || category,
+        folder: item.folder || folder,
+        uploaded: item.uploaded || new Date().toISOString(),
+      }));
+
+      if (uploadedNow.length) {
+        const uploadedKeys = new Set(uploadedNow.map((item) => item.key));
+        state.images = [
+          ...state.images.filter((item) => !uploadedKeys.has(item.key)),
+          ...uploadedNow,
+        ];
+        renderRecent();
+        applyFilters();
       }
 
       const links = (data?.files || []).map((item) =>
@@ -628,6 +685,7 @@
       ].forEach(([input, label]) => updateFileLabel(input, label));
 
       const uploadedCategory = category;
+      await new Promise((resolve) => setTimeout(resolve, 250));
       await loadLibrary();
 
       if ([...el.uploadCategorySelect.options].some((option) => option.value === uploadedCategory)) {
