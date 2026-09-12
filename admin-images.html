@@ -12,12 +12,12 @@
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/admin/admin.css?v=20260906-1" />
   <link rel="stylesheet" href="/admin/admin-pages.css?v=20260907-4" />
-  <link rel="stylesheet" href="/admin/image-library.css?v=20260911-4" />
+  <link rel="stylesheet" href="/admin/image-library.css?v=20260911-5" />
 
   <script src="/components.js?v=20260906-1" defer></script>
   <script src="/set-up-collection/config.js?v=20260906-1"></script>
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
-  <script src="/admin/image-library.js?v=20260911-4" defer></script>
+  <script src="/admin/image-library.js?v=20260911-5" defer></script>
 </head>
 <body>
   <main class="page admin-page image-library-page">
@@ -120,7 +120,16 @@
 
             <label class="upload-field">
               <span>Folder</span>
-              <input id="uploadFolder" name="folder" placeholder="Adam Sandler" autocomplete="off" required />
+              <select id="uploadFolderSelect" required>
+                <option value="">Choose Folder</option>
+                <option value="__new__">+ Create New Folder…</option>
+              </select>
+              <small>Choose a folder from the selected category or create a new one.</small>
+            </label>
+
+            <label class="upload-field new-folder-field" id="newFolderField" hidden>
+              <span>New Folder Name</span>
+              <input id="uploadFolder" name="folder" placeholder="Adam Sandler" autocomplete="off" />
               <small>May include nested folders, e.g. <code>Marvel/Phase One</code>.</small>
             </label>
 
