@@ -653,3 +653,8 @@ body.light .image-library-page .copy-url-button {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+
+.new-folder-field[hidden] {
+  display: none !important;
+}
