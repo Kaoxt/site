@@ -13,8 +13,8 @@
   finalPanel.innerHTML = `
     <div class="final-divider"></div>
     <div class="final-block">
-      <span class="section-kicker">LANGUAGE</span>
-      <select id="postersLanguage" class="final-select" aria-label="Catalog language">
+      <span class="section-kicker">OVERLAY LANGUAGE</span>
+      <select id="postersLanguage" class="final-select" aria-label="Poster overlay language">
         <option value="en" selected>English</option>
         <option value="es">Spanish</option>
         <option value="fr">French</option>
@@ -24,6 +24,7 @@
         <option value="ja">Japanese</option>
         <option value="ko">Korean</option>
       </select>
+      <small class="overlay-language-note">Changes generated overlay text such as Today and Genre labels. It does not change the catalog title language.</small>
     </div>
     <div class="final-block">
       <span class="section-kicker">LIST SORT</span>
@@ -52,6 +53,7 @@
     .final-divider{height:1px;background:rgba(255,255,255,.09)}
     .final-block{display:grid;gap:13px}
     .final-select{width:100%;min-height:48px;border:1px solid rgba(255,255,255,.14);border-radius:11px;background:#151618;color:#fff;padding:0 15px;font:inherit;font-size:14px;outline:0}
+    .overlay-language-note{color:#686b73;font-size:11px;line-height:1.45}
     .sort-options{display:grid;gap:9px}
     .sort-option{display:flex;align-items:center;gap:13px;min-height:64px;padding:12px 15px;border:1px solid rgba(255,255,255,.11);border-radius:12px;background:#101113;cursor:pointer}
     .sort-option:has(input:checked){border-color:rgba(67,219,122,.34);background:rgba(23,73,39,.22)}
