@@ -12,6 +12,21 @@ const clean = (value) => String(value || '').trim().replace(/^@/, '');
 const slugify = (value) => clean(value).toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '');
 const MAX_LISTS = 500;
 
+function decodeHtml(value = '') {
+  return String(value)
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n) || 32));
+}
+
+function stripHtml(value = '') {
+  return decodeHtml(String(value).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim());
+}
+
 function normalizeTraktList(item, username) {
   const list = item?.list || item;
   const ids = list?.ids || {};
@@ -76,6 +91,34 @@ function extractMdblistHtml(html, username) {
   return items;
 }
 
+function extractMdblistTopLists(html) {
+  const seen = new Set();
+  const items = [];
+  const anchorRegex = /<a\b[^>]*href=["'](?:https?:\/\/(?:www\.)?mdblist\.com)?\/lists\/([^\/"'?#]+)\/([^"'?#/]+)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi;
+  let match;
+  while ((match = anchorRegex.exec(html)) && items.length < MAX_LISTS) {
+    const username = decodeURIComponent(match[1]);
+    const slug = decodeURIComponent(match[2]);
+    const key = `${username}:${slug}`.toLowerCase();
+    if (!username || !slug || seen.has(key)) continue;
+    seen.add(key);
+    const anchorText = stripHtml(match[3]);
+    const name = anchorText || slug.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    items.push({
+      id: `mdblist:${username}:${slug}`,
+      provider: 'MDBList',
+      username,
+      name,
+      description: 'Popular list on MDBList',
+      itemCount: 0,
+      url: `https://mdblist.com/lists/${encodeURIComponent(username)}/${encodeURIComponent(slug)}`,
+      slug,
+      popular: true,
+    });
+  }
+  return items;
+}
+
 function normalizeMdblistJson(data, username) {
   const source = Array.isArray(data) ? data : Array.isArray(data?.lists) ? data.lists : Array.isArray(data?.results) ? data.results : [];
   return source.map((item) => {
@@ -124,6 +167,21 @@ async function mdblistLists(username, apiKey) {
   }
 }
 
+async function mdblistTopLists() {
+  try {
+    const response = await fetch('https://mdblist.com/toplists/', {
+      headers: { accept: 'text/html', 'user-agent': 'Mozilla/5.0 TheKollection/1.0' },
+    });
+    if (!response.ok) throw new Error(`MDBList ${response.status}`);
+    const html = await response.text();
+    const items = extractMdblistTopLists(html);
+    if (!items.length) throw new Error('MDBList returned no popular lists.');
+    return { items, available: true };
+  } catch (error) {
+    return { items: [], available: false, error: error?.message || 'MDBList popular lists lookup failed.' };
+  }
+}
+
 async function traktUser(username, clientId) {
   if (!clientId) return null;
   try {
@@ -156,10 +214,23 @@ async function mdblistUser(username) {
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   const username = clean(url.searchParams.get('username'));
-  const mode = url.searchParams.get('mode') === 'users' ? 'users' : 'lists';
+  const requestedMode = clean(url.searchParams.get('mode')).toLowerCase();
+  const mode = requestedMode === 'users' ? 'users' : requestedMode === 'toplists' ? 'toplists' : 'lists';
   const provider = clean(url.searchParams.get('provider')).toLowerCase();
-  if (!username || username.length > 64) return json({ error: 'A valid username is required.' }, 400);
+
   if (provider && !['mdblist', 'trakt'].includes(provider)) return json({ error: 'Unsupported provider.' }, 400);
+
+  if (mode === 'toplists') {
+    const mdblist = await mdblistTopLists();
+    return json({
+      mode,
+      provider: 'mdblist',
+      items: mdblist.items,
+      providers: { mdblist: { available: mdblist.available, error: mdblist.error || null } },
+    });
+  }
+
+  if (!username || username.length > 64) return json({ error: 'A valid username is required.' }, 400);
 
   if (mode === 'users') {
     const users = [];
