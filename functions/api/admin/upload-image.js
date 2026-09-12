@@ -220,17 +220,27 @@ export async function onRequestPost(context) {
     }
 
     const slots = [
-      ['cover', 'cover.webp'],
-      ['backdrop', 'backdrop.webp'],
-      ['logo', 'logo.webp'],
+      ['cover', 'cover.webp', false],
+      ['backdrop', 'backdrop.webp', false],
+      ['logo', 'logo.webp', false],
+      ['asIs', '', true],
     ];
 
     const selected = [];
 
-    for (const [field, filename] of slots) {
+    for (const [field, fixedFilename, preserveName] of slots) {
       const file = form.get(field);
 
       if (!file || typeof file.arrayBuffer !== 'function' || !file.size) continue;
+
+      let filename = fixedFilename;
+      if (preserveName) {
+        try {
+          filename = cleanSegment(file.name, 'Filename');
+        } catch (error) {
+          return response({ error: error.message }, 400);
+        }
+      }
 
       if (file.size > MAX_FILE_SIZE) {
         return response({ error: `${filename} is larger than the 12 MB upload limit.` }, 413);
@@ -240,8 +250,8 @@ export async function onRequestPost(context) {
         String(file.type || '').toLowerCase() === 'image/webp' ||
         /\.webp$/i.test(String(file.name || ''));
 
-      if (!looksWebp) {
-        return response({ error: `${filename} must be uploaded as a WebP image.` }, 415);
+      if (!looksWebp || !/\.webp$/i.test(filename)) {
+        return response({ error: `${filename || file.name} must be uploaded with a .webp filename.` }, 415);
       }
 
       const bytes = new Uint8Array(await file.arrayBuffer());
