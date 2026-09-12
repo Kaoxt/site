@@ -1,1 +1,82 @@
-.setup-toolbar-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.save-setup-status{font-size:12px;color:rgba(235,239,247,.68);min-height:18px}.save-setup-status[data-kind="success"]{color:#9de0b4}.save-setup-status[data-kind="error"]{color:#ff9a9a}.save-setup-status[data-kind="info"]{color:#b8c0ff}html[data-theme="light"] .save-setup-status{color:rgba(27,34,48,.68)}html[data-theme="light"] .save-setup-status[data-kind="success"]{color:#257447}html[data-theme="light"] .save-setup-status[data-kind="error"]{color:#b42318}html[data-theme="light"] .save-setup-status[data-kind="info"]{color:#4d57b8}@media(max-width:760px){.setup-toolbar{align-items:flex-start}.setup-toolbar-actions{max-width:55%;gap:7px}.save-setup-status{width:100%;text-align:right;font-size:11px}}
+.setup-toolbar-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.setup-toolbar-actions .ghost.small{
+  min-height:42px;
+  padding:0 20px;
+  font-size:13px;
+  font-weight:700;
+  line-height:1;
+  border-radius:999px;
+  min-width:118px;
+}
+
+.save-setup-status{
+  font-size:12px;
+  color:rgba(235,239,247,.68);
+  min-height:18px;
+}
+.save-setup-status[data-kind="success"]{color:#9de0b4}
+.save-setup-status[data-kind="error"]{color:#ff9a9a}
+.save-setup-status[data-kind="info"]{color:#b8c0ff}
+
+html[data-theme="light"] .save-setup-status{color:rgba(27,34,48,.68)}
+html[data-theme="light"] .save-setup-status[data-kind="success"]{color:#257447}
+html[data-theme="light"] .save-setup-status[data-kind="error"]{color:#b42318}
+html[data-theme="light"] .save-setup-status[data-kind="info"]{color:#4d57b8}
+
+@media(max-width:760px){
+  .setup-toolbar{
+    align-items:center !important;
+    gap:14px;
+  }
+
+  .setup-toolbar-actions{
+    max-width:none;
+    margin-left:auto;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(108px,1fr));
+    gap:8px;
+    align-items:center;
+    justify-content:end;
+  }
+
+  .setup-toolbar-actions .save-setup-status{
+    grid-column:1 / -1;
+    width:100%;
+    text-align:right;
+    font-size:11px;
+    min-height:0;
+  }
+
+  .setup-toolbar-actions .ghost.small{
+    width:100%;
+    min-width:0;
+    min-height:42px;
+    padding:0 14px;
+    font-size:12.5px;
+  }
+}
+
+@media(max-width:520px){
+  .setup-toolbar{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr);
+    align-items:start !important;
+  }
+
+  .setup-toolbar-actions{
+    width:100%;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    margin-left:0;
+  }
+
+  .setup-toolbar-actions .save-setup-status{
+    text-align:left;
+  }
+}
