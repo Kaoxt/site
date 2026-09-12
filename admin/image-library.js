@@ -291,11 +291,13 @@
       ).join('') +
       '<option value="__new__">+ Create New Folder…</option>';
 
-    if (current === '__new__' || !folders.length || el.uploadCategorySelect.value === '__new__') {
+    if (el.uploadCategorySelect.value === '__new__' || !folders.length) {
       el.uploadFolderSelect.value = '__new__';
     } else if (folders.includes(current)) {
       el.uploadFolderSelect.value = current;
     } else {
+      // Existing category with folders: show the picker instead of
+      // forcing "+ Create New Folder…" from the previous state.
       el.uploadFolderSelect.value = '';
     }
 
