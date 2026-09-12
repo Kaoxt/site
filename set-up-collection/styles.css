@@ -697,3 +697,9 @@ body.light .collection-section-choice.selected .collection-section-check::after{
   .nuvio-auth-fields,.nuvio-auth-actions{width:100%}
   .nuvio-auth-note{width:100%;font-size:13px}
 }
+
+
+/* Self-host URL is only visible when Self-Host Instance is selected. */
+#selfHostField[hidden] {
+  display: none !important;
+}
