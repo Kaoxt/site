@@ -111,14 +111,14 @@
       row.querySelector('button').addEventListener('click', () => {
         searchInput.value = user.username;
         modeButtons.forEach((button) => button.classList.toggle('active', button.textContent.trim() === 'Search Lists'));
-        runSearch(user.username, 'lists');
+        runSearch(user.username, 'lists', String(user.provider || '').toLowerCase());
       });
       results.appendChild(row);
     });
     setStatus(`${users.length} matching account${users.length === 1 ? '' : 's'} found.`);
   }
 
-  async function runSearch(value = searchInput.value, forcedMode = '') {
+  async function runSearch(value = searchInput.value, forcedMode = '', provider = '') {
     const username = String(value || '').trim().replace(/^@/, '');
     if (username.length < 2) {
       results.innerHTML = '';
@@ -126,8 +126,10 @@
       return;
     }
     const mode = forcedMode || currentMode();
+    const providerFilter = String(provider || '').toLowerCase();
     const requestId = ++generation;
-    setStatus(mode === 'users' ? `Looking for @${username}…` : `Loading public lists for @${username}…`, false, true);
+    const providerLabel = providerFilter === 'mdblist' ? 'MDBList ' : providerFilter === 'trakt' ? 'Trakt ' : '';
+    setStatus(mode === 'users' ? `Looking for @${username}…` : `Loading ${providerLabel}public lists for @${username}…`, false, true);
     try {
       const response = await fetch(`/api/posters-discover?username=${encodeURIComponent(username)}&mode=${mode}`, {
         headers: { accept: 'application/json' },
@@ -136,8 +138,15 @@
       const data = await response.json().catch(() => ({}));
       if (requestId !== generation) return;
       if (!response.ok) throw new Error(data?.error || `Search failed (${response.status})`);
-      if (mode === 'users') renderUsers(Array.isArray(data.users) ? data.users : []);
-      else renderLists(Array.isArray(data.items) ? data.items : [], data.providers || {});
+      if (mode === 'users') {
+        const users = Array.isArray(data.users) ? data.users : [];
+        const filteredUsers = providerFilter ? users.filter((user) => String(user.provider || '').toLowerCase() === providerFilter) : users;
+        renderUsers(filteredUsers);
+      } else {
+        const items = Array.isArray(data.items) ? data.items : [];
+        const filteredItems = providerFilter ? items.filter((item) => String(item.provider || '').toLowerCase() === providerFilter) : items;
+        renderLists(filteredItems, data.providers || {});
+      }
     } catch (error) {
       if (requestId !== generation) return;
       results.innerHTML = '';
@@ -191,10 +200,11 @@
   }));
 
   recommendedButtons.forEach((button) => button.addEventListener('click', () => {
-    const username = button.textContent.trim();
+    const username = button.dataset.username || button.textContent.trim();
+    const provider = button.dataset.provider || '';
     searchInput.value = username;
     modeButtons.forEach((item) => item.classList.toggle('active', item.textContent.trim() === 'Search Lists'));
-    setTimeout(() => runSearch(username, 'lists'), 0);
+    setTimeout(() => runSearch(username, 'lists', provider), 0);
   }));
 
   document.getElementById('generateBtn')?.addEventListener('click', () => setTimeout(augmentGeneratedJson, 0));
