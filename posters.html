@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="/posters/styles.css?v=20260911-2" />
   <link rel="stylesheet" href="/posters/overlays.css?v=20260909-4" />
   <link rel="stylesheet" href="/posters/addon.css?v=20260909-1" />
-  <link rel="stylesheet" href="/posters/betterposters-match.css?v=20260912-3" />
+  <link rel="stylesheet" href="/posters/betterposters-match.css?v=20260912-4" />
   <script src="/components.js?v=20260908-3" defer></script>
 </head>
 <body>
@@ -35,6 +35,10 @@
             <button class="catalog-tab active" type="button" data-catalog-tab="default">Default</button>
             <button class="catalog-tab" type="button" data-catalog-tab="discover">Discover</button>
           </div>
+          <div class="discover-tabs" role="tablist" hidden>
+            <button class="active" type="button" data-discover-mode="smart-lists">Search Lists</button>
+            <button type="button" data-discover-mode="browse-users">Browse Users</button>
+          </div>
         </div>
 
         <div class="catalog-panel" data-catalog-panel="default">
@@ -45,50 +49,20 @@
           <label class="catalog-card"><input type="checkbox" checked><span><strong>Popular Series</strong><small>TMDB</small></span></label>
           <label class="catalog-card"><input type="checkbox" checked><span><strong>Top Rated</strong><small>TMDB</small></span></label>
           <label class="catalog-card"><input type="checkbox" checked><span><strong>Coming Soon</strong><small>TMDB</small></span></label>
-
-          <div class="default-search-lists">
-            <button id="popularListsButton" class="discover-option-card" type="button">
-              <span class="discover-option-icon">⌕</span>
-              <span><strong>Search Lists</strong><small>Browse popular public lists from MDBList.</small></span>
-              <span class="usage-arrow">›</span>
-            </button>
-            <div id="popularListsResults" class="popular-lists-results" hidden></div>
-          </div>
         </div>
 
         <div class="catalog-panel" data-catalog-panel="discover" hidden>
-          <p class="catalog-intro">Choose how you want to discover additional catalogs.</p>
-          <div class="discover-option-grid">
-            <button class="discover-option-card" type="button" data-discover-choice="mdblist">
-              <span class="discover-option-icon">M</span>
-              <span><strong>MDBList</strong><small>Search public MDBList users and lists.</small></span>
-              <span class="usage-arrow">›</span>
-            </button>
-            <button class="discover-option-card" type="button" data-discover-choice="trakt">
-              <span class="discover-option-icon">T</span>
-              <span><strong>Trakt</strong><small>Search public Trakt users and lists.</small></span>
-              <span class="usage-arrow">›</span>
-            </button>
-            <button class="discover-option-card" type="button" data-discover-choice="publicmetadb" disabled>
-              <span class="discover-option-icon">P</span>
-              <span><strong>PublicMetaDB</strong><small>Personal list discovery — coming soon.</small></span>
-              <span class="usage-arrow">›</span>
-            </button>
-            <button class="discover-option-card" type="button" data-discover-choice="stremio" disabled>
-              <span class="discover-option-icon">S</span>
-              <span><strong>Stremio Addons</strong><small>Import addon catalogs — coming soon.</small></span>
-              <span class="usage-arrow">›</span>
-            </button>
+          <div class="discover-view" data-discover-view="smart-lists">
+            <label class="catalog-search"><span>⌕</span><input id="popularListSearch" type="search" placeholder="Search public lists…" aria-label="Search MDBList popular lists"></label>
+            <div class="popular-lists-heading"><strong>Popular Lists</strong><small>Popular public lists from MDBList.</small></div>
+            <div id="popularListsResults" class="popular-lists-results"></div>
           </div>
 
-          <div class="discover-search-tools" hidden>
-            <div class="discover-tabs" role="tablist">
-              <button class="active" type="button" data-discover-mode="smart-lists">Search Lists</button>
-              <button type="button" data-discover-mode="browse-users">Browse Users</button>
-            </div>
-            <label class="catalog-search"><span>⌕</span><input type="search" placeholder="Enter username…" aria-label="Search username"></label>
+          <div class="discover-view" data-discover-view="browse-users" hidden>
+            <label class="catalog-search"><span>⌕</span><input id="browseUserSearch" type="search" placeholder="Enter MDBList username…" aria-label="Search MDBList username"></label>
             <span class="recommended-label">RECOMMENDED MDBLIST USERS</span>
             <div class="recommended-users"><button type="button" data-provider="mdblist" data-username="snoak">snoak</button><button type="button" data-provider="mdblist" data-username="garycrawfordgc">gary</button><button type="button" data-provider="mdblist" data-username="kaoxt">kaoxt</button></div>
+            <div id="userListsResults" class="user-lists-results"></div>
           </div>
         </div>
 
@@ -114,5 +88,5 @@
     </section>
     <div id="site-footer"></div>
   </main>
-  <script src="/posters/posters.js?v=20260911-14"></script><script src="/posters/preview-controller.js?v=20260911-14"></script><script src="/posters/rating-sources-status.js?v=20260910-1"></script><script src="/posters/addon.js?v=20260909-1"></script><script src="/posters/discover-live.js?v=20260912-5"></script><script src="/posters/catalog-flow.js?v=20260912-4"></script>
+  <script src="/posters/posters.js?v=20260911-14"></script><script src="/posters/preview-controller.js?v=20260911-14"></script><script src="/posters/rating-sources-status.js?v=20260910-1"></script><script src="/posters/addon.js?v=20260909-1"></script><script src="/posters/discover-live.js?v=20260912-6"></script><script src="/posters/catalog-flow.js?v=20260912-5"></script>
 </body></html>
