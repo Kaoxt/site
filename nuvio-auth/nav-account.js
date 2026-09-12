@@ -250,7 +250,6 @@
         <div class="nuvio-desktop-guest-actions">
           ${socialLink(GITHUB_URL, 'GitHub', githubIcon(), true)}
           ${socialLink(COFFEE_URL, 'Buy me a coffee', coffeeIcon(), true)}
-          ${socialLink(FAQ_URL, 'FAQ', faqIcon(), true, false)}
           <button class="nuvio-desktop-signin-button" type="button" data-nuvio-signin-desktop>
             <span>Log in</span>
           </button>
