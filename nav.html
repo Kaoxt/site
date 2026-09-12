@@ -156,30 +156,18 @@
       outline: none;
     }
 
-    /* Keep the submenu unavailable to signed-out desktop/landscape users. */
-    #site-nav .desktop-setup-menu { display: none; }
-    #site-nav .desktop-nav:has(.nuvio-desktop-account-wrap) .desktop-setup-menu {
-      display: block;
-    }
-
-    #site-nav .desktop-nav:has(.nuvio-desktop-account-wrap) .desktop-setup-group:hover .desktop-setup-menu,
-    #site-nav .desktop-nav:has(.nuvio-desktop-account-wrap) .desktop-setup-group:focus-within .desktop-setup-menu {
+    #site-nav .desktop-setup-group:hover .desktop-setup-menu,
+    #site-nav .desktop-setup-group:focus-within .desktop-setup-menu {
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
       transform: translate(-50%, 0);
     }
 
-    #site-nav .desktop-nav:has(.nuvio-desktop-account-wrap) .desktop-setup-group:hover .desktop-setup-chevron,
-    #site-nav .desktop-nav:has(.nuvio-desktop-account-wrap) .desktop-setup-group:focus-within .desktop-setup-chevron {
+    #site-nav .desktop-setup-group:hover .desktop-setup-chevron,
+    #site-nav .desktop-setup-group:focus-within .desktop-setup-chevron {
       transform: rotate(180deg);
       opacity: 1;
-    }
-
-    /* Do not show a dropdown affordance to signed-out users. */
-    #site-nav .desktop-setup-chevron { display: none; }
-    #site-nav .desktop-nav:has(.nuvio-desktop-account-wrap) .desktop-setup-chevron {
-      display: block;
     }
   </style>
 </header>
