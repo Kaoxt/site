@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="/posters/styles.css?v=20260911-2" />
   <link rel="stylesheet" href="/posters/overlays.css?v=20260909-4" />
   <link rel="stylesheet" href="/posters/addon.css?v=20260909-1" />
-  <link rel="stylesheet" href="/posters/betterposters-match.css?v=20260912-1" />
+  <link rel="stylesheet" href="/posters/betterposters-match.css?v=20260912-2" />
   <script src="/components.js?v=20260908-3" defer></script>
 </head>
 <body>
@@ -30,7 +30,10 @@
     <section id="postersCatalogStep" class="posters-catalog-step" data-page-content hidden aria-label="Choose poster catalogs">
       <div class="config-routebar"><button id="catalogBackBtn" class="route-back" type="button">‹ Back</button><div><span>SMART OVERLAY POSTERS</span><strong>Choose your catalogs</strong></div></div>
       <div class="catalog-shell">
-        <div class="catalog-tabs" role="tablist"><button class="catalog-tab active" type="button" data-catalog-tab="default">Default</button><button class="catalog-tab" type="button" data-catalog-tab="discover">Discover</button></div>
+        <div class="catalog-nav-group" aria-label="Catalog categories">
+          <div class="catalog-tabs" role="tablist"><button class="catalog-tab active" type="button" data-catalog-tab="default">Default</button><button class="catalog-tab" type="button" data-catalog-tab="discover">Discover</button></div>
+          <div class="discover-tabs" role="tablist"><button class="active" type="button" data-discover-mode="smart-lists">Smart Lists</button><button type="button" data-discover-mode="browse-users">Browse Users</button></div>
+        </div>
         <div class="catalog-panel" data-catalog-panel="default">
           <p class="catalog-intro">Choose which default catalogs should use Smart Overlay Posters.</p>
           <label class="catalog-card"><input type="checkbox" checked><span><strong>Trending Movies</strong><small>TMDB</small></span></label>
@@ -41,9 +44,8 @@
           <label class="catalog-card"><input type="checkbox" checked><span><strong>Coming Soon</strong><small>TMDB</small></span></label>
         </div>
         <div class="catalog-panel" data-catalog-panel="discover" hidden>
-          <div class="discover-tabs"><button class="active" type="button">Search Lists</button><button type="button">Browse Users</button></div>
           <label class="catalog-search"><span>⌕</span><input type="search" placeholder="Enter username (Trakt or MDBList)…" aria-label="Search Trakt or MDBList username"></label>
-          <span class="recommended-label">RECOMMENDED USERS</span><div class="recommended-users"><button type="button" data-provider="mdblist" data-username="snoak">snoak</button><button type="button" data-provider="mdblist" data-username="garycrawfordgc">gary</button><button type="button" data-provider="mdblist" data-username="kaoxt">kaoxt</button></div>
+          <span class="recommended-label">RECOMMENDED MDBLIST USERS</span><div class="recommended-users"><button type="button" data-provider="mdblist" data-username="snoak">snoak</button><button type="button" data-provider="mdblist" data-username="garycrawfordgc">gary</button><button type="button" data-provider="mdblist" data-username="kaoxt">kaoxt</button></div>
         </div>
         <div class="catalog-actions"><button id="catalogNextBtn" class="catalog-next" type="button">Next</button><button id="catalogBackBottomBtn" class="catalog-back" type="button">Back</button></div>
       </div>
@@ -67,5 +69,5 @@
     </section>
     <div id="site-footer"></div>
   </main>
-  <script src="/posters/posters.js?v=20260911-14"></script><script src="/posters/preview-controller.js?v=20260911-14"></script><script src="/posters/rating-sources-status.js?v=20260910-1"></script><script src="/posters/addon.js?v=20260909-1"></script><script src="/posters/discover-live.js?v=20260912-2"></script><script src="/posters/catalog-flow.js?v=20260911-2"></script>
+  <script src="/posters/posters.js?v=20260911-14"></script><script src="/posters/preview-controller.js?v=20260911-14"></script><script src="/posters/rating-sources-status.js?v=20260910-1"></script><script src="/posters/addon.js?v=20260909-1"></script><script src="/posters/discover-live.js?v=20260912-3"></script><script src="/posters/catalog-flow.js?v=20260912-3"></script>
 </body></html>
