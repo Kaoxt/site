@@ -1300,26 +1300,7 @@ html.force-compact-nav body #site-nav .nuvio-mobile-socials .nuvio-social-link {
    NAV LABEL POLISH
    ========================================================================== */
 
-/* Visually rename signed-in "Sign out" controls to "Log Out".
-   Keep click behavior untouched. */
-html body #site-nav .nuvio-account-signout-button,
-html body #site-nav .nuvio-mobile-signout-button {
-  font-size: 0 !important;
-}
-
-html body #site-nav .nuvio-account-signout-button::after {
-  content: "Log Out";
-  font-size: 13px !important;
-  font-weight: 620 !important;
-  line-height: 1 !important;
-}
-
-html body #site-nav .nuvio-mobile-signout-button::after {
-  content: "Log Out";
-  font-size: 14px !important;
-  font-weight: 650 !important;
-  line-height: 1 !important;
-}
+/* Logout labels are rendered directly by nav-account.js. */
 
 /* ==========================================================================
    DESKTOP GUEST NAV ORDER + HOME ACTION TYPE — FINAL AUTHORITY
