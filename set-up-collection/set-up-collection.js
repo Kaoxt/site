@@ -34,7 +34,9 @@
 
     mdblistKey: '',
     tmdbKey: '',
-    aiHostPreference: CFG.aiometadataHosts?.[0]?.url || '',
+    aiHostPreference: '',
+    aiHostMode: '',
+    aiSelfHostUrl: '',
     aiSetupMode: 'built-in',
     aiCustomFileName: '',
     aiCustomConfig: null,
@@ -592,7 +594,10 @@
   function chunkAioCatalogs(catalogs, preferredHost) {
     const defs = CFG.aiometadataHosts.map(h => ({ ...h, url: normalizeHost(h.url) }));
     const primary = normalizeHost(preferredHost || defs[0].url);
-    const ordered = [defs.find(h => h.url === primary) || defs[0], ...defs.filter(h => h.url !== primary)];
+    const managed = defs.find(h => h.url === primary);
+    const ordered = managed
+      ? [managed, ...defs.filter(h => h.url !== primary)]
+      : [{ url: primary, label: 'Self-Host Instance', cap: 500 }];
     const remaining = catalogs.slice();
     const chunks = [];
     let i = 0;
@@ -1107,10 +1112,19 @@
 
   function renderAi() {
     const custom = state.aiSetupMode === 'custom';
-    const hostOptions = CFG.aiometadataHosts.map(h => `<option value="${esc(normalizeHost(h.url))}" ${normalizeHost(state.aiHostPreference || CFG.aiometadataHosts[0].url) === normalizeHost(h.url) ? 'selected' : ''}>${esc(h.label)} · ${h.cap} catalog limit</option>`).join('');
+    const managedHost = CFG.aiometadataHosts[0];
+    const managedUrl = normalizeHost(managedHost?.url || '');
+    const currentHost = state.aiHostPreference ? normalizeHost(state.aiHostPreference) : '';
+    const selfHostSelected = state.aiHostMode === 'self' || (currentHost && currentHost !== managedUrl);
+    const selectedHostMode = selfHostSelected ? '__self_host__' : (currentHost === managedUrl ? managedUrl : '');
+    const hostOptions = [
+      '<option value="" ' + (!selectedHostMode ? 'selected' : '') + ' disabled>Choose AIOMetadata host</option>',
+      `<option value="${esc(managedUrl)}" ${selectedHostMode === managedUrl ? 'selected' : ''}>${esc(managedHost?.label || 'Midnight')} · ${Number(managedHost?.cap || 500)} catalog limit</option>`,
+      `<option value="__self_host__" ${selectedHostMode === '__self_host__' ? 'selected' : ''}>Self-Host Instance</option>`,
+    ].join('');
     const customMdblist = state.aiCustomConfig?.apiKeys?.mdblist || '';
     host.innerHTML = panel('STEP 3 · AIOMETADATA', 'Prepare AIOMetadata for The Kollection',
-      'Use the built-in catalog setup or bring your own AIOMetadata JSON export. Midnight supports up to 500 catalogs per configuration.',
+      'Use the built-in catalog setup or bring your own AIOMetadata JSON export, then choose where your AIOMetadata configuration should be hosted.',
       `<div class="card">
         <div class="setup-tabs" role="tablist" aria-label="AIOMetadata setup method">
           <button class="setup-tab ${!custom ? 'active' : ''}" id="builtInTab" type="button">Built-in setup</button>
@@ -1141,7 +1155,12 @@
             <div class="secret-input-wrap"><input id="tmdb" type="password" value="${esc(state.tmdbKey)}" placeholder="Optional TMDB v3 key" autocomplete="off"><button class="key-visibility-toggle" type="button" data-target="tmdb" aria-label="Show TMDB API key" title="Show API key"><svg class="eye-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg><svg class="eye-closed" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 18 18"></path><path d="M10.6 6.2A10.7 10.7 0 0 1 12 6c6 0 9.5 6 9.5 6a16.1 16.1 0 0 1-3 3.7"></path><path d="M6.1 6.1C3.8 7.7 2.5 12 2.5 12s3.5 6 9.5 6c1 0 2-.2 2.8-.4"></path></svg></button></div>
             <small>Optional; it can improve metadata resolution.</small>
           </div>`}
-        <div class="field"><label for="aiHost">AIOMetadata host</label><select id="aiHost">${hostOptions}</select><small>Midnight allows up to 500 catalogs in each configuration. If needed, Set Up Collection can split the required catalogs across more than one configuration.</small></div>
+        <div class="field"><label for="aiHost">AIOMetadata host</label><select id="aiHost">${hostOptions}</select><small>Choose Midnight or use your own self-hosted AIOMetadata instance.</small></div>
+        <div class="field" id="selfHostField" ${selfHostSelected ? '' : 'hidden'}>
+          <label for="aiSelfHostUrl">Self-Host Instance URL</label>
+          <input id="aiSelfHostUrl" type="url" inputmode="url" value="${esc(state.aiSelfHostUrl || (selfHostSelected ? currentHost : ''))}" placeholder="https://your-aiometadata.example.com/" autocomplete="url">
+          <small>Paste the base URL for your AIOMetadata instance. The Kollection will use this host when creating the configuration.</small>
+        </div>
         ${custom ? `<div class="callout">The uploaded file supplies your AIOMetadata preferences and matching catalog definitions. Any required The Kollection catalog missing from your file falls back to the built-in catalog definition.</div>` : ''}
         <div class="actions"><button class="ghost" id="backBtn">Back</button><button class="btn" id="nextBtn">Continue to Bingecat</button></div>
       </div>`);
@@ -1162,7 +1181,26 @@
         button.title = `${revealing ? 'Hide' : 'Show'} API key`;
       };
     });
-    $('#aiHost').onchange = e => { state.aiHostPreference = e.target.value; state.backup = null; };
+    $('#aiHost').onchange = e => {
+      const value = e.target.value;
+      state.backup = null;
+      if (value === '__self_host__') {
+        state.aiHostMode = 'self';
+        state.aiHostPreference = state.aiSelfHostUrl ? normalizeHost(state.aiSelfHostUrl) : '';
+        $('#selfHostField').hidden = false;
+        setTimeout(() => $('#aiSelfHostUrl')?.focus(), 0);
+      } else {
+        state.aiHostMode = value ? 'managed' : '';
+        state.aiHostPreference = value ? normalizeHost(value) : '';
+        $('#selfHostField').hidden = true;
+      }
+    };
+    $('#aiSelfHostUrl')?.addEventListener('input', e => {
+      state.aiSelfHostUrl = e.target.value.trim();
+      state.aiHostPreference = state.aiSelfHostUrl ? normalizeHost(state.aiSelfHostUrl) : '';
+      state.aiHostMode = 'self';
+      state.backup = null;
+    });
     if (custom) {
       $('#aiFile').onchange = async e => {
         try {
@@ -1175,7 +1213,21 @@
     $('#nextBtn').onclick = () => {
       state.mdblistKey = $('#mdblist').value.trim();
       state.tmdbKey = $('#tmdb').value.trim();
-      state.aiHostPreference = $('#aiHost').value;
+      const hostChoice = $('#aiHost').value;
+      if (!hostChoice) return alert('Choose an AIOMetadata host to continue.', 'error');
+      if (hostChoice === '__self_host__') {
+        const selfHost = $('#aiSelfHostUrl')?.value.trim() || '';
+        if (!selfHost) return alert('Paste the URL for your self-hosted AIOMetadata instance.', 'error');
+        let parsedHost;
+        try { parsedHost = new URL(selfHost); } catch { return alert('Enter a valid self-hosted AIOMetadata URL.', 'error'); }
+        if (!['http:', 'https:'].includes(parsedHost.protocol)) return alert('The self-hosted AIOMetadata URL must use http:// or https://.', 'error');
+        state.aiSelfHostUrl = selfHost;
+        state.aiHostMode = 'self';
+        state.aiHostPreference = normalizeHost(selfHost);
+      } else {
+        state.aiHostMode = 'managed';
+        state.aiHostPreference = normalizeHost(hostChoice);
+      }
       if (custom && !state.aiCustomConfig) return alert('Choose your AIOMetadata JSON file to continue.', 'error');
       if (!custom && !state.mdblistKey) return alert('Paste your MDBList API key to continue.', 'error');
       if (custom && !state.mdblistKey && !customMdblist) return alert('Your AIOMetadata file does not include an MDBList key. Enter one to continue.', 'error');
@@ -1332,7 +1384,7 @@
       `<div class="card">
         <div class="summary">
           <div class="summary-item"><span class="icon">N</span><div><b>${esc(state.profileName)}</b><span>Nuvio profile ${state.profileId}; add-ons target profile ${state.addonProfileId || state.profileId}.</span></div></div>
-          <div class="summary-item"><span class="icon">A</span><div><b>${state.aiNeededCatalogs.length} AIOMetadata catalogs</b><span>${state.aiSetupMode === 'custom' ? `Using ${esc(state.aiCustomFileName)} as the configuration base. ` : ''}Planned across ${state.aiChunks.length} configuration${state.aiChunks.length === 1 ? '' : 's'} with Midnight’s 500-catalog limit.</span></div></div>
+          <div class="summary-item"><span class="icon">A</span><div><b>${state.aiNeededCatalogs.length} AIOMetadata catalogs</b><span>${state.aiSetupMode === 'custom' ? `Using ${esc(state.aiCustomFileName)} as the configuration base. ` : ''}Planned across ${state.aiChunks.length} configuration${state.aiChunks.length === 1 ? '' : 's'} using your selected AIOMetadata host.</span></div></div>
           <div class="summary-item"><span class="icon">B</span><div><b>${state.bingecatSkipped ? 'Bingecat skipped' : (bcNeeded ? `Bingecat · ${bc.length} recommendation catalogs` : 'Bingecat not needed')}</b><span>${state.bingecatSkipped ? 'For You Bingecat placeholders will be removed.' : (bcNeeded ? `Your personal add-on ID ${esc(state.bingecatAddonId)} will replace the creator-specific For You references.` : 'None of the selected sections use Bingecat, so its add-on will not be installed.')}</span></div></div>
           <div class="summary-item"><span class="icon">K</span><div><b>The Kollection</b><span>${selectedPack.length} of ${state.collectionPack?.length || 0} sections selected · ${selectedFolders} folders included. This profile goes from ${existingCount} to ${previewCount} groups after the ID-aware merge.</span></div></div>
         </div>
