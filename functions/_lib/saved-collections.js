@@ -10,6 +10,53 @@ export function requireDb(env) {
   return env.DB;
 }
 
+let schemaReady = false;
+
+export async function savedCollectionsDb(env) {
+  const db = requireDb(env);
+  if (schemaReady) return db;
+
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS saved_collections_v2 (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      config_json TEXT NOT NULL DEFAULT '{}',
+      draft_step INTEGER NOT NULL DEFAULT 0,
+      last_nuvio_profile_id INTEGER,
+      last_nuvio_profile_name TEXT,
+      last_applied_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )
+  `).run();
+
+  await db.prepare(`
+    CREATE INDEX IF NOT EXISTS idx_saved_collections_v2_user_updated
+    ON saved_collections_v2 (user_id, updated_at DESC)
+  `).run();
+
+  // Copy any pre-existing saved setups from the original table when possible.
+  // The legacy table may have a foreign key tied to the old Kollection account
+  // model, so all new writes use the Nuvio-native v2 table instead.
+  try {
+    await db.prepare(`
+      INSERT OR IGNORE INTO saved_collections_v2
+        (id, user_id, name, config_json, draft_step, last_nuvio_profile_id,
+         last_nuvio_profile_name, last_applied_at, created_at, updated_at)
+      SELECT
+        id, user_id, name, config_json, draft_step, last_nuvio_profile_id,
+        last_nuvio_profile_name, last_applied_at, created_at, updated_at
+      FROM saved_collections
+    `).run();
+  } catch {
+    // The original table may not exist on newer installs.
+  }
+
+  schemaReady = true;
+  return db;
+}
+
 function sanitize(value) {
   if (Array.isArray(value)) return value.map(sanitize);
   if (!value || typeof value !== 'object') return value;
