@@ -34,6 +34,8 @@
     uploadCategorySelect: $('uploadCategorySelect'),
     uploadNewCategory: $('uploadNewCategory'),
     newCategoryField: $('newCategoryField'),
+    uploadFolderSelect: $('uploadFolderSelect'),
+    newFolderField: $('newFolderField'),
     uploadFolder: $('uploadFolder'),
     coverFile: $('coverFile'),
     backdropFile: $('backdropFile'),
@@ -266,6 +268,38 @@
     }
 
     syncNewCategoryField();
+    populateUploadFolders();
+  }
+
+  function populateUploadFolders() {
+    const category = getUploadCategory();
+    const current = el.uploadFolderSelect.value;
+
+    const folders = category
+      ? [...new Set(
+          state.images
+            .filter((item) => item.category === category)
+            .map((item) => item.folder)
+            .filter(Boolean)
+        )].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+      : [];
+
+    el.uploadFolderSelect.innerHTML =
+      '<option value="">Choose Folder</option>' +
+      folders.map((folder) =>
+        `<option value="${esc(folder)}">${esc(folder)}</option>`
+      ).join('') +
+      '<option value="__new__">+ Create New Folder…</option>';
+
+    if (current === '__new__' || !folders.length || el.uploadCategorySelect.value === '__new__') {
+      el.uploadFolderSelect.value = '__new__';
+    } else if (folders.includes(current)) {
+      el.uploadFolderSelect.value = current;
+    } else {
+      el.uploadFolderSelect.value = '';
+    }
+
+    syncNewFolderField();
   }
 
   function labelFor(filename) {
@@ -429,9 +463,26 @@
     return cleanDisplayPart(el.uploadCategorySelect.value);
   }
 
+  function syncNewFolderField() {
+    const creating = el.uploadFolderSelect.value === '__new__';
+    el.newFolderField.hidden = !creating;
+    el.uploadFolder.required = creating;
+
+    if (!creating) {
+      el.uploadFolder.value = '';
+    }
+  }
+
+  function getUploadFolder() {
+    if (el.uploadFolderSelect.value === '__new__') {
+      return cleanDisplayPart(el.uploadFolder.value);
+    }
+    return cleanDisplayPart(el.uploadFolderSelect.value);
+  }
+
   function updateUploadPreview() {
     const category = getUploadCategory() || 'Category';
-    const folder = cleanDisplayPart(el.uploadFolder.value) || 'Folder';
+    const folder = getUploadFolder() || 'Folder';
 
     const names = [];
     if (el.coverFile.files?.[0]) names.push('cover.webp');
@@ -457,9 +508,17 @@
 
   el.uploadCategorySelect.addEventListener('change', () => {
     syncNewCategoryField();
+    populateUploadFolders();
     updateUploadPreview();
   });
-  el.uploadNewCategory.addEventListener('input', updateUploadPreview);
+  el.uploadNewCategory.addEventListener('input', () => {
+    populateUploadFolders();
+    updateUploadPreview();
+  });
+  el.uploadFolderSelect.addEventListener('change', () => {
+    syncNewFolderField();
+    updateUploadPreview();
+  });
   el.uploadFolder.addEventListener('input', updateUploadPreview);
 
   el.uploadForm.addEventListener('submit', async (event) => {
@@ -469,7 +528,7 @@
     el.uploadResult.innerHTML = '';
 
     const category = getUploadCategory();
-    const folder = cleanDisplayPart(el.uploadFolder.value);
+    const folder = getUploadFolder();
     const selected = [
       ['cover.webp', el.coverFile.files?.[0]],
       ['backdrop.webp', el.backdropFile.files?.[0]],
@@ -485,7 +544,14 @@
           : 'Choose an image category or create a new one.'
       );
     }
-    if (!folder) return setMessage(el.uploadMessage, 'Enter an artwork folder.');
+    if (!folder) {
+      return setMessage(
+        el.uploadMessage,
+        el.uploadFolderSelect.value === '__new__'
+          ? 'Enter a name for the new artwork folder.'
+          : 'Choose an artwork folder or create a new one.'
+      );
+    }
     if (!selected.length) return setMessage(el.uploadMessage, 'Choose at least one WebP image.');
 
     for (const [, file] of selected) {
@@ -566,6 +632,11 @@
         el.uploadCategorySelect.value = uploadedCategory;
       }
       syncNewCategoryField();
+      populateUploadFolders();
+      if ([...el.uploadFolderSelect.options].some((option) => option.value === folder)) {
+        el.uploadFolderSelect.value = folder;
+        syncNewFolderField();
+      }
       updateUploadPreview();
     } catch (error) {
       setMessage(el.uploadMessage, error.message || 'Could not upload the artwork.');
@@ -616,6 +687,7 @@
   });
 
   syncNewCategoryField();
+  populateUploadFolders();
   updateUploadPreview();
   loadSession();
 })();
