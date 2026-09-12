@@ -7,6 +7,10 @@
   const discoverPanel = step.querySelector('[data-catalog-panel="discover"]');
   const searchInput = discoverPanel?.querySelector('.catalog-search input');
   const modeButtons = [...(step.querySelectorAll('.discover-tabs button') || [])];
+  const discoverSearchTools = step.querySelector('.discover-search-tools');
+  const discoverChoiceButtons = [...step.querySelectorAll('[data-discover-choice]')];
+  const popularListsButton = document.getElementById('popularListsButton');
+  const popularListsResults = document.getElementById('popularListsResults');
   const recommendedButtons = [...(discoverPanel?.querySelectorAll('.recommended-users button') || [])];
   if (!discoverPanel || !searchInput) return;
 
@@ -20,6 +24,7 @@
   let generation = 0;
   let selected = [];
   let activeRecommendedLabel = '';
+  let activeProvider = '';
 
   const style = document.createElement('style');
   style.textContent = `
@@ -154,7 +159,7 @@
       return;
     }
     const mode = forcedMode || currentMode();
-    const providerFilter = String(provider || '').toLowerCase();
+    const providerFilter = String(provider || activeProvider || '').toLowerCase();
     const requestId = ++generation;
     const providerLabel = providerFilter === 'mdblist' ? 'MDBList ' : providerFilter === 'trakt' ? 'Trakt ' : '';
     setStatus(mode === 'users' ? `Looking for @${username}…` : `Loading ${providerLabel}public lists for @${username}…`, false, true);
@@ -218,6 +223,83 @@
       output.dataset.generatedJson = text;
     } catch {}
   }
+
+
+  function renderPopularLists(items) {
+    if (!popularListsResults) return;
+    popularListsResults.innerHTML = '';
+    if (!items.length) {
+      popularListsResults.innerHTML = '<div class="discover-status is-error">No popular MDBList lists were available right now.</div>';
+      popularListsResults.hidden = false;
+      return;
+    }
+    const selectedSet = new Set(selected.map(selectedKey));
+    const heading = document.createElement('div');
+    heading.className = 'popular-lists-heading';
+    heading.innerHTML = '<strong>Popular MDBList Lists</strong><small>Select any lists you want to include.</small>';
+    popularListsResults.appendChild(heading);
+    items.slice(0, 40).forEach((item) => {
+      const label = document.createElement('label');
+      label.className = 'discover-result';
+      const key = selectedKey(item);
+      label.innerHTML = `<input type="checkbox" ${selectedSet.has(key) ? 'checked' : ''}><span class="discover-result-copy"><strong></strong><small></small></span><span class="discover-provider">MDBList</span>`;
+      label.querySelector('strong').textContent = item.name || item.slug || 'Untitled list';
+      label.querySelector('small').textContent = item.username ? `@${item.username}` : 'Popular public list';
+      label.querySelector('input').addEventListener('change', (event) => {
+        if (event.target.checked) {
+          if (!selected.some((entry) => selectedKey(entry) === key)) selected.push(item);
+        } else {
+          selected = selected.filter((entry) => selectedKey(entry) !== key);
+        }
+        writeState();
+      });
+      popularListsResults.appendChild(label);
+    });
+    popularListsResults.hidden = false;
+  }
+
+  async function loadPopularLists() {
+    if (!popularListsButton || !popularListsResults) return;
+    popularListsButton.disabled = true;
+    popularListsResults.hidden = false;
+    popularListsResults.innerHTML = '<div class="discover-status discover-loading">Loading popular MDBList lists…</div>';
+    try {
+      const response = await fetch('/api/posters-discover?mode=toplists&provider=mdblist', {
+        headers: { accept: 'application/json' },
+        cache: 'no-store',
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data?.error || `Could not load lists (${response.status})`);
+      renderPopularLists(Array.isArray(data.items) ? data.items : []);
+    } catch (error) {
+      popularListsResults.innerHTML = `<div class="discover-status is-error">${String(error?.message || 'Could not load MDBList popular lists.')}</div>`;
+    } finally {
+      popularListsButton.disabled = false;
+    }
+  }
+
+  popularListsButton?.addEventListener('click', loadPopularLists);
+
+  discoverChoiceButtons.forEach((button) => button.addEventListener('click', () => {
+    if (button.disabled) return;
+    activeProvider = button.dataset.discoverChoice === 'trakt' ? 'trakt' : 'mdblist';
+    discoverChoiceButtons.forEach((item) => item.classList.toggle('selected', item === button));
+    if (discoverSearchTools) discoverSearchTools.hidden = false;
+    searchInput.placeholder = activeProvider === 'trakt' ? 'Enter Trakt username…' : 'Enter MDBList username…';
+    if (activeProvider === 'trakt') {
+      recommendedButtons.forEach((item) => item.hidden = true);
+      const label = discoverPanel.querySelector('.recommended-label');
+      if (label) label.hidden = true;
+    } else {
+      recommendedButtons.forEach((item) => item.hidden = false);
+      const label = discoverPanel.querySelector('.recommended-label');
+      if (label) label.hidden = false;
+    }
+    results.innerHTML = '';
+    setListHeading('');
+    setStatus(`Enter a ${activeProvider === 'trakt' ? 'Trakt' : 'MDBList'} username to search.`);
+    discoverSearchTools.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }));
 
   searchInput.addEventListener('input', scheduleSearch);
   searchInput.addEventListener('keydown', (event) => {
