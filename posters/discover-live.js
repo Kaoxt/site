@@ -11,6 +11,11 @@
   if (!discoverPanel || !searchInput) return;
 
   const STORE_KEY = 'kollection-posters-discover-live-v1';
+  const RECOMMENDED_PROFILES = {
+    snoak: { provider: 'mdblist', username: 'snoak' },
+    gary: { provider: 'mdblist', username: 'garycrawfordgc' },
+    kaoxt: { provider: 'mdblist', username: 'kaoxt' },
+  };
   let timer = 0;
   let generation = 0;
   let selected = [];
@@ -200,11 +205,14 @@
   }));
 
   recommendedButtons.forEach((button) => button.addEventListener('click', () => {
-    const username = button.dataset.username || button.textContent.trim();
-    const provider = button.dataset.provider || '';
-    searchInput.value = username;
+    const label = button.textContent.trim().toLowerCase();
+    const profile = RECOMMENDED_PROFILES[label] || {
+      provider: button.dataset.provider || '',
+      username: button.dataset.username || button.textContent.trim(),
+    };
+    searchInput.value = profile.username;
     modeButtons.forEach((item) => item.classList.toggle('active', item.textContent.trim() === 'Search Lists'));
-    setTimeout(() => runSearch(username, 'lists', provider), 0);
+    setTimeout(() => runSearch(profile.username, 'lists', profile.provider), 0);
   }));
 
   document.getElementById('generateBtn')?.addEventListener('click', () => setTimeout(augmentGeneratedJson, 0));
