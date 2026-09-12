@@ -10,6 +10,7 @@ function json(data, status = 200) {
 
 const clean = (value) => String(value || '').trim().replace(/^@/, '');
 const slugify = (value) => clean(value).toLowerCase().replace(/[^a-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '');
+const MAX_LISTS = 500;
 
 function normalizeTraktList(item, username) {
   const list = item?.list || item;
@@ -43,7 +44,7 @@ async function traktLists(username, clientId) {
     if (!response.ok) throw new Error(`Trakt ${response.status}`);
     const data = await response.json();
     return {
-      items: (Array.isArray(data) ? data : []).map((item) => normalizeTraktList(item, username)).filter(Boolean).slice(0, 40),
+      items: (Array.isArray(data) ? data : []).map((item) => normalizeTraktList(item, username)).filter(Boolean).slice(0, MAX_LISTS),
       available: true,
     };
   } catch (error) {
@@ -57,7 +58,7 @@ function extractMdblistHtml(html, username) {
   const seen = new Set();
   const items = [];
   let match;
-  while ((match = regex.exec(html)) && items.length < 40) {
+  while ((match = regex.exec(html)) && items.length < MAX_LISTS) {
     const slug = decodeURIComponent(match[1]);
     if (!slug || seen.has(slug)) continue;
     seen.add(slug);
@@ -91,7 +92,7 @@ function normalizeMdblistJson(data, username) {
       url: item?.url || `https://mdblist.com/lists/${encodeURIComponent(owner)}/${encodeURIComponent(slug)}`,
       slug,
     };
-  }).filter(Boolean).slice(0, 40);
+  }).filter(Boolean).slice(0, MAX_LISTS);
 }
 
 async function mdblistLists(username, apiKey) {
