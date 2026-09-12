@@ -31,3 +31,12 @@
   background: transparent !important;
   color: inherit !important;
 }
+
+/* Match the lower home CTA width to the hero buttons on mobile. */
+@media (max-width: 700px) {
+  body .caption .actions {
+    width: 108.695652%;
+    margin-left: -4.347826% !important;
+    margin-right: -4.347826% !important;
+  }
+}
