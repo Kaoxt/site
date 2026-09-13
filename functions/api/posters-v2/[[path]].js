@@ -6,7 +6,6 @@ const CACHE_VERSION = 'production-cache-13';
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
 const DEFAULT_MDBLIST_CACHE_DAYS = 30;
-const DEFAULT_MDBLIST_MAX_LOOKUPS_PER_DAY = 500;
 const ALLOWED_TAGS = ['trend', 'rating', 'genre', 'quality', 'age'];
 const OVERLAY_LANGUAGES = ['en', 'es', 'fr', 'de', 'it', 'pt', 'ja', 'ko'];
 
@@ -374,13 +373,15 @@ async function mdblistRating(details, type, source, env) {
   if (!env.DB) return { value: '', label: '', source, status: 'rating-cache-unavailable' };
   const itemId = `${type}:${details.id}`;
   const cacheDays = positiveInt(env.MDBLIST_RATING_CACHE_DAYS, DEFAULT_MDBLIST_CACHE_DAYS, 1, 365);
-  const dailyLimit = positiveInt(env.MDBLIST_MAX_LOOKUPS_PER_DAY, DEFAULT_MDBLIST_MAX_LOOKUPS_PER_DAY, 1, 1000000);
+  const configuredLimit = Number.parseInt(String(env.MDBLIST_MAX_LOOKUPS_PER_DAY || ''), 10);
   try {
     await ensureRatingTables(env.DB);
     const cached = await readMdblistRecord(env.DB, itemId, cacheDays * 86400);
     if (cached) return formatMdblistRating(cached, source);
-    const reserved = await reserveProviderLookup(env.DB, 'mdblist', dailyLimit);
-    if (!reserved) return { value: '', label: '', source, status: 'mdblist-daily-limit' };
+    if (Number.isFinite(configuredLimit) && configuredLimit > 0) {
+      const reserved = await reserveProviderLookup(env.DB, 'mdblist', configuredLimit);
+      if (!reserved) return { value: '', label: '', source, status: 'mdblist-daily-limit' };
+    }
   } catch {
     return { value: '', label: '', source, status: 'rating-cache-error' };
   }
