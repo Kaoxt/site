@@ -60,13 +60,14 @@ function smartBottomBackdrop(){return Buffer.from(`<svg xmlns="http://www.w3.org
 async function readJson(req){const chunks=[];for await(const chunk of req)chunks.push(chunk);const raw=Buffer.concat(chunks).toString('utf8');return raw?JSON.parse(raw):{};}
 
 async function renderPoster(body){
- const{posterPath,sourceUrl,logoPath='',title='',smartLayout=false,overlayOnly=false,rating='',ratingLabel='',genre='',trend='',age='',quality='',overlayColor='#2f2d33'}=body||{};
+ const{posterPath,sourceUrl,logoPath='',title='',smartLayout=false,overlayOnly=false,rating='',ratingLabel='',genre='',trend='',age='',quality='',overlayColor='dynamic'}=body||{};
  const posterUrl=sourceUrl||(posterPath?`${TMDB_IMAGE_BASE}${posterPath}`:'');if(!posterUrl)throw new Error('posterPath or sourceUrl is required');
  const res=await fetch(posterUrl,{headers:{accept:'image/*'}});if(!res.ok)throw new Error(`Source image fetch failed: ${res.status}`);
  const input=Buffer.from(await res.arrayBuffer()),resized=await sharp(input).resize(POSTER_WIDTH,POSTER_HEIGHT,{fit:'cover'}).png().toBuffer(),composites=[];
  const resolvedRatingLabel=ratingLabel||(rating?`★ ${rating}`:'');
+ const dynamicFill=overlayColor==='dynamic'?await dynamicAccent(resized):overlayColor;
  if(smartLayout){
-  const dynamicFill=overlayColor==='dynamic'?await dynamicAccent(resized):overlayColor;composites.push({input:smartBottomBackdrop(),top:POSTER_HEIGHT-330,left:0});
+  composites.push({input:smartBottomBackdrop(),top:POSTER_HEIGHT-330,left:0});
   if(quality){if(trend){const t=await smartTopTag(trend,{fill:dynamicFill,width:smartTagWidth(trend,300,390)});composites.push({input:t.buffer,top:0,left:SAFE_MARGIN});}const q=await smartTopTag(quality,{fill:'#f3f4f6',fillOpacity:.9,width:smartTagWidth(quality,112,160),fontSize:42,textColor:'#111318'});composites.push({input:q.buffer,top:0,left:POSTER_WIDTH-SAFE_MARGIN-q.width});}
   else if(trend){const t=await smartTopTag(trend,{fill:dynamicFill,width:smartTagWidth(trend,300,390)});composites.push({input:t.buffer,top:0,left:Math.round((POSTER_WIDTH-t.width)/2)});}
   if(age){const width=smartTagWidth(age,132,205),badge=await originalBadgeImage(age,{width,height:72,fill:'#111216',fillOpacity:.42,fontSize:38,radius:7,strokeOpacity:.22});composites.push({input:badge,top:SMART_AGE_TOP,left:Math.round((POSTER_WIDTH-width)/2)});}
@@ -75,7 +76,7 @@ async function renderPoster(body){
  }else{
   if(age){const width=smartTagWidth(age,132,205),badge=await originalBadgeImage(age,{width,height:72,fill:'#111216',fillOpacity:.42,fontSize:38,radius:7,strokeOpacity:.22});composites.push({input:badge,top:SMART_AGE_TOP,left:Math.round((POSTER_WIDTH-width)/2)});}
   if(quality){const width=190;composites.push({input:await originalBadgeImage(quality,{width,height:92,fill:'#f3f4f6',fillOpacity:.9,textColor:'#111318',fontSize:44,radius:8,strokeOpacity:.05}),top:0,left:POSTER_WIDTH-SAFE_MARGIN-width});}
-  if(trend){const t=await smartTopTag(trend,{fill:'#2f2d33',fillOpacity:.9,width:smartTagWidth(trend,300,390)});composites.push({input:t.buffer,top:0,left:Math.round((POSTER_WIDTH-t.width)/2)});}
+  if(trend){const t=await smartTopTag(trend,{fill:dynamicFill,fillOpacity:.9,width:smartTagWidth(trend,300,390)});composites.push({input:t.buffer,top:0,left:Math.round((POSTER_WIDTH-t.width)/2)});}
   composites.push({input:smartBottomBackdrop(),top:POSTER_HEIGHT-330,left:0});
   const info=await smartBottomInfo(genre,resolvedRatingLabel);if(info)composites.push({input:info,top:SMART_BOTTOM_INFO_TOP,left:30});
  }
