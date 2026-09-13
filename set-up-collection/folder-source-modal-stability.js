@@ -2,33 +2,42 @@
   'use strict';
 
   function stabilize(root) {
-    if (!root || root.dataset.mobileStable === '1') return;
-    root.dataset.mobileStable = '1';
+    if (!root || root.dataset.mobileStable === '2') return;
+    root.dataset.mobileStable = '2';
 
     const backdrop = root.querySelector('.folder-source-backdrop');
     const modal = root.querySelector('.folder-source-modal');
     if (!backdrop || !modal) return;
 
-    // Some Android browsers can retarget the click produced when a native
-    // <select> chooser closes to the backdrop. The folder editor previously
-    // treated that synthetic backdrop click as an instruction to close the
-    // entire modal. Ignore backdrop clicks here; the explicit X remains the
-    // close control and Save/Restore continue to close through the main editor.
-    backdrop.addEventListener('click', event => {
+    // The editor should close only from its explicit X button (or from the
+    // editor's own Save/Restore actions). Do not let clicks/taps retargeted by
+    // Android/Chrome to the backdrop close the modal.
+    const blockBackdropDismiss = event => {
       if (event.target === backdrop) {
+        event.preventDefault();
         event.stopImmediatePropagation();
       }
-    }, true);
+    };
 
-    // Keep all form interaction inside the dialog from bubbling into the page
-    // underneath it. This also prevents Step 5 card handlers from receiving a
-    // tap after Android dismisses a native select/input UI.
-    modal.addEventListener('click', event => {
-      if (event.target.closest('[data-source-close]')) return;
+    backdrop.addEventListener('pointerdown', blockBackdropDismiss, true);
+    backdrop.addEventListener('pointerup', blockBackdropDismiss, true);
+    backdrop.addEventListener('touchstart', blockBackdropDismiss, { capture: true, passive: false });
+    backdrop.addEventListener('touchend', blockBackdropDismiss, { capture: true, passive: false });
+    backdrop.addEventListener('click', blockBackdropDismiss, true);
+
+    // Stop every ordinary form interaction from escaping the dialog and
+    // reaching the Step 5 folder/card controls underneath it. This includes
+    // focus events, which can otherwise cause a re-render while editing a URL.
+    const stopInside = event => {
+      if (event.target?.closest?.('[data-source-close]')) return;
       event.stopPropagation();
-    });
-    modal.addEventListener('pointerup', event => event.stopPropagation());
-    modal.addEventListener('touchend', event => event.stopPropagation(), { passive: true });
+    };
+
+    ['click', 'pointerdown', 'pointerup', 'mousedown', 'mouseup', 'focusin', 'input', 'change']
+      .forEach(type => modal.addEventListener(type, stopInside));
+
+    modal.addEventListener('touchstart', stopInside, { passive: true });
+    modal.addEventListener('touchend', stopInside, { passive: true });
   }
 
   function scan() {
