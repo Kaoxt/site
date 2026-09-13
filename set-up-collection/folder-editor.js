@@ -14,21 +14,31 @@
   function selectedFolderKeys(state, group, groupKey, makeFolderKey) {
     state.selectedCollectionFolderIds ||= {};
     const key = groupKey(group);
-    const all = (group?.folders || []).map(folder => folderKey(folder, makeFolderKey)).filter(Boolean);
+    const all = [...new Set((group?.folders || []).map(folder => folderKey(folder, makeFolderKey)).filter(Boolean))];
     const existing = state.selectedCollectionFolderIds[key];
     const groupIsSelected = (state.selectedCollectionGroupIds || []).includes(key);
 
     // Folder selections are opt-out. A category starts with every folder selected.
-    // Also repair the stale/inconsistent state produced by the first editor build
-    // where a selected category could be saved with an empty folder array.
+    // Also repair stale/inconsistent state produced by earlier editor builds.
     if (!Array.isArray(existing) || (groupIsSelected && existing.length === 0 && all.length)) {
       state.selectedCollectionFolderIds[key] = all.slice();
       return new Set(all);
     }
 
     const valid = new Set(all);
-    const cleaned = existing.filter(id => valid.has(id));
-    if (cleaned.length !== existing.length) state.selectedCollectionFolderIds[key] = cleaned;
+    const cleaned = [...new Set(existing.filter(id => valid.has(id)))];
+
+    // Earlier builds could save legacy/invalid folder keys. If a category itself
+    // is selected but none of those keys match today's folders, treat it as the
+    // old default state: all folders selected.
+    if (groupIsSelected && cleaned.length === 0 && all.length) {
+      state.selectedCollectionFolderIds[key] = all.slice();
+      return new Set(all);
+    }
+
+    if (cleaned.length !== existing.length || cleaned.some((id, index) => id !== existing[index])) {
+      state.selectedCollectionFolderIds[key] = cleaned;
+    }
     return new Set(cleaned);
   }
 
