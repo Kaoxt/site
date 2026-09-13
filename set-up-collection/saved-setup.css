@@ -1,4 +1,4 @@
-.setup-toolbar-actions{
+.setup-toolbar>.setup-toolbar-actions{
   display:flex;
   align-items:center;
   justify-content:flex-end;
@@ -40,7 +40,7 @@ html[data-theme="light"] .save-setup-status[data-kind="info"]{color:#4d57b8}
     gap:14px;
   }
 
-  .setup-toolbar-actions{
+  .setup-toolbar>.setup-toolbar-actions{
     max-width:min(100%,680px);
     margin-left:auto;
     display:flex;
@@ -74,7 +74,7 @@ html[data-theme="light"] .save-setup-status[data-kind="info"]{color:#4d57b8}
     align-items:start !important;
   }
 
-  .setup-toolbar-actions{
+  .setup-toolbar>.setup-toolbar-actions{
     width:100%;
     margin-left:0;
     justify-content:flex-start;
