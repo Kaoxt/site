@@ -333,7 +333,7 @@ async function writeMdblistRecord(db, itemId, data) {
   `).bind(itemId, JSON.stringify(data), now).run();
 }
 
-function mdblistRating(record, source, status = 'cache-hit') {
+function formatMdblistRating(record, source, status = 'cache-hit') {
   const ratings = Array.isArray(record?.ratings) ? record.ratings : [];
   const aliases = {
     imdb: ['imdb'], letterboxd: ['letterboxd'], mal: ['myanimelist', 'mal'],
@@ -378,7 +378,7 @@ async function mdblistRating(details, type, source, env) {
   try {
     await ensureRatingTables(env.DB);
     const cached = await readMdblistRecord(env.DB, itemId, cacheDays * 86400);
-    if (cached) return mdblistRating(cached, source);
+    if (cached) return formatMdblistRating(cached, source);
     const reserved = await reserveProviderLookup(env.DB, 'mdblist', dailyLimit);
     if (!reserved) return { value: '', label: '', source, status: 'mdblist-daily-limit' };
   } catch {
@@ -394,7 +394,7 @@ async function mdblistRating(details, type, source, env) {
   if (!response.ok) return { value: '', label: '', source, status: `mdblist-${response.status}` };
   const record = await response.json();
   try { await writeMdblistRecord(env.DB, itemId, record); } catch {}
-  return mdblistRating(record, source, 'upstream');
+  return formatMdblistRating(record, source, 'upstream');
 }
 
 async function imdbRating(details, env) {
