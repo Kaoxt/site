@@ -57,7 +57,7 @@
 
       const resume = document.createElement('a');
       resume.className = 'account-secondary-button account-small-button';
-      resume.href = `/set-up-collection?saved=${encodeURIComponent(item.id)}`;
+      resume.href = `/set-up-collection?saved=${encodeURIComponent(item.id)}${complete ? '&edit=1' : ''}`;
       resume.textContent = complete ? 'Edit' : 'Resume';
       resume.setAttribute('aria-label', complete ? `Edit ${item.name || 'saved setup'}` : `Resume ${item.name || 'saved setup'}`);
 
