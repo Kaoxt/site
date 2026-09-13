@@ -2,7 +2,7 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'production-cache-11';
+const CACHE_VERSION = 'production-cache-12';
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
 const ALLOWED_TAGS = ['trend', 'rating', 'genre', 'quality', 'age'];
@@ -163,7 +163,7 @@ function posterVariant(url, preview) {
     tags: normalizeTags(url.searchParams.get('tags')),
     ratingSource: normalizeRatingSource(url.searchParams.get('ratingSource')),
     language: normalizeOverlayLanguage(url.searchParams.get('language')),
-    overlayColor: url.searchParams.get('overlayColor') || '#5a5c62',
+    overlayColor: url.searchParams.get('overlayColor') || '#2f2d33',
     sourceUrl: normalizeSourceUrl(url.searchParams.get('sourceUrl')),
     overlayOnly: url.searchParams.get('overlayOnly') === '1',
   };
@@ -350,7 +350,7 @@ function cacheRequestFor(request) {
   const tags = normalizeTags(incoming.searchParams.get('tags'));
   const ratingSource = normalizeRatingSource(incoming.searchParams.get('ratingSource'));
   const language = normalizeOverlayLanguage(incoming.searchParams.get('language'));
-  const overlayColor = incoming.searchParams.get('overlayColor') || '#5a5c62';
+  const overlayColor = incoming.searchParams.get('overlayColor') || '#2f2d33';
   const sourceUrl = normalizeSourceUrl(incoming.searchParams.get('sourceUrl'));
   const overlayOnly = incoming.searchParams.get('overlayOnly') === '1';
 
@@ -451,7 +451,7 @@ export async function onRequest(context) {
       trend: tags.has('trend') ? await trendLabel(type, id, env.TMDB_API_KEY, overlayLanguage) : '',
       quality: '',
       smartLayout,
-      overlayColor: url.searchParams.get('overlayColor') || '#5a5c62',
+      overlayColor: url.searchParams.get('overlayColor') || '#2f2d33',
     };
 
     const rendererBase = String(env.POSTERS_V2_RENDERER_URL || DEFAULT_RENDERER_URL).replace(/\/$/, '');
