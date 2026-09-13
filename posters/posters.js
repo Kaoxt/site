@@ -30,9 +30,9 @@
   const SETTINGS_KEY = 'kollection-posters-settings-v1';
 
   const ratingSources = [
-    ['average', 'Score (average)'],
+    ['average', 'Average'],
+    ['imdb', 'IMDb'],
     ['score', 'Score'],
-    ['imdb', 'IMDb Rating'],
     ['letterboxd', 'Letterboxd'],
     ['mal', 'MyAnimeList'],
     ['rogerebert', 'RogerEbert'],
