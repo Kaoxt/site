@@ -7,17 +7,17 @@
 
     const labels = {
       average: 'Average',
-      score: 'Score · TMDB',
+      score: 'Score',
       imdb: 'IMDb',
-      tmdb: 'TMDB Rating · Live',
-      letterboxd: 'Letterboxd · Coming soon',
-      mal: 'MyAnimeList · Coming soon',
-      rogerebert: 'RogerEbert · Coming soon',
-      tomatometer: 'Tomatometer · Coming soon',
-      popcornmeter: 'Popcornmeter · Coming soon',
+      tmdb: 'TMDB',
+      letterboxd: 'Letterboxd',
+      mal: 'MyAnimeList',
+      rogerebert: 'Roger Ebert',
+      tomatometer: 'Tomatometer',
+      popcornmeter: 'Popcornmeter',
     };
 
-    const upcoming = new Set(['letterboxd', 'mal', 'rogerebert', 'tomatometer', 'popcornmeter']);
+    const upcoming = new Set();
 
     [...select.options].forEach((option) => {
       if (labels[option.value]) option.textContent = labels[option.value];
@@ -31,7 +31,7 @@
     const row = select.closest('.rating-source-row');
     const note = row?.querySelector('.rating-source-copy small');
     if (note) {
-      note.textContent = 'IMDb and TMDB are live. Other providers stay disabled until a reliable source is connected.';
+      note.textContent = 'Ratings are supplied by MDBList and cached to reduce API usage.';
     }
 
     return true;
