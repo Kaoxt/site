@@ -8,8 +8,6 @@
   const clone = (value) => JSON.parse(JSON.stringify(value));
 
   function folderKey(folder, makeKey) {
-    // collectionFolderKey expects the folder object. Passing folder.id/title here
-    // caused every folder to collapse to an empty key, so all cards toggled together.
     return makeKey(folder);
   }
 
@@ -20,8 +18,6 @@
     const existing = state.selectedCollectionFolderIds[key];
     const groupIsSelected = (state.selectedCollectionGroupIds || []).includes(key);
 
-    // Folder selections are opt-out. A selected category starts with every folder selected.
-    // Repair stale state from earlier editor builds that saved an empty/invalid key list.
     if (!Array.isArray(existing) || (groupIsSelected && existing.length === 0 && all.length)) {
       state.selectedCollectionFolderIds[key] = all.slice();
       return new Set(all);
@@ -117,6 +113,48 @@
     });
   }
 
+  function rankSort(items, keyFn, preferred) {
+    const source = Array.isArray(items) ? items.slice() : [];
+    const rank = new Map((preferred || []).map((key, index) => [key, index]));
+    return source.sort((a, b) => {
+      const ak = keyFn(a);
+      const bk = keyFn(b);
+      const ai = rank.has(ak) ? rank.get(ak) : Number.MAX_SAFE_INTEGER;
+      const bi = rank.has(bk) ? rank.get(bk) : Number.MAX_SAFE_INTEGER;
+      return ai - bi;
+    });
+  }
+
+  function alphabetical(items) {
+    return (items || []).slice().sort((a, b) =>
+      String(a?.title || '').localeCompare(String(b?.title || ''), undefined, { sensitivity: 'base' })
+    );
+  }
+
+  function ensureFolderOrderState(state, group, groupKey, makeFolderKey) {
+    const key = groupKey(group);
+    state.collectionFolderSortModes ||= {};
+    state.collectionFolderOrders ||= {};
+    state.collectionDefaultFolderOrders ||= {};
+
+    if (!Array.isArray(state.collectionDefaultFolderOrders[key]) || !state.collectionDefaultFolderOrders[key].length) {
+      state.collectionDefaultFolderOrders[key] = (group.folders || []).map(folder => folderKey(folder, makeFolderKey)).filter(Boolean);
+    }
+    return key;
+  }
+
+  function applyFolderOrder(state, group, groupKey, makeFolderKey) {
+    const key = ensureFolderOrderState(state, group, groupKey, makeFolderKey);
+    const mode = state.collectionFolderSortModes[key] || 'default';
+    if (mode === 'alphabetical') {
+      group.folders = alphabetical(group.folders || []);
+    } else if (mode === 'custom') {
+      group.folders = rankSort(group.folders || [], folder => folderKey(folder, makeFolderKey), state.collectionFolderOrders[key] || []);
+    } else {
+      group.folders = rankSort(group.folders || [], folder => folderKey(folder, makeFolderKey), state.collectionDefaultFolderOrders[key] || []);
+    }
+  }
+
   function filterPack(pack, state, groupKey, makeFolderKey) {
     ensureFolderSelections(state, pack || [], groupKey, makeFolderKey);
     const selectedGroups = new Set(state.selectedCollectionGroupIds || []);
@@ -124,6 +162,7 @@
     return (pack || [])
       .filter(group => selectedGroups.has(groupKey(group)))
       .map(group => {
+        applyFolderOrder(state, group, groupKey, makeFolderKey);
         const selectedFolders = selectedFolderKeys(state, group, groupKey, makeFolderKey);
         const next = clone(group);
         next.folders = (next.folders || []).filter(folder => selectedFolders.has(folderKey(folder, makeFolderKey)));
@@ -209,9 +248,7 @@
         const key = collectionGroupKey(group);
         const row = host.querySelector(`.collection-category-row[data-group-key="${CSS.escape(key)}"]`);
         const checked = selectedNow.has(key);
-
         if (checked) selectedFolderKeys(state, group, collectionGroupKey, collectionFolderKey);
-
         row?.classList.toggle('selected', checked);
         const editButton = row?.querySelector('[data-edit-group]');
         if (editButton) editButton.disabled = !checked;
@@ -276,10 +313,12 @@
       collectionGroupKey, collectionFolderKey,
     } = options;
 
-    const groupKey = collectionGroupKey(group);
+    const groupKey = ensureFolderOrderState(state, group, collectionGroupKey, collectionFolderKey);
+    applyFolderOrder(state, group, collectionGroupKey, collectionFolderKey);
     const folders = group.folders || [];
     const selected = selectedFolderKeys(state, group, collectionGroupKey, collectionFolderKey);
     const total = folders.length;
+    const sortMode = state.collectionFolderSortModes[groupKey] || 'default';
 
     host.innerHTML = panel(
       'STEP 5 · CUSTOMIZE',
@@ -294,18 +333,35 @@
             <button class="ghost small" id="clearFolders" type="button">Clear all</button>
           </div>
         </div>
+        <div class="folder-sort-toolbar">
+          <div class="folder-sort-copy"><b>Folder order</b><span>Choose how cover images in this category are arranged.</span></div>
+          <label class="folder-sort-select-wrap">
+            <span class="visually-hidden">Folder order</span>
+            <select id="folderSortMode" aria-label="Folder order">
+              <option value="default" ${sortMode === 'default' ? 'selected' : ''}>Default</option>
+              <option value="alphabetical" ${sortMode === 'alphabetical' ? 'selected' : ''}>Alphabetical</option>
+              <option value="custom" ${sortMode === 'custom' ? 'selected' : ''}>Custom</option>
+            </select>
+          </label>
+        </div>
         <div class="folder-edit-grid">
-          ${folders.map(folder => {
+          ${folders.map((folder, index) => {
             const key = folderKey(folder, collectionFolderKey);
             const on = selected.has(key);
-            return `<button class="folder-edit-card ${on ? 'selected' : 'removed'}" type="button" data-folder-key="${esc(key)}" aria-pressed="${on ? 'true' : 'false'}">
-              <span class="folder-edit-image">
-                ${cardImage(group, folder, esc)}
-                <span class="folder-edit-shade" aria-hidden="true"></span>
-                <span class="folder-edit-state" aria-hidden="true">${on ? '✓' : '×'}</span>
-              </span>
-              <span class="folder-edit-meta"><b>${esc(folder.title || 'Untitled folder')}</b><small>${on ? 'Included' : 'Removed'}</small></span>
-            </button>`;
+            return `<div class="folder-edit-card-wrap" data-order-key="${esc(key)}">
+              <button class="folder-edit-card ${on ? 'selected' : 'removed'}" type="button" data-folder-key="${esc(key)}" aria-pressed="${on ? 'true' : 'false'}">
+                <span class="folder-edit-image">
+                  ${cardImage(group, folder, esc)}
+                  <span class="folder-edit-shade" aria-hidden="true"></span>
+                  <span class="folder-edit-state" aria-hidden="true">${on ? '✓' : '×'}</span>
+                </span>
+                <span class="folder-edit-meta"><b>${esc(folder.title || 'Untitled folder')}</b><small>${on ? 'Included' : 'Removed'}</small></span>
+              </button>
+              ${sortMode === 'custom' ? `<div class="folder-card-order">
+                <button type="button" class="folder-order-button" data-direction="up" aria-label="Move ${esc(folder.title || 'folder')} up" ${index === 0 ? 'disabled' : ''}>↑</button>
+                <button type="button" class="folder-order-button" data-direction="down" aria-label="Move ${esc(folder.title || 'folder')} down" ${index === folders.length - 1 ? 'disabled' : ''}>↓</button>
+              </div>` : ''}
+            </div>`;
           }).join('')}
         </div>
         <div class="actions folder-editor-actions"><button class="ghost" id="doneEditingBottomBtn" type="button">Done editing</button></div>
@@ -345,6 +401,36 @@
         if (set.has(key)) set.delete(key); else set.add(key);
         writeSelection(set);
         refreshCards(set);
+      };
+    });
+
+    $('#folderSortMode').onchange = (event) => {
+      const mode = event.target.value;
+      state.collectionFolderSortModes[groupKey] = mode;
+      if (mode === 'custom' && (!Array.isArray(state.collectionFolderOrders[groupKey]) || !state.collectionFolderOrders[groupKey].length)) {
+        state.collectionFolderOrders[groupKey] = folders.map(folder => folderKey(folder, collectionFolderKey)).filter(Boolean);
+      }
+      applyFolderOrder(state, group, collectionGroupKey, collectionFolderKey);
+      invalidate(state);
+      renderGroupEditor(group, options);
+    };
+
+    $$('.folder-order-button').forEach(button => {
+      button.onclick = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const wrappers = $$('.folder-edit-card-wrap');
+        const wrapper = button.closest('.folder-edit-card-wrap');
+        const order = wrappers.map(item => item.dataset.orderKey || '').filter(Boolean);
+        const key = wrapper?.dataset.orderKey || '';
+        const from = order.indexOf(key);
+        const to = button.dataset.direction === 'up' ? from - 1 : from + 1;
+        if (from < 0 || to < 0 || to >= order.length) return;
+        [order[from], order[to]] = [order[to], order[from]];
+        state.collectionFolderOrders[groupKey] = order;
+        group.folders = rankSort(group.folders || [], folder => folderKey(folder, collectionFolderKey), order);
+        invalidate(state);
+        renderGroupEditor(group, options);
       };
     });
 
