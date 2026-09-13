@@ -57,12 +57,47 @@
 .folder-editor-count{min-width:0;display:grid;gap:4px}
 .folder-editor-count b{font-size:16px;color:#f4f4f6}
 .folder-editor-count span{font-size:13px;line-height:1.4;color:var(--muted)}
+.folder-sort-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin:0 0 16px;
+  padding:14px 15px;
+  border:1px solid var(--line-soft);
+  border-radius:16px;
+  background:rgba(255,255,255,.018);
+}
+.folder-sort-copy{min-width:0;display:grid;gap:3px}
+.folder-sort-copy b{font-size:14px;color:#f2f2f4}
+.folder-sort-copy span{font-size:12px;line-height:1.45;color:var(--muted)}
+.folder-sort-select-wrap{flex:0 0 auto}
+.folder-sort-select-wrap select{
+  min-width:150px;
+  min-height:40px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background-color:rgba(8,9,12,.78);
+  color:#f5f5f7;
+  padding:0 38px 0 15px;
+  font:inherit;
+  font-size:12.5px;
+  font-weight:700;
+  outline:none;
+  appearance:none;
+  -webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a7a7ad' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 9 5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 13px center;
+}
 .folder-edit-grid{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
   gap:14px;
 }
+.folder-edit-card-wrap{min-width:0;display:grid;gap:8px}
 .folder-edit-card{
+  width:100%;
   min-width:0;
   padding:0;
   overflow:hidden;
@@ -120,17 +155,27 @@
 .folder-edit-meta b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;line-height:1.25;color:#f2f2f4}
 .folder-edit-meta small{font-size:11.5px;color:var(--muted)}
 .folder-edit-card.removed .folder-edit-meta small{color:#c0c1c7}
+.folder-card-order{display:flex;justify-content:flex-end;gap:6px}
+.folder-order-button{
+  width:32px;height:32px;border-radius:999px;border:1px solid var(--line-soft);
+  background:rgba(255,255,255,.035);color:#d9d9df;font:inherit;font-size:13px;font-weight:800;cursor:pointer;
+}
+.folder-order-button:hover:not(:disabled){background:rgba(255,255,255,.075)}
+.folder-order-button:disabled{opacity:.25;cursor:default}
 .folder-editor-actions{justify-content:flex-end;margin-top:18px}
 
 body.light .collection-category-row{border-color:rgba(0,0,0,.08);background:rgba(255,255,255,.5)}
 body.light .collection-category-row.selected{border-color:rgba(79,70,229,.25);background:linear-gradient(135deg,rgba(99,102,241,.07),rgba(139,92,246,.035))}
-body.light .collection-category-copy b,body.light .folder-editor-count b,body.light .folder-edit-meta b{color:#202126}
-body.light .collection-category-copy small,body.light .folder-editor-count span,body.light .folder-edit-meta small{color:#686b73}
+body.light .collection-category-copy b,body.light .folder-editor-count b,body.light .folder-edit-meta b,body.light .folder-sort-copy b{color:#202126}
+body.light .collection-category-copy small,body.light .folder-editor-count span,body.light .folder-edit-meta small,body.light .folder-sort-copy span{color:#686b73}
 body.light .collection-edit-button{border-color:rgba(0,0,0,.10);background:rgba(255,255,255,.7);color:#202126}
 body.light .collection-edit-button:hover:not(:disabled){background:#fff}
 body.light .folder-edit-card{border-color:rgba(0,0,0,.09);background:#fff}
 body.light .folder-edit-card.selected{border-color:rgba(79,70,229,.48);box-shadow:0 0 0 1px rgba(79,70,229,.08)}
 body.light .folder-edit-card.removed{opacity:.52}
+body.light .folder-sort-toolbar{border-color:rgba(0,0,0,.08);background:rgba(255,255,255,.52)}
+body.light .folder-sort-select-wrap select{border-color:rgba(0,0,0,.10);background-color:#fff;color:#202126}
+body.light .folder-order-button{border-color:rgba(0,0,0,.10);background:#fff;color:#202126}
 
 @media(max-width:1000px){
   .folder-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -146,6 +191,8 @@ body.light .folder-edit-card.removed{opacity:.52}
   .folder-editor-toolbar>.action-group{grid-column:auto;width:100%;display:grid;grid-template-columns:1fr 1fr}
   .folder-editor-toolbar>.action-group .ghost{width:100%}
   .folder-editor-back{justify-self:start}
+  .folder-sort-toolbar{align-items:flex-start;flex-direction:column;gap:10px}
+  .folder-sort-select-wrap,.folder-sort-select-wrap select{width:100%}
   .folder-edit-grid{gap:10px}
   .folder-edit-meta{padding:9px 10px 10px}
   .folder-edit-meta b{font-size:13px}
@@ -154,8 +201,6 @@ body.light .folder-edit-card.removed{opacity:.52}
   .folder-edit-grid{grid-template-columns:1fr}
 }
 
-/* Selected category checkbox state (the shared checkbox style originally targeted
-   the older .collection-section-choice markup). */
 .collection-category-row.selected .collection-section-check{
   background:#f5f5f7;
   border-color:#f5f5f7;
