@@ -17,8 +17,10 @@
     bingecatSkipped: false,
     bingecatManifestUrl: '',
     selectedCollectionGroupIds: [],
+    selectedCollectionFolderIds: {},
   };
   let autoAction = false;
+  let collectionRestoreApplied = false;
   let restoreNoticeShown = false;
   let verifiedBingecatOnce = false;
 
@@ -91,7 +93,7 @@
   function serializableConfig() {
     captureVisible();
     return {
-      version: 1,
+      version: 2,
       aiSetupMode: snapshot.aiSetupMode === 'custom' ? 'custom' : 'built-in',
       aiHostPreference: snapshot.aiHostPreference || '',
       aiHostMode: snapshot.aiHostMode || '',
@@ -102,6 +104,9 @@
       selectedCollectionGroupIds: Array.isArray(snapshot.selectedCollectionGroupIds)
         ? snapshot.selectedCollectionGroupIds.slice()
         : [],
+      selectedCollectionFolderIds: snapshot.selectedCollectionFolderIds && typeof snapshot.selectedCollectionFolderIds === 'object'
+        ? JSON.parse(JSON.stringify(snapshot.selectedCollectionFolderIds))
+        : {},
     };
   }
 
@@ -271,18 +276,18 @@
     }
 
     if (step === 4) {
-      const selected = new Set(snapshot.selectedCollectionGroupIds || []);
-      const checks = $$('.section-checkbox');
-      if (checks.length && selected.size) {
-        let changed = false;
-        for (const input of checks) {
-          const should = selected.has(input.value);
-          if (input.checked !== should) {
-            input.checked = should;
-            changed = true;
-          }
-        }
-        if (changed) dispatchChange(checks[0]);
+      if (!collectionRestoreApplied) {
+        collectionRestoreApplied = true;
+        window.dispatchEvent(new CustomEvent('kollection:restore-collection-selection', {
+          detail: {
+            selectedCollectionGroupIds: Array.isArray(snapshot.selectedCollectionGroupIds)
+              ? snapshot.selectedCollectionGroupIds.slice()
+              : [],
+            selectedCollectionFolderIds: snapshot.selectedCollectionFolderIds && typeof snapshot.selectedCollectionFolderIds === 'object'
+              ? JSON.parse(JSON.stringify(snapshot.selectedCollectionFolderIds))
+              : {},
+          },
+        }));
       }
       if (targetStep > 4) clickOnce($('#nextBtn'));
       else {
@@ -316,6 +321,7 @@
         profileId: item?.nuvioProfileId ?? snapshot.profileId,
         profileName: item?.nuvioProfileName || snapshot.profileName,
       };
+      collectionRestoreApplied = false;
       restoring = true;
       applyVisible();
     } catch (error) {
@@ -340,6 +346,15 @@
     document.addEventListener('input', () => setTimeout(captureVisible, 0), true);
     document.addEventListener('click', () => setTimeout(captureVisible, 80), true);
     window.addEventListener('kollection:nuvio-signed-in', () => setTimeout(applyVisible, 200));
+    window.addEventListener('kollection:collection-selection-changed', event => {
+      const detail = event?.detail || {};
+      if (Array.isArray(detail.selectedCollectionGroupIds)) {
+        snapshot.selectedCollectionGroupIds = detail.selectedCollectionGroupIds.slice();
+      }
+      if (detail.selectedCollectionFolderIds && typeof detail.selectedCollectionFolderIds === 'object') {
+        snapshot.selectedCollectionFolderIds = JSON.parse(JSON.stringify(detail.selectedCollectionFolderIds));
+      }
+    });
 
     loadSaved();
   }
