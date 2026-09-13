@@ -7,11 +7,12 @@
   <link rel="shortcut icon" href="/favicon.ico?v=3" type="image/x-icon" />
   <meta name="theme-color" content="#050608" />
   <title>Backdrops | The Kollection</title>
-  <meta name="description" content="Choose original or custom per-title movie and TV backdrops for The Kollection, Nuvio, and compatible metadata setups." />
+  <meta name="description" content="Choose original or custom movie, TV, and folder backdrops for The Kollection, Nuvio, and compatible metadata setups." />
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/secondary-pages.css?v=20260909-3" />
   <link rel="stylesheet" href="/backdrops/styles.css?v=20260913-2" />
   <link rel="stylesheet" href="/backdrops/title-mode.css?v=20260913-2" />
+  <link rel="stylesheet" href="/backdrops/folder-builder.css?v=20260913-1" />
   <script src="/components.js?v=20260908-3" defer></script>
 </head>
 <body>
@@ -21,9 +22,9 @@
     <header data-page-header class="backdrop-page-header">
       <div data-page-chip>Backdrop Configurator</div>
       <h1 data-page-title>Backdrops</h1>
-      <p data-page-subtitle>Every movie and TV show keeps its own backdrop. Use each title's original TMDB backdrop by default, or apply one custom backdrop style across your setup. You can also load titles directly from MDBList.</p>
+      <p data-page-subtitle>Create backdrops from TMDB or MDBList. When opened from Set Up Collection, the backdrop is saved separately for that specific folder.</p>
       <div class="hero-pills">
-        <span>One backdrop per title</span>
+        <span>Per-folder setup</span>
         <span>TMDB + MDBList</span>
         <span>Browser rendered</span>
       </div>
@@ -33,15 +34,15 @@
       <aside class="backdrop-sidebar">
         <div class="sidebar-scroll">
           <section class="control-card backdrop-source-card">
-            <div class="control-card-heading"><span><small>BACKDROP SOURCE</small><strong>Choose how title backdrops work</strong></span></div>
+            <div class="control-card-heading"><span><small>BACKDROP SOURCE</small><strong>Choose how the backdrop works</strong></span></div>
             <div class="control-card-body">
               <label class="field-label" for="backdropSourceMode">Backdrop style</label>
               <select id="backdropSourceMode" class="select-input">
                 <option value="original" selected>Original backdrop (default)</option>
                 <option value="custom">Custom backdrop style</option>
               </select>
-              <p class="backdrop-source-note"><strong>Original</strong> uses each movie or show's own TMDB <code>backdrop_path</code>. Custom keeps every title unique, but applies your selected styling to each title's backdrop.</p>
-              <div id="backdropModeStatus" class="status-line ok">Original is selected. Each title uses its own backdrop.</div>
+              <p class="backdrop-source-note"><strong>Default</strong> keeps the existing backdrop. Custom lets you build a new backdrop from TMDB or MDBList artwork.</p>
+              <div id="backdropModeStatus" class="status-line ok">Original is selected.</div>
             </div>
           </section>
 
@@ -75,7 +76,7 @@
           </details>
 
           <section class="control-card">
-            <div class="control-card-heading"><span><small>01</small><strong>Choose titles</strong></span></div>
+            <div class="control-card-heading"><span><small>01</small><strong>Choose artwork source</strong></span></div>
             <div class="control-card-body">
               <label class="field-label" for="titleSource">Source</label>
               <select id="titleSource" class="select-input">
@@ -93,7 +94,7 @@
                   <input id="titleSearch" class="text-input" type="search" placeholder="Search TMDB…" autocomplete="off" />
                   <button id="searchTitle" class="primary-button" type="button">Search</button>
                 </div>
-                <div id="titleSearchStatus" class="status-line">Search for a title to preview its own backdrop.</div>
+                <div id="titleSearchStatus" class="status-line">Search for a title to preview its artwork.</div>
                 <div id="titleResults" class="title-results" aria-live="polite"></div>
               </div>
 
@@ -162,7 +163,7 @@
           <section class="control-card custom-only">
             <div class="control-card-heading"><span><small>03</small><strong>Optional title treatment</strong></span></div>
             <div class="control-card-body">
-              <label class="toggle-row"><span><strong>Show title text</strong><small>Preview-only styling for each title</small></span><input id="showTitle" type="checkbox" /></label>
+              <label class="toggle-row"><span><strong>Show title text</strong><small>Optional text on the generated backdrop</small></span><input id="showTitle" type="checkbox" /></label>
               <div id="textControls" class="text-controls" hidden>
                 <label class="field-label" for="fontFamily">Font</label>
                 <select id="fontFamily" class="select-input"><option value="Inter, Arial, sans-serif">Inter</option><option value="Arial Narrow, Arial, sans-serif">Condensed</option><option value="Georgia, serif">Serif</option><option value="Impact, sans-serif">Impact</option></select>
@@ -180,8 +181,8 @@
       <section class="backdrop-workspace">
         <div class="preview-toolbar">
           <div>
-            <span class="section-kicker">TITLE PREVIEW</span>
-            <strong id="previewTitle">Search for a movie or TV show</strong>
+            <span class="section-kicker">BACKDROP PREVIEW</span>
+            <strong id="previewTitle">Choose artwork to begin</strong>
           </div>
           <div class="title-meta" id="previewMeta"></div>
         </div>
@@ -189,20 +190,20 @@
         <div class="canvas-stage">
           <div id="emptyState" class="empty-state">
             <div class="empty-icon" aria-hidden="true">▧</div>
-            <strong>Every poster gets its own backdrop</strong>
-            <span>Search TMDB or load an MDBList list, then choose any title to preview the exact backdrop that belongs to it.</span>
+            <strong>Build a backdrop</strong>
+            <span>Search TMDB or load an MDBList list to create a backdrop.</span>
           </div>
-          <canvas id="backdropCanvas" width="1280" height="720" aria-label="Per-title backdrop preview"></canvas>
-          <div id="renderBusy" class="render-busy" hidden><span></span>Rendering title backdrop…</div>
+          <canvas id="backdropCanvas" width="1280" height="720" aria-label="Backdrop preview"></canvas>
+          <div id="renderBusy" class="render-busy" hidden><span></span>Rendering backdrop…</div>
         </div>
 
         <div class="per-title-explainer">
-          <strong>How MDBList works here</strong>
-          <span>An MDBList list chooses the titles. It does not turn the whole list into one shared image: every movie or show from that list still gets its own TMDB backdrop and your selected backdrop style.</span>
+          <strong>Folder-aware when opened from Set Up Collection</strong>
+          <span>Each selected collection folder can keep its default backdrop or save its own custom backdrop recipe.</span>
         </div>
 
         <div class="workspace-footer">
-          <div class="privacy-note"><span class="privacy-dot"></span><div><strong>Browser-only image pipeline</strong><small>TMDB and MDBList requests are made by the user's browser. The Kollection does not pre-render or store a backdrop for every title.</small></div></div>
+          <div class="privacy-note"><span class="privacy-dot"></span><div><strong>Browser-only image pipeline</strong><small>TMDB and MDBList requests are made by the user's browser. The Kollection does not pre-render every possible backdrop.</small></div></div>
           <div class="export-panel">
             <label for="resolution">Preview download</label>
             <select id="resolution" class="select-input resolution-select"><option value="1280x720">720p</option><option value="1920x1080" selected>1080p</option><option value="2560x1440">1440p</option><option value="3840x2160">4K</option></select>
@@ -216,5 +217,6 @@
   </main>
   <script src="/backdrops/backdrops.js?v=20260913-3"></script>
   <script src="/backdrops/mdblist.js?v=20260913-1"></script>
+  <script src="/backdrops/folder-builder.js?v=20260913-1"></script>
 </body>
 </html>
