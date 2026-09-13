@@ -54,6 +54,7 @@
     .client-preview-layer [hidden]{display:none!important}
     .client-preview-top{position:absolute;top:0;left:0;right:0;height:29px;width:100%;pointer-events:none}
     .client-preview-top .client-preview-trend,.client-preview-top .client-preview-quality{position:absolute;top:0}
+    .client-preview-top .client-preview-trend{background:rgba(88,90,96,.92)!important}
     .client-preview-top.center-layout .client-preview-trend{left:50%;transform:translateX(-50%)}
     .client-preview-top.split-layout .client-preview-trend{left:10px;transform:none}
     .client-preview-top.split-layout .client-preview-quality{right:10px}
