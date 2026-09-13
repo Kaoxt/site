@@ -1,0 +1,24 @@
+/* Collection backdrop source chooser */
+.backdrop-source-card .control-card-body{gap:12px}
+.backdrop-source-note{margin:0;color:rgba(255,255,255,.46);font-size:10px;line-height:1.5}
+.backdrop-source-note strong{color:rgba(255,255,255,.78)}
+.collection-fields{display:flex;flex-direction:column;gap:9px}
+.collection-field{display:flex;flex-direction:column;gap:6px}
+.collection-field[hidden]{display:none!important}
+.collection-current-preview{position:absolute;inset:28px;z-index:1;border-radius:12px;overflow:hidden;background:#050608;box-shadow:0 20px 60px rgba(0,0,0,.42);display:flex;align-items:center;justify-content:center}
+.collection-current-preview[hidden]{display:none!important}
+.collection-current-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.collection-current-empty{padding:28px;text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;color:rgba(255,255,255,.42);font-size:11px;line-height:1.5}
+.collection-current-empty strong{color:rgba(255,255,255,.74);font-size:14px}
+.collection-current-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid rgba(99,102,241,.28);border-radius:999px;background:rgba(99,102,241,.1);color:#c7d2fe;font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.backdrop-app.mode-provided .generator-only{display:none!important}
+.backdrop-app.mode-provided #backdropCanvas,.backdrop-app.mode-provided #emptyState,.backdrop-app.mode-provided #renderBusy{display:none!important}
+.backdrop-app.mode-custom #collectionCurrentPreview{display:none!important}
+.backdrop-target-line{margin-top:2px;color:rgba(255,255,255,.42);font-size:10px;line-height:1.45}
+.backdrop-target-line strong{color:rgba(255,255,255,.72)}
+html[data-theme="light"] .backdrop-source-note,html[data-theme="light"] .backdrop-target-line{color:rgba(15,23,42,.54)}
+html[data-theme="light"] .backdrop-source-note strong,html[data-theme="light"] .backdrop-target-line strong{color:rgba(15,23,42,.8)}
+html[data-theme="light"] .collection-current-preview{background:#e8ebf1}
+html[data-theme="light"] .collection-current-empty{color:rgba(15,23,42,.48)}
+html[data-theme="light"] .collection-current-empty strong{color:rgba(15,23,42,.76)}
+@media(max-width:760px){.collection-current-preview{position:relative;inset:auto;width:100%;aspect-ratio:16/9;border-radius:9px}.backdrop-app.mode-provided .canvas-stage{padding:14px}}
