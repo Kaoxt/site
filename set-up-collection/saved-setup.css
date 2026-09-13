@@ -4,6 +4,7 @@
   justify-content:flex-end;
   gap:10px;
   flex-wrap:wrap;
+  margin-left:auto;
 }
 
 /* Always honor the HTML hidden state, including wide/landscape layouts. */
@@ -29,6 +30,7 @@
   min-height:18px;
   flex:1 1 260px;
   min-width:180px;
+  text-align:right;
 }
 .save-setup-status[data-kind="success"]{color:#9de0b4}
 .save-setup-status[data-kind="error"]{color:#ff9a9a}
@@ -41,18 +43,27 @@ html[data-theme="light"] .save-setup-status[data-kind="info"]{color:#4d57b8}
 
 @media(max-width:760px){
   .setup-toolbar{
-    align-items:flex-start !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
     gap:14px;
   }
 
+  .setup-toolbar>div:first-child{
+    min-width:0;
+    flex:1 1 auto;
+  }
+
   .setup-toolbar>.setup-toolbar-actions{
-    max-width:min(100%,680px);
+    width:auto;
+    max-width:none;
     margin-left:auto;
     display:flex;
     gap:8px;
     align-items:center;
     justify-content:flex-end;
     flex-wrap:wrap;
+    flex:0 0 auto;
   }
 
   .setup-toolbar-actions .save-setup-status{
@@ -74,19 +85,24 @@ html[data-theme="light"] .save-setup-status[data-kind="info"]{color:#4d57b8}
 
 @media(max-width:520px){
   .setup-toolbar{
-    display:grid !important;
-    grid-template-columns:minmax(0,1fr);
-    align-items:start !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
   }
 
   .setup-toolbar>.setup-toolbar-actions{
-    width:100%;
-    margin-left:0;
-    justify-content:flex-start;
+    width:auto;
+    margin-left:auto;
+    justify-content:flex-end;
+    align-items:flex-end;
+    flex-direction:column;
+    flex-wrap:nowrap;
   }
 
   .setup-toolbar-actions .save-setup-status{
-    text-align:left;
+    width:auto;
+    max-width:190px;
+    text-align:right;
   }
 
   .setup-toolbar-actions .ghost.small{
