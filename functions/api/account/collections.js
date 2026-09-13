@@ -3,6 +3,7 @@ import { normalizeName, parseRow, savedCollectionsDb, sanitizeConfig, storageCon
 import { encryptSavedSecrets } from '../../_lib/saved-secrets.js';
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
+const MAX_SETUPS_PER_PROFILE = 10;
 function json(body, status = 200, extraHeaders = {}) { return new Response(JSON.stringify(body), { status, headers: { ...JSON_HEADERS, ...extraHeaders } }); }
 async function accountSession(context) {
   const current = await readSession(context.request, context.env || {});
@@ -11,6 +12,24 @@ async function accountSession(context) {
 }
 const SELECT = `id, name, config_json, draft_step, last_nuvio_profile_id, last_nuvio_profile_name, last_applied_at, created_at, updated_at`;
 const TABLE = 'saved_collections_v2';
+
+async function duplicateName(db, userId, profileId, name) {
+  return db.prepare(
+    `SELECT id FROM ${TABLE}
+     WHERE user_id = ?1
+       AND last_nuvio_profile_id IS ?2
+       AND lower(name) = lower(?3)
+     LIMIT 1`
+  ).bind(userId, profileId, name).first();
+}
+
+async function profileSetupCount(db, userId, profileId) {
+  const row = await db.prepare(
+    `SELECT COUNT(*) AS total FROM ${TABLE}
+     WHERE user_id = ?1 AND last_nuvio_profile_id IS ?2`
+  ).bind(userId, profileId).first();
+  return Number(row?.total || 0);
+}
 
 export async function onRequestGet(context) {
   try {
@@ -43,6 +62,15 @@ export async function onRequestPost(context) {
     const profileName = String(input.nuvioProfileName || '').trim().slice(0, 120);
     const now = new Date().toISOString();
     const db = await savedCollectionsDb(context.env);
+
+    if (await duplicateName(db, auth.session.id, profileId, name)) {
+      return json({ error: `A saved setup named “${name}” already exists for this profile. Choose a different name.` }, 409, auth.cookie ? { 'Set-Cookie': auth.cookie } : {});
+    }
+
+    if (await profileSetupCount(db, auth.session.id, profileId) >= MAX_SETUPS_PER_PROFILE) {
+      return json({ error: `You can save up to ${MAX_SETUPS_PER_PROFILE} setups per Nuvio profile. Delete an existing setup before creating another.` }, 409, auth.cookie ? { 'Set-Cookie': auth.cookie } : {});
+    }
+
     await db.prepare(
       `INSERT INTO ${TABLE} (id, user_id, name, config_json, draft_step, last_nuvio_profile_id, last_nuvio_profile_name, created_at, updated_at)
        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?8)`
