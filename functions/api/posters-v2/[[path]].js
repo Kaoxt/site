@@ -2,7 +2,7 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'production-cache-15';
+const CACHE_VERSION = 'production-cache-16';
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
 const DEFAULT_MDBLIST_CACHE_DAYS = 30;
@@ -207,7 +207,7 @@ function posterCacheControl(preview, tags, hasTrendValue = false) {
       : 'public, max-age=60, s-maxage=600';
   }
   if (hasTrendValue || tagSet.has('trend')) {
-    return 'public, max-age=900, s-maxage=1800, stale-while-revalidate=21600';
+    return 'public, max-age=21600, s-maxage=604800, stale-while-revalidate=86400';
   }
   return 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000';
 }
