@@ -8,7 +8,9 @@
   const clone = (value) => JSON.parse(JSON.stringify(value));
 
   function folderKey(folder, makeKey) {
-    return makeKey(folder?.id || folder?.title || '');
+    // collectionFolderKey expects the folder object. Passing folder.id/title here
+    // caused every folder to collapse to an empty key, so all cards toggled together.
+    return makeKey(folder);
   }
 
   function selectedFolderKeys(state, group, groupKey, makeFolderKey) {
@@ -18,8 +20,8 @@
     const existing = state.selectedCollectionFolderIds[key];
     const groupIsSelected = (state.selectedCollectionGroupIds || []).includes(key);
 
-    // Folder selections are opt-out. A category starts with every folder selected.
-    // Also repair stale/inconsistent state produced by earlier editor builds.
+    // Folder selections are opt-out. A selected category starts with every folder selected.
+    // Repair stale state from earlier editor builds that saved an empty/invalid key list.
     if (!Array.isArray(existing) || (groupIsSelected && existing.length === 0 && all.length)) {
       state.selectedCollectionFolderIds[key] = all.slice();
       return new Set(all);
@@ -28,10 +30,7 @@
     const valid = new Set(all);
     const cleaned = [...new Set(existing.filter(id => valid.has(id)))];
 
-    // Earlier builds could save legacy/invalid folder keys. If a category itself
-    // is selected but none of those keys match today's folders, treat it as the
-    // old default state: all folders selected.
-    if (groupIsSelected && cleaned.length === 0 && all.length) {
+    if (groupIsSelected && existing.length > 0 && cleaned.length === 0 && all.length) {
       state.selectedCollectionFolderIds[key] = all.slice();
       return new Set(all);
     }
@@ -149,7 +148,6 @@
 
     const groups = state.collectionPack || [];
     ensureFolderSelections(state, groups, collectionGroupKey, collectionFolderKey);
-    // Keep the saved-setup layer synchronized even before the user edits anything.
     emitSelection(state);
 
     const activeKey = state.customizeGroupKey || null;
@@ -212,8 +210,6 @@
         const row = host.querySelector(`.collection-category-row[data-group-key="${CSS.escape(key)}"]`);
         const checked = selectedNow.has(key);
 
-        // Checking a category whose folder selection is empty means "include the
-        // category", so restore all of its folders by default.
         if (checked) selectedFolderKeys(state, group, collectionGroupKey, collectionFolderKey);
 
         row?.classList.toggle('selected', checked);
