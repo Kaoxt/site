@@ -2,16 +2,20 @@
   'use strict';
 
   function stabilize(root) {
-    if (!root || root.dataset.mobileStable === '2') return;
-    root.dataset.mobileStable = '2';
+    if (!root || root.dataset.mobileStable === '3') return;
+    root.dataset.mobileStable = '3';
 
     const backdrop = root.querySelector('.folder-source-backdrop');
     const modal = root.querySelector('.folder-source-modal');
     if (!backdrop || !modal) return;
 
-    // The editor should close only from its explicit X button (or from the
-    // editor's own Save/Restore actions). Do not let clicks/taps retargeted by
-    // Android/Chrome to the backdrop close the modal.
+    // Critical fix: the backdrop itself used data-source-close, which meant the
+    // editor's delegated close handler matched that ancestor for every click
+    // anywhere inside the modal. Remove that marker so only the explicit close
+    // button matches delegated close handling. A direct backdrop click is still
+    // handled separately by the editor code.
+    backdrop.removeAttribute('data-source-close');
+
     const blockBackdropDismiss = event => {
       if (event.target === backdrop) {
         event.preventDefault();
@@ -25,11 +29,8 @@
     backdrop.addEventListener('touchend', blockBackdropDismiss, { capture: true, passive: false });
     backdrop.addEventListener('click', blockBackdropDismiss, true);
 
-    // Stop every ordinary form interaction from escaping the dialog and
-    // reaching the Step 5 folder/card controls underneath it. This includes
-    // focus events, which can otherwise cause a re-render while editing a URL.
     const stopInside = event => {
-      if (event.target?.closest?.('[data-source-close]')) return;
+      if (event.target?.closest?.('.folder-source-close[data-source-close]')) return;
       event.stopPropagation();
     };
 
