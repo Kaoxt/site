@@ -49,7 +49,7 @@
     if (type) el.classList.add(type);
   }
   function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
   }
 
   function authFor(urlString) {
@@ -132,7 +132,9 @@
   async function selectTitle(item) {
     state.selected = item;
     saveState();
-    els.titleResults.querySelectorAll('.title-result').forEach(button => button.classList.toggle('selected', Number(button.dataset.id) === Number(item.id)));
+    document.querySelectorAll('.title-result').forEach(button => {
+      button.classList.toggle('selected', Number(button.dataset.id) === Number(item.id) && String(button.dataset.media || '') === String(item.media || ''));
+    });
     await renderPreview();
   }
 
@@ -323,6 +325,9 @@
   [els.overlayPreset,els.overlayOpacity,els.gradientCoverage,els.backdropZoom,els.positionX,els.showTitle,els.fontFamily,els.textPosition,els.fontSize,els.textColor,els.textShadow,els.resolution]
     .forEach(el => el.addEventListener('input', syncState));
   els.downloadBackdrop.addEventListener('click', downloadPreview);
+
+  window.KollectionBackdrops = Object.freeze({ selectTitle, tmdbFetch });
+  window.dispatchEvent(new CustomEvent('kollection:backdrops-ready'));
 
   hydrate();
   applyMode();
