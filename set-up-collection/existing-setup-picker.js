@@ -4,6 +4,9 @@
   const params = new URLSearchParams(window.location.search);
   const hasSavedSetup = Boolean(params.get('saved'));
   const $ = (selector, root = document) => root.querySelector(selector);
+  let signedIn = false;
+  let authChecked = false;
+  let authCheckBusy = false;
 
   function currentStep() {
     const text = $('#mobileStepText')?.textContent || '';
@@ -69,6 +72,7 @@
   }
 
   async function openExistingSetupModal() {
+    if (!signedIn) return;
     const root = renderModalShell();
     const list = $('#existingSetupList', root);
     const error = $('#existingSetupError', root);
@@ -80,7 +84,11 @@
 
     try {
       const session = await window.KollectionNuvioAuth?.getSession?.();
-      if (!session?.authenticated) throw new Error('Sign in with Nuvio to edit a saved setup.');
+      if (!session?.authenticated) {
+        signedIn = false;
+        syncToolbarButton();
+        throw new Error('Sign in with Nuvio to edit a saved setup.');
+      }
       const response = await fetch('/api/account/collections', { credentials: 'same-origin', cache: 'no-store' });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(body?.error || `Could not load saved setups (HTTP ${response.status}).`);
@@ -122,18 +130,44 @@
     const button = $('#saveSetupBtn');
     if (!button) return;
     const step = currentStep();
-    if (step === 0) {
+
+    if (step === 0 && authChecked && signedIn) {
+      button.hidden = false;
       button.textContent = 'Edit Existing Setup';
       button.dataset.existingSetupPicker = 'true';
-    } else if (button.dataset.existingSetupPicker === 'true') {
+      button.setAttribute('aria-label', 'Edit an existing saved setup');
+      return;
+    }
+
+    if (button.dataset.existingSetupPicker === 'true') {
       button.textContent = 'Save setup';
+      button.setAttribute('aria-label', 'Save setup');
       delete button.dataset.existingSetupPicker;
+    }
+
+    // At Step 1, don't show a save action before setup has started. The only
+    // Step 1 toolbar action here is Edit Existing Setup, and only when signed in.
+    button.hidden = step === 0;
+  }
+
+  async function refreshAuthState() {
+    if (hasSavedSetup || authCheckBusy) return;
+    authCheckBusy = true;
+    try {
+      const session = await window.KollectionNuvioAuth?.getSession?.();
+      signedIn = Boolean(session?.authenticated);
+    } catch {
+      signedIn = false;
+    } finally {
+      authChecked = true;
+      authCheckBusy = false;
+      syncToolbarButton();
     }
   }
 
   function interceptToolbarClick(event) {
     const button = event.target.closest('#saveSetupBtn');
-    if (!button || hasSavedSetup || currentStep() !== 0) return;
+    if (!button || hasSavedSetup || currentStep() !== 0 || !signedIn || button.dataset.existingSetupPicker !== 'true') return;
     event.preventDefault();
     event.stopImmediatePropagation();
     openExistingSetupModal();
@@ -176,9 +210,27 @@
 
   function init() {
     document.addEventListener('click', interceptToolbarClick, true);
+    const button = $('#saveSetupBtn');
+    if (button && !hasSavedSetup && currentStep() === 0) button.hidden = true;
+
     const observer = new MutationObserver(() => setTimeout(refreshEnhancements, 0));
     observer.observe(document.body, { childList: true, subtree: true });
+
+    window.addEventListener('kollection:nuvio-signed-in', () => {
+      signedIn = true;
+      authChecked = true;
+      syncToolbarButton();
+    });
+    window.addEventListener('kollection:nuvio-signed-out', () => {
+      signedIn = false;
+      authChecked = true;
+      closeModal();
+      syncToolbarButton();
+    });
+    window.addEventListener('kollection:nuvio-session-changed', refreshAuthState);
+
     refreshEnhancements();
+    refreshAuthState();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
