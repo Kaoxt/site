@@ -11,6 +11,7 @@
     folderOrders: {},
   };
   let editAdvanceBusy = false;
+  let editRestoreAdvanceEnabled = editMode;
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
@@ -286,7 +287,12 @@
   }
 
   function advanceEditRestore() {
-    if (!editMode || editAdvanceBusy || currentStepIndex() !== 2) return;
+    const step = currentStepIndex();
+    if (step >= 4) {
+      editRestoreAdvanceEnabled = false;
+      return;
+    }
+    if (!editRestoreAdvanceEnabled || !editMode || editAdvanceBusy || step !== 2) return;
     const builtIn = document.getElementById('builtInTab')?.classList.contains('active');
     const key = document.getElementById('mdblist')?.value?.trim();
     const host = document.getElementById('aiHost')?.value;
@@ -296,7 +302,7 @@
     editAdvanceBusy = true;
     setTimeout(() => {
       try {
-        if (currentStepIndex() === 2 && document.getElementById('mdblist')?.value?.trim()) next.click();
+        if (editRestoreAdvanceEnabled && currentStepIndex() === 2 && document.getElementById('mdblist')?.value?.trim()) next.click();
       } finally {
         setTimeout(() => { editAdvanceBusy = false; }, 400);
       }
