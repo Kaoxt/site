@@ -5,7 +5,11 @@
   const editMode = params.get('edit') === '1' && Boolean(params.get('saved'));
   const originalFetch = window.fetch.bind(window);
   let restoredPreference = null;
-  let currentPreference = { mode: 'default', order: [] };
+  let currentPreference = {
+    categoryOrder: [],
+    folderSortModes: {},
+    folderOrders: {},
+  };
   let editAdvanceBusy = false;
 
   function clone(value) {
@@ -21,9 +25,6 @@
     }
   }
 
-  // Keep category ordering in the existing saved-setup config without changing the API schema.
-  // In edit mode, completed setups are presented to the restore layer as Step 5 so the user
-  // lands directly in Customize rather than being pushed through Review/Done again.
   window.fetch = async function(input, init = {}) {
     const method = String(init?.method || (typeof input !== 'string' && input?.method) || 'GET').toUpperCase();
     let nextInit = init;
@@ -32,8 +33,12 @@
       try {
         const payload = JSON.parse(init.body);
         if (payload?.config && typeof payload.config === 'object') {
-          payload.config.categorySortMode = currentPreference.mode || 'default';
-          payload.config.categoryOrder = Array.isArray(currentPreference.order) ? currentPreference.order.slice() : [];
+          payload.config.categoryOrder = Array.isArray(currentPreference.categoryOrder)
+            ? currentPreference.categoryOrder.slice()
+            : [];
+          payload.config.folderSortModes = clone(currentPreference.folderSortModes || {});
+          payload.config.folderOrders = clone(currentPreference.folderOrders || {});
+          delete payload.config.categorySortMode;
           nextInit = { ...init, body: JSON.stringify(payload) };
         }
       } catch {}
@@ -47,12 +52,20 @@
       const item = data?.collection;
       if (item?.config && typeof item.config === 'object') {
         restoredPreference = {
-          mode: ['default', 'alphabetical', 'custom'].includes(item.config.categorySortMode)
-            ? item.config.categorySortMode
-            : 'default',
-          order: Array.isArray(item.config.categoryOrder) ? item.config.categoryOrder.slice() : [],
+          legacyCategoryMode: item.config.categorySortMode || '',
+          categoryOrder: Array.isArray(item.config.categoryOrder) ? item.config.categoryOrder.slice() : [],
+          folderSortModes: item.config.folderSortModes && typeof item.config.folderSortModes === 'object'
+            ? clone(item.config.folderSortModes)
+            : {},
+          folderOrders: item.config.folderOrders && typeof item.config.folderOrders === 'object'
+            ? clone(item.config.folderOrders)
+            : {},
         };
-        currentPreference = clone(restoredPreference);
+        currentPreference = clone({
+          categoryOrder: restoredPreference.categoryOrder,
+          folderSortModes: restoredPreference.folderSortModes,
+          folderOrders: restoredPreference.folderOrders,
+        });
       }
 
       if (editMode && item) {
@@ -69,63 +82,57 @@
     return response;
   };
 
-  function groupOrder(groups, groupKey, mode, customOrder, defaultOrder) {
-    const source = Array.isArray(groups) ? groups.slice() : [];
-    if (mode === 'alphabetical') {
-      return source.sort((a, b) => String(a?.title || '').localeCompare(String(b?.title || ''), undefined, { sensitivity: 'base' }));
-    }
-
-    const preferred = mode === 'custom' ? customOrder : defaultOrder;
+  function rankSort(items, keyFn, preferred) {
+    const source = Array.isArray(items) ? items.slice() : [];
     const rank = new Map((preferred || []).map((key, index) => [key, index]));
     return source.sort((a, b) => {
-      const aKey = groupKey(a);
-      const bKey = groupKey(b);
-      const ai = rank.has(aKey) ? rank.get(aKey) : Number.MAX_SAFE_INTEGER;
-      const bi = rank.has(bKey) ? rank.get(bKey) : Number.MAX_SAFE_INTEGER;
+      const ai = rank.has(keyFn(a)) ? rank.get(keyFn(a)) : Number.MAX_SAFE_INTEGER;
+      const bi = rank.has(keyFn(b)) ? rank.get(keyFn(b)) : Number.MAX_SAFE_INTEGER;
       return ai - bi;
     });
+  }
+
+  function alphabetical(items, titleFn) {
+    return (items || []).slice().sort((a, b) => String(titleFn(a) || '').localeCompare(String(titleFn(b) || ''), undefined, { sensitivity: 'base' }));
+  }
+
+  function applyFolderOrder(state, group, groupKey, folderKey) {
+    if (!group) return;
+    state.collectionDefaultFolderOrders ||= {};
+    state.collectionFolderSortModes ||= {};
+    state.collectionFolderOrders ||= {};
+
+    const key = groupKey(group);
+    if (!Array.isArray(state.collectionDefaultFolderOrders[key]) || !state.collectionDefaultFolderOrders[key].length) {
+      state.collectionDefaultFolderOrders[key] = (group.folders || []).map(folderKey).filter(Boolean);
+    }
+
+    const mode = state.collectionFolderSortModes[key] || 'default';
+    if (mode === 'alphabetical') {
+      group.folders = alphabetical(group.folders || [], folder => folder?.title || '');
+    } else if (mode === 'custom') {
+      group.folders = rankSort(group.folders || [], folderKey, state.collectionFolderOrders[key] || []);
+    } else {
+      group.folders = rankSort(group.folders || [], folderKey, state.collectionDefaultFolderOrders[key]);
+    }
+  }
+
+  function syncPreferenceFromState(state) {
+    currentPreference = {
+      categoryOrder: Array.isArray(state.collectionCategoryOrder) ? state.collectionCategoryOrder.slice() : [],
+      folderSortModes: clone(state.collectionFolderSortModes || {}),
+      folderOrders: clone(state.collectionFolderOrders || {}),
+    };
   }
 
   function enhanceOverview(options, rerender) {
     const { state, host, collectionGroupKey } = options;
     const list = host.querySelector('.collection-category-list');
-    if (!list || host.querySelector('.category-order-toolbar')) return;
-
-    const toolbar = document.createElement('div');
-    toolbar.className = 'category-order-toolbar';
-    toolbar.innerHTML = `
-      <div class="category-order-copy">
-        <b>Category order</b>
-        <span>Choose the original order, alphabetical order, or arrange categories yourself.</span>
-      </div>
-      <label class="category-order-select-wrap">
-        <span class="visually-hidden">Category order</span>
-        <select id="categoryOrderMode" aria-label="Category order">
-          <option value="default">Default</option>
-          <option value="alphabetical">Alphabetical</option>
-          <option value="custom">Custom</option>
-        </select>
-      </label>`;
-    list.before(toolbar);
-
-    const select = toolbar.querySelector('#categoryOrderMode');
-    select.value = state.collectionCategorySortMode || 'default';
-    select.onchange = () => {
-      state.collectionCategorySortMode = select.value;
-      if (select.value === 'custom' && (!Array.isArray(state.collectionCategoryOrder) || !state.collectionCategoryOrder.length)) {
-        state.collectionCategoryOrder = (state.collectionPack || []).map(collectionGroupKey);
-      }
-      currentPreference = {
-        mode: state.collectionCategorySortMode,
-        order: Array.isArray(state.collectionCategoryOrder) ? state.collectionCategoryOrder.slice() : [],
-      };
-      rerender(options);
-    };
-
-    if ((state.collectionCategorySortMode || 'default') !== 'custom') return;
+    if (!list) return;
 
     const rows = Array.from(list.querySelectorAll('.collection-category-row'));
     rows.forEach((row, index) => {
+      if (row.querySelector('.category-order-move')) return;
       row.classList.add('custom-order-row');
       const controls = document.createElement('div');
       controls.className = 'category-order-move';
@@ -136,14 +143,81 @@
 
       controls.querySelectorAll('.category-move-button').forEach((button) => {
         button.onclick = () => {
+          const order = rows.map(item => item.dataset.groupKey || '').filter(Boolean);
           const key = row.dataset.groupKey || '';
-          const order = rows.map((item) => item.dataset.groupKey || '').filter(Boolean);
           const from = order.indexOf(key);
           const to = button.dataset.direction === 'up' ? from - 1 : from + 1;
           if (from < 0 || to < 0 || to >= order.length) return;
           [order[from], order[to]] = [order[to], order[from]];
           state.collectionCategoryOrder = order;
-          currentPreference = { mode: 'custom', order: order.slice() };
+          syncPreferenceFromState(state);
+          rerender(options);
+        };
+      });
+    });
+  }
+
+  function enhanceFolderView(options, rerender) {
+    const { state, host, collectionGroupKey, collectionFolderKey } = options;
+    const grid = host.querySelector('.folder-edit-grid');
+    if (!grid) return;
+    const group = (state.collectionPack || []).find(item => collectionGroupKey(item) === state.customizeGroupKey);
+    if (!group) return;
+    const groupKey = collectionGroupKey(group);
+
+    if (!host.querySelector('.folder-sort-toolbar')) {
+      const toolbar = document.createElement('div');
+      toolbar.className = 'folder-sort-toolbar';
+      toolbar.innerHTML = `
+        <div class="folder-sort-copy"><b>Folder order</b><span>Choose how folders in this category are arranged.</span></div>
+        <label class="folder-sort-select-wrap">
+          <span class="visually-hidden">Folder order</span>
+          <select id="folderSortMode" aria-label="Folder order">
+            <option value="default">Default</option>
+            <option value="alphabetical">Alphabetical</option>
+            <option value="custom">Custom</option>
+          </select>
+        </label>`;
+      grid.before(toolbar);
+      const select = toolbar.querySelector('#folderSortMode');
+      select.value = state.collectionFolderSortModes?.[groupKey] || 'default';
+      select.onchange = () => {
+        state.collectionFolderSortModes ||= {};
+        state.collectionFolderOrders ||= {};
+        state.collectionFolderSortModes[groupKey] = select.value;
+        if (select.value === 'custom' && (!Array.isArray(state.collectionFolderOrders[groupKey]) || !state.collectionFolderOrders[groupKey].length)) {
+          state.collectionFolderOrders[groupKey] = (group.folders || []).map(collectionFolderKey).filter(Boolean);
+        }
+        applyFolderOrder(state, group, collectionGroupKey, collectionFolderKey);
+        syncPreferenceFromState(state);
+        rerender(options);
+      };
+    }
+
+    const mode = state.collectionFolderSortModes?.[groupKey] || 'default';
+    if (mode !== 'custom') return;
+
+    const cards = Array.from(grid.querySelectorAll('.folder-edit-card'));
+    cards.forEach((card, index) => {
+      if (card.querySelector('.folder-card-order')) return;
+      const controls = document.createElement('span');
+      controls.className = 'folder-card-order';
+      controls.innerHTML = `
+        <button type="button" class="folder-order-button" data-direction="up" aria-label="Move folder up" title="Move up" ${index === 0 ? 'disabled' : ''}>↑</button>
+        <button type="button" class="folder-order-button" data-direction="down" aria-label="Move folder down" title="Move down" ${index === cards.length - 1 ? 'disabled' : ''}>↓</button>`;
+      card.appendChild(controls);
+      controls.querySelectorAll('.folder-order-button').forEach(button => {
+        button.onclick = event => {
+          event.stopPropagation();
+          const order = cards.map(item => item.dataset.folderKey || '').filter(Boolean);
+          const key = card.dataset.folderKey || '';
+          const from = order.indexOf(key);
+          const to = button.dataset.direction === 'up' ? from - 1 : from + 1;
+          if (from < 0 || to < 0 || to >= order.length) return;
+          [order[from], order[to]] = [order[to], order[from]];
+          state.collectionFolderOrders[groupKey] = order;
+          group.folders = rankSort(group.folders || [], collectionFolderKey, order);
+          syncPreferenceFromState(state);
           rerender(options);
         };
       });
@@ -152,53 +226,52 @@
 
   function installEditorWrapper() {
     const original = window.KollectionFolderEditor;
-    if (!original || original.__categoryOrderWrapped) return false;
+    if (!original || original.__categoryOrderWrappedV2) return false;
 
     const wrapped = {
       ...original,
-      __categoryOrderWrapped: true,
+      __categoryOrderWrappedV2: true,
       render(options) {
-        const { state, collectionGroupKey } = options;
+        const { state, collectionGroupKey, collectionFolderKey } = options;
         const groups = state.collectionPack || [];
 
         if (!Array.isArray(state.collectionDefaultGroupOrder) || !state.collectionDefaultGroupOrder.length) {
           state.collectionDefaultGroupOrder = groups.map(collectionGroupKey);
         }
 
-        if (restoredPreference && !state.collectionCategoryPreferenceRestored) {
-          state.collectionCategorySortMode = restoredPreference.mode;
-          state.collectionCategoryOrder = restoredPreference.order.slice();
-          state.collectionCategoryPreferenceRestored = true;
+        if (restoredPreference && !state.collectionOrderPreferenceRestored) {
+          let categoryOrder = restoredPreference.categoryOrder.slice();
+          if (!categoryOrder.length && restoredPreference.legacyCategoryMode === 'alphabetical') {
+            categoryOrder = alphabetical(groups, group => group?.title || '').map(collectionGroupKey);
+          }
+          state.collectionCategoryOrder = categoryOrder.length ? categoryOrder : state.collectionDefaultGroupOrder.slice();
+          state.collectionFolderSortModes = clone(restoredPreference.folderSortModes || {});
+          state.collectionFolderOrders = clone(restoredPreference.folderOrders || {});
+          state.collectionOrderPreferenceRestored = true;
         }
 
-        state.collectionCategorySortMode ||= 'default';
-        state.collectionCategoryOrder ||= [];
-        state.collectionPack = groupOrder(
-          groups,
-          collectionGroupKey,
-          state.collectionCategorySortMode,
-          state.collectionCategoryOrder,
-          state.collectionDefaultGroupOrder,
-        );
-
-        currentPreference = {
-          mode: state.collectionCategorySortMode,
-          order: Array.isArray(state.collectionCategoryOrder) ? state.collectionCategoryOrder.slice() : [],
-        };
+        state.collectionCategoryOrder ||= state.collectionDefaultGroupOrder.slice();
+        state.collectionFolderSortModes ||= {};
+        state.collectionFolderOrders ||= {};
+        state.collectionPack = rankSort(groups, collectionGroupKey, state.collectionCategoryOrder);
+        for (const group of state.collectionPack) applyFolderOrder(state, group, collectionGroupKey, collectionFolderKey);
+        syncPreferenceFromState(state);
 
         const result = original.render(options);
-        requestAnimationFrame(() => enhanceOverview(options, wrapped.render));
+        requestAnimationFrame(() => {
+          if (state.customizeGroupKey) enhanceFolderView(options, wrapped.render);
+          else enhanceOverview(options, wrapped.render);
+        });
         return result;
       },
       filterPack(pack, state, groupKey, makeFolderKey) {
-        const ordered = groupOrder(
+        const orderedGroups = rankSort(
           pack,
           groupKey,
-          state.collectionCategorySortMode || 'default',
-          state.collectionCategoryOrder || [],
-          state.collectionDefaultGroupOrder || (pack || []).map(groupKey),
+          state.collectionCategoryOrder || state.collectionDefaultGroupOrder || (pack || []).map(groupKey),
         );
-        return original.filterPack(ordered, state, groupKey, makeFolderKey);
+        for (const group of orderedGroups) applyFolderOrder(state, group, groupKey, makeFolderKey);
+        return original.filterPack(orderedGroups, state, groupKey, makeFolderKey);
       },
     };
 
