@@ -2,7 +2,7 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'production-cache-13';
+const CACHE_VERSION = 'production-cache-14';
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
 const DEFAULT_MDBLIST_CACHE_DAYS = 30;
@@ -59,6 +59,26 @@ async function resolveTmdbId(type, rawId, key) {
   const found = await tmdbFetch(`/find/${encodeURIComponent(rawId)}?external_source=imdb_id`, key);
   const list = type === 'tv' ? found.tv_results : found.movie_results;
   return list?.[0]?.id ? String(list[0].id) : null;
+}
+
+
+function theatricalLabel(details, type, region = 'US', now = new Date()) {
+  if (type !== 'movie') return '';
+  const dates = details.release_dates?.results?.find(item => item.iso_3166_1 === region)?.release_dates || [];
+  const today = now.toISOString().slice(0, 10);
+  const theatrical = dates.filter(item => [2, 3].includes(Number(item.type)))
+    .map(item => String(item.release_date || '').slice(0, 10))
+    .filter(day => /^\d{4}-\d{2}-\d{2}$/.test(day)).sort();
+  if (!theatrical.length) return '';
+  const first = theatrical[0];
+  if (first > today) {
+    const formatted = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(first + 'T00:00:00Z'));
+    return 'Coming ' + formatted;
+  }
+  const daysSince = (Date.parse(today) - Date.parse(first)) / 86400000;
+  const homeReleased = dates.some(item => [4, 5, 6].includes(Number(item.type)) && String(item.release_date || '').slice(0, 10) <= today);
+  // TMDB supplies release dates, not live cinema listings. Use a bounded theatrical window.
+  return daysSince <= 45 && !homeReleased ? 'In Cinema' : '';
 }
 
 async function trendLabel(type, id, key, language = 'en') {
@@ -164,7 +184,7 @@ function posterVariant(url, preview) {
     tags: normalizeTags(url.searchParams.get('tags')),
     ratingSource: normalizeRatingSource(url.searchParams.get('ratingSource')),
     language: normalizeOverlayLanguage(url.searchParams.get('language')),
-    overlayColor: url.searchParams.get('overlayColor') || '#2f2d33',
+    overlayColor: url.searchParams.get('overlayColor') || 'dynamic',
     sourceUrl: normalizeSourceUrl(url.searchParams.get('sourceUrl')),
     overlayOnly: url.searchParams.get('overlayOnly') === '1',
   };
@@ -441,7 +461,7 @@ function cacheRequestFor(request) {
   const tags = normalizeTags(incoming.searchParams.get('tags'));
   const ratingSource = normalizeRatingSource(incoming.searchParams.get('ratingSource'));
   const language = normalizeOverlayLanguage(incoming.searchParams.get('language'));
-  const overlayColor = incoming.searchParams.get('overlayColor') || '#2f2d33';
+  const overlayColor = incoming.searchParams.get('overlayColor') || 'dynamic';
   const sourceUrl = normalizeSourceUrl(incoming.searchParams.get('sourceUrl'));
   const overlayOnly = incoming.searchParams.get('overlayOnly') === '1';
 
@@ -539,10 +559,10 @@ export async function onRequest(context) {
       ratingLabel: rating.label,
       genre: tags.has('genre') ? localizeGenre(details.genres?.[0]?.name || '', overlayLanguage) : '',
       age: tags.has('age') ? certification(details, type) : '',
-      trend: tags.has('trend') ? await trendLabel(type, id, env.TMDB_API_KEY, overlayLanguage) : '',
+      trend: tags.has('trend') ? (theatricalLabel(details, type, String(env.POSTERS_RELEASE_REGION || 'US').toUpperCase()) || await trendLabel(type, id, env.TMDB_API_KEY, overlayLanguage)) : '',
       quality: '',
       smartLayout,
-      overlayColor: url.searchParams.get('overlayColor') || '#2f2d33',
+      overlayColor: url.searchParams.get('overlayColor') || 'dynamic',
     };
 
     const rendererBase = String(env.POSTERS_V2_RENDERER_URL || DEFAULT_RENDERER_URL).replace(/\/$/, '');
