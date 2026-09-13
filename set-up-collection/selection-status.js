@@ -7,23 +7,31 @@
       const count = row.querySelector('[data-category-count]');
       if (!checkbox || !count) return;
 
-      const text = String(count.textContent || '').trim();
-      const match = text.match(/^(\d+)\s+of\s+(\d+)\s+folders selected(.*)$/i);
+      const current = String(count.textContent || '').trim();
+      const match = current.match(/^(\d+)\s+of\s+(\d+)\s+folders selected(.*)$/i);
       if (!match) return;
 
       const total = Number(match[2]) || 0;
       const suffix = match[3] || '';
 
       if (checkbox.checked) {
-        if (count.dataset.selectedLabel) {
-          count.textContent = count.dataset.selectedLabel;
-          delete count.dataset.selectedLabel;
+        const selectedLabel = count.dataset.selectedLabel || '';
+        if (selectedLabel && current !== selectedLabel) {
+          count.textContent = selectedLabel;
         }
+        if (selectedLabel) delete count.dataset.selectedLabel;
         return;
       }
 
-      if (!count.dataset.selectedLabel) count.dataset.selectedLabel = text;
-      count.textContent = `0 of ${total} folders selected${suffix}`;
+      // Preserve the real selected-folder count once, then only change the text
+      // when necessary. Writing the same textContent on every MutationObserver
+      // callback creates a self-triggering mutation loop in Firefox Android.
+      if (!count.dataset.selectedLabel && !/^0\s+of\s+/i.test(current)) {
+        count.dataset.selectedLabel = current;
+      }
+
+      const desired = `0 of ${total} folders selected${suffix}`;
+      if (current !== desired) count.textContent = desired;
     });
   }
 
@@ -39,6 +47,8 @@
       }
     }, true);
 
+    // Child-list observation is enough to catch Step 5 rerenders. The callback is
+    // idempotent so its own label correction cannot keep Firefox's main thread busy.
     new MutationObserver(() => updateCategoryRows(panel)).observe(panel, {
       childList: true,
       subtree: true,
