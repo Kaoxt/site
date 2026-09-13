@@ -29,12 +29,12 @@ async function dynamicAccent(imageBuffer) {
     if (max - min < 22) { r *= 0.72; g *= 0.72; b *= 0.72; }
     else { const target = 150, scale = max > target ? target / max : 1; r *= scale; g *= scale; b *= scale; }
     return rgbToHex(r, g, b);
-  } catch { return '#5a5c62'; }
+  } catch { return '#2f2d33'; }
 }
 
 function smartTagWidth(text, min = 220, max = 430) { return clamp(72 + String(text || '').length * 28, min, max); }
 
-async function smartTopTag(text, { fill = '#5a5c62', fillOpacity = 0.9, width, fontSize = 46, textColor = '#ffffff' } = {}) {
+async function smartTopTag(text, { fill = '#2f2d33', fillOpacity = 0.9, width, fontSize = 46, textColor = '#ffffff' } = {}) {
   const resolvedWidth = width || smartTagWidth(text), safeText = esc(text), radius = 7;
   const svg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${resolvedWidth}" height="${SMART_TOP_HEIGHT}" viewBox="0 0 ${resolvedWidth} ${SMART_TOP_HEIGHT}"><path d="M0 0h${resolvedWidth}v${SMART_TOP_HEIGHT-radius}a${radius} ${radius} 0 0 1-${radius} ${radius}H${radius}A${radius} ${radius} 0 0 1 0 ${SMART_TOP_HEIGHT-radius}z" fill="${fill}" fill-opacity="${fillOpacity}"/><text x="${resolvedWidth/2}" y="${SMART_TOP_HEIGHT/2}" text-anchor="middle" dominant-baseline="middle" font-family="DejaVu Sans" font-size="${fontSize}" font-weight="700" letter-spacing="-0.35" fill="${textColor}">${safeText}</text></svg>`);
   return { buffer: await sharp(svg).png().toBuffer(), width: resolvedWidth, height: SMART_TOP_HEIGHT };
@@ -60,7 +60,7 @@ function smartBottomBackdrop(){return Buffer.from(`<svg xmlns="http://www.w3.org
 async function readJson(req){const chunks=[];for await(const chunk of req)chunks.push(chunk);const raw=Buffer.concat(chunks).toString('utf8');return raw?JSON.parse(raw):{};}
 
 async function renderPoster(body){
- const{posterPath,sourceUrl,logoPath='',title='',smartLayout=false,overlayOnly=false,rating='',ratingLabel='',genre='',trend='',age='',quality='',overlayColor='#5a5c62'}=body||{};
+ const{posterPath,sourceUrl,logoPath='',title='',smartLayout=false,overlayOnly=false,rating='',ratingLabel='',genre='',trend='',age='',quality='',overlayColor='#2f2d33'}=body||{};
  const posterUrl=sourceUrl||(posterPath?`${TMDB_IMAGE_BASE}${posterPath}`:'');if(!posterUrl)throw new Error('posterPath or sourceUrl is required');
  const res=await fetch(posterUrl,{headers:{accept:'image/*'}});if(!res.ok)throw new Error(`Source image fetch failed: ${res.status}`);
  const input=Buffer.from(await res.arrayBuffer()),resized=await sharp(input).resize(POSTER_WIDTH,POSTER_HEIGHT,{fit:'cover'}).png().toBuffer(),composites=[];
@@ -75,12 +75,12 @@ async function renderPoster(body){
  }else{
   if(age){const width=smartTagWidth(age,132,205),badge=await originalBadgeImage(age,{width,height:72,fill:'#111216',fillOpacity:.42,fontSize:38,radius:7,strokeOpacity:.22});composites.push({input:badge,top:SMART_AGE_TOP,left:Math.round((POSTER_WIDTH-width)/2)});}
   if(quality){const width=190;composites.push({input:await originalBadgeImage(quality,{width,height:92,fill:'#f3f4f6',fillOpacity:.9,textColor:'#111318',fontSize:44,radius:8,strokeOpacity:.05}),top:0,left:POSTER_WIDTH-SAFE_MARGIN-width});}
-  if(trend){const t=await smartTopTag(trend,{fill:'#5a5c62',fillOpacity:.9,width:smartTagWidth(trend,300,390)});composites.push({input:t.buffer,top:0,left:Math.round((POSTER_WIDTH-t.width)/2)});}
+  if(trend){const t=await smartTopTag(trend,{fill:'#2f2d33',fillOpacity:.9,width:smartTagWidth(trend,300,390)});composites.push({input:t.buffer,top:0,left:Math.round((POSTER_WIDTH-t.width)/2)});}
   composites.push({input:smartBottomBackdrop(),top:POSTER_HEIGHT-330,left:0});
   const info=await smartBottomInfo(genre,resolvedRatingLabel);if(info)composites.push({input:info,top:SMART_BOTTOM_INFO_TOP,left:30});
  }
  return sharp(resized).composite(composites).webp({quality:88,effort:4}).toBuffer();
 }
 
-const server=http.createServer(async(req,res)=>{try{if(req.method==='GET'&&req.url==='/health'){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return res.end(JSON.stringify({ok:true,renderer:'kollection-posters-v2-bp-layout-14'}));}if(req.method!=='POST'||req.url!=='/render'){res.writeHead(404,{'content-type':'application/json'});return res.end(JSON.stringify({error:'Not found'}));}const body=await readJson(req),started=Date.now(),output=await renderPoster(body);res.writeHead(200,{'content-type':'image/webp','content-length':String(output.length),'cache-control':'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800','x-kollection-renderer':'v2-bp-layout-14','x-kollection-render-ms':String(Date.now()-started)});res.end(output);}catch(error){res.writeHead(400,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:error?.message||'Render failed'}));}});
+const server=http.createServer(async(req,res)=>{try{if(req.method==='GET'&&req.url==='/health'){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return res.end(JSON.stringify({ok:true,renderer:'kollection-posters-v2-bp-layout-15'}));}if(req.method!=='POST'||req.url!=='/render'){res.writeHead(404,{'content-type':'application/json'});return res.end(JSON.stringify({error:'Not found'}));}const body=await readJson(req),started=Date.now(),output=await renderPoster(body);res.writeHead(200,{'content-type':'image/webp','content-length':String(output.length),'cache-control':'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800','x-kollection-renderer':'v2-bp-layout-15','x-kollection-render-ms':String(Date.now()-started)});res.end(output);}catch(error){res.writeHead(400,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:error?.message||'Render failed'}));}});
 server.listen(PORT,'0.0.0.0',()=>console.log(`Kollection Posters v2 renderer listening on ${PORT}`));
