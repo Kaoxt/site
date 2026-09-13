@@ -7,10 +7,11 @@
   <link rel="shortcut icon" href="/favicon.ico?v=3" type="image/x-icon" />
   <meta name="theme-color" content="#050608" />
   <title>Backdrops | The Kollection</title>
-  <meta name="description" content="Create cinematic Nuvio hero backdrops directly in your browser using TMDB artwork." />
+  <meta name="description" content="Use The Kollection backdrop or create your own cinematic Nuvio collection backdrop directly in your browser." />
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/secondary-pages.css?v=20260909-3" />
   <link rel="stylesheet" href="/backdrops/styles.css?v=20260913-1" />
+  <link rel="stylesheet" href="/backdrops/collection-mode.css?v=20260913-1" />
   <script src="/components.js?v=20260908-3" defer></script>
 </head>
 <body>
@@ -20,18 +21,43 @@
     <header data-page-header class="backdrop-page-header">
       <div data-page-chip>Backdrop Generator</div>
       <h1 data-page-title>Backdrops</h1>
-      <p data-page-subtitle>Create cinematic collection backdrops from TMDB artwork. Images are fetched and rendered in your browser so The Kollection does not host or transform them.</p>
+      <p data-page-subtitle>Keep the backdrop provided with your Kollection setup, or create a custom backdrop for a saved collection or folder. Custom artwork is fetched and rendered in your browser.</p>
       <div class="hero-pills">
+        <span>Collection aware</span>
         <span>Browser rendered</span>
         <span>TMDB powered</span>
-        <span>No Kollection image hosting</span>
       </div>
     </header>
 
-    <section class="backdrop-app" data-page-content aria-label="Backdrop generator">
+    <section class="backdrop-app mode-provided" data-page-content aria-label="Backdrop generator">
       <aside class="backdrop-sidebar">
         <div class="sidebar-scroll">
-          <details class="control-card api-card" open>
+          <section class="control-card backdrop-source-card">
+            <div class="control-card-heading"><span><small>BACKDROP SOURCE</small><strong>Choose how your collection looks</strong></span></div>
+            <div class="control-card-body">
+              <label class="field-label" for="backdropSourceMode">Backdrop</label>
+              <select id="backdropSourceMode" class="select-input">
+                <option value="provided" selected>Use The Kollection backdrop</option>
+                <option value="custom">Create my own backdrop</option>
+              </select>
+              <p class="backdrop-source-note"><strong>Default:</strong> keep the backdrop already provided with your collection setup. Switch to custom whenever you want to make your own.</p>
+
+              <div class="collection-fields">
+                <label id="backdropCollectionField" class="collection-field" for="backdropCollection">
+                  <span class="field-label">Saved collection</span>
+                  <select id="backdropCollection" class="select-input"><option value="">Checking saved collections…</option></select>
+                </label>
+                <label id="backdropFolderField" class="collection-field" for="backdropFolder" hidden>
+                  <span class="field-label">Collection / folder</span>
+                  <select id="backdropFolder" class="select-input"><option value="__setup__">Entire collection setup</option></select>
+                </label>
+              </div>
+              <div id="collectionBackdropStatus" class="status-line" aria-live="polite">Checking for saved collection setups…</div>
+              <div id="backdropTargetLine" class="backdrop-target-line"><strong>Target:</strong> your collection</div>
+            </div>
+          </section>
+
+          <details class="control-card api-card generator-only" open>
             <summary><span><small>SETUP</small><strong>TMDB API</strong></span><i aria-hidden="true">⌄</i></summary>
             <div class="control-card-body">
               <p class="control-help">Use your own TMDB Read Access Token or API key. It stays in this browser and is sent directly to TMDB.</p>
@@ -48,7 +74,7 @@
             </div>
           </details>
 
-          <section class="control-card">
+          <section class="control-card generator-only">
             <div class="control-card-heading"><span><small>01</small><strong>Image source</strong></span></div>
             <div class="control-card-body">
               <label class="field-label" for="mediaType">Media</label>
@@ -83,7 +109,7 @@
             </div>
           </section>
 
-          <section class="control-card">
+          <section class="control-card generator-only">
             <div class="control-card-heading"><span><small>02</small><strong>Layout</strong></span><button class="reset-button" type="button" data-reset="layout">Reset</button></div>
             <div class="control-card-body range-stack">
               <label class="range-row"><span>Card scale <output id="scaleValue">100%</output></span><input id="cardScale" class="range-input" type="range" min="65" max="145" value="100" step="1" /></label>
@@ -96,7 +122,7 @@
             </div>
           </section>
 
-          <section class="control-card">
+          <section class="control-card generator-only">
             <div class="control-card-heading"><span><small>03</small><strong>Overlay</strong></span><button class="reset-button" type="button" data-reset="overlay">Reset</button></div>
             <div class="control-card-body">
               <label class="field-label" for="overlayPreset">Preset</label>
@@ -115,7 +141,7 @@
             </div>
           </section>
 
-          <section class="control-card">
+          <section class="control-card generator-only">
             <div class="control-card-heading"><span><small>04</small><strong>Text</strong></span><button class="reset-button" type="button" data-reset="text">Reset</button></div>
             <div class="control-card-body">
               <label class="toggle-row"><span><strong>Show title</strong><small>Add a label directly to the backdrop</small></span><input id="showTitle" type="checkbox" /></label>
@@ -139,27 +165,35 @@
         <div class="preview-toolbar">
           <div>
             <span class="section-kicker">LIVE PREVIEW</span>
-            <strong id="previewTitle">Your backdrop will appear here</strong>
+            <strong id="previewTitle">Using your collection backdrop</strong>
           </div>
-          <div class="toolbar-actions">
+          <div class="toolbar-actions generator-only">
             <button id="shuffleImages" class="toolbar-button" type="button" disabled>Shuffle</button>
             <button id="clearCanvas" class="toolbar-button" type="button">Clear</button>
           </div>
         </div>
 
         <div class="canvas-stage">
-          <div id="emptyState" class="empty-state">
+          <div id="collectionCurrentPreview" class="collection-current-preview">
+            <img id="collectionCurrentImage" alt="" hidden />
+            <div id="collectionCurrentEmpty" class="collection-current-empty">
+              <span class="collection-current-badge">The Kollection default</span>
+              <strong id="collectionCurrentTitle">Your collection backdrop</strong>
+              <span id="collectionCurrentCopy">This collection will keep the backdrop already provided by The Kollection.</span>
+            </div>
+          </div>
+          <div id="emptyState" class="empty-state generator-only">
             <div class="empty-icon" aria-hidden="true">▧</div>
             <strong>Fetch artwork to begin</strong>
             <span>The collage is built locally in your browser from TMDB image URLs.</span>
           </div>
-          <canvas id="backdropCanvas" width="1280" height="720" aria-label="Generated backdrop preview"></canvas>
-          <div id="renderBusy" class="render-busy" hidden><span></span>Rendering artwork…</div>
+          <canvas id="backdropCanvas" class="generator-only" width="1280" height="720" aria-label="Generated backdrop preview"></canvas>
+          <div id="renderBusy" class="render-busy generator-only" hidden><span></span>Rendering artwork…</div>
         </div>
 
         <div class="workspace-footer">
-          <div class="privacy-note"><span class="privacy-dot"></span><div><strong>Browser-only image pipeline</strong><small>TMDB requests, image loading, canvas rendering, settings, and cache stay on the user's device. The Kollection does not proxy or store generated artwork.</small></div></div>
-          <div class="export-panel">
+          <div class="privacy-note"><span class="privacy-dot"></span><div><strong>Browser-only custom image pipeline</strong><small>When custom mode is selected, TMDB requests, image loading, canvas rendering, settings, and cache stay on the user's device. The Kollection does not proxy or store generated artwork.</small></div></div>
+          <div class="export-panel generator-only">
             <label for="resolution">Resolution</label>
             <select id="resolution" class="select-input resolution-select"><option value="1280x720">720p</option><option value="1920x1080" selected>1080p</option><option value="2560x1440">1440p</option><option value="3840x2160">4K</option></select>
             <button id="downloadBackdrop" class="primary-button" type="button" disabled>Download PNG</button>
@@ -171,5 +205,6 @@
     <div id="site-footer"></div>
   </main>
   <script src="/backdrops/backdrops.js?v=20260913-1"></script>
+  <script src="/backdrops/collection-mode.js?v=20260913-1"></script>
 </body>
 </html>
