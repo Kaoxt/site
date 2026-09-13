@@ -78,6 +78,7 @@
 
     event.stopImmediatePropagation();
     syncPosterControlUi();
+    document.dispatchEvent(new Event('kollection:poster-settings-changed'));
 
     const preview = window.KollectionPosterPreview;
     preview?.setLoading?.();
