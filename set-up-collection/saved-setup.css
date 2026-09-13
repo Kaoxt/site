@@ -6,6 +6,11 @@
   flex-wrap:wrap;
 }
 
+/* Always honor the HTML hidden state, including wide/landscape layouts. */
+.setup-toolbar-actions [hidden]{
+  display:none !important;
+}
+
 .setup-toolbar-actions .ghost.small{
   min-height:42px;
   padding:0 20px;
