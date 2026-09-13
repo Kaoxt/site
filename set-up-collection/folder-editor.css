@@ -1,0 +1,155 @@
+/* Step 5 visual collection editor. Scoped to Set Up Collection only. */
+.collection-editor-shell{overflow:hidden}
+.collection-category-list{display:grid;gap:10px}
+.collection-category-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:12px;
+  min-height:78px;
+  padding:12px 13px 12px 15px;
+  border:1px solid var(--line-soft);
+  border-radius:17px;
+  background:rgba(255,255,255,.018);
+  transition:border-color .18s ease,background .18s ease,opacity .18s ease;
+}
+.collection-category-row.selected{
+  border-color:rgba(129,140,248,.34);
+  background:linear-gradient(135deg,rgba(99,102,241,.075),rgba(139,92,246,.035));
+}
+.collection-category-toggle{
+  min-width:0;
+  display:grid;
+  grid-template-columns:24px minmax(0,1fr);
+  align-items:center;
+  gap:13px;
+  cursor:pointer;
+}
+.collection-category-toggle input{position:absolute;opacity:0;pointer-events:none}
+.collection-category-copy{min-width:0;display:grid;gap:4px}
+.collection-category-copy b{font-size:16px;line-height:1.25;color:#f2f2f4}
+.collection-category-copy small{font-size:13px;line-height:1.4;color:var(--muted)}
+.collection-edit-button{
+  min-width:72px;
+  min-height:38px;
+  padding:0 16px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:rgba(255,255,255,.055);
+  color:#f5f5f7;
+  font:inherit;
+  font-size:13px;
+  font-weight:750;
+  cursor:pointer;
+}
+.collection-edit-button:hover:not(:disabled){background:rgba(255,255,255,.09)}
+.collection-edit-button:disabled{opacity:.32;cursor:default}
+
+.folder-editor-toolbar{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:16px;
+  margin-bottom:20px;
+  padding-bottom:18px;
+  border-bottom:1px solid var(--line-soft);
+}
+.folder-editor-count{min-width:0;display:grid;gap:4px}
+.folder-editor-count b{font-size:16px;color:#f4f4f6}
+.folder-editor-count span{font-size:13px;line-height:1.4;color:var(--muted)}
+.folder-edit-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+}
+.folder-edit-card{
+  min-width:0;
+  padding:0;
+  overflow:hidden;
+  text-align:left;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:16px;
+  background:rgba(255,255,255,.02);
+  color:inherit;
+  cursor:pointer;
+  transition:transform .18s ease,border-color .18s ease,background .18s ease,opacity .18s ease,box-shadow .18s ease;
+}
+.folder-edit-card:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.18)}
+.folder-edit-card.selected{
+  border-color:rgba(129,140,248,.62);
+  box-shadow:0 0 0 1px rgba(129,140,248,.15);
+}
+.folder-edit-card.removed{opacity:.48;filter:saturate(.55)}
+.folder-edit-card.removed:hover{opacity:.68}
+.folder-edit-image{
+  position:relative;
+  display:block;
+  aspect-ratio:16/9;
+  overflow:hidden;
+  background:rgba(255,255,255,.035);
+}
+.folder-edit-art{width:100%;height:100%;display:block;object-fit:cover}
+.folder-edit-image.art-missing::before,
+.folder-art-fallback{
+  content:"";
+  position:absolute;
+  inset:0;
+  display:block;
+  background:linear-gradient(135deg,rgba(99,102,241,.22),rgba(17,18,23,.75));
+}
+.folder-edit-shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(4,5,8,.25),transparent 55%);pointer-events:none}
+.folder-edit-card.removed .folder-edit-shade{background:rgba(5,6,8,.55)}
+.folder-edit-state{
+  position:absolute;
+  top:9px;
+  right:9px;
+  width:27px;
+  height:27px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.42);
+  background:rgba(8,9,12,.78);
+  color:#fff;
+  font-size:15px;
+  font-weight:900;
+  box-shadow:0 4px 14px rgba(0,0,0,.25);
+}
+.folder-edit-card.selected .folder-edit-state{background:#f4f4f6;color:#15161a;border-color:#f4f4f6}
+.folder-edit-meta{display:grid;gap:3px;padding:11px 12px 12px}
+.folder-edit-meta b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;line-height:1.25;color:#f2f2f4}
+.folder-edit-meta small{font-size:11.5px;color:var(--muted)}
+.folder-edit-card.removed .folder-edit-meta small{color:#c0c1c7}
+.folder-editor-actions{justify-content:flex-end;margin-top:18px}
+
+body.light .collection-category-row{border-color:rgba(0,0,0,.08);background:rgba(255,255,255,.5)}
+body.light .collection-category-row.selected{border-color:rgba(79,70,229,.25);background:linear-gradient(135deg,rgba(99,102,241,.07),rgba(139,92,246,.035))}
+body.light .collection-category-copy b,body.light .folder-editor-count b,body.light .folder-edit-meta b{color:#202126}
+body.light .collection-category-copy small,body.light .folder-editor-count span,body.light .folder-edit-meta small{color:#686b73}
+body.light .collection-edit-button{border-color:rgba(0,0,0,.10);background:rgba(255,255,255,.7);color:#202126}
+body.light .collection-edit-button:hover:not(:disabled){background:#fff}
+body.light .folder-edit-card{border-color:rgba(0,0,0,.09);background:#fff}
+body.light .folder-edit-card.selected{border-color:rgba(79,70,229,.48);box-shadow:0 0 0 1px rgba(79,70,229,.08)}
+body.light .folder-edit-card.removed{opacity:.52}
+
+@media(max-width:1000px){
+  .folder-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .folder-editor-toolbar{grid-template-columns:auto minmax(0,1fr)}
+  .folder-editor-toolbar>.action-group{grid-column:1/-1;justify-content:flex-end}
+}
+@media(max-width:700px){
+  .collection-category-row{min-height:72px;padding:11px 11px 11px 13px}
+  .collection-category-copy b{font-size:15px}
+  .collection-category-copy small{font-size:12.5px}
+  .collection-edit-button{min-width:64px;padding-inline:13px}
+  .folder-editor-toolbar{grid-template-columns:1fr;align-items:start;gap:11px}
+  .folder-editor-toolbar>.action-group{grid-column:auto;width:100%;display:grid;grid-template-columns:1fr 1fr}
+  .folder-editor-toolbar>.action-group .ghost{width:100%}
+  .folder-editor-back{justify-self:start}
+  .folder-edit-grid{gap:10px}
+  .folder-edit-meta{padding:9px 10px 10px}
+  .folder-edit-meta b{font-size:13px}
+}
+@media(max-width:430px){
+  .folder-edit-grid{grid-template-columns:1fr}
+}
