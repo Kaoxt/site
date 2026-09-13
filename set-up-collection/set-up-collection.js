@@ -49,7 +49,9 @@
 
     collectionPack: null,
     selectedCollectionGroupIds: [],
+    selectedCollectionFolderIds: {},
     collectionSelectionInitialized: false,
+    customizeGroupKey: null,
     bingecatManifestUrl: '',
     bingecatManifest: null,
     bingecatAddonId: '',
@@ -65,6 +67,22 @@
   const nav = $('#stepNav');
   const host = $('#panelHost');
   const alertHost = $('#alertHost');
+
+  window.addEventListener('kollection:restore-collection-selection', event => {
+    const detail = event?.detail || {};
+    if (Array.isArray(detail.selectedCollectionGroupIds)) {
+      state.selectedCollectionGroupIds = detail.selectedCollectionGroupIds.slice();
+    }
+    if (detail.selectedCollectionFolderIds && typeof detail.selectedCollectionFolderIds === 'object') {
+      state.selectedCollectionFolderIds = jsonClone(detail.selectedCollectionFolderIds);
+    }
+    state.collectionSelectionInitialized = true;
+    state.customizeGroupKey = null;
+    state.backup = null;
+    state.previewCollections = null;
+    state.finalCollections = null;
+    if (state.step === 4 && state.collectionPack) renderCustomize();
+  });
 
   function esc(value) {
     return String(value ?? '')
@@ -492,14 +510,27 @@
     return mergeKey(group?.id || group?.title || '');
   }
 
+  function collectionFolderKey(folder) {
+    return mergeKey(folder?.id || folder?.title || '');
+  }
+
   function ensureCollectionSelection() {
     if (state.collectionSelectionInitialized) return;
     state.selectedCollectionGroupIds = (state.collectionPack || []).map(collectionGroupKey).filter(Boolean);
+    state.selectedCollectionFolderIds = {};
     state.collectionSelectionInitialized = true;
   }
 
   function selectedCollectionPack() {
     ensureCollectionSelection();
+    if (window.KollectionFolderEditor?.filterPack) {
+      return window.KollectionFolderEditor.filterPack(
+        state.collectionPack || [],
+        state,
+        collectionGroupKey,
+        collectionFolderKey
+      );
+    }
     const selected = new Set(state.selectedCollectionGroupIds || []);
     return (state.collectionPack || []).filter(group => selected.has(collectionGroupKey(group)));
   }
@@ -1312,6 +1343,24 @@
 
   function renderCustomize() {
     ensureCollectionSelection();
+    if (window.KollectionFolderEditor?.render) {
+      return window.KollectionFolderEditor.render({
+        state,
+        host,
+        panel,
+        $,
+        $$,
+        esc,
+        alert,
+        loading,
+        setStep,
+        collectionGroupKey,
+        collectionFolderKey,
+        groupStats,
+        packUsesBingecat,
+        prepareReview,
+      });
+    }
     const groups = state.collectionPack || [];
     const selected = new Set(state.selectedCollectionGroupIds || []);
     const selectedCount = groups.filter(group => selected.has(collectionGroupKey(group))).length;
