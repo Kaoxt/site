@@ -9,7 +9,7 @@ const POSTER_HEIGHT = 1170;
 const SAFE_MARGIN = 30;
 
 const SMART_TOP_HEIGHT = 100;
-const SMART_BOTTOM_INFO_TOP = 1068;
+const SMART_BOTTOM_INFO_TOP = 1018;
 const SMART_AGE_TOP = 645;
 const SMART_LOGO_ZONE_TOP = 720;
 const SMART_LOGO_ZONE_BOTTOM = 1002;
@@ -47,10 +47,10 @@ async function originalBadgeImage(text, { width = 250, height = ORIGINAL_BADGE_H
 }
 
 async function smartBottomInfo(genre, ratingLabel) {
-  const cleanGenre=String(genre||'').trim(), cleanRating=String(ratingLabel||'').replace(/^★\s*/,'').replace(/^(IMDb|TMDB)\s+/i,'').trim();
+  const cleanGenre=String(genre||'').trim().replace(/^Science Fiction$/, 'Sci-Fi').replace(/^Sci-Fi & Fantasy$/, 'Sci-Fi').replace(/^Action & Adventure$/, 'Action'), cleanRating=String(ratingLabel||'').replace(/^★\s*/,'').replace(/^(IMDb|TMDB)\s+/i,'').trim();
   if(!cleanGenre&&!cleanRating)return null;
   const text=cleanGenre&&cleanRating?`${cleanGenre} • ★ ${cleanRating}`:cleanGenre||`★ ${cleanRating}`;
-  const svg=Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="720" height="72" viewBox="0 0 720 72"><defs><filter id="shadow" x="-20%" y="-60%" width="140%" height="220%"><feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#000" flood-opacity="0.48"/></filter></defs><text x="360" y="36" text-anchor="middle" dominant-baseline="middle" font-family="DejaVu Sans" font-size="44" font-weight="600" letter-spacing="-0.2" fill="#dedee3" fill-opacity="0.82" filter="url(#shadow)">${esc(text)}</text></svg>`);
+  const svg=Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="720" height="84" viewBox="0 0 720 84"><defs><filter id="shadow" x="-20%" y="-60%" width="140%" height="220%"><feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#000" flood-opacity="0.48"/></filter></defs><text x="360" y="42" text-anchor="middle" dominant-baseline="middle" font-family="DejaVu Sans" font-size="58" font-weight="600" letter-spacing="-0.2" fill="#dedee3" fill-opacity="0.82" filter="url(#shadow)">${esc(text)}</text></svg>`);
   return sharp(svg).png().toBuffer();
 }
 
@@ -83,5 +83,5 @@ async function renderPoster(body){
  return sharp(resized).composite(composites).webp({quality:88,effort:4}).toBuffer();
 }
 
-const server=http.createServer(async(req,res)=>{try{if(req.method==='GET'&&req.url==='/health'){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return res.end(JSON.stringify({ok:true,renderer:'kollection-posters-v2-bp-layout-15'}));}if(req.method!=='POST'||req.url!=='/render'){res.writeHead(404,{'content-type':'application/json'});return res.end(JSON.stringify({error:'Not found'}));}const body=await readJson(req),started=Date.now(),output=await renderPoster(body);res.writeHead(200,{'content-type':'image/webp','content-length':String(output.length),'cache-control':'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800','x-kollection-renderer':'v2-bp-layout-15','x-kollection-render-ms':String(Date.now()-started)});res.end(output);}catch(error){res.writeHead(400,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:error?.message||'Render failed'}));}});
+const server=http.createServer(async(req,res)=>{try{if(req.method==='GET'&&req.url==='/health'){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return res.end(JSON.stringify({ok:true,renderer:'kollection-posters-v2-bp-layout-16'}));}if(req.method!=='POST'||req.url!=='/render'){res.writeHead(404,{'content-type':'application/json'});return res.end(JSON.stringify({error:'Not found'}));}const body=await readJson(req),started=Date.now(),output=await renderPoster(body);res.writeHead(200,{'content-type':'image/webp','content-length':String(output.length),'cache-control':'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800','x-kollection-renderer':'v2-bp-layout-15','x-kollection-render-ms':String(Date.now()-started)});res.end(output);}catch(error){res.writeHead(400,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:error?.message||'Render failed'}));}});
 server.listen(PORT,'0.0.0.0',()=>console.log(`Kollection Posters v2 renderer listening on ${PORT}`));
