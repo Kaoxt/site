@@ -6,9 +6,9 @@
     if (!select) return false;
 
     const labels = {
-      average: 'Score (average) · TMDB',
+      average: 'Average',
       score: 'Score · TMDB',
-      imdb: 'IMDb Rating · Live',
+      imdb: 'IMDb',
       tmdb: 'TMDB Rating · Live',
       letterboxd: 'Letterboxd · Coming soon',
       mal: 'MyAnimeList · Coming soon',
@@ -23,6 +23,10 @@
       if (labels[option.value]) option.textContent = labels[option.value];
       option.disabled = upcoming.has(option.value);
     });
+
+    const imdbOption = [...select.options].find(option => option.value === 'imdb');
+    const averageOption = [...select.options].find(option => option.value === 'average');
+    if (imdbOption && averageOption) averageOption.after(imdbOption);
 
     const row = select.closest('.rating-source-row');
     const note = row?.querySelector('.rating-source-copy small');
