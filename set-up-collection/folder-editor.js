@@ -16,8 +16,12 @@
     const key = groupKey(group);
     const all = (group?.folders || []).map(folder => folderKey(folder, makeFolderKey)).filter(Boolean);
     const existing = state.selectedCollectionFolderIds[key];
+    const groupIsSelected = (state.selectedCollectionGroupIds || []).includes(key);
 
-    if (!Array.isArray(existing)) {
+    // Folder selections are opt-out. A category starts with every folder selected.
+    // Also repair the stale/inconsistent state produced by the first editor build
+    // where a selected category could be saved with an empty folder array.
+    if (!Array.isArray(existing) || (groupIsSelected && existing.length === 0 && all.length)) {
       state.selectedCollectionFolderIds[key] = all.slice();
       return new Set(all);
     }
@@ -135,6 +139,8 @@
 
     const groups = state.collectionPack || [];
     ensureFolderSelections(state, groups, collectionGroupKey, collectionFolderKey);
+    // Keep the saved-setup layer synchronized even before the user edits anything.
+    emitSelection(state);
 
     const activeKey = state.customizeGroupKey || null;
     const activeGroup = groups.find(group => collectionGroupKey(group) === activeKey);
@@ -195,6 +201,11 @@
         const key = collectionGroupKey(group);
         const row = host.querySelector(`.collection-category-row[data-group-key="${CSS.escape(key)}"]`);
         const checked = selectedNow.has(key);
+
+        // Checking a category whose folder selection is empty means "include the
+        // category", so restore all of its folders by default.
+        if (checked) selectedFolderKeys(state, group, collectionGroupKey, collectionFolderKey);
+
         row?.classList.toggle('selected', checked);
         const editButton = row?.querySelector('[data-edit-group]');
         if (editButton) editButton.disabled = !checked;
@@ -220,6 +231,12 @@
 
     $('#selectAllSections').onclick = () => {
       $$('.section-checkbox').forEach(input => { input.checked = true; });
+      for (const group of groups) {
+        const key = collectionGroupKey(group);
+        state.selectedCollectionFolderIds[key] = (group.folders || [])
+          .map(folder => folderKey(folder, collectionFolderKey))
+          .filter(Boolean);
+      }
       syncOverview();
     };
 
