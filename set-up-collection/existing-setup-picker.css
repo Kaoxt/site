@@ -1,0 +1,36 @@
+#existingSetupModalRoot{position:fixed;inset:0;z-index:10050;pointer-events:none}
+#existingSetupModalRoot.open{pointer-events:auto}
+.existing-setup-backdrop{position:absolute;inset:0;display:grid;place-items:center;padding:24px;background:rgba(5,6,8,.48);backdrop-filter:blur(16px) saturate(.92);-webkit-backdrop-filter:blur(16px) saturate(.92)}
+.existing-setup-modal{width:min(650px,100%);max-height:min(86vh,820px);overflow:auto;border:1px solid rgba(255,255,255,.13);border-radius:22px;background:rgba(22,22,24,.98);box-shadow:0 28px 90px rgba(0,0,0,.58);color:#f4f4f6}
+.existing-setup-modal-head{min-height:74px;padding:20px 26px;border-bottom:1px solid rgba(255,255,255,.09);display:flex;align-items:center;justify-content:space-between;gap:18px}
+.existing-setup-modal-head h3{margin:2px 0 0;font-size:22px;letter-spacing:-.025em}
+.existing-setup-kicker{display:block;color:#818cff;font-size:11px;font-weight:800;letter-spacing:.13em}
+.existing-setup-close{width:42px;height:42px;padding:0;border:1px solid rgba(255,255,255,.10);border-radius:50%;background:rgba(255,255,255,.025);color:#a8a8af;cursor:pointer;display:grid;place-items:center}
+.existing-setup-close::before{content:"×";font-size:24px;line-height:1;transform:translateY(-1px)}
+.existing-setup-close:hover{color:#fff;background:rgba(255,255,255,.06)}
+.existing-setup-modal-body{padding:26px}
+.existing-setup-copy{margin:0 0 20px;color:#9b9ba3;line-height:1.55}
+.existing-setup-list{display:grid;gap:10px}
+.existing-setup-row{width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;text-align:left;min-height:72px;padding:14px 16px;border:1px solid rgba(255,255,255,.10);border-radius:15px;background:rgba(255,255,255,.025);color:#f3f3f5;font:inherit;cursor:pointer;transition:background .16s ease,border-color .16s ease,transform .16s ease}
+.existing-setup-row:hover{background:rgba(255,255,255,.06);border-color:rgba(111,124,255,.38);transform:translateY(-1px)}
+.existing-setup-row-main{min-width:0;display:grid;gap:4px}
+.existing-setup-row-main b{font-size:14px}
+.existing-setup-row-main small{color:#96969f;font-size:12px;line-height:1.4}
+.existing-setup-state{flex:0 0 auto;min-width:72px;text-align:center;padding:8px 12px;border:1px solid rgba(255,255,255,.10);border-radius:999px;background:rgba(255,255,255,.035);font-size:12px;font-weight:750}
+.existing-setup-loading,.existing-setup-empty,.existing-setup-error{padding:20px;border:1px solid rgba(255,255,255,.08);border-radius:14px;color:#9b9ba3;background:rgba(255,255,255,.02)}
+.existing-setup-empty{display:grid;gap:5px}
+.existing-setup-empty b{color:#f3f3f5}
+.existing-setup-error{color:#ff9a9a}
+.existing-setup-modal-open{overflow:hidden}
+.customize-edit-ai-row{display:flex;justify-content:flex-end;margin-top:16px}
+.customize-edit-ai-row .ghost.small{min-height:40px;padding:0 16px;border-radius:999px;font-size:12.5px;font-weight:700}
+html[data-theme="light"] .existing-setup-backdrop{background:rgba(230,233,240,.45)}
+html[data-theme="light"] .existing-setup-modal{background:rgba(248,249,252,.98);border-color:rgba(0,0,0,.10);box-shadow:0 28px 90px rgba(24,30,45,.24);color:#202126}
+html[data-theme="light"] .existing-setup-modal-head{border-color:rgba(0,0,0,.08)}
+html[data-theme="light"] .existing-setup-copy,html[data-theme="light"] .existing-setup-row-main small{color:#686b73}
+html[data-theme="light"] .existing-setup-row{border-color:rgba(0,0,0,.09);background:rgba(255,255,255,.74);color:#202126}
+html[data-theme="light"] .existing-setup-row:hover{background:#fff;border-color:rgba(91,105,220,.30)}
+html[data-theme="light"] .existing-setup-state{border-color:rgba(0,0,0,.09);background:#fff}
+html[data-theme="light"] .existing-setup-loading,html[data-theme="light"] .existing-setup-empty,html[data-theme="light"] .existing-setup-error{border-color:rgba(0,0,0,.08);background:rgba(255,255,255,.65)}
+html[data-theme="light"] .existing-setup-empty b{color:#202126}
+@media(max-width:760px){.existing-setup-backdrop{padding:12px}.existing-setup-modal{border-radius:18px;max-height:90vh}.existing-setup-modal-head{min-height:64px;padding:16px 18px}.existing-setup-modal-head h3{font-size:19px}.existing-setup-modal-body{padding:20px 18px}.existing-setup-row{align-items:flex-start}.existing-setup-state{min-width:64px}.customize-edit-ai-row{justify-content:flex-start}}
