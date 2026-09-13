@@ -158,6 +158,42 @@ async function fetchTmdbDefault(config, id, env) {
   })), config.sort);
 }
 
+
+async function enrichArtwork(item, env) {
+  if (!env.TMDB_API_KEY) return item;
+  try {
+    const type = item.type === 'series' ? 'tv' : 'movie';
+    let id = String(item.id || '').replace(/^tmdb:/, '');
+    if (/^tt\d+$/.test(id)) {
+      const found = await fetch('https://api.themoviedb.org/3/find/' + id + '?external_source=imdb_id&api_key=' + encodeURIComponent(env.TMDB_API_KEY), { cf: { cacheTtl: 86400, cacheEverything: true } });
+      if (!found.ok) return item;
+      const data = await found.json();
+      id = String((type === 'tv' ? data.tv_results : data.movie_results)?.[0]?.id || '');
+    }
+    if (!/^\d+$/.test(id)) return item;
+    const response = await fetch('https://api.themoviedb.org/3/' + type + '/' + id + '?append_to_response=images,external_ids&include_image_language=en,null&api_key=' + encodeURIComponent(env.TMDB_API_KEY), { cf: { cacheTtl: 86400, cacheEverything: true } });
+    if (!response.ok) return item;
+    const details = await response.json();
+    const logos = details.images?.logos || [];
+    const logo = logos.find(image => image.iso_639_1 === 'en') || logos.find(image => !image.iso_639_1);
+    return {
+      ...item,
+      id: details.external_ids?.imdb_id || item.id,
+      ...(details.backdrop_path ? { background: 'https://image.tmdb.org/t/p/original' + details.backdrop_path } : {}),
+      ...(logo?.file_path ? { logo: 'https://image.tmdb.org/t/p/original' + logo.file_path } : {}),
+    };
+  } catch { return item; }
+}
+
+async function enrichCatalogArtwork(items, env) {
+  const result = [];
+  // Bound concurrency so large MDBList catalogs do not burst metadata requests.
+  for (let i = 0; i < items.length; i += 5) {
+    result.push(...await Promise.all(items.slice(i, i + 5).map(item => enrichArtwork(item, env))));
+  }
+  return result;
+}
+
 export async function onRequest({ request, env }) {
   const url = new URL(request.url);
   const parts = url.pathname.split('/').filter(Boolean);
@@ -187,7 +223,7 @@ export async function onRequest({ request, env }) {
     } else {
       return json({ error: 'Unknown catalog.' }, 404);
     }
-    return json({ metas: metas.slice(skip, skip + 100) });
+    return json({ metas: await enrichCatalogArtwork(metas.slice(skip, skip + 100), env) });
   } catch (error) {
     return json({ error: error?.message || 'Could not load catalog.', metas: [] }, 502);
   }
