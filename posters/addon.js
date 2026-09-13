@@ -64,6 +64,8 @@
     if (event.target?.id === 'ratingSource') refreshPattern();
   });
 
+  document.addEventListener('kollection:poster-settings-changed', refreshPattern);
+
   copyButton?.addEventListener('click', async () => {
     refreshPattern();
     try {
