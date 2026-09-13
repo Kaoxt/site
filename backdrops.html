@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/secondary-pages.css?v=20260909-3" />
   <link rel="stylesheet" href="/backdrops/styles.css?v=20260913-2" />
-  <link rel="stylesheet" href="/backdrops/title-mode.css?v=20260913-1" />
+  <link rel="stylesheet" href="/backdrops/title-mode.css?v=20260913-2" />
   <script src="/components.js?v=20260908-3" defer></script>
 </head>
 <body>
@@ -21,11 +21,11 @@
     <header data-page-header class="backdrop-page-header">
       <div data-page-chip>Backdrop Configurator</div>
       <h1 data-page-title>Backdrops</h1>
-      <p data-page-subtitle>Every movie and TV show keeps its own backdrop. Use each title's original TMDB backdrop by default, or apply one custom backdrop style across your setup.</p>
+      <p data-page-subtitle>Every movie and TV show keeps its own backdrop. Use each title's original TMDB backdrop by default, or apply one custom backdrop style across your setup. You can also load titles directly from MDBList.</p>
       <div class="hero-pills">
         <span>One backdrop per title</span>
+        <span>TMDB + MDBList</span>
         <span>Browser rendered</span>
-        <span>TMDB powered</span>
       </div>
     </header>
 
@@ -46,36 +46,95 @@
           </section>
 
           <details class="control-card api-card" open>
-            <summary><span><small>SETUP</small><strong>TMDB API</strong></span><i aria-hidden="true">⌄</i></summary>
+            <summary><span><small>SETUP</small><strong>API Keys</strong></span><i aria-hidden="true">⌄</i></summary>
             <div class="control-card-body">
-              <p class="control-help">Use your own TMDB Read Access Token or API key. It stays in this browser and is sent directly to TMDB.</p>
+              <p class="control-help">Keys stay in this browser and are sent directly to TMDB or MDBList. The Kollection does not proxy these requests.</p>
               <label class="field-label" for="tmdbKey">TMDB Read Access Token / API key</label>
               <div class="key-row">
                 <input id="tmdbKey" class="text-input" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your TMDB token" />
-                <button id="toggleKey" class="icon-button" type="button" aria-label="Show API key" title="Show API key">👁</button>
+                <button id="toggleKey" class="icon-button" type="button" aria-label="Show TMDB key" title="Show TMDB key">👁</button>
               </div>
               <div class="inline-actions">
-                <button id="saveKey" class="secondary-button" type="button">Save key</button>
-                <button id="validateKey" class="ghost-button" type="button">Test</button>
+                <button id="saveKey" class="secondary-button" type="button">Save TMDB key</button>
+                <button id="validateKey" class="ghost-button" type="button">Test TMDB</button>
               </div>
               <div id="keyStatus" class="status-line" aria-live="polite">No TMDB key saved.</div>
+
+              <div class="api-divider"></div>
+              <label class="field-label" for="mdblistKey">MDBList API key</label>
+              <div class="key-row">
+                <input id="mdblistKey" class="text-input" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your MDBList API key" />
+                <button id="toggleMdblistKey" class="icon-button" type="button" aria-label="Show MDBList key" title="Show MDBList key">👁</button>
+              </div>
+              <div class="inline-actions">
+                <button id="saveMdblistKey" class="secondary-button" type="button">Save MDBList key</button>
+                <button id="validateMdblistKey" class="ghost-button" type="button">Test MDBList</button>
+              </div>
+              <div id="mdblistKeyStatus" class="status-line" aria-live="polite">MDBList key is optional unless you want to browse lists.</div>
             </div>
           </details>
 
           <section class="control-card">
-            <div class="control-card-heading"><span><small>01</small><strong>Preview a title</strong></span></div>
+            <div class="control-card-heading"><span><small>01</small><strong>Choose titles</strong></span></div>
             <div class="control-card-body">
-              <div id="mediaType" class="segmented two" role="group" aria-label="Media type">
-                <button type="button" data-value="movie" class="active">Movies</button>
-                <button type="button" data-value="tv">TV Shows</button>
+              <label class="field-label" for="titleSource">Source</label>
+              <select id="titleSource" class="select-input">
+                <option value="tmdb" selected>Search TMDB</option>
+                <option value="mdblist">Browse MDBList</option>
+              </select>
+
+              <div id="tmdbTitleSource">
+                <div id="mediaType" class="segmented two" role="group" aria-label="Media type">
+                  <button type="button" data-value="movie" class="active">Movies</button>
+                  <button type="button" data-value="tv">TV Shows</button>
+                </div>
+                <label class="field-label" for="titleSearch">Movie or TV title</label>
+                <div class="search-row">
+                  <input id="titleSearch" class="text-input" type="search" placeholder="Search TMDB…" autocomplete="off" />
+                  <button id="searchTitle" class="primary-button" type="button">Search</button>
+                </div>
+                <div id="titleSearchStatus" class="status-line">Search for a title to preview its own backdrop.</div>
+                <div id="titleResults" class="title-results" aria-live="polite"></div>
               </div>
-              <label class="field-label" for="titleSearch">Movie or TV title</label>
-              <div class="search-row">
-                <input id="titleSearch" class="text-input" type="search" placeholder="Search TMDB…" autocomplete="off" />
-                <button id="searchTitle" class="primary-button" type="button">Search</button>
+
+              <div id="mdblistTitleSource" hidden>
+                <label class="field-label" for="mdblistMode">MDBList source</label>
+                <select id="mdblistMode" class="select-input">
+                  <option value="my-lists">My lists</option>
+                  <option value="official">Official lists</option>
+                  <option value="top">Top lists</option>
+                  <option value="user">Search by username</option>
+                  <option value="url">List URL</option>
+                </select>
+
+                <div id="mdblistUsernameRow" class="source-inline" hidden>
+                  <input id="mdblistUsername" class="text-input" type="text" placeholder="MDBList username" autocomplete="off" />
+                  <button id="searchMdblistUser" class="secondary-button" type="button">Search</button>
+                </div>
+
+                <div id="mdblistUrlRow" class="source-inline" hidden>
+                  <input id="mdblistUrl" class="text-input" type="url" placeholder="https://mdblist.com/lists/user/list" autocomplete="off" />
+                  <button id="loadMdblistUrl" class="secondary-button" type="button">Load</button>
+                </div>
+
+                <div id="mdblistListRow">
+                  <label class="field-label" for="mdblistList">List</label>
+                  <select id="mdblistList" class="select-input"><option value="">Choose a list…</option></select>
+                </div>
+
+                <div id="mdblistMediaRow" hidden>
+                  <label class="field-label" for="mdblistMediaType">Official list content</label>
+                  <select id="mdblistMediaType" class="select-input">
+                    <option value="">Movies & Shows</option>
+                    <option value="movie">Movies</option>
+                    <option value="show">Shows</option>
+                  </select>
+                </div>
+
+                <button id="loadMdblistTitles" class="primary-button full" type="button">Load titles from list</button>
+                <div id="mdblistStatus" class="status-line">Add an MDBList key above, then choose one of your lists or browse another list.</div>
+                <div id="mdblistTitleResults" class="title-results mdblist-title-results" aria-live="polite"></div>
               </div>
-              <div id="titleSearchStatus" class="status-line">Search for a title to preview its own backdrop.</div>
-              <div id="titleResults" class="title-results" aria-live="polite"></div>
             </div>
           </section>
 
@@ -131,19 +190,19 @@
           <div id="emptyState" class="empty-state">
             <div class="empty-icon" aria-hidden="true">▧</div>
             <strong>Every poster gets its own backdrop</strong>
-            <span>Search for a title to preview the exact backdrop that belongs to that movie or show.</span>
+            <span>Search TMDB or load an MDBList list, then choose any title to preview the exact backdrop that belongs to it.</span>
           </div>
           <canvas id="backdropCanvas" width="1280" height="720" aria-label="Per-title backdrop preview"></canvas>
           <div id="renderBusy" class="render-busy" hidden><span></span>Rendering title backdrop…</div>
         </div>
 
         <div class="per-title-explainer">
-          <strong>How this applies to your collection</strong>
-          <span>The setting is global, but the image is not. Dune uses Dune's backdrop, The Batman uses The Batman's backdrop, and every other title uses its own TMDB backdrop.</span>
+          <strong>How MDBList works here</strong>
+          <span>An MDBList list chooses the titles. It does not turn the whole list into one shared image: every movie or show from that list still gets its own TMDB backdrop and your selected backdrop style.</span>
         </div>
 
         <div class="workspace-footer">
-          <div class="privacy-note"><span class="privacy-dot"></span><div><strong>Browser-only image pipeline</strong><small>TMDB metadata and artwork are requested by the user's browser. The Kollection does not pre-render or store a backdrop for every title.</small></div></div>
+          <div class="privacy-note"><span class="privacy-dot"></span><div><strong>Browser-only image pipeline</strong><small>TMDB and MDBList requests are made by the user's browser. The Kollection does not pre-render or store a backdrop for every title.</small></div></div>
           <div class="export-panel">
             <label for="resolution">Preview download</label>
             <select id="resolution" class="select-input resolution-select"><option value="1280x720">720p</option><option value="1920x1080" selected>1080p</option><option value="2560x1440">1440p</option><option value="3840x2160">4K</option></select>
@@ -155,6 +214,7 @@
 
     <div id="site-footer"></div>
   </main>
-  <script src="/backdrops/backdrops.js?v=20260913-2"></script>
+  <script src="/backdrops/backdrops.js?v=20260913-3"></script>
+  <script src="/backdrops/mdblist.js?v=20260913-1"></script>
 </body>
 </html>
