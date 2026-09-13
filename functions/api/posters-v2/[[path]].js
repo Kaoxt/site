@@ -484,6 +484,24 @@ function cacheRequestFor(request) {
   return new Request(cacheUrl.toString(), request);
 }
 
+
+async function originalPosterFallback(type, id, env, reason, details = null) {
+  try {
+    const metadata = details || await tmdbFetch('/' + type + '/' + id, env.TMDB_API_KEY);
+    if (metadata.poster_path) {
+      return new Response(null, {
+        status: 302,
+        headers: {
+          location: 'https://image.tmdb.org/t/p/w780' + metadata.poster_path,
+          'cache-control': 'no-store',
+          'x-kollection-poster-fallback': reason,
+        },
+      });
+    }
+  } catch {}
+  return json({ error: 'Poster artwork is temporarily unavailable.', reason }, 503);
+}
+
 export async function onRequest(context) {
   const { request, env } = context;
   const url = new URL(request.url);
@@ -533,7 +551,7 @@ export async function onRequest(context) {
   }
 
   const slot = await acquirePosterRenderSlot(env, request);
-  if (!slot.allowed) return json({ error: 'Poster render budget blocked this uncached render.', reason: slot.reason }, slot.reason === 'client-hourly-limit' ? 429 : 503);
+  if (!slot.allowed) return originalPosterFallback(type, id, env, slot.reason);
 
   try {
     const append = type === 'movie' ? 'images,release_dates,external_ids' : 'images,content_ratings,external_ids';
@@ -573,7 +591,7 @@ export async function onRequest(context) {
     });
     if (!rendered.ok) {
       const message = await rendered.text().catch(() => '');
-      return json({ error: 'Sharp renderer failed.', status: rendered.status, detail: message.slice(0, 500) }, 502);
+      return originalPosterFallback(type, id, env, 'renderer-' + rendered.status, details);
     }
 
     const output = await rendered.arrayBuffer();
@@ -600,7 +618,7 @@ export async function onRequest(context) {
     ]));
     return response;
   } catch (error) {
-    return json({ error: error?.message || 'Posters v2 failed.' }, 502);
+    return originalPosterFallback(type, id, env, 'render-error');
   } finally {
     slot.release();
   }
