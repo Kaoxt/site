@@ -3,6 +3,7 @@ import { encryptedSecretsFromRow, normalizeName, parseRow, savedCollectionsDb, s
 import { decryptSavedSecrets, encryptSavedSecrets, normalizeSavedSecrets } from '../../../_lib/saved-secrets.js';
 
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
+const MAX_SETUPS_PER_PROFILE = 10;
 function json(body, status = 200, extraHeaders = {}) { return new Response(JSON.stringify(body), { status, headers: { ...JSON_HEADERS, ...extraHeaders } }); }
 async function accountSession(context) {
   const current = await readSession(context.request, context.env || {});
@@ -13,6 +14,25 @@ const SELECT = `id, name, config_json, draft_step, last_nuvio_profile_id, last_n
 const TABLE = 'saved_collections_v2';
 async function ownedRow(db, id, userId) {
   return db.prepare(`SELECT ${SELECT} FROM ${TABLE} WHERE id = ?1 AND user_id = ?2`).bind(id, userId).first();
+}
+async function duplicateName(db, userId, profileId, name, excludeId) {
+  return db.prepare(
+    `SELECT id FROM ${TABLE}
+     WHERE user_id = ?1
+       AND last_nuvio_profile_id IS ?2
+       AND lower(name) = lower(?3)
+       AND id <> ?4
+     LIMIT 1`
+  ).bind(userId, profileId, name, excludeId).first();
+}
+async function profileSetupCount(db, userId, profileId, excludeId) {
+  const row = await db.prepare(
+    `SELECT COUNT(*) AS total FROM ${TABLE}
+     WHERE user_id = ?1
+       AND last_nuvio_profile_id IS ?2
+       AND id <> ?3`
+  ).bind(userId, profileId, excludeId).first();
+  return Number(row?.total || 0);
 }
 
 export async function onRequestGet(context) {
@@ -42,6 +62,15 @@ async function update(context) {
     const profileId = input.nuvioProfileId === undefined ? existing.last_nuvio_profile_id : (Number.isFinite(Number(input.nuvioProfileId)) ? Number(input.nuvioProfileId) : null);
     const profileName = input.nuvioProfileName === undefined ? (existing.last_nuvio_profile_name || '') : String(input.nuvioProfileName || '').trim().slice(0, 120);
     const clean = input.config === undefined ? parseRow(existing).config : sanitizeConfig(input.config).clean;
+
+    if (await duplicateName(db, auth.session.id, profileId, name, context.params.id)) {
+      return json({ error: `A saved setup named “${name}” already exists for this profile. Choose a different name.` }, 409, auth.cookie ? { 'Set-Cookie': auth.cookie } : {});
+    }
+
+    const movingProfiles = Number(profileId) !== Number(existing.last_nuvio_profile_id);
+    if (movingProfiles && await profileSetupCount(db, auth.session.id, profileId, context.params.id) >= MAX_SETUPS_PER_PROFILE) {
+      return json({ error: `You can save up to ${MAX_SETUPS_PER_PROFILE} setups per Nuvio profile. Delete an existing setup before moving this setup to that profile.` }, 409, auth.cookie ? { 'Set-Cookie': auth.cookie } : {});
+    }
 
     const existingCipher = encryptedSecretsFromRow(existing);
     let encryptedSecrets = existingCipher;
