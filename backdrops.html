@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <link rel="icon" href="/favicon.ico?v=3" sizes="any" />
+  <link rel="shortcut icon" href="/favicon.ico?v=3" type="image/x-icon" />
+  <meta name="theme-color" content="#050608" />
+  <title>Backdrops | The Kollection</title>
+  <meta name="description" content="Create cinematic Nuvio hero backdrops directly in your browser using TMDB artwork." />
+  <link rel="stylesheet" href="/shared.css?v=20260906-1" />
+  <link rel="stylesheet" href="/secondary-pages.css?v=20260909-3" />
+  <link rel="stylesheet" href="/backdrops/styles.css?v=20260913-1" />
+  <script src="/components.js?v=20260908-3" defer></script>
+</head>
+<body>
+  <main class="page backdrop-page" data-kollection-page="secondary">
+    <div id="site-nav" aria-label="Site navigation"></div>
+
+    <header data-page-header class="backdrop-page-header">
+      <div data-page-chip>Backdrop Generator</div>
+      <h1 data-page-title>Backdrops</h1>
+      <p data-page-subtitle>Create cinematic collection backdrops from TMDB artwork. Images are fetched and rendered in your browser so The Kollection does not host or transform them.</p>
+      <div class="hero-pills">
+        <span>Browser rendered</span>
+        <span>TMDB powered</span>
+        <span>No Kollection image hosting</span>
+      </div>
+    </header>
+
+    <section class="backdrop-app" data-page-content aria-label="Backdrop generator">
+      <aside class="backdrop-sidebar">
+        <div class="sidebar-scroll">
+          <details class="control-card api-card" open>
+            <summary><span><small>SETUP</small><strong>TMDB API</strong></span><i aria-hidden="true">⌄</i></summary>
+            <div class="control-card-body">
+              <p class="control-help">Use your own TMDB Read Access Token or API key. It stays in this browser and is sent directly to TMDB.</p>
+              <label class="field-label" for="tmdbKey">TMDB Read Access Token / API key</label>
+              <div class="key-row">
+                <input id="tmdbKey" class="text-input" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your TMDB token" />
+                <button id="toggleKey" class="icon-button" type="button" aria-label="Show API key" title="Show API key">👁</button>
+              </div>
+              <div class="inline-actions">
+                <button id="saveKey" class="secondary-button" type="button">Save key</button>
+                <button id="validateKey" class="ghost-button" type="button">Test</button>
+              </div>
+              <div id="keyStatus" class="status-line" aria-live="polite">No TMDB key saved.</div>
+            </div>
+          </details>
+
+          <section class="control-card">
+            <div class="control-card-heading"><span><small>01</small><strong>Image source</strong></span></div>
+            <div class="control-card-body">
+              <label class="field-label" for="mediaType">Media</label>
+              <div id="mediaType" class="segmented" role="group" aria-label="Media type">
+                <button type="button" data-value="movie" class="active">Movies</button>
+                <button type="button" data-value="tv">TV Shows</button>
+                <button type="button" data-value="both">Both</button>
+              </div>
+
+              <label class="field-label" for="sourceList">TMDB list</label>
+              <select id="sourceList" class="select-input">
+                <option value="popular">Popular</option>
+                <option value="top_rated">Top Rated</option>
+                <option value="trending">Trending This Week</option>
+                <option value="now_playing">Now Playing / On The Air</option>
+              </select>
+
+              <div class="field-grid two-col">
+                <label><span>Genre</span><select id="genre" class="select-input"><option value="">Any genre</option></select></label>
+                <label><span>Decade</span><select id="decade" class="select-input"><option value="">Any decade</option><option>2020</option><option>2010</option><option>2000</option><option>1990</option><option>1980</option><option>1970</option><option>1960</option><option>1950</option></select></label>
+              </div>
+
+              <div class="field-grid two-col">
+                <label><span>Language</span><select id="language" class="select-input"><option value="">Any language</option><option value="en">English</option><option value="es">Spanish</option><option value="ja">Japanese</option><option value="ko">Korean</option><option value="fr">French</option><option value="de">German</option><option value="it">Italian</option><option value="pt">Portuguese</option><option value="hi">Hindi</option></select></label>
+                <label><span>Artwork</span><select id="artworkShape" class="select-input"><option value="backdrop">Backdrops</option><option value="poster">Posters</option></select></label>
+              </div>
+
+              <label class="field-label" for="imageCount">Images <output id="imageCountValue">18</output></label>
+              <input id="imageCount" class="range-input" type="range" min="8" max="36" value="18" step="1" />
+              <button id="fetchImages" class="primary-button full" type="button">Fetch artwork</button>
+              <div id="sourceStatus" class="status-line" aria-live="polite">Add your TMDB key, then fetch artwork.</div>
+            </div>
+          </section>
+
+          <section class="control-card">
+            <div class="control-card-heading"><span><small>02</small><strong>Layout</strong></span><button class="reset-button" type="button" data-reset="layout">Reset</button></div>
+            <div class="control-card-body range-stack">
+              <label class="range-row"><span>Card scale <output id="scaleValue">100%</output></span><input id="cardScale" class="range-input" type="range" min="65" max="145" value="100" step="1" /></label>
+              <label class="range-row"><span>Gap <output id="gapValue">18</output></span><input id="cardGap" class="range-input" type="range" min="0" max="56" value="18" step="1" /></label>
+              <label class="range-row"><span>Corner radius <output id="radiusValue">16</output></span><input id="cornerRadius" class="range-input" type="range" min="0" max="48" value="16" step="1" /></label>
+              <label class="range-row"><span>Artwork opacity <output id="artOpacityValue">100%</output></span><input id="artOpacity" class="range-input" type="range" min="20" max="100" value="100" step="1" /></label>
+              <label class="range-row"><span>Angle <output id="angleValue">-7°</output></span><input id="rowAngle" class="range-input" type="range" min="-15" max="15" value="-7" step="1" /></label>
+              <label class="range-row"><span>X offset <output id="offsetXValue">0</output></span><input id="offsetX" class="range-input" type="range" min="-240" max="240" value="0" step="4" /></label>
+              <label class="range-row"><span>Y offset <output id="offsetYValue">0</output></span><input id="offsetY" class="range-input" type="range" min="-180" max="180" value="0" step="4" /></label>
+            </div>
+          </section>
+
+          <section class="control-card">
+            <div class="control-card-heading"><span><small>03</small><strong>Overlay</strong></span><button class="reset-button" type="button" data-reset="overlay">Reset</button></div>
+            <div class="control-card-body">
+              <label class="field-label" for="overlayPreset">Preset</label>
+              <select id="overlayPreset" class="select-input">
+                <option value="cinematic">Cinematic</option>
+                <option value="dark-left">Dark Left</option>
+                <option value="dark-right">Dark Right</option>
+                <option value="vignette">Vignette</option>
+                <option value="bottom-fade">Bottom Fade</option>
+                <option value="none">None</option>
+              </select>
+              <div class="range-stack compact">
+                <label class="range-row"><span>Overlay opacity <output id="overlayOpacityValue">72%</output></span><input id="overlayOpacity" class="range-input" type="range" min="0" max="100" value="72" step="1" /></label>
+                <label class="range-row"><span>Gradient coverage <output id="coverageValue">68%</output></span><input id="gradientCoverage" class="range-input" type="range" min="30" max="100" value="68" step="1" /></label>
+              </div>
+            </div>
+          </section>
+
+          <section class="control-card">
+            <div class="control-card-heading"><span><small>04</small><strong>Text</strong></span><button class="reset-button" type="button" data-reset="text">Reset</button></div>
+            <div class="control-card-body">
+              <label class="toggle-row"><span><strong>Show title</strong><small>Add a label directly to the backdrop</small></span><input id="showTitle" type="checkbox" /></label>
+              <div id="textControls" class="text-controls" hidden>
+                <label class="field-label" for="titleText">Title</label>
+                <input id="titleText" class="text-input" type="text" maxlength="64" placeholder="e.g. Action Movies" />
+                <div class="field-grid two-col">
+                  <label><span>Font</span><select id="fontFamily" class="select-input"><option value="Inter, Arial, sans-serif">Inter</option><option value="Arial Narrow, Arial, sans-serif">Condensed</option><option value="Georgia, serif">Serif</option><option value="Impact, sans-serif">Impact</option></select></label>
+                  <label><span>Position</span><select id="textPosition" class="select-input"><option value="left-center">Left center</option><option value="left-bottom">Left bottom</option><option value="center">Center</option><option value="right-center">Right center</option><option value="right-bottom">Right bottom</option></select></label>
+                </div>
+                <label class="range-row"><span>Text size <output id="fontSizeValue">72</output></span><input id="fontSize" class="range-input" type="range" min="32" max="140" value="72" step="2" /></label>
+                <label class="color-row"><span>Text color</span><input id="textColor" type="color" value="#ffffff" /></label>
+                <label class="toggle-row simple"><span>Drop shadow</span><input id="textShadow" type="checkbox" checked /></label>
+              </div>
+            </div>
+          </section>
+        </div>
+      </aside>
+
+      <section class="backdrop-workspace">
+        <div class="preview-toolbar">
+          <div>
+            <span class="section-kicker">LIVE PREVIEW</span>
+            <strong id="previewTitle">Your backdrop will appear here</strong>
+          </div>
+          <div class="toolbar-actions">
+            <button id="shuffleImages" class="toolbar-button" type="button" disabled>Shuffle</button>
+            <button id="clearCanvas" class="toolbar-button" type="button">Clear</button>
+          </div>
+        </div>
+
+        <div class="canvas-stage">
+          <div id="emptyState" class="empty-state">
+            <div class="empty-icon" aria-hidden="true">▧</div>
+            <strong>Fetch artwork to begin</strong>
+            <span>The collage is built locally in your browser from TMDB image URLs.</span>
+          </div>
+          <canvas id="backdropCanvas" width="1280" height="720" aria-label="Generated backdrop preview"></canvas>
+          <div id="renderBusy" class="render-busy" hidden><span></span>Rendering artwork…</div>
+        </div>
+
+        <div class="workspace-footer">
+          <div class="privacy-note"><span class="privacy-dot"></span><div><strong>Browser-only image pipeline</strong><small>TMDB requests, image loading, canvas rendering, settings, and cache stay on the user's device. The Kollection does not proxy or store generated artwork.</small></div></div>
+          <div class="export-panel">
+            <label for="resolution">Resolution</label>
+            <select id="resolution" class="select-input resolution-select"><option value="1280x720">720p</option><option value="1920x1080" selected>1080p</option><option value="2560x1440">1440p</option><option value="3840x2160">4K</option></select>
+            <button id="downloadBackdrop" class="primary-button" type="button" disabled>Download PNG</button>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <div id="site-footer"></div>
+  </main>
+  <script src="/backdrops/backdrops.js?v=20260913-1"></script>
+</body>
+</html>
