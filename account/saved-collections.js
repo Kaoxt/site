@@ -46,9 +46,10 @@
       name.textContent = item.name || 'My Kollection';
       const meta = document.createElement('small');
       const pieces = [];
+      const complete = Number(item.draftStep || 0) >= 7;
       if (item.nuvioProfileName) pieces.push(item.nuvioProfileName);
-      if (item.updatedAt) pieces.push(`Updated ${formatDate(item.updatedAt)}`);
-      meta.textContent = pieces.join(' · ') || 'Saved configuration';
+      if (item.updatedAt) pieces.push(`${complete ? 'Last synced' : 'Updated'} ${formatDate(item.updatedAt)}`);
+      meta.textContent = pieces.join(' · ') || (complete ? 'Setup complete' : 'Saved configuration');
       copy.append(name, meta);
 
       const actions = document.createElement('div');
@@ -57,7 +58,8 @@
       const resume = document.createElement('a');
       resume.className = 'account-secondary-button account-small-button';
       resume.href = `/set-up-collection?saved=${encodeURIComponent(item.id)}`;
-      resume.textContent = 'Resume';
+      resume.textContent = complete ? 'Edit' : 'Resume';
+      resume.setAttribute('aria-label', complete ? `Edit ${item.name || 'saved setup'}` : `Resume ${item.name || 'saved setup'}`);
 
       const remove = document.createElement('button');
       remove.className = 'account-secondary-button account-small-button';
@@ -121,6 +123,7 @@
   function init() {
     load();
     window.addEventListener('kollection:nuvio-signed-in', load);
+    window.addEventListener('kollection:setup-synced', load);
     window.addEventListener('kollection:nuvio-signed-out', () => {
       const container = document.getElementById('accountSavedCollections');
       const status = document.getElementById('accountSavedStatus');
