@@ -2,9 +2,11 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'production-cache-12';
+const CACHE_VERSION = 'production-cache-13';
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
+const DEFAULT_MDBLIST_CACHE_DAYS = 30;
+const DEFAULT_MDBLIST_MAX_LOOKUPS_PER_DAY = 500;
 const ALLOWED_TAGS = ['trend', 'rating', 'genre', 'quality', 'age'];
 const OVERLAY_LANGUAGES = ['en', 'es', 'fr', 'de', 'it', 'pt', 'ja', 'ko'];
 
@@ -307,6 +309,94 @@ async function writeCachedRating(db, provider, itemId, value, label) {
   `).bind(provider, itemId, value, label, now).run();
 }
 
+const MDBLIST_RATING_SOURCES = new Set(['average', 'score', 'imdb', 'letterboxd', 'mal', 'rogerebert', 'tomatometer', 'popcornmeter']);
+
+async function readMdblistRecord(db, itemId, maxAgeSeconds) {
+  const cutoff = Math.floor(Date.now() / 1000) - maxAgeSeconds;
+  const row = await db.prepare(`
+    SELECT value FROM poster_rating_cache
+    WHERE provider = 'mdblist-record' AND item_id = ?1 AND updated_at >= ?2
+  `).bind(itemId, cutoff).first();
+  if (!row?.value) return null;
+  try { return JSON.parse(String(row.value)); } catch { return null; }
+}
+
+async function writeMdblistRecord(db, itemId, data) {
+  const now = Math.floor(Date.now() / 1000);
+  await db.prepare(`
+    INSERT INTO poster_rating_cache (provider, item_id, value, label, updated_at)
+    VALUES ('mdblist-record', ?1, ?2, '', ?3)
+    ON CONFLICT(provider, item_id) DO UPDATE SET
+      value = excluded.value,
+      label = excluded.label,
+      updated_at = excluded.updated_at
+  `).bind(itemId, JSON.stringify(data), now).run();
+}
+
+function mdblistRating(record, source, status = 'cache-hit') {
+  const ratings = Array.isArray(record?.ratings) ? record.ratings : [];
+  const aliases = {
+    imdb: ['imdb'], letterboxd: ['letterboxd'], mal: ['myanimelist', 'mal'],
+    rogerebert: ['rogerebert'], tomatometer: ['tomatoes'], popcornmeter: ['audience'],
+  };
+  let value;
+  if (source === 'average' || source === 'score') {
+    const raw = Number(source === 'average' ? record?.score_average : record?.score);
+    if (Number.isFinite(raw) && raw > 0) value = raw / 10;
+  } else {
+    const rating = ratings.find(item => aliases[source]?.includes(String(item?.source || '').toLowerCase()));
+    if (source === 'tomatometer' || source === 'popcornmeter') {
+      const raw = Number(rating?.value ?? rating?.score);
+      if (Number.isFinite(raw) && raw > 0) {
+        const formatted = Math.round(raw) + '%';
+        return { value: formatted, label: formatted, source, status };
+      }
+    } else if (source === 'letterboxd') {
+      const score = Number(rating?.score);
+      const raw = Number(rating?.value);
+      if (Number.isFinite(score) && score > 0) value = score / 10;
+      else if (Number.isFinite(raw) && raw > 0) value = raw > 5 ? raw / 2 : raw;
+    } else {
+      const raw = Number(rating?.value);
+      if (Number.isFinite(raw) && raw > 0) value = raw;
+    }
+  }
+  if (!Number.isFinite(value) || value <= 0) return { value: '', label: '', source, status: 'missing' };
+  const formatted = value.toFixed(1);
+  return { value: formatted, label: formatted, source, status };
+}
+
+async function mdblistRating(details, type, source, env) {
+  if (!env.MDBLIST_API_KEY) {
+    if (source === 'imdb') return imdbRating(details, env);
+    return { value: '', label: '', source, status: 'not-configured' };
+  }
+  if (!env.DB) return { value: '', label: '', source, status: 'rating-cache-unavailable' };
+  const itemId = `${type}:${details.id}`;
+  const cacheDays = positiveInt(env.MDBLIST_RATING_CACHE_DAYS, DEFAULT_MDBLIST_CACHE_DAYS, 1, 365);
+  const dailyLimit = positiveInt(env.MDBLIST_MAX_LOOKUPS_PER_DAY, DEFAULT_MDBLIST_MAX_LOOKUPS_PER_DAY, 1, 1000000);
+  try {
+    await ensureRatingTables(env.DB);
+    const cached = await readMdblistRecord(env.DB, itemId, cacheDays * 86400);
+    if (cached) return mdblistRating(cached, source);
+    const reserved = await reserveProviderLookup(env.DB, 'mdblist', dailyLimit);
+    if (!reserved) return { value: '', label: '', source, status: 'mdblist-daily-limit' };
+  } catch {
+    return { value: '', label: '', source, status: 'rating-cache-error' };
+  }
+  const mediaType = type === 'tv' ? 'show' : 'movie';
+  let response;
+  try {
+    response = await fetch(`https://api.mdblist.com/tmdb/${mediaType}/${encodeURIComponent(details.id)}?apikey=${encodeURIComponent(env.MDBLIST_API_KEY)}`, { headers: { accept: 'application/json' } });
+  } catch {
+    return { value: '', label: '', source, status: 'mdblist-network-error' };
+  }
+  if (!response.ok) return { value: '', label: '', source, status: `mdblist-${response.status}` };
+  const record = await response.json();
+  try { await writeMdblistRecord(env.DB, itemId, record); } catch {}
+  return mdblistRating(record, source, 'upstream');
+}
+
 async function imdbRating(details, env) {
   const imdbId = details.external_ids?.imdb_id || '';
   if (!imdbId) return { value: '', label: '', source: 'imdb', status: 'missing-id' };
@@ -334,10 +424,10 @@ async function imdbRating(details, env) {
   return { value: formatted, label, source: 'imdb', status: 'upstream' };
 }
 
-async function resolveRating(details, requestedSource, env) {
+async function resolveRating(details, type, requestedSource, env) {
   const source = normalizeRatingSource(requestedSource);
-  if (source === 'imdb') return imdbRating(details, env);
-  if (source === 'tmdb' || source === 'score' || source === 'average') return tmdbRating(details, source);
+  if (source === 'tmdb') return tmdbRating(details, source);
+  if (MDBLIST_RATING_SOURCES.has(source)) return mdblistRating(details, type, source, env);
   return { value: '', label: '', source, status: 'unsupported' };
 }
 
@@ -437,7 +527,7 @@ export async function onRequest(context) {
     if (!artwork.path && !sourceUrl) return json({ error: 'TMDB has no poster artwork for this title.' }, 404);
 
     const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
-    const rating = tags.has('rating') ? await resolveRating(details, requestedRatingSource, env) : { value: '', label: '', source: requestedRatingSource, status: 'disabled' };
+    const rating = tags.has('rating') ? await resolveRating(details, type, requestedRatingSource, env) : { value: '', label: '', source: requestedRatingSource, status: 'disabled' };
     const payload = {
       posterPath: artwork.path,
       sourceUrl,
