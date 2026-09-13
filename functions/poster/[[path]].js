@@ -23,12 +23,23 @@ export async function onRequest({ request }) {
   if (!target.searchParams.has('tags')) target.searchParams.set('tags', 'trend,rating');
   if (!target.searchParams.has('ratingSource')) target.searchParams.set('ratingSource', 'average');
 
-  return new Response(null, {
-    status: 302,
-    headers: {
-      location: target.toString(),
-      'cache-control': 'no-store',
-      'x-kollection-poster-route': 'v2-sharp',
-    },
-  });
+  try {
+    const rendered = await fetch(target.toString(), {
+      headers: { accept: request.headers.get('accept') || 'image/webp' },
+      cf: { cacheEverything: true },
+    });
+    const headers = new Headers(rendered.headers);
+    headers.set('x-kollection-poster-route', 'v2-sharp-direct');
+    headers.delete('content-encoding');
+    return new Response(rendered.body, {
+      status: rendered.status,
+      statusText: rendered.statusText,
+      headers,
+    });
+  } catch {
+    return new Response('Poster artwork is temporarily unavailable.', {
+      status: 503,
+      headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' },
+    });
+  }
 }
