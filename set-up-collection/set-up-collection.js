@@ -1272,8 +1272,9 @@
     const catalogs = bingecatDisplayCatalogs();
     const movieCount = catalogs.filter(c => String(c.type).toLowerCase() === 'movie').length;
     const seriesCount = catalogs.filter(c => String(c.type).toLowerCase() === 'series').length;
+    const bingecatConfigureUrl = 'https://bingecat.com/stremio/configure';
     host.innerHTML = panel('STEP 4 · BINGECAT', skipped ? 'Bingecat is skipped' : (ready ? 'Your personal Bingecat manifest is ready' : 'Connect Bingecat recommendations'),
-      skipped ? 'The For You Bingecat placeholders will be removed and the rest of The Kollection will still be set up normally.' : (ready ? 'Set Up Collection will install this personal manifest and rewrite the For You sources to its add-on ID and catalog IDs.' : 'Bingecat is optional. Connect your personal manifest for recommendations, or skip this step.'),
+      skipped ? 'The For You Bingecat placeholders will be removed and the rest of The Kollection will still be set up normally.' : (ready ? 'Set Up Collection will install this personal manifest and rewrite the For You sources to its add-on ID and catalog IDs.' : 'Bingecat is optional. Open its setup page, configure your recommendations, then paste the install URL back here.'),
       `<div class="card">
         ${skipped ? `
           <div class="callout">Bingecat is optional. Your setup will continue without personalized For You recommendation catalogs.</div>
@@ -1281,10 +1282,11 @@
           <div class="status-row"><div><b>${esc(state.bingecatManifest.name || 'Bingecat')}</b><span>${esc(state.bingecatAddonId)} · ${movieCount} movie + ${seriesCount} series recommendation catalogs</span></div><span class="badge good">Verified</span></div>
           <div class="catalog-list" style="margin-top:16px">${catalogs.slice(0, 8).map(c => `<div class="catalog-row"><div><b>${esc(c.name || c.id)}</b><small>${esc(c.id)}</small></div><span class="badge">${esc(c.type || '')}</span></div>`).join('')}</div>
           <div class="actions"><button class="ghost" id="backBtn">Back</button><div class="action-group"><button class="ghost" id="skipBtn">Skip Bingecat</button><button class="ghost" id="changeBtn">Use a different manifest</button><button class="btn" id="nextBtn">Customize collection</button></div></div>` : `
-          <div class="callout">Open Bingecat, configure your recommendations, copy your personal add-on URL ending in <strong>manifest.json</strong>, and paste it below.</div>
-          <div class="inline" style="margin-top:16px"><a class="btn secondary" href="${esc(CFG.bingecatUrl)}" target="_blank" rel="noopener">Open Bingecat</a></div>
-          <div class="field" style="margin-top:18px"><label for="bcUrl">Bingecat manifest URL</label><input id="bcUrl" type="url" value="${esc(state.bingecatManifestUrl)}" placeholder="https://…/manifest.json" autocomplete="off"><small>The creator-specific Bingecat ID is never pushed. It is replaced with the ID from your manifest.</small></div>
-          <div class="actions"><button class="ghost" id="backBtn">Back</button><div class="action-group"><button class="ghost" id="skipBtn">Skip Bingecat</button><button class="btn" id="verifyBtn">Verify Bingecat</button></div></div>`}
+          <div class="callout"><strong>1. Open Bingecat setup.</strong> If you are already signed in, Bingecat should take you directly to its configuration page. Configure your recommendations and use its <strong>Copy Install URL</strong> action.</div>
+          <div class="inline" style="margin-top:16px"><a class="btn secondary" href="${esc(bingecatConfigureUrl)}" target="_blank" rel="noopener">Open Bingecat setup</a></div>
+          <div class="callout" style="margin-top:16px"><strong>2. Return here and connect it.</strong> Use Paste &amp; Connect for the quickest setup, or paste the URL manually below.</div>
+          <div class="field" style="margin-top:18px"><label for="bcUrl">Bingecat install URL</label><input id="bcUrl" type="url" value="${esc(state.bingecatManifestUrl)}" placeholder="https://…/manifest.json" autocomplete="off"><small>The Kollection only needs your personal manifest URL. Your Bingecat password is never requested or stored.</small></div>
+          <div class="actions"><button class="ghost" id="backBtn">Back</button><div class="action-group"><button class="ghost" id="skipBtn">Skip Bingecat</button><button class="ghost" id="pasteBingecatBtn" type="button">Paste &amp; Connect</button><button class="btn" id="verifyBtn">Connect Bingecat</button></div></div>`}
       </div>`);
     $('#backBtn').onclick = () => setStep(2);
     const skip = async () => {
@@ -1328,17 +1330,40 @@
       };
       return;
     }
-    $('#verifyBtn').onclick = async () => {
+    const connectBingecat = async (url) => {
       try {
-        const url = $('#bcUrl').value.trim();
-        loading('Reading your Bingecat manifest…');
+        const normalized = String(url || '').trim();
+        if (!normalized) return alert('Paste your Bingecat install URL first.', 'error');
+        state.bingecatManifestUrl = normalized;
+        loading('Connecting your Bingecat recommendations…');
         state.bingecatSkipped = false;
-        await verifyBingecatManifest(url);
+        await verifyBingecatManifest(normalized);
         state.backup = null;
         renderBingecat();
-        alert('Bingecat manifest verified.', 'success');
-      } catch (e) { renderBingecat(); alert(e.message, 'error'); }
+        alert('Bingecat connected.', 'success');
+      } catch (e) {
+        renderBingecat();
+        alert(e.message, 'error');
+      }
     };
+
+    const pasteButton = $('#pasteBingecatBtn');
+    if (pasteButton) {
+      pasteButton.onclick = async () => {
+        try {
+          if (!navigator.clipboard?.readText) throw new Error('Clipboard access is not available in this browser.');
+          const text = await navigator.clipboard.readText();
+          if (!String(text || '').trim()) throw new Error('Your clipboard is empty.');
+          await connectBingecat(text);
+        } catch (e) {
+          const input = $('#bcUrl');
+          input?.focus();
+          alert(`${e.message || 'Clipboard permission was not granted.'} Paste the Bingecat install URL into the field and tap Connect Bingecat.`, 'info');
+        }
+      };
+    }
+
+    $('#verifyBtn').onclick = () => connectBingecat($('#bcUrl').value);
   }
 
   function renderCustomize() {
