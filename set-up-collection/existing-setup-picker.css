@@ -24,6 +24,8 @@
 .existing-setup-modal-open{overflow:hidden}
 .customize-edit-ai-row{display:flex;justify-content:flex-end;margin-top:16px}
 .customize-edit-ai-row .ghost.small{min-height:40px;padding:0 16px;border-radius:999px;font-size:12.5px;font-weight:700}
+/* The shared desktop toolbar CSS gives buttons display:inline-flex, which can override the browser's default [hidden] rule. Force auth-gated actions to stay hidden in every viewport. */
+.setup-toolbar-actions #saveSetupBtn[hidden],.setup-toolbar-actions #resetBtn[hidden]{display:none!important}
 html[data-theme="light"] .existing-setup-backdrop{background:rgba(230,233,240,.45)}
 html[data-theme="light"] .existing-setup-modal{background:rgba(248,249,252,.98);border-color:rgba(0,0,0,.10);box-shadow:0 28px 90px rgba(24,30,45,.24);color:#202126}
 html[data-theme="light"] .existing-setup-modal-head{border-color:rgba(0,0,0,.08)}
