@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const LEGACY_HOST_RE = /https?:\/\/(?:www\.)?kao-xt\.com(?=\/|$)/gi;
+  const LEGACY_HOST_RE = /^https?:\/\/(?:www\.)?(?:kao-xt|ka-oxt)\.com(?=\/|$)/i;
   const ARTWORK_INPUT_IDS = [
     'folderCoverImage',
     'folderTitleLogo',
@@ -10,7 +10,11 @@
 
   function normalizeString(value) {
     if (typeof value !== 'string' || !value) return value;
-    return value.replace(LEGACY_HOST_RE, 'https://kollection.tv');
+
+    return value.replace(/https?:\/\/(?:www\.)?(?:kao-xt|ka-oxt)\.com(?:\/images)?(?=\/|$)([^\s"'<>]*)/gi, (match, tail) => {
+      const suffix = String(tail || '');
+      return `https://kollection.tv/images${suffix.startsWith('/') ? suffix : `/${suffix}`}`;
+    });
   }
 
   function normalizeDeep(value) {
@@ -80,6 +84,7 @@
       const caret = input.selectionStart;
       input.value = normalized;
       try { input.setSelectionRange(caret, caret); } catch {}
+      input.dispatchEvent(new Event('input', { bubbles: true }));
     }
   }, true);
 
@@ -103,5 +108,6 @@
   window.KollectionArtworkUrls = Object.freeze({
     normalize: normalizeString,
     normalizeDeep,
+    isLegacy: value => typeof value === 'string' && LEGACY_HOST_RE.test(value),
   });
 })();
