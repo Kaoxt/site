@@ -6,6 +6,8 @@
   let savedOverrides = {};
   let activeOptions = null;
 
+  const keyFor = (groupKey, folderKey) => `${groupKey}::${folderKey}`;
+
   function collectionRequest(input) {
     try {
       const url = new URL(typeof input === 'string' ? input : input?.url || '', window.location.href);
@@ -16,8 +18,7 @@
   window.fetch = async function(input, init = {}) {
     const method = String(init?.method || (typeof input !== 'string' && input?.method) || 'GET').toUpperCase();
     let nextInit = init;
-
-    if (collectionRequest(input) && ['POST','PATCH','PUT'].includes(method) && init?.body) {
+    if (collectionRequest(input) && ['POST', 'PATCH', 'PUT'].includes(method) && init?.body) {
       try {
         const payload = JSON.parse(init.body);
         if (payload?.config && typeof payload.config === 'object') {
@@ -26,7 +27,6 @@
         }
       } catch {}
     }
-
     const response = await originalFetch(input, nextInit);
     if (collectionRequest(input) && method === 'GET' && response.ok) {
       try {
@@ -38,25 +38,14 @@
     return response;
   };
 
-  function keyFor(groupKey, folderKey) { return `${groupKey}::${folderKey}`; }
-
   function extractNumericId(raw, provider) {
     const value = String(raw || '').trim();
     if (/^\d+$/.test(value)) return value;
     try {
       const url = new URL(value);
-      if (provider === 'tmdb') {
-        const match = url.pathname.match(/\/collection\/(\d+)/i);
-        if (match) return match[1];
-      }
-      if (provider === 'trakt') {
-        const match = url.pathname.match(/\/lists\/(\d+)/i);
-        if (match) return match[1];
-      }
-      if (provider === 'mdblist') {
-        const match = url.pathname.match(/\/(?:lists|list)\/(\d+)(?:\/|$)/i);
-        if (match) return match[1];
-      }
+      if (provider === 'tmdb') return url.pathname.match(/\/collection\/(\d+)/i)?.[1] || '';
+      if (provider === 'trakt') return url.pathname.match(/\/lists\/(\d+)/i)?.[1] || '';
+      if (provider === 'mdblist') return url.pathname.match(/\/(?:lists|list)\/(\d+)(?:\/|$)/i)?.[1] || '';
     } catch {}
     return '';
   }
@@ -97,7 +86,7 @@
     return null;
   }
 
-  function ensureDefaults(state, group, folder, gk, fk, groupKey, folderKey) {
+  function ensureDefaults(state, folder, gk, fk, groupKey, folderKey) {
     state.collectionFolderDefaults ||= {};
     const mapKey = keyFor(gk, fk);
     if (state.collectionFolderDefaults[mapKey]) return state.collectionFolderDefaults[mapKey];
@@ -116,16 +105,15 @@
     activeOptions = options;
     const { state, collectionGroupKey, collectionFolderKey } = options;
     state.collectionFolderSourceOverrides ||= clone(savedOverrides || {});
-    if (Object.keys(savedOverrides || {}).length && !Object.keys(state.collectionFolderSourceOverrides || {}).length) state.collectionFolderSourceOverrides = clone(savedOverrides);
-    else if (Object.keys(state.collectionFolderSourceOverrides || {}).length) savedOverrides = clone(state.collectionFolderSourceOverrides);
-
+    if (Object.keys(state.collectionFolderSourceOverrides || {}).length) savedOverrides = clone(state.collectionFolderSourceOverrides);
     state.aiCatalogLibrary ||= [];
+
     for (const group of state.collectionPack || []) {
       const gk = collectionGroupKey(group);
       for (const folder of group.folders || []) {
         const fk = collectionFolderKey(folder);
         const mapKey = keyFor(gk, fk);
-        const defaults = ensureDefaults(state, group, folder, gk, fk, collectionGroupKey, collectionFolderKey);
+        const defaults = ensureDefaults(state, folder, gk, fk, collectionGroupKey, collectionFolderKey);
         const override = state.collectionFolderSourceOverrides[mapKey];
 
         if (override?.provider && override?.id) {
@@ -136,18 +124,17 @@
           const catalog = catalogFor(override, folder.title || 'Custom catalog');
           const index = state.aiCatalogLibrary.findIndex(item => item?.id === catalog.id);
           if (index >= 0) state.aiCatalogLibrary[index] = catalog; else state.aiCatalogLibrary.push(catalog);
-        } else if (defaults) {
+        } else {
           folder.sources = clone(defaults.sources || []);
           folder.catalogSources = clone(defaults.catalogSources || []);
         }
 
-        if (override?.artwork && typeof override.artwork === 'object') {
-          folder.coverImageUrl = String(override.artwork.coverImageUrl ?? defaults?.artwork?.coverImageUrl ?? '');
-          folder.titleLogoUrl = String(override.artwork.titleLogoUrl ?? defaults?.artwork?.titleLogoUrl ?? '');
-          folder.heroBackdropUrl = String(override.artwork.heroBackdropUrl ?? defaults?.artwork?.heroBackdropUrl ?? '');
-          folder.coverEmoji = String(override.artwork.coverEmoji ?? defaults?.artwork?.coverEmoji ?? '');
-        } else if (defaults?.artwork) {
-          Object.assign(folder, clone(defaults.artwork));
+        const art = override?.artwork && typeof override.artwork === 'object' ? override.artwork : defaults.artwork;
+        if (art) {
+          folder.coverImageUrl = String(art.coverImageUrl ?? '');
+          folder.titleLogoUrl = String(art.titleLogoUrl ?? '');
+          folder.heroBackdropUrl = String(art.heroBackdropUrl ?? '');
+          folder.coverEmoji = String(art.coverEmoji ?? '');
         }
       }
     }
@@ -169,20 +156,18 @@
           </header>
           <div class="folder-source-body">
             <section class="folder-edit-section">
-              <div class="folder-edit-section-head"><b>Catalog source</b><span>Use the Kollection default or replace this folder with your own list.</span></div>
+              <div class="folder-edit-section-head"><b>Catalog source</b><span>Keep the Kollection default or replace this folder with your own list.</span></div>
               <div class="field"><label for="folderSourceProvider">Provider</label><select id="folderSourceProvider"><option value="">Keep current / default source</option><option value="mdblist">MDBList</option><option value="tmdb">TMDB Collection</option><option value="trakt">Trakt List</option></select></div>
-              <div class="field" id="folderSourceValueRow"><label for="folderSourceValue">List / collection ID or URL</label><input id="folderSourceValue" type="text" autocomplete="off" placeholder="Paste an ID or supported URL"><small id="folderSourceHint"></small></div>
+              <div class="field" id="folderSourceValueRow"><label for="folderSourceValue">List / collection ID or URL</label><input id="folderSourceValue" type="text" autocomplete="off"><small id="folderSourceHint"></small></div>
               <div class="field" id="folderSourceTypeRow"><label for="folderSourceType">Media type</label><select id="folderSourceType"><option value="all">Movies + Series</option><option value="movie">Movies</option><option value="series">Series</option></select></div>
               <div class="field" id="folderSourceNameRow"><label for="folderSourceName">Catalog name <span class="optional">(optional)</span></label><input id="folderSourceName" type="text" autocomplete="off" placeholder="Uses the cover folder name by default"></div>
             </section>
-
             <section class="folder-edit-section artwork-section">
-              <div class="folder-edit-section-head"><b>Artwork and folder behavior</b><span>Edit the same artwork fields Nuvio uses for collection folders.</span></div>
+              <div class="folder-edit-section-head"><b>Artwork and folder behavior</b><span>Edit the artwork fields Nuvio uses for collection folders.</span></div>
               <div class="field"><label for="folderCoverImage">Cover image URL</label><input id="folderCoverImage" type="url" inputmode="url" autocomplete="off" placeholder="https://…/cover.webp"><small>Poster or landscape image shown for the folder.</small></div>
-              <div class="field"><label for="folderCoverEmoji">Cover emoji <span class="optional">(optional)</span></label><input id="folderCoverEmoji" type="text" autocomplete="off" placeholder="Optional fallback marker"><small>Used when artwork is unavailable.</small></div>
-              <div class="field"><label for="folderTitleLogo">Title logo URL</label><input id="folderTitleLogo" type="url" inputmode="url" autocomplete="off" placeholder="https://…/logo.webp"><small>Transparent logo for branded rows.</small></div>
-              <div class="field"><label for="folderHeroBackdrop">Hero backdrop URL</label><input id="folderHeroBackdrop" type="url" inputmode="url" autocomplete="off" placeholder="https://…/backdrop.webp"><small>Wide image used when the folder is focused.</small></div>
-
+              <div class="field"><label for="folderCoverEmoji">Cover emoji <span class="optional">(optional)</span></label><input id="folderCoverEmoji" type="text" autocomplete="off" placeholder="Optional fallback marker"></div>
+              <div class="field"><label for="folderTitleLogo">Title logo URL</label><input id="folderTitleLogo" type="url" inputmode="url" autocomplete="off" placeholder="https://…/logo.webp"></div>
+              <div class="field"><label for="folderHeroBackdrop">Hero backdrop URL</label><input id="folderHeroBackdrop" type="url" inputmode="url" autocomplete="off" placeholder="https://…/backdrop.webp"></div>
               <div class="folder-artwork-preview-grid" aria-label="Artwork previews">
                 <figure class="folder-artwork-preview"><div class="folder-artwork-preview-frame cover"><img id="folderCoverPreview" alt="Cover preview"><span>Preview unavailable</span></div><figcaption>Cover</figcaption></figure>
                 <figure class="folder-artwork-preview"><div class="folder-artwork-preview-frame logo"><img id="folderLogoPreview" alt="Title logo preview"><span>Preview unavailable</span></div><figcaption>Title logo</figcaption></figure>
@@ -204,37 +189,37 @@
   function closeModal() {
     const root = document.getElementById('folderSourceEditorModal');
     if (!root) return;
-    root.classList.remove('open'); root.setAttribute('aria-hidden','true');
+    root.classList.remove('open');
+    root.setAttribute('aria-hidden', 'true');
   }
 
   function bindPreview(root, inputSelector, imageSelector) {
-    const input = root.querySelector(inputSelector), image = root.querySelector(imageSelector);
+    const input = root.querySelector(inputSelector);
+    const image = root.querySelector(imageSelector);
     const frame = image?.closest('.folder-artwork-preview-frame');
-    if (!input || !image || !frame) return () => {};
+    if (!input || !image || !frame) return;
     const update = () => {
       const url = input.value.trim();
       frame.classList.toggle('empty', !url);
       image.hidden = !url;
       if (!url) { image.removeAttribute('src'); return; }
-      image.hidden = false;
       image.src = url;
     };
     image.onerror = () => { image.hidden = true; frame.classList.add('empty'); };
     image.onload = () => { image.hidden = false; frame.classList.remove('empty'); };
-    input.addEventListener('input', update);
+    input.oninput = update;
     update();
-    return update;
   }
 
-  function openModal(group, folder, groupKey, folderKey) {
-    const root = ensureModal();
+  function openModal(group, folder, gk, fk) {
     const { state, collectionGroupKey, collectionFolderKey } = activeOptions || {};
     if (!state) return;
-    const mapKey = keyFor(groupKey, folderKey);
-    const defaults = ensureDefaults(state, group, folder, groupKey, folderKey, collectionGroupKey, collectionFolderKey);
+    const root = ensureModal();
+    const mapKey = keyFor(gk, fk);
+    const defaults = ensureDefaults(state, folder, gk, fk, collectionGroupKey, collectionFolderKey);
     const existing = state.collectionFolderSourceOverrides?.[mapKey] || {};
     const artwork = { ...(defaults?.artwork || artworkFrom(folder)), ...(existing.artwork || {}) };
-    root.dataset.mapKey = mapKey;
+
     root.querySelector('#folderSourceTitle').textContent = `Edit ${folder.title || 'folder'}`;
     root.querySelector('#folderSourceProvider').value = existing.provider || '';
     root.querySelector('#folderSourceValue').value = existing.url || existing.id || '';
@@ -248,21 +233,18 @@
 
     const syncProvider = () => {
       const provider = root.querySelector('#folderSourceProvider').value;
-      const valueRow = root.querySelector('#folderSourceValueRow');
-      const typeRow = root.querySelector('#folderSourceTypeRow');
-      const nameRow = root.querySelector('#folderSourceNameRow');
+      root.querySelector('#folderSourceValueRow').hidden = !provider;
+      root.querySelector('#folderSourceTypeRow').hidden = !provider || provider === 'tmdb';
+      root.querySelector('#folderSourceNameRow').hidden = !provider;
       const input = root.querySelector('#folderSourceValue');
       const hint = root.querySelector('#folderSourceHint');
-      const custom = Boolean(provider);
-      valueRow.hidden = !custom; typeRow.hidden = !custom || provider === 'tmdb'; nameRow.hidden = !custom;
-      if (!custom) { hint.textContent = ''; return; }
-      if (provider === 'tmdb') { input.placeholder = 'TMDB collection ID or themoviedb.org/collection/... URL'; hint.textContent = 'TMDB collections contain movies only.'; }
-      else if (provider === 'trakt') { input.placeholder = 'Trakt numeric list ID or trakt.tv/lists/... URL'; hint.textContent = 'Public Trakt list IDs work directly; private lists may require Trakt authorization in AIOMetadata.'; }
-      else { input.placeholder = 'MDBList numeric list ID'; hint.textContent = 'Use the numeric MDBList list ID. Your saved MDBList API key is used by AIOMetadata.'; }
+      if (!provider) { hint.textContent = ''; return; }
+      if (provider === 'tmdb') { input.placeholder = 'TMDB collection ID or URL'; hint.textContent = 'TMDB collections contain movies only.'; }
+      else if (provider === 'trakt') { input.placeholder = 'Trakt numeric list ID or URL'; hint.textContent = 'Public Trakt list IDs work directly.'; }
+      else { input.placeholder = 'MDBList numeric list ID'; hint.textContent = 'Your saved MDBList API key is used by AIOMetadata.'; }
     };
     root.querySelector('#folderSourceProvider').onchange = syncProvider;
     syncProvider();
-
     bindPreview(root, '#folderCoverImage', '#folderCoverPreview');
     bindPreview(root, '#folderTitleLogo', '#folderLogoPreview');
     bindPreview(root, '#folderHeroBackdrop', '#folderBackdropPreview');
@@ -274,13 +256,13 @@
       if (provider) {
         const id = extractNumericId(raw, provider);
         if (!id) {
-          root.querySelector('#folderSourceError').textContent = `Enter a valid ${provider === 'tmdb' ? 'TMDB collection' : provider === 'trakt' ? 'Trakt list' : 'MDBList list'} numeric ID or supported URL.`;
+          root.querySelector('#folderSourceError').textContent = `Enter a valid ${provider === 'tmdb' ? 'TMDB collection' : provider === 'trakt' ? 'Trakt list' : 'MDBList list'} ID or supported URL.`;
           return;
         }
         sourceData = { provider, id, url: /^https?:\/\//i.test(raw) ? raw : '', type: provider === 'tmdb' ? 'movie' : root.querySelector('#folderSourceType').value, name: root.querySelector('#folderSourceName').value.trim() };
       }
-
-      const override = {
+      state.collectionFolderSourceOverrides ||= {};
+      state.collectionFolderSourceOverrides[mapKey] = {
         ...sourceData,
         artwork: {
           coverImageUrl: root.querySelector('#folderCoverImage').value.trim(),
@@ -289,8 +271,6 @@
           heroBackdropUrl: root.querySelector('#folderHeroBackdrop').value.trim(),
         },
       };
-      state.collectionFolderSourceOverrides ||= {};
-      state.collectionFolderSourceOverrides[mapKey] = override;
       savedOverrides = clone(state.collectionFolderSourceOverrides);
       applyOverrides(activeOptions);
       state.backup = null; state.previewCollections = null; state.finalCollections = null;
@@ -302,17 +282,17 @@
     root.querySelector('#folderSourceReset').onclick = () => {
       if (state.collectionFolderSourceOverrides?.[mapKey]) delete state.collectionFolderSourceOverrides[mapKey];
       savedOverrides = clone(state.collectionFolderSourceOverrides || {});
-      if (defaults) {
-        folder.sources = clone(defaults.sources || []); folder.catalogSources = clone(defaults.catalogSources || []);
-        Object.assign(folder, clone(defaults.artwork || {}));
-      }
+      folder.sources = clone(defaults.sources || []);
+      folder.catalogSources = clone(defaults.catalogSources || []);
+      Object.assign(folder, clone(defaults.artwork || {}));
       state.backup = null; state.previewCollections = null; state.finalCollections = null;
       window.dispatchEvent(new CustomEvent('kollection:folder-source-overrides-changed', { detail: clone(savedOverrides) }));
       closeModal();
       window.KollectionFolderEditor?.render?.(activeOptions);
     };
 
-    root.classList.add('open'); root.setAttribute('aria-hidden','false');
+    root.classList.add('open');
+    root.setAttribute('aria-hidden', 'false');
   }
 
   function addEditButtons(options) {
@@ -320,39 +300,66 @@
     if (!state?.customizeGroupKey) return;
     const group = (state.collectionPack || []).find(item => collectionGroupKey(item) === state.customizeGroupKey);
     if (!group) return;
-    const groupKey = collectionGroupKey(group);
-    host.querySelectorAll('.folder-edit-card').forEach(card => {
-      const folderKey = card.dataset.folderKey || '';
-      const folder = (group.folders || []).find(item => collectionFolderKey(item) === folderKey);
-      const meta = card.querySelector('.folder-edit-meta');
-      if (!folder || !meta || meta.querySelector('.folder-source-edit')) return;
-      const title = meta.querySelector('b');
-      if (title) {
-        const row = document.createElement('span'); row.className = 'folder-title-edit-row'; title.replaceWith(row); row.appendChild(title);
-        const edit = document.createElement('button'); edit.type = 'button'; edit.className = 'folder-source-edit'; edit.textContent = 'Edit'; edit.setAttribute('aria-label', `Edit ${folder.title || 'folder'}`);
-        edit.onclick = event => { event.preventDefault(); event.stopPropagation(); openModal(group, folder, groupKey, folderKey); };
-        row.appendChild(edit);
-      }
-      const override = state.collectionFolderSourceOverrides?.[keyFor(groupKey, folderKey)];
-      if (override) card.classList.add('has-custom-source');
+    const gk = collectionGroupKey(group);
+    const folders = group.folders || [];
+
+    host.querySelectorAll('.folder-edit-card-wrap').forEach((wrap, index) => {
+      if (wrap.querySelector(':scope > .folder-source-edit')) return;
+      const fk = wrap.dataset.orderKey || '';
+      const folder = folders.find(item => collectionFolderKey(item) === fk) || folders[index];
+      if (!folder) return;
+      const actualKey = collectionFolderKey(folder);
+      const edit = document.createElement('button');
+      edit.type = 'button';
+      edit.className = 'folder-source-edit';
+      edit.textContent = 'Edit';
+      edit.setAttribute('aria-label', `Edit ${folder.title || 'folder'}`);
+      edit.onclick = event => {
+        event.preventDefault();
+        event.stopPropagation();
+        openModal(group, folder, gk, actualKey);
+      };
+      wrap.appendChild(edit);
+      if (state.collectionFolderSourceOverrides?.[keyFor(gk, actualKey)]) wrap.classList.add('has-custom-source');
     });
   }
 
   function install() {
     const original = window.KollectionFolderEditor;
-    if (!original || original.__folderSourceEditorWrapped) return false;
+    if (!original || original.__folderSourceEditorWrappedV2) return false;
     const wrapped = {
       ...original,
-      __folderSourceEditorWrapped: true,
-      render(options) { activeOptions = options; applyOverrides(options); const result = original.render(options); requestAnimationFrame(() => addEditButtons(options)); return result; },
-      filterPack(pack, state, groupKey, folderKey) { applyOverrides({ ...(activeOptions || {}), state, collectionGroupKey: groupKey, collectionFolderKey: folderKey }); return original.filterPack(pack, state, groupKey, folderKey); },
+      __folderSourceEditorWrappedV2: true,
+      render(options) {
+        activeOptions = options;
+        applyOverrides(options);
+        const result = original.render(options);
+        requestAnimationFrame(() => addEditButtons(options));
+        setTimeout(() => addEditButtons(options), 80);
+        return result;
+      },
+      filterPack(pack, state, groupKey, folderKey) {
+        applyOverrides({ ...(activeOptions || {}), state, collectionGroupKey: groupKey, collectionFolderKey: folderKey });
+        return original.filterPack(pack, state, groupKey, folderKey);
+      },
     };
-    window.KollectionFolderEditor = Object.freeze(wrapped); return true;
+    window.KollectionFolderEditor = Object.freeze(wrapped);
+    return true;
   }
 
   function init() {
-    if (!install()) { let tries = 0; const timer = setInterval(() => { tries += 1; if (install() || tries > 50) clearInterval(timer); }, 100); }
+    if (!install()) {
+      let tries = 0;
+      const timer = setInterval(() => { tries += 1; if (install() || tries > 60) clearInterval(timer); }, 100);
+    }
+    const panel = document.getElementById('panelHost');
+    if (panel) {
+      new MutationObserver(() => {
+        if (activeOptions) requestAnimationFrame(() => addEditButtons(activeOptions));
+      }).observe(panel, { childList: true, subtree: true });
+    }
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true }); else init();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
 })();
