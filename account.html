@@ -106,7 +106,7 @@
 
           <section class="account-card account-saved-card">
             <div class="account-section-head"><div><span class="account-kicker">SAVED COLLECTIONS</span><h2>Your setups</h2></div><a class="account-secondary-button account-small-button" href="/set-up-collection">New setup</a></div>
-            <p class="account-card-copy">Saved Kollection configurations stay tied to this Nuvio account so you can resume, edit, and update them later. Nuvio passwords and session tokens are never stored in saved collection data; MDBList and TMDB keys can be saved encrypted and are only decrypted for the signed-in owner when resuming a setup.</p>
+            <p class="account-card-copy">Saved Kollection configurations stay tied to this Nuvio account so you can resume unfinished setups or edit completed ones later. Nuvio passwords and session tokens are never stored in saved collection data; MDBList and TMDB keys are saved encrypted and only decrypted for the signed-in owner when editing or resuming a setup.</p>
             <div id="accountSavedCollections" class="account-saved-list"></div><p id="accountSavedStatus" class="account-status" role="status"></p>
           </section>
         </div>
@@ -119,7 +119,7 @@
   <script src="/account/account.js?v=20260909-5"></script>
   <script src="/account/profile-actions.js?v=20260909-1"></script>
   <script src="/account/avatar-edit.js?v=20260909-3"></script>
-  <script src="/account/saved-collections.js?v=20260908-1"></script>
+  <script src="/account/saved-collections.js?v=20260913-2"></script>
   <script>
     (() => {
       const loader = document.getElementById('accountBootLoader');
