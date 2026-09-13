@@ -3,9 +3,17 @@
 .account-saved-row > div:first-child { min-width: 0; }
 .account-saved-row strong { display: block; color: var(--account-text); overflow-wrap: anywhere; }
 .account-saved-row small { display: block; margin-top: 3px; color: var(--account-muted); line-height: 1.45; }
+.account-saved-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.account-origin-badge { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: .02em; border: 1px solid var(--account-border); }
+.account-origin-badge[data-state="valid"] { color: #a7f3d0; background: rgba(16,185,129,.10); border-color: rgba(16,185,129,.32); }
+.account-origin-badge[data-state="invalid"] { color: #fecaca; background: rgba(239,68,68,.10); border-color: rgba(239,68,68,.34); }
+.account-origin-badge[data-state="unknown"] { color: #fde68a; background: rgba(245,158,11,.10); border-color: rgba(245,158,11,.30); }
+.account-origin-message { color: #f4a7a7 !important; max-width: 680px; }
+.account-saved-invalid { border-color: rgba(239,68,68,.28); background: rgba(239,68,68,.035); }
 .account-saved-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
 .account-small-button { min-height: 36px; padding: 0 12px; border-radius: 11px; font-size: 13px; }
 .account-secondary-button:disabled { opacity: .5; cursor: default; transform: none; }
+.account-edit-pending,.account-edit-invalid { opacity: .52; pointer-events: none; cursor: default; }
 
 @media (max-width: 680px) {
   .account-saved-row { align-items: flex-start; flex-direction: column; }
