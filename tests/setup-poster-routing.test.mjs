@@ -78,18 +78,24 @@ test('legacy grouped release preference expands into the new lifecycle choices',
 });
 
 
-test('existing setup editor can change individual Smart Overlay Poster options', async () => {
+test('existing setup uses a Configure modal for Smart Overlay Poster options', async () => {
   const source = await readFile(new URL('../set-up-collection/folder-editor.js', import.meta.url), 'utf8');
   assert.match(source, /editingSavedSetup\(\)/);
+  assert.match(source, /id="configureSmartOverlayBtn"/);
+  assert.match(source, /id="smartOverlayModalRoot"/);
+  assert.match(source, /role="dialog"/);
+  assert.match(source, />Configure<\/button>/);
+  assert.match(source, />Save changes<\/button>/);
+  assert.doesNotMatch(source, />Existing setup<\/span>/);
   assert.match(source, /id="posterOverlaysEnabled"/);
   assert.match(source, /id="posterSettingsJson"/);
   for (const tag of ['trend', 'quality', 'genre', 'rating', 'age']) {
-    assert.match(source, new RegExp("\\['" + tag + "',"));
+    assert.match(source, new RegExp("\\\\['" + tag + "',"));
   }
   for (const detail of ['inCinema', 'rank', 'newMovie', 'comingSoon', 'newSeries', 'returningSeries', 'limitedSeries']) {
-    assert.match(source, new RegExp("\\['" + detail + "',"));
+    assert.match(source, new RegExp("\\\\['" + detail + "',"));
   }
-  assert.match(source, /state\.posterOverlaysEnabled = Boolean\(master\.checked\)/);
-  assert.match(source, /state\.posterSettings = helper/);
+  assert.match(source, /state\.posterOverlaysEnabled = nextEnabled/);
+  assert.match(source, /state\.posterSettings = nextSettings/);
   assert.match(source, /kollection:poster-settings-changed/);
 });
