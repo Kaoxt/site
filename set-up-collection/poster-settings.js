@@ -4,6 +4,7 @@
   const STORAGE_KEY = 'kollection-posters-settings-v1';
   const ALLOWED_TAGS = ['trend', 'quality', 'genre', 'rating', 'age'];
   const RATING_SOURCES = ['average', 'score', 'imdb', 'letterboxd', 'mal', 'rogerebert', 'tomatometer', 'popcornmeter', 'tmdb'];
+  const TREND_DETAILS = ['studio', 'director', 'cast', 'rank', 'release'];
 
   function normalize(value) {
     const input = value && typeof value === 'object' ? value : {};
@@ -13,7 +14,11 @@
     const ratingSource = RATING_SOURCES.includes(String(input.ratingSource || '').toLowerCase())
       ? String(input.ratingSource).toLowerCase()
       : 'average';
-    return { source, tags, ratingSource, artworkProvider: 'tmdb' };
+    const requestedTrendDetails = Array.isArray(input.trendDetails)
+      ? input.trendDetails.map(String)
+      : TREND_DETAILS;
+    const trendDetails = TREND_DETAILS.filter(type => requestedTrendDetails.includes(type));
+    return { source, tags, ratingSource, trendDetails, artworkProvider: 'tmdb' };
   }
 
   function readLocal() {
@@ -28,10 +33,11 @@
   function pattern(value) {
     const settings = normalize(value);
     const params = new URLSearchParams({
-      v: '21',
+      v: '22',
       source: settings.source,
       tags: [...new Set(settings.tags)].sort().join(','),
       ratingSource: settings.ratingSource,
+      trendDetails: settings.trendDetails.join(','),
       language: '{language_short}',
     });
     return 'https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?' +
@@ -63,9 +69,11 @@
       enabled: true,
       posterSource: settings.source,
       ratingSource: settings.ratingSource,
+      trendDetails: settings.trendDetails.slice(),
       smartTags: {
         enabled: true,
         tags: settings.tags.slice(),
+        trendDetails: settings.trendDetails.slice(),
         fixedPlacement: true,
       },
     };
