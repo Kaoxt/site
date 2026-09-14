@@ -28,7 +28,7 @@
   function pattern(value) {
     const settings = normalize(value);
     const params = new URLSearchParams({
-      v: '20',
+      v: '21',
       source: settings.source,
       tags: [...new Set(settings.tags)].sort().join(','),
       ratingSource: settings.ratingSource,
@@ -59,7 +59,7 @@
       enableRatingPosters: true,
     }));
     config.kollectionPosters = {
-      version: 2,
+      version: 3,
       enabled: true,
       posterSource: settings.source,
       ratingSource: settings.ratingSource,
