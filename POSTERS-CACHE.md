@@ -24,6 +24,8 @@ The artwork version remains `production-cache-19`, preserving previously rendere
 
 TMDB ID lookup results are cached for 30 days, title details/artwork references for one day, and daily trend lists for 30 minutes (partitioned by UTC day). These records are independent of poster styles and rating-source choices, stored in R2 and the edge cache without API keys. MDBList keeps its existing 30-day D1 cache; concurrent rating-source variants share one full MDBList record lookup.
 
+Quality Tags can optionally use AIOStreams without exposing its credentials in generated poster URLs. Configure `POSTERS_AIOSTREAMS_URL` and `POSTERS_AIOSTREAMS_AUTH` (or the compatible `AIOSTREAMS_URL` / `AIOSTREAMS_AUTH` names). The auth value may be a Base64 `user:password` value or a complete `Basic ...` header value. Quality is queried only when the `quality` tag is enabled. Resolved 4K/HD results are cached in D1 for one day on releases newer than two weeks and 30 days on older titles. If no quality source is configured, no quality badge is invented.
+
 ## Limits and diagnostics
 
 Daily/hourly rendering safeguards are unchanged. A bounded local queue absorbs bursts; identical variants share work locally and through a short D1 lease. New rendering has a 25-second abort deadline, with shorter individual upstream timeouts. The D1 lease table is created automatically on the existing `DB` binding.
