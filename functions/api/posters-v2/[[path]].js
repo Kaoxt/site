@@ -207,7 +207,7 @@ function posterCacheControl(preview, tags, hasTrendValue = false) {
       : 'public, max-age=60, s-maxage=600';
   }
   if (hasTrendValue || tagSet.has('trend')) {
-    return 'public, max-age=21600, s-maxage=604800, stale-while-revalidate=86400';
+    return 'public, max-age=21600, s-maxage=21600, stale-while-revalidate=86400';
   }
   return 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000';
 }
@@ -489,14 +489,23 @@ async function originalPosterFallback(type, id, env, reason, details = null) {
   try {
     const metadata = details || await tmdbFetch('/' + type + '/' + id, env.TMDB_API_KEY);
     if (metadata.poster_path) {
-      return new Response(null, {
-        status: 302,
-        headers: {
-          location: 'https://image.tmdb.org/t/p/w780' + metadata.poster_path,
-          'cache-control': 'no-store',
-          'x-kollection-poster-fallback': reason,
-        },
+      const artwork = await fetch('https://image.tmdb.org/t/p/w500' + metadata.poster_path, {
+        headers: { accept: 'image/avif,image/webp,image/jpeg,image/*' },
       });
+      if (artwork.ok && artwork.body) {
+        const cacheControl = 'public, max-age=300, s-maxage=1800, stale-while-revalidate=3600';
+        return new Response(artwork.body, {
+          status: 200,
+          headers: {
+            'content-type': artwork.headers.get('content-type') || 'image/jpeg',
+            'content-length': artwork.headers.get('content-length') || '',
+            'access-control-allow-origin': '*',
+            'cache-control': cacheControl,
+            'cdn-cache-control': cacheControl,
+            'x-kollection-poster-fallback': reason,
+          },
+        });
+      }
     }
   } catch {}
   return json({ error: 'Poster artwork is temporarily unavailable.', reason }, 503);
@@ -538,8 +547,9 @@ export async function onRequest(context) {
     persistent.writeHttpMetadata(headers);
     headers.set('content-type', 'image/webp');
     headers.set('access-control-allow-origin', '*');
-    headers.set('cdn-cache-control', 'max-age=604800, stale-while-revalidate=86400');
-    headers.set('cache-control', posterCacheControl(preview, requestedTags, requestedTags.has('trend')));
+    const cacheControl = posterCacheControl(preview, requestedTags, requestedTags.has('trend'));
+    headers.set('cdn-cache-control', cacheControl);
+    headers.set('cache-control', cacheControl);
     headers.set('etag', persistent.httpEtag);
     headers.set('x-kollection-cache', 'MISS');
     headers.set('x-kollection-persistent-cache', 'HIT');
@@ -601,7 +611,7 @@ export async function onRequest(context) {
     const headers = new Headers(rendered.headers);
     headers.set('content-type', 'image/webp');
     headers.set('access-control-allow-origin', '*');
-    headers.set('cdn-cache-control', 'max-age=604800, stale-while-revalidate=86400');
+    headers.set('cdn-cache-control', cacheControl);
     headers.set('cache-control', cacheControl);
     headers.set('x-kollection-posters', 'v2-sharp');
     headers.set('x-kollection-render-version', CACHE_VERSION);
