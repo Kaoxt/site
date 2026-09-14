@@ -196,23 +196,25 @@ async function sha256Hex(value) {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-function posterVariant(url, preview) {
+function posterVariant(url, preview, env) {
+  const tags = normalizeTags(url.searchParams.get('tags'));
   return {
     version: CACHE_VERSION,
     scope: preview ? 'preview' : 'production',
     source: url.searchParams.get('source') === 'smart' ? 'smart' : 'tmdb',
     provider: url.searchParams.get('provider') || 'tmdb',
-    tags: normalizeTags(url.searchParams.get('tags')),
+    tags,
     ratingSource: normalizeRatingSource(url.searchParams.get('ratingSource')),
     language: normalizeOverlayLanguage(url.searchParams.get('language')),
     overlayColor: url.searchParams.get('overlayColor') || 'dynamic',
     sourceUrl: normalizeSourceUrl(url.searchParams.get('sourceUrl')),
     overlayOnly: url.searchParams.get('overlayOnly') === '1',
+    qualitySource: tags.includes('quality') && aiostreamsQualityConfig(env) ? 'aiostreams-1' : 'none',
   };
 }
 
-async function persistentPosterKey(type, id, url, preview) {
-  const variant = posterVariant(url, preview);
+async function persistentPosterKey(type, id, url, preview, env) {
+  const variant = posterVariant(url, preview, env);
   const hash = await sha256Hex(JSON.stringify(variant));
   return `poster-cache/${variant.scope}/${type}/${id}/${hash}.webp`;
 }
@@ -580,7 +582,7 @@ async function resolveQuality(details, type, env, context) {
   return { value, source: 'aiostreams', status: results.length ? 'upstream' : 'upstream-empty' };
 }
 
-function cacheRequestFor(request) {
+function cacheRequestFor(request, env) {
   const incoming = new URL(request.url);
   const preview = incoming.searchParams.get('preview') === '1';
   const cacheUrl = new URL(`${incoming.origin}${incoming.pathname}`);
@@ -604,6 +606,9 @@ function cacheRequestFor(request) {
   cacheUrl.searchParams.set('__kollection_renderer', CACHE_VERSION);
   cacheUrl.searchParams.set('__kollection_delivery', DELIVERY_VERSION);
   cacheUrl.searchParams.set('__kollection_scope', preview ? 'preview' : 'production');
+  if (tags.includes('quality')) {
+    cacheUrl.searchParams.set('__kollection_quality_source', aiostreamsQualityConfig(env) ? 'aiostreams-1' : 'none');
+  }
 
   if (preview) {
     cacheUrl.searchParams.set('preview', '1');
@@ -903,7 +908,7 @@ async function refreshPoster(context, state, background = false) {
       const id = state.idHint || await resolveTmdbId(state.type, state.rawId, context.env.TMDB_API_KEY, workContext);
       if (!id) throw posterError('id-not-found');
       state.idHint = id;
-      const key = await persistentPosterKey(state.type, id, state.url, state.preview);
+      const key = await persistentPosterKey(state.type, id, state.url, state.preview, context.env);
       state.canonicalKey = key;
       const result = await singleFlight(context.env, `poster-render:${key}`,
         () => renderUnderLease(workContext, state, id, key, background));
@@ -960,19 +965,19 @@ async function handlePoster(context) {
     tags: new Set(normalizeTags(url.searchParams.get('tags'))),
     overlayOnly: Boolean(sourceUrl && url.searchParams.get('overlayOnly') === '1'),
     overlayLanguage: normalizeOverlayLanguage(url.searchParams.get('language')),
-    cacheRequest: cacheRequestFor(request),
+    cacheRequest: cacheRequestFor(request, env),
     idHint: /^\d+$/.test(rawId) ? rawId : '',
   };
   try {
     const edge = await caches.default.match(state.cacheRequest);
     if (usable(edge, state)) {
-      state.rawKey = await persistentPosterKey(type, rawId, url, state.preview);
+      state.rawKey = await persistentPosterKey(type, rawId, url, state.preview, env);
       return serveSaved(context, state, new Response(edge.body, { headers: edge.headers }), true);
     }
     await edge?.body?.cancel();
   } catch { /* Fall through to persistent storage if edge caching is unavailable. */ }
 
-  state.rawKey = await persistentPosterKey(type, rawId, url, state.preview);
+  state.rawKey = await persistentPosterKey(type, rawId, url, state.preview, env);
   // This check deliberately happens BEFORE credentials, TMDB, MDBList, or the renderer.
   const saved = await loadSaved(context, state, state.rawKey);
   if (saved) return serveSaved(context, state, saved);
@@ -982,7 +987,7 @@ async function handlePoster(context) {
     if (!state.idHint && env.TMDB_API_KEY) {
       state.idHint = await resolveTmdbId(type, rawId, env.TMDB_API_KEY, context);
       if (state.idHint) {
-        state.canonicalKey = await persistentPosterKey(type, state.idHint, url, state.preview);
+        state.canonicalKey = await persistentPosterKey(type, state.idHint, url, state.preview, env);
         const legacy = await loadSaved(context, state, state.canonicalKey);
         if (legacy) return serveSaved(context, state, legacy);
       }
