@@ -2,7 +2,7 @@ import { Container, getContainer } from '@cloudflare/containers';
 
 export class PosterRenderer extends Container {
   defaultPort = 8080;
-  sleepAfter = '10m';
+  sleepAfter = '30m';
 }
 
 function json(data, status = 200) {
