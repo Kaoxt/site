@@ -34,7 +34,7 @@ function parseConfig(token) {
     lists,
     defaults,
     source: ['smart', 'tmdb'].includes(raw.source) ? raw.source : 'smart',
-    tags: Array.isArray(raw.tags) ? raw.tags.map(String).filter(Boolean).slice(0, 8) : ['trend', 'rating'],
+    tags: Array.isArray(raw.tags) ? raw.tags.map(String).filter(Boolean).slice(0, 8) : ['trend', 'genre', 'rating'],
     ratingSource: String(raw.ratingSource || 'average'),
     language: ['en', 'es', 'fr', 'de', 'it', 'pt', 'ja', 'ko'].includes(String(raw.language || '').toLowerCase()) ? String(raw.language).toLowerCase() : 'en',
     sort: ['shuffle', 'list', 'newest', 'oldest'].includes(raw.sort) ? raw.sort : 'shuffle',
@@ -43,6 +43,7 @@ function parseConfig(token) {
 
 function posterUrl(config, type, id) {
   const params = new URLSearchParams({
+    v: '21',
     source: config.source,
     provider: 'tmdb-bp11',
     tags: [...new Set(config.tags)].sort().join(','),
