@@ -84,10 +84,10 @@ test('existing setup editor can change individual Smart Overlay Poster options',
   assert.match(source, /id="posterOverlaysEnabled"/);
   assert.match(source, /id="posterSettingsJson"/);
   for (const tag of ['trend', 'quality', 'genre', 'rating', 'age']) {
-    assert.match(source, new RegExp("data-smart-overlay-tag value=\\\"" + tag + "\\\""));
+    assert.match(source, new RegExp("\\['" + tag + "',"));
   }
   for (const detail of ['inCinema', 'rank', 'newMovie', 'comingSoon', 'newSeries', 'returningSeries', 'limitedSeries']) {
-    assert.match(source, new RegExp("data-smart-trend-detail value=\\\"" + detail + "\\\""));
+    assert.match(source, new RegExp("\\['" + detail + "',"));
   }
   assert.match(source, /state\.posterOverlaysEnabled = Boolean\(master\.checked\)/);
   assert.match(source, /state\.posterSettings = helper/);
