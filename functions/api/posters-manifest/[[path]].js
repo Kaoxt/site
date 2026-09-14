@@ -1,4 +1,12 @@
 const POSTER_BASE = 'https://kollection.tv/api/posters-v2';
+const TREND_DETAILS = ['studio','director','cast','inCinema','rank','newMovie','comingSoon','newSeries','returningSeries','limitedSeries'];
+const LEGACY_RELEASE_DETAILS = ['inCinema','newMovie','comingSoon','newSeries','returningSeries','limitedSeries'];
+
+function normalizeTrendDetails(values) {
+  const selected = new Set(Array.isArray(values) ? values.map(String) : TREND_DETAILS);
+  if (selected.has('release')) LEGACY_RELEASE_DETAILS.forEach(value => selected.add(value));
+  return TREND_DETAILS.filter(value => selected.has(value));
+}
 
 function json(data, status = 200, headers = {}) {
   return new Response(JSON.stringify(data), {
@@ -35,9 +43,7 @@ function parseConfig(token) {
     defaults,
     source: ['smart', 'tmdb'].includes(raw.source) ? raw.source : 'smart',
     tags: Array.isArray(raw.tags) ? raw.tags.map(String).filter(Boolean).slice(0, 8) : ['trend', 'genre', 'rating'],
-    trendDetails: Array.isArray(raw.trendDetails)
-      ? raw.trendDetails.map(String).filter(value => ['studio', 'director', 'cast', 'rank', 'release'].includes(value)).slice(0, 5)
-      : ['studio', 'director', 'cast', 'rank', 'release'],
+    trendDetails: normalizeTrendDetails(raw.trendDetails),
     ratingSource: String(raw.ratingSource || 'average'),
     language: ['en', 'es', 'fr', 'de', 'it', 'pt', 'ja', 'ko'].includes(String(raw.language || '').toLowerCase()) ? String(raw.language).toLowerCase() : 'en',
     sort: ['shuffle', 'list', 'newest', 'oldest'].includes(raw.sort) ? raw.sort : 'shuffle',
@@ -46,7 +52,7 @@ function parseConfig(token) {
 
 function posterUrl(config, type, id) {
   const params = new URLSearchParams({
-    v: '22',
+    v: '23',
     source: config.source,
     provider: 'tmdb-bp11',
     tags: [...new Set(config.tags)].sort().join(','),
