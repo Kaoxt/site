@@ -295,7 +295,12 @@ test('richer AIOStreams quality includes Dolby Vision and Atmos', async () => {
     },
     name: 'Movie.2160p.DV.HDR10.TrueHD.Atmos.REMUX',
   }];
-  const response = await h.request('27205', '&tags=trend,genre,rating,quality&trendDetails=rank');
+  const context = h.context('27205');
+  const qualityUrl = new URL(context.request.url);
+  qualityUrl.searchParams.set('tags', 'trend,genre,rating,quality');
+  qualityUrl.searchParams.set('trendDetails', 'rank');
+  context.request = new Request(qualityUrl);
+  const response = await onRequest(context);
   await response.arrayBuffer(); await h.flush();
   assert.equal(h.payloads.at(-1).quality, '4K · DV');
   assert.equal(h.payloads.at(-1).audio, 'Atmos');
