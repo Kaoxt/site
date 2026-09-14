@@ -4,6 +4,7 @@
   const params = new URLSearchParams(window.location.search);
   const sourceSavedId = params.get('saved') || '';
   const cloneSavedSetup = params.get('clone') === '1';
+  const updateExistingSetup = params.get('update') === '1';
   let savedId = cloneSavedSetup ? '' : sourceSavedId;
   const targetProfileId = Number(params.get('targetProfile')) || null;
   let savedName = '';
@@ -173,6 +174,7 @@
         next.searchParams.delete('clone');
         next.searchParams.delete('switch');
         next.searchParams.delete('targetProfile');
+        next.searchParams.delete('update');
         history.replaceState(null, '', next);
       }
     }
@@ -230,6 +232,7 @@
         next.searchParams.delete('clone');
         next.searchParams.delete('switch');
         next.searchParams.delete('targetProfile');
+        next.searchParams.delete('update');
         history.replaceState(null, '', next);
       }
     }
@@ -458,9 +461,11 @@
       }));
       const item = data.collection;
       savedName = item?.name || 'My Kollection';
-      targetStep = cloneSavedSetup
-        ? Math.max(0, Math.min(6, Number(item?.draftStep) || 0))
-        : Math.max(0, Math.min(7, Number(item?.draftStep) || 0));
+      targetStep = updateExistingSetup
+        ? 4
+        : cloneSavedSetup
+          ? Math.max(0, Math.min(6, Number(item?.draftStep) || 0))
+          : Math.max(0, Math.min(7, Number(item?.draftStep) || 0));
       snapshot = {
         ...snapshot,
         ...(item?.config && typeof item.config === 'object' ? item.config : {}),
