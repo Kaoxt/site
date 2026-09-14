@@ -74,6 +74,52 @@
     return rows.length ? parseCollections(rows[0]?.collections_json) : [];
   }
 
+  async function pullProfiles() {
+    const tokenResult = await window.KollectionNuvioAuth?.getAccessToken?.();
+    const accessToken = tokenResult?.accessToken;
+    if (!accessToken) throw new Error('Nuvio session unavailable.');
+    const { apiBase, publishableKey } = config();
+    const response = await fetch(`${apiBase}/rest/v1/rpc/sync_pull_profiles`, {
+      method: 'POST',
+      headers: {
+        apikey: publishableKey,
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: '{}',
+      cache: 'no-store',
+    });
+    const data = await response.json().catch(() => []);
+    if (!response.ok) throw new Error(`Could not verify Nuvio profiles (HTTP ${response.status}).`);
+    return Array.isArray(data) ? data : (data?.profiles || []);
+  }
+
+  const profileIdOf = (profile) => Number(profile?.profile_index ?? profile?.id);
+  const profileNameOf = (profile) => String(profile?.name || '').trim();
+
+  async function repairSavedProfileLink(item, profile) {
+    if (!item?.id || !profile) return;
+    const profileId = profileIdOf(profile);
+    if (!Number.isFinite(profileId) || profileId < 1) return;
+    try {
+      await readJson(await fetch(`/api/account/collections/${encodeURIComponent(item.id)}`, {
+        method: 'PATCH',
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nuvioProfileId: profileId,
+          nuvioProfileName: profileNameOf(profile) || item.nuvioProfileName || '',
+        }),
+      }));
+      item.nuvioProfileId = profileId;
+      if (profileNameOf(profile)) item.nuvioProfileName = profileNameOf(profile);
+    } catch (error) {
+      console.warn('[The Kollection] Could not repair saved setup profile link.', error);
+    }
+  }
+
   function liveIds(collections) {
     return new Set(parseCollections(collections).map(item => collectionKey(item?.id)).filter(Boolean));
   }
@@ -83,24 +129,90 @@
     return Array.isArray(ids) ? ids.map(collectionKey).filter(Boolean) : [];
   }
 
-  async function verifyCompletedSetup(item, cache) {
+  async function verifyCompletedSetup(item, cache, profileCache) {
     if (Number(item?.draftStep || 0) < 7) return { state: 'draft' };
-    const profileId = Number(item?.nuvioProfileId);
+
     const expected = expectedIds(item);
-    if (!Number.isFinite(profileId) || profileId < 1 || !expected.length) {
-      return { state: 'invalid', message: 'This saved setup cannot be matched to a Kollection installed on its Nuvio profile.' };
+    const savedProfileId = Number(item?.nuvioProfileId);
+    const savedProfileName = String(item?.nuvioProfileName || '').trim();
+
+    const inspect = async (profileId) => {
+      if (!Number.isFinite(profileId) || profileId < 1) return null;
+      if (!cache.has(profileId)) cache.set(profileId, pullProfileCollections(profileId));
+      const collections = await cache.get(profileId);
+      const ids = liveIds(collections);
+      const matched = expected.filter(id => ids.has(id));
+
+      if (matched.length) {
+        return { state: 'valid', matched: matched.length, expected: expected.length, profileId };
+      }
+
+      if (window.KollectionCollectionEligibility) {
+        const eligibility = await window.KollectionCollectionEligibility.check(profileId, { force: true });
+        if (eligibility?.state === 'kollection' && eligibility?.hasKollection) {
+          return {
+            state: 'valid',
+            matched: 0,
+            expected: expected.length,
+            profileId,
+            verifiedByOrigin: true,
+          };
+        }
+      }
+      return null;
+    };
+
+    if (Number.isFinite(savedProfileId) && savedProfileId >= 1) {
+      const direct = await inspect(savedProfileId);
+      if (direct) return direct;
     }
-    if (!cache.has(profileId)) cache.set(profileId, pullProfileCollections(profileId));
-    const collections = await cache.get(profileId);
-    const ids = liveIds(collections);
-    const matched = expected.filter(id => ids.has(id));
-    if (!matched.length) {
-      return {
-        state: 'invalid',
-        message: 'This Nuvio profile does not contain a collection created by kollection.tv. Editing is disabled.',
-      };
+
+    if (!profileCache.value) profileCache.value = pullProfiles();
+    const profiles = await profileCache.value;
+
+    const named = savedProfileName
+      ? profiles.filter((profile) => profileNameOf(profile).toLowerCase() === savedProfileName.toLowerCase())
+      : [];
+
+    for (const profile of named) {
+      const id = profileIdOf(profile);
+      if (id === savedProfileId) continue;
+      const resolved = await inspect(id);
+      if (resolved) {
+        await repairSavedProfileLink(item, profile);
+        return { ...resolved, repairedProfileLink: true };
+      }
     }
-    return { state: 'valid', matched: matched.length, expected: expected.length };
+
+    if (expected.length) {
+      const exactMatches = [];
+      for (const profile of profiles) {
+        const id = profileIdOf(profile);
+        if (!Number.isFinite(id) || id < 1 || id === savedProfileId || named.includes(profile)) continue;
+        if (!cache.has(id)) cache.set(id, pullProfileCollections(id));
+        const collections = await cache.get(id);
+        const ids = liveIds(collections);
+        const matched = expected.filter(key => ids.has(key));
+        if (matched.length) exactMatches.push({ profile, matched });
+      }
+
+      if (exactMatches.length === 1) {
+        const candidate = exactMatches[0];
+        await repairSavedProfileLink(item, candidate.profile);
+        return {
+          state: 'valid',
+          matched: candidate.matched.length,
+          expected: expected.length,
+          profileId: profileIdOf(candidate.profile),
+          repairedProfileLink: true,
+        };
+      }
+    }
+
+    return {
+      state: 'invalid',
+      message: 'This saved setup could not be matched to The Kollection currently installed on its Nuvio profile. Editing is disabled.',
+    };
   }
 
   function buildRow(item) {
@@ -177,6 +289,7 @@
     if (!collections.length) { empty(container); return; }
 
     const cache = new Map();
+    const profileCache = { value: null };
     const pending = [];
     for (const item of collections) {
       const ui = buildRow(item);
@@ -184,7 +297,7 @@
       if (!ui.complete) continue;
       pending.push((async () => {
         try {
-          const result = await verifyCompletedSetup(item, cache);
+          const result = await verifyCompletedSetup(item, cache, profileCache);
           ui.resume.classList.remove('account-edit-pending');
           ui.resume.removeAttribute('aria-disabled');
           ui.badge.hidden = false;
