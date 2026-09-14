@@ -90,10 +90,10 @@ test('existing setup uses a Configure modal for Smart Overlay Poster options', a
   assert.match(source, /id="posterOverlaysEnabled"/);
   assert.match(source, /id="posterSettingsJson"/);
   for (const tag of ['trend', 'quality', 'genre', 'rating', 'age']) {
-    assert.match(source, new RegExp("\\\\['" + tag + "',"));
+    assert.ok(source.includes("['" + tag + "',"), 'missing overlay option ' + tag);
   }
   for (const detail of ['inCinema', 'rank', 'newMovie', 'comingSoon', 'newSeries', 'returningSeries', 'limitedSeries']) {
-    assert.match(source, new RegExp("\\\\['" + detail + "',"));
+    assert.ok(source.includes("['" + detail + "',"), 'missing Trend Tag detail ' + detail);
   }
   assert.match(source, /state\.posterOverlaysEnabled = nextEnabled/);
   assert.match(source, /state\.posterSettings = nextSettings/);
