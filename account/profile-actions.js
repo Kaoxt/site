@@ -189,8 +189,8 @@
     const status = document.getElementById('accountEditStatus');
 
     const syncSaveLabel = () => {
-      if (!save || !setupSelect || !activeSetup) return;
-      save.textContent = setupSelect.value && setupSelect.value !== activeSetup.id
+      if (!save || !setupSelect) return;
+      save.textContent = setupSelect.value && setupSelect.value !== String(activeSetup?.id || '')
         ? 'Apply selected setup'
         : 'Save changes';
     };
