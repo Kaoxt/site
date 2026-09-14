@@ -9,6 +9,7 @@
   const LAST_SYNC_KEY_PREFIX = 'kollection-nuvio-last-sync:';
   let observer = null;
   let modalRoot = null;
+  let savedSetupsPromise = null;
 
   const cfg = () => {
     const c = window.KOLLECTION_CONFIG || {};
@@ -61,6 +62,40 @@
   const profileId = (profile) => Number(profile?.profile_index ?? profile?.id);
   const profileName = (profile) => String(profile?.name || `Profile ${profileId(profile)}`);
 
+  async function getSavedSetups(force = false) {
+    if (force || !savedSetupsPromise) {
+      savedSetupsPromise = fetch('/api/account/collections', {
+        credentials: 'same-origin',
+        cache: 'no-store',
+      }).then(async (response) => {
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(body?.error || `Could not load saved setups (HTTP ${response.status}).`);
+        return Array.isArray(body?.collections) ? body.collections : [];
+      }).catch((error) => {
+        savedSetupsPromise = null;
+        throw error;
+      });
+    }
+    return savedSetupsPromise;
+  }
+
+  function completedSetupsForProfile(profileIndex, setups) {
+    const id = Number(profileIndex);
+    return (setups || [])
+      .filter((item) => Number(item?.draftStep || 0) >= 7 && Number(item?.nuvioProfileId) === id)
+      .sort((a, b) => {
+        const aApplied = Date.parse(a?.lastAppliedAt || '') || 0;
+        const bApplied = Date.parse(b?.lastAppliedAt || '') || 0;
+        if (aApplied !== bApplied) return bApplied - aApplied;
+        return (Date.parse(b?.updatedAt || '') || 0) - (Date.parse(a?.updatedAt || '') || 0);
+      });
+  }
+
+  function activeSetupForProfile(profileIndex, setups) {
+    const candidates = completedSetupsForProfile(profileIndex, setups);
+    return candidates.find((item) => item?.lastAppliedAt) || candidates[0] || null;
+  }
+
   function setLastSync(userId) {
     const now = new Date().toISOString();
     try { localStorage.setItem(`${LAST_SYNC_KEY_PREFIX}${userId || 'default'}`, now); } catch {}
@@ -96,14 +131,39 @@
   async function openEdit(profile) {
     const id = profileId(profile);
     const name = profileName(profile);
+
+    let setups = [];
+    let eligibility = null;
+    try {
+      [setups, eligibility] = await Promise.all([
+        getSavedSetups(true).catch(() => []),
+        window.KollectionCollectionEligibility?.check?.(id, { force: false }).catch(() => null),
+      ]);
+    } catch {}
+
+    const profileSetups = completedSetupsForProfile(id, setups);
+    const activeSetup = activeSetupForProfile(id, setups);
+    const showSetupPicker = eligibility?.state === 'kollection';
+    const setupOptions = profileSetups.length
+      ? profileSetups.map((item) => `<option value="${esc(item.id)}" ${item.id === activeSetup?.id ? 'selected' : ''}>${esc(item.name || 'My Kollection')}${item.id === activeSetup?.id ? ' · Current' : ''}</option>`).join('')
+      : '<option value="">No saved setup linked</option>';
+
     openModal(`
       <header class="account-modal-head">
         <h3>Edit ${esc(name)}</h3>
         <button class="account-modal-x" type="button" data-modal-close aria-label="Close">×</button>
       </header>
       <div class="account-modal-body">
-        <p class="account-modal-copy">Update this profile name in Nuvio. Avatar changes stay managed by Nuvio.</p>
+        <p class="account-modal-copy">Update this profile name and, when The Kollection is installed, choose which saved setup this profile uses.</p>
         <label class="account-modal-field"><span>Profile name</span><input id="accountEditProfileName" maxlength="40" value="${esc(name)}" /></label>
+        ${showSetupPicker ? `
+          <label class="account-modal-field account-profile-setup-field">
+            <span>Saved setup</span>
+            <select id="accountEditSavedSetup" ${profileSetups.length ? '' : 'disabled'}>${setupOptions}</select>
+            <small>${profileSetups.length > 1
+              ? 'Choose a different saved setup to switch this profile. The Kollection setup page will open so the selected setup can be safely applied.'
+              : (profileSetups.length === 1 ? 'This is the saved setup currently linked to this profile.' : 'No completed saved setup is linked to this profile yet.')}</small>
+          </label>` : ''}
         <p class="account-modal-status" id="accountEditStatus" role="status"></p>
       </div>
       <footer class="account-modal-footer">
@@ -113,20 +173,48 @@
 
     const save = document.getElementById('accountSaveProfile');
     const input = document.getElementById('accountEditProfileName');
+    const setupSelect = document.getElementById('accountEditSavedSetup');
     const status = document.getElementById('accountEditStatus');
+
+    const syncSaveLabel = () => {
+      if (!save || !setupSelect || !activeSetup) return;
+      save.textContent = setupSelect.value && setupSelect.value !== activeSetup.id
+        ? 'Apply selected setup'
+        : 'Save changes';
+    };
+    setupSelect?.addEventListener('change', syncSaveLabel);
+    syncSaveLabel();
+
     save?.addEventListener('click', async () => {
       const nextName = String(input?.value || '').trim();
       if (!nextName) { status.textContent = 'Enter a profile name.'; return; }
+      const selectedSetupId = String(setupSelect?.value || '');
+      const switchingSetup = Boolean(selectedSetupId && activeSetup && selectedSetupId !== activeSetup.id);
+
       save.disabled = true;
-      status.textContent = 'Saving…';
+      status.textContent = switchingSetup ? 'Saving profile before opening the selected setup…' : 'Saving…';
       try {
         const { accessToken, userId } = await getAuth();
-        await apiFetch(`/rest/v1/profiles?profile_index=eq.${id}`, accessToken, {
-          method: 'PATCH',
-          headers: { Prefer: 'return=minimal' },
-          body: JSON.stringify({ name: nextName }),
-        });
+        if (nextName !== name) {
+          await apiFetch(`/rest/v1/profiles?profile_index=eq.${id}`, accessToken, {
+            method: 'PATCH',
+            headers: { Prefer: 'return=minimal' },
+            body: JSON.stringify({ name: nextName }),
+          });
+        }
         setLastSync(userId);
+
+        if (switchingSetup) {
+          closeModal();
+          const target = new URL('/set-up-collection', window.location.origin);
+          target.searchParams.set('saved', selectedSetupId);
+          target.searchParams.set('edit', '1');
+          target.searchParams.set('targetProfile', String(id));
+          target.searchParams.set('switch', '1');
+          window.location.href = target.pathname + target.search;
+          return;
+        }
+
         closeModal();
         window.location.reload();
       } catch (error) {
@@ -314,16 +402,28 @@
     }
 
     try {
-      const result = await window.KollectionCollectionEligibility?.check?.(profileId(profile), { force: true });
+      const id = profileId(profile);
+      const [result, setups] = await Promise.all([
+        window.KollectionCollectionEligibility?.check?.(id, { force: true }),
+        getSavedSetups().catch(() => []),
+      ]);
       if (!result) throw new Error('Profile availability could not be checked.');
       row.dataset.collectionEligibility = result.eligible ? 'eligible' : 'ineligible';
 
       if (availability) {
         availability.classList.remove('account-profile-setup-checking');
         if (result.eligible) {
-          availability.textContent = result.state === 'kollection'
-            ? 'Available for Set Up Collection · Kollection installed'
-            : 'Available for Set Up Collection';
+          if (result.state === 'kollection') {
+            const activeSetup = activeSetupForProfile(id, setups);
+            if (activeSetup) {
+              row.dataset.activeSavedSetupId = String(activeSetup.id || '');
+              availability.textContent = `Using saved setup · ${activeSetup.name || 'My Kollection'}`;
+            } else {
+              availability.textContent = 'Kollection installed · No saved setup linked';
+            }
+          } else {
+            availability.textContent = 'Available for Set Up Collection';
+          }
           availability.classList.add('account-profile-setup-available');
           availability.classList.remove('account-profile-setup-unavailable');
         } else {
