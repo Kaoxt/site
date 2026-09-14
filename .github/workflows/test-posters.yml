@@ -4,7 +4,15 @@ on:
   push:
     paths:
       - 'functions/api/posters-v2/**'
+      - 'functions/api/posters-manifest/**'
+      - 'functions/api/posters-addon/**'
       - 'functions/_lib/poster-*.js'
+      - 'posters.html'
+      - 'posters/posters.js'
+      - 'posters/preview-controller.js'
+      - 'posters/addon.js'
+      - 'posters/manifest-final.js'
+      - 'posters/overlays.css'
       - 'tests/poster-cache.test.mjs'
       - 'tests/setup-poster-routing.test.mjs'
       - 'set-up-collection/poster-settings.js'
@@ -16,7 +24,15 @@ on:
   pull_request:
     paths:
       - 'functions/api/posters-v2/**'
+      - 'functions/api/posters-manifest/**'
+      - 'functions/api/posters-addon/**'
       - 'functions/_lib/poster-*.js'
+      - 'posters.html'
+      - 'posters/posters.js'
+      - 'posters/preview-controller.js'
+      - 'posters/addon.js'
+      - 'posters/manifest-final.js'
+      - 'posters/overlays.css'
       - 'tests/poster-cache.test.mjs'
       - 'tests/setup-poster-routing.test.mjs'
       - 'set-up-collection/poster-settings.js'
