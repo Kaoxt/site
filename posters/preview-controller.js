@@ -250,7 +250,7 @@
 
   async function loadSamples() {
     try {
-      const response = await fetch('/api/posters-preview-samples?previewVersion=client-2', { headers: { accept: 'application/json' }, cache: 'default' });
+      const response = await fetch('/api/posters-preview-samples?previewVersion=client-3', { headers: { accept: 'application/json' }, cache: 'default' });
       if (response.ok) {
         const data = await response.json();
         if (Array.isArray(data?.samples) && data.samples.length >= 3) samples = data.samples.slice(0, 3);
