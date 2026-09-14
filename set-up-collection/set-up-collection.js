@@ -2011,6 +2011,7 @@
     const bcDescription = state.bingecatSkipped
       ? 'The setup completed without Bingecat recommendation catalogs.'
       : (bcNeeded ? 'The creator-specific Bingecat IDs were replaced with your manifest ID and recommendation catalogs.' : 'None of the selected sections required Bingecat, so its add-on was not installed.');
+    const savedSetupName = window.KollectionSavedSetup?.getName?.() || 'My Kollection';
     host.innerHTML = panel('COMPLETE', 'The Kollection is set up',
       `The selected Nuvio profile now has ${selectedPack.length} selected The Kollection section${selectedPack.length === 1 ? '' : 's'} and the required AIOMetadata catalog configuration${state.aiInstalls.length === 1 ? '' : 's'}${bcNeeded ? ', with your personal Bingecat recommendations wired into For You.' : ''}`,
       `<div class="card"><div class="done-mark">✓</div>
@@ -2018,6 +2019,7 @@
           <div class="summary-item"><span class="icon">✓</span><div><b>AIOMetadata ready</b><span>${state.aiInstalls.length} configuration${state.aiInstalls.length === 1 ? '' : 's'} installed for ${state.aiNeededCatalogs.length} required catalogs.</span></div></div>
           <div class="summary-item"><span class="icon">✓</span><div><b>${bcStatus}</b><span>${bcDescription}</span></div></div>
           <div class="summary-item"><span class="icon">✓</span><div><b>Nuvio synced</b><span>${selectedPack.length} selected The Kollection sections were synced to profile ${state.profileId}.</span></div></div>
+          <div class="summary-item"><span class="icon">✓</span><div><b>Saved automatically</b><span>${esc(savedSetupName)} is saved under Your setups and linked to ${esc(state.profileName || `profile ${state.profileId}`)}.</span></div></div>
         </div>
         <div class="actions"><button class="ghost" id="recordBtn">Download setup record</button><a class="btn" href="https://nuvio.tv/" target="_blank" rel="noopener">Open Nuvio</a></div>
       </div>`);
