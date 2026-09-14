@@ -703,3 +703,36 @@ body.light .collection-section-choice.selected .collection-section-check::after{
 #selfHostField[hidden] {
   display: none !important;
 }
+
+
+/* Step 3 — optional Smart Overlay Posters setup */
+.smart-overlay-option{
+  border:1px solid rgba(129,140,248,.22);
+  background:linear-gradient(135deg,rgba(99,102,241,.075),rgba(139,92,246,.035));
+  border-radius:18px;
+  padding:17px 18px;
+}
+.smart-overlay-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.smart-overlay-heading>div{display:grid;gap:7px}
+.smart-overlay-heading h3{margin:0;font-size:17px;line-height:1.25}
+.smart-overlay-heading p{margin:0;color:var(--muted);font-size:13.5px;line-height:1.55;max-width:700px}
+.smart-overlay-toggle{padding:16px 0 4px}
+.smart-overlay-settings{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1px solid rgba(255,255,255,.09);
+}
+.smart-overlay-settings[hidden]{display:none!important}
+.smart-overlay-settings>div{display:grid;gap:3px;min-width:0}
+.smart-overlay-settings span{color:var(--muted);font-size:11.5px}
+.smart-overlay-settings b{font-size:13px;line-height:1.4}
+body.light .smart-overlay-option{border-color:rgba(79,70,229,.16);background:linear-gradient(135deg,rgba(99,102,241,.06),rgba(139,92,246,.028))}
+body.light .smart-overlay-settings{border-top-color:rgba(0,0,0,.08)}
+@media(max-width:680px){
+  .smart-overlay-settings{align-items:stretch;flex-direction:column}
+  .smart-overlay-settings .ghost{width:100%}
+}
