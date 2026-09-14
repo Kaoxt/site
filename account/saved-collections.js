@@ -129,7 +129,31 @@
     return Array.isArray(ids) ? ids.map(collectionKey).filter(Boolean) : [];
   }
 
-  async function verifyCompletedSetup(item, cache, profileCache) {
+  function activeProfileIdForUser(userId) {
+    const row = document.querySelector('#accountProfiles .account-profile-row.active-profile');
+    const rowId = Number(row?.dataset?.profileId);
+    if (Number.isFinite(rowId) && rowId >= 1) return rowId;
+    try {
+      const stored = Number(localStorage.getItem(`kollection-nuvio-profile-id:${String(userId || 'default')}`));
+      return Number.isFinite(stored) && stored >= 1 ? stored : null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function getActiveKollectionContext(userId) {
+    const profileId = activeProfileIdForUser(userId);
+    if (!profileId || !window.KollectionCollectionEligibility) return null;
+    try {
+      const eligibility = await window.KollectionCollectionEligibility.check(profileId, { force: true });
+      if (eligibility?.state !== 'kollection' || !eligibility?.hasKollection) return null;
+      return { profileId, eligibility };
+    } catch {
+      return null;
+    }
+  }
+
+  async function verifyCompletedSetup(item, cache, profileCache, activeKollection) {
     if (Number(item?.draftStep || 0) < 7) return { state: 'draft' };
 
     const expected = expectedIds(item);
@@ -209,6 +233,15 @@
       }
     }
 
+    if (activeKollection?.profileId) {
+      return {
+        state: 'valid',
+        profileId: activeKollection.profileId,
+        editableViaActiveProfile: true,
+        message: 'Editable using the active Nuvio profile that currently has The Kollection installed.',
+      };
+    }
+
     return {
       state: 'invalid',
       message: 'This saved setup could not be matched to The Kollection currently installed on its Nuvio profile. Editing is disabled.',
@@ -282,7 +315,7 @@
     return { row, resume, badge, originMessage, meta, complete };
   }
 
-  async function render(collections) {
+  async function render(collections, activeKollection = null) {
     const container = document.getElementById('accountSavedCollections');
     if (!container) return;
     container.innerHTML = '';
@@ -297,16 +330,24 @@
       if (!ui.complete) continue;
       pending.push((async () => {
         try {
-          const result = await verifyCompletedSetup(item, cache, profileCache);
+          const result = await verifyCompletedSetup(item, cache, profileCache, activeKollection);
           ui.resume.classList.remove('account-edit-pending');
           ui.resume.removeAttribute('aria-disabled');
           ui.badge.hidden = false;
           if (result.state === 'valid') {
-            ui.badge.textContent = item.lastAppliedAt ? 'Active' : 'Verified';
-            ui.badge.dataset.state = item.lastAppliedAt ? 'active' : 'valid';
+            ui.badge.textContent = item.lastAppliedAt ? 'Active' : (result.editableViaActiveProfile ? 'Editable' : 'Verified');
+            ui.badge.dataset.state = item.lastAppliedAt ? 'active' : (result.editableViaActiveProfile ? 'editable' : 'valid');
             ui.resume.textContent = 'Edit';
             ui.resume.setAttribute('aria-label', `Edit ${item.name || 'saved setup'}`);
-            ui.originMessage.hidden = true;
+            if (result.editableViaActiveProfile && result.profileId) {
+              ui.resume.href = `/set-up-collection?saved=${encodeURIComponent(item.id)}&edit=1&targetProfile=${encodeURIComponent(result.profileId)}`;
+              ui.originMessage.textContent = 'This saved setup can be edited using your active Nuvio profile, which currently has The Kollection installed.';
+              ui.originMessage.hidden = false;
+              ui.originMessage.classList.add('account-origin-message-info');
+            } else {
+              ui.originMessage.hidden = true;
+              ui.originMessage.classList.remove('account-origin-message-info');
+            }
             if (result.repairedProfileLink && ui.meta) {
               const parts = [];
               if (item.nuvioProfileName) parts.push(item.nuvioProfileName);
@@ -356,9 +397,11 @@
       }
       const data = await readJson(await fetch('/api/account/collections', { credentials: 'same-origin', cache: 'no-store' }));
       const collections = Array.isArray(data.collections) ? data.collections : [];
-      await render(collections);
+      const activeKollection = await getActiveKollectionContext(session.user?.id || '');
+      await render(collections, activeKollection);
       if (status) status.textContent = collections.length
-        ? `${collections.length} saved setup${collections.length === 1 ? '' : 's'}. Completed setups are verified against the linked Nuvio profile before editing.` : '';
+        ? `${collections.length} saved setup${collections.length === 1 ? '' : 's'}. Completed setups can be edited when their linked profile or your active Nuvio profile currently has The Kollection installed.`
+        : '';
     } catch (error) {
       empty(container, 'Saved collection storage needs the Cloudflare D1 database binding before it can be used.');
       if (status) status.textContent = error?.message || 'Could not load saved setups.';
