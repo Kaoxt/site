@@ -76,7 +76,6 @@
     const target = event.target;
     if (!isPosterControl(target)) return;
 
-    event.stopImmediatePropagation();
     syncPosterControlUi();
     document.dispatchEvent(new Event('kollection:poster-settings-changed'));
 
