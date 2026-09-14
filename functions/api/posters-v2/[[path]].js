@@ -806,6 +806,8 @@ function persistentResponse(object, state) {
   if (metadata.tmdbId) headers.set('x-kollection-tmdb-id', metadata.tmdbId);
   if (metadata.renderer) headers.set('x-kollection-renderer', metadata.renderer);
   if (metadata.ratingStatus) headers.set('x-kollection-rating-status', metadata.ratingStatus);
+  if (metadata.qualitySource) headers.set('x-kollection-quality-source', metadata.qualitySource);
+  if (metadata.qualityStatus) headers.set('x-kollection-quality-status', metadata.qualityStatus);
   return new Response(object.body, { headers });
 }
 
@@ -824,6 +826,8 @@ async function saveResult(context, state, key, result) {
     tmdbId: headers.get('x-kollection-tmdb-id') || state.idHint || '',
     renderer: headers.get('x-kollection-renderer') || '',
     ratingStatus: headers.get('x-kollection-rating-status') || '',
+    qualitySource: headers.get('x-kollection-quality-source') || '',
+    qualityStatus: headers.get('x-kollection-quality-status') || '',
     // Copying an alias must preserve the original date, not make old tags fresh.
     trendDay: state.tags.has('trend') ? new Date(Number(headers.get('x-kollection-generated-at'))).toISOString().slice(0, 10) : '',
   });
