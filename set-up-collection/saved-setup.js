@@ -461,11 +461,14 @@
       }));
       const item = data.collection;
       savedName = item?.name || 'My Kollection';
+      const routedStep = Number(window.KollectionSetupRoute?.getStep?.() ?? 0);
       targetStep = updateExistingSetup
         ? 4
-        : cloneSavedSetup
-          ? Math.max(0, Math.min(6, Number(item?.draftStep) || 0))
-          : Math.max(0, Math.min(7, Number(item?.draftStep) || 0));
+        : routedStep > 0
+          ? Math.max(0, Math.min(7, routedStep))
+          : cloneSavedSetup
+            ? Math.max(0, Math.min(6, Number(item?.draftStep) || 0))
+            : Math.max(0, Math.min(7, Number(item?.draftStep) || 0));
       snapshot = {
         ...snapshot,
         ...(item?.config && typeof item.config === 'object' ? item.config : {}),
