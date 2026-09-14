@@ -36,6 +36,7 @@
     root.classList.remove('open');
     root.setAttribute('aria-hidden', 'true');
     document.documentElement.classList.remove('existing-setup-modal-open');
+    document.body.classList.remove('existing-setup-modal-open');
   }
 
   function renderModalShell() {
@@ -45,14 +46,14 @@
     root.id = 'existingSetupModalRoot';
     root.setAttribute('aria-hidden', 'true');
     root.innerHTML = `
-      <div class="existing-setup-backdrop" data-close-existing-setup>
+      <div class="existing-setup-backdrop">
         <section class="existing-setup-modal" role="dialog" aria-modal="true" aria-labelledby="existingSetupTitle">
           <header class="existing-setup-modal-head">
             <div>
               <span class="existing-setup-kicker">SAVED SETUPS</span>
               <h3 id="existingSetupTitle">Edit Existing Setup</h3>
             </div>
-            <button class="existing-setup-close" type="button" aria-label="Close" data-close-existing-setup></button>
+            <button class="existing-setup-close" type="button" aria-label="Close saved setups" data-close-existing-setup>×</button>
           </header>
           <div class="existing-setup-modal-body">
             <p class="existing-setup-copy">Choose a saved setup to open it directly in Step 5. Your saved categories, folders, keys, and setup preferences will be restored.</p>
@@ -62,9 +63,29 @@
         </section>
       </div>`;
     document.body.appendChild(root);
-    root.addEventListener('click', (event) => {
-      if (event.target === root.querySelector('.existing-setup-backdrop') || event.target.closest('[data-close-existing-setup]')) closeModal();
+
+    const backdrop = root.querySelector('.existing-setup-backdrop');
+    const modal = root.querySelector('.existing-setup-modal');
+    const closeButton = root.querySelector('[data-close-existing-setup]');
+
+    // Bind the close button directly instead of relying on delegated click
+    // handling. Firefox Android can retarget taps in fixed/backdrop-filtered
+    // dialogs, which made the visible X appear unresponsive.
+    const closeFromButton = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      closeModal();
+    };
+    closeButton?.addEventListener('click', closeFromButton);
+    closeButton?.addEventListener('pointerup', closeFromButton);
+
+    // Clicking the dimmed area still closes the dialog, but clicks inside the
+    // card never bubble into the backdrop close path.
+    backdrop?.addEventListener('click', (event) => {
+      if (event.target === backdrop) closeModal();
     });
+    modal?.addEventListener('click', event => event.stopPropagation());
+
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && root.classList.contains('open')) closeModal();
     });
@@ -79,6 +100,7 @@
     root.classList.add('open');
     root.setAttribute('aria-hidden', 'false');
     document.documentElement.classList.add('existing-setup-modal-open');
+    document.body.classList.add('existing-setup-modal-open');
     list.innerHTML = '<div class="existing-setup-loading">Loading saved setups…</div>';
     error.textContent = '';
 
@@ -130,8 +152,6 @@
     const resetButton = $('#resetBtn');
     const step = currentStep();
 
-    // Until authentication is confirmed, keep both account-related toolbar
-    // actions hidden so signed-out users never see Start over or Edit Existing.
     if (!authChecked || !signedIn) {
       if (saveButton) saveButton.hidden = true;
       if (resetButton) resetButton.hidden = true;
