@@ -655,7 +655,11 @@ async function renderPoster(context, state, id, persistentKey) {
   const { url, type, preview, tags, sourceUrl, overlayOnly, overlayLanguage } = state;
 
   const append = type === 'movie' ? 'images,release_dates,external_ids' : 'images,content_ratings,external_ids';
-  const details = await tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null&language=en-US`, env.TMDB_API_KEY, context);
+  const detailsPromise = tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null&language=en-US`, env.TMDB_API_KEY, context);
+  const trendPromise = tags.has('trend')
+    ? trendLabel(type, id, env.TMDB_API_KEY, overlayLanguage, context)
+    : Promise.resolve('');
+  const details = await detailsPromise;
   if (!details.poster_path && !sourceUrl) throw posterError('artwork-missing');
   const smartLayout = url.searchParams.get('source') === 'smart';
   const artwork = sourceUrl ? { path: '', source: 'upstream-addon' } : choosePoster(details, smartLayout);
@@ -664,18 +668,18 @@ async function renderPoster(context, state, id, persistentKey) {
   if (!artwork.path && !sourceUrl) throw posterError('artwork-missing');
 
   const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
-  const [rating, resolvedTrend, quality] = await Promise.all([
+  const [rating, trendRank, quality] = await Promise.all([
     tags.has('rating')
       ? resolveRating(details, type, requestedRatingSource, env, context)
       : Promise.resolve({ value: '', label: '', source: requestedRatingSource, status: 'disabled' }),
-    tags.has('trend')
-      ? Promise.resolve(theatricalLabel(details, type, String(env.POSTERS_RELEASE_REGION || 'US').toUpperCase()))
-          .then((label) => label || trendLabel(type, id, env.TMDB_API_KEY, overlayLanguage, context))
-      : Promise.resolve(''),
+    trendPromise,
     tags.has('quality')
       ? resolveQuality(details, type, env, context)
       : Promise.resolve({ value: '', source: 'aiostreams', status: 'disabled' }),
   ]);
+  const resolvedTrend = tags.has('trend')
+    ? theatricalLabel(details, type, String(env.POSTERS_RELEASE_REGION || 'US').toUpperCase()) || trendRank
+    : '';
   if (!['ok', 'upstream', 'cache-hit', 'missing', 'disabled', 'not-configured'].includes(rating.status)) {
     // A ratings-provider outage must not replace a good cached overlay with one
     // missing its rating for the entire cache lifetime.
