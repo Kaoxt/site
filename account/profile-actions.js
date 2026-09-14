@@ -381,7 +381,7 @@
 
       actions.append(edit, copy);
 
-      if (!eligibility?.eligible) {
+      if (eligibility?.state === 'blocked') {
         const clearCollection = document.createElement('button');
         clearCollection.type = 'button';
         clearCollection.className = 'account-profile-action warning';
