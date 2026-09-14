@@ -215,7 +215,7 @@
     const strong = document.createElement('strong');
     strong.textContent = name;
     const small = document.createElement('small');
-    small.textContent = 'Available for Set Up Collection';
+    small.textContent = 'Checking Set Up Collection availability…';
     copy.append(strong, small);
 
     const switchButton = document.createElement('button');
