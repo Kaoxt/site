@@ -97,3 +97,20 @@ html[data-theme="light"] .account-profile-action.warning{
   color:#8a5a00;
   border-color:rgba(160,105,0,.28);
 }
+
+
+/* Saved setup picker in profile edit */
+.account-profile-setup-field{
+  margin-top:18px;
+}
+.account-profile-setup-field small{
+  color:var(--account-muted);
+  font-size:11.5px;
+  line-height:1.5;
+}
+.account-profile-copy small.account-profile-setup-active{
+  color:#b6e7c3;
+}
+html[data-theme="light"] .account-profile-copy small.account-profile-setup-active{
+  color:#287344;
+}
