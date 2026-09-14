@@ -31,12 +31,21 @@
   }
 
   function closeModal() {
-    const root = $('#existingSetupModalRoot');
+    const root = document.getElementById('existingSetupModalRoot');
     if (!root) return;
     root.classList.remove('open');
     root.setAttribute('aria-hidden', 'true');
+    root.style.pointerEvents = 'none';
     document.documentElement.classList.remove('existing-setup-modal-open');
     document.body.classList.remove('existing-setup-modal-open');
+  }
+
+  function forceCloseFromEvent(event) {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target?.closest('.existing-setup-close')) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    closeModal();
   }
 
   function renderModalShell() {
@@ -53,7 +62,9 @@
               <span class="existing-setup-kicker">SAVED SETUPS</span>
               <h3 id="existingSetupTitle">Edit Existing Setup</h3>
             </div>
-            <button class="existing-setup-close" type="button" aria-label="Close saved setups" data-close-existing-setup>×</button>
+            <button class="existing-setup-close" type="button" aria-label="Close saved setups">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
           </header>
           <div class="existing-setup-modal-body">
             <p class="existing-setup-copy">Choose a saved setup to open it directly in Step 5. Your saved categories, folders, keys, and setup preferences will be restored.</p>
@@ -65,26 +76,9 @@
     document.body.appendChild(root);
 
     const backdrop = root.querySelector('.existing-setup-backdrop');
-    const modal = root.querySelector('.existing-setup-modal');
-    const closeButton = root.querySelector('[data-close-existing-setup]');
-
-    // Bind the close button directly instead of relying on delegated click
-    // handling. Firefox Android can retarget taps in fixed/backdrop-filtered
-    // dialogs, which made the visible X appear unresponsive.
-    const closeFromButton = (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      closeModal();
-    };
-    closeButton?.addEventListener('click', closeFromButton);
-    closeButton?.addEventListener('pointerup', closeFromButton);
-
-    // Clicking the dimmed area still closes the dialog, but clicks inside the
-    // card never bubble into the backdrop close path.
     backdrop?.addEventListener('click', (event) => {
       if (event.target === backdrop) closeModal();
     });
-    modal?.addEventListener('click', event => event.stopPropagation());
 
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && root.classList.contains('open')) closeModal();
@@ -97,6 +91,7 @@
     const root = renderModalShell();
     const list = $('#existingSetupList', root);
     const error = $('#existingSetupError', root);
+    root.style.pointerEvents = 'auto';
     root.classList.add('open');
     root.setAttribute('aria-hidden', 'false');
     document.documentElement.classList.add('existing-setup-modal-open');
@@ -242,6 +237,9 @@
 
   function init() {
     document.addEventListener('click', interceptToolbarClick, true);
+    document.addEventListener('pointerdown', forceCloseFromEvent, true);
+    document.addEventListener('touchstart', forceCloseFromEvent, { capture: true, passive: false });
+    document.addEventListener('click', forceCloseFromEvent, true);
 
     const saveButton = $('#saveSetupBtn');
     const resetButton = $('#resetBtn');
