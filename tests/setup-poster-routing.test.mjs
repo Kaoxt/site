@@ -50,3 +50,11 @@ test('Set Up Collection applies poster routing only when the user enables it', a
   assert.match(source, /state\.posterOverlaysEnabled && window\.KollectionPosterSettings/);
   assert.match(source, /KollectionPosterSettings\.applyToAioConfig\(config, state\.posterSettings\)/);
 });
+
+
+test('saved collection setups persist the poster overlay selection', async () => {
+  const source = await readFile(new URL('../set-up-collection/saved-setup.js', import.meta.url), 'utf8');
+  assert.match(source, /posterOverlaysEnabled: Boolean\(snapshot\.posterOverlaysEnabled\)/);
+  assert.match(source, /kollection:restore-poster-settings/);
+  assert.match(source, /posterSettingsJson/);
+});
