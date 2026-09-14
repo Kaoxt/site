@@ -1865,7 +1865,14 @@
         loading('Preparing your selected collection sections…');
         await prepareReview();
         setStep(5);
-      } catch (e) { renderCustomize(); alert(e.message, 'error'); }
+      } catch (e) {
+        if (state.step === 1 && !state.profileEligibility?.eligible) {
+          alert(e.message, 'error');
+          return;
+        }
+        renderCustomize();
+        alert(e.message, 'error');
+      }
     };
   }
 
@@ -1910,6 +1917,10 @@
         await installEverything();
         setStep(7);
       } catch (e) {
+        if (state.step === 1 && !state.profileEligibility?.eligible) {
+          alert(e.message, 'error');
+          return;
+        }
         renderInstall();
         alert(`${e.message}${state.installStarted ? ' Your pre-setup backup is still available from the Review step.' : ''}`, 'error');
       }
@@ -1929,7 +1940,7 @@
         <div class="summary">
           <div class="summary-item"><span class="icon">✓</span><div><b>AIOMetadata ready</b><span>${state.aiInstalls.length} configuration${state.aiInstalls.length === 1 ? '' : 's'} installed for ${state.aiNeededCatalogs.length} required catalogs.</span></div></div>
           <div class="summary-item"><span class="icon">✓</span><div><b>${bcStatus}</b><span>${bcDescription}</span></div></div>
-          <div class="summary-item"><span class="icon">✓</span><div><b>Nuvio synced</b><span>${selectedPack.length} selected The Kollection sections were synced to profile ${state.profileId}; unrelated existing groups were preserved.</span></div></div>
+          <div class="summary-item"><span class="icon">✓</span><div><b>Nuvio synced</b><span>${selectedPack.length} selected The Kollection sections were synced to profile ${state.profileId}.</span></div></div>
         </div>
         <div class="actions"><button class="ghost" id="recordBtn">Download setup record</button><a class="btn" href="https://nuvio.tv/" target="_blank" rel="noopener">Open Nuvio</a></div>
       </div>`);
