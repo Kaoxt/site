@@ -102,8 +102,8 @@ export async function renderPoster(body){
   const info=await smartBottomInfo(genre,resolvedRatingLabel);if(info)composites.push({input:info,top:SMART_BOTTOM_INFO_TOP,left:px(30)});
  }else{
   if(age){const width=smartTagWidth(age,132,205),badge=await originalBadgeImage(age,{width,height:px(64),fill:'#111216',fillOpacity:.50,fontSize:34,radius:8,strokeOpacity:.20});composites.push({input:badge,top:SMART_AGE_TOP,left:Math.round((POSTER_WIDTH-width)/2)});}
-  if(quality){const width=px(190);composites.push({input:await originalBadgeImage(quality,{width,height:px(92),fill:'#f3f4f6',fillOpacity:.9,textColor:'#111318',fontSize:44,radius:8,strokeOpacity:.05}),top:0,left:POSTER_WIDTH-SAFE_MARGIN-width});}
-  if(trend){const t=await smartTopTag(trend,{fill:dynamicFill,fillOpacity:.9,width:smartTagWidth(trend,300,390)});composites.push({input:t.buffer,top:0,left:Math.round((POSTER_WIDTH-t.width)/2)});}
+  if(quality){if(trend){const t=await smartTopTag(trend,{fill:dynamicFill,width:smartTagWidth(trend,238,590)});composites.push({input:t.buffer,top:0,left:SAFE_MARGIN});}const q=await smartTopTag(quality,{fill:'#f4f4f5',fillOpacity:.96,width:smartTagWidth(quality,108,158),fontSize:39,textColor:'#111318'});composites.push({input:q.buffer,top:0,left:POSTER_WIDTH-SAFE_MARGIN-q.width});}
+  else if(trend){const t=await smartTopTag(trend,{fill:dynamicFill,width:smartTagWidth(trend,238,590)});composites.push({input:t.buffer,top:0,left:Math.round((POSTER_WIDTH-t.width)/2)});}
   composites.push({input:smartBottomBackdrop(),top:POSTER_HEIGHT-px(275),left:0});
   const info=await smartBottomInfo(genre,resolvedRatingLabel);if(info)composites.push({input:info,top:SMART_BOTTOM_INFO_TOP,left:px(30)});
  }
