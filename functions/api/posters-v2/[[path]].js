@@ -2,7 +2,7 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'production-cache-17';
+const CACHE_VERSION = 'production-cache-18';
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
 const DEFAULT_MDBLIST_CACHE_DAYS = 30;
@@ -602,7 +602,8 @@ export async function onRequest(context) {
     });
     if (!rendered.ok) {
       const message = await rendered.text().catch(() => '');
-      return originalPosterFallback(type, id, env, 'renderer-' + rendered.status, details);
+      const safeMessage = message.replace(/[^a-z0-9._-]+/gi, '-').replace(/^-+|-+$/g, '').slice(0, 140);
+      return originalPosterFallback(type, id, env, 'renderer-' + rendered.status + (safeMessage ? '-' + safeMessage : ''), details);
     }
 
     const output = await rendered.arrayBuffer();
