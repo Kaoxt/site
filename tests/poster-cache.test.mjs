@@ -98,8 +98,11 @@ function harness(overrides = {}) {
       count.details++;
       if (h.detailsHook) await h.detailsHook();
       const id = Number(url.pathname.split('/').at(-1));
-      return Response.json({ id, title: 'Test title', name: 'Test series', poster_path: '/poster.jpg', vote_average: 8.1,
-        genres: [{ name: 'Drama' }], images: { posters: [], logos: [] }, external_ids: { imdb_id: 'tt1375666' } });
+      return Response.json({
+        id, title: 'Test title', name: 'Test series', poster_path: '/poster.jpg', vote_average: 8.1,
+        genres: [{ name: 'Drama' }], images: { posters: [], logos: [] }, external_ids: { imdb_id: 'tt1375666' },
+        ...(h.detailsOverride || {}),
+      });
     }
     if (url.hostname === 'api.mdblist.com') {
       count.ratings++;
@@ -170,6 +173,45 @@ test('cold MDBList lookup starts before TMDB details finish', { timeout: 2000 },
   assert.equal(h.payloads[0].genre, 'Drama');
   assert.match(response.headers.get('server-timing'), /metadata;dur=\d+/);
   assert.equal(h.count.ratings, 1);
+});
+
+
+test('trend labels prefer daily rank and fall back to truthful release status', async () => {
+  const day = offset => new Date(Date.now() + offset * 86400000).toISOString().slice(0, 10);
+  const release = offset => day(offset) + 'T00:00:00Z';
+
+  const ranked = harness();
+  ranked.detailsOverride = {
+    release_date: day(10),
+    release_dates: { results: [{ iso_3166_1: 'US', release_dates: [{ type: 3, release_date: release(10) }] }] },
+  };
+  await (await ranked.request('27205')).arrayBuffer(); await ranked.flush();
+  assert.equal(ranked.payloads.at(-1).trend, '#1 Today');
+
+  const fresh = harness();
+  fresh.detailsOverride = {
+    release_date: day(-3),
+    release_dates: { results: [{ iso_3166_1: 'US', release_dates: [{ type: 3, release_date: release(-3) }] }] },
+  };
+  await (await fresh.request('155')).arrayBuffer(); await fresh.flush();
+  assert.equal(fresh.payloads.at(-1).trend, 'New');
+
+  const cinema = harness();
+  cinema.detailsOverride = {
+    release_date: day(-20),
+    release_dates: { results: [{ iso_3166_1: 'US', release_dates: [{ type: 3, release_date: release(-20) }] }] },
+  };
+  await (await cinema.request('278')).arrayBuffer(); await cinema.flush();
+  assert.equal(cinema.payloads.at(-1).trend, 'In Cinema');
+
+  const coming = harness();
+  coming.detailsOverride = {
+    release_date: day(12),
+    release_dates: { results: [{ iso_3166_1: 'US', release_dates: [{ type: 3, release_date: release(12) }] }] },
+  };
+  const response = await coming.request('13'); await response.arrayBuffer(); await coming.flush();
+  assert.match(coming.payloads.at(-1).trend, /^Coming /);
+  assert.match(response.headers.get('x-kollection-trend-label'), /^Coming /);
 });
 
 test('cold image returns before cache writes while its lease and shared bytes remain available', { timeout: 2000 }, async () => {

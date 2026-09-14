@@ -9,7 +9,7 @@ The AIOMetadata pattern replaces only `poster`. It does not change a title's bac
 3. On an IMDb miss, cached ID metadata locates the existing TMDB-addressed R2 poster. That legacy poster is reused and an IMDb-addressed copy is saved to avoid future ID lookups. Both IDs still share one render lock.
 4. Only a true cache miss renders a new image. Refreshes and cold requests share in-flight work; D1 leases coordinate separate Worker instances. The finished canonical R2 write completes before a successful lease is released.
 
-The artwork version remains `production-cache-19`, preserving previously rendered 500×750 images. The delivery version is independent (`cold-pipeline-2`); generated client patterns use `v=20`.
+The artwork version remains `production-cache-19`, preserving previously rendered 500×750 images. The delivery version is independent (`cold-pipeline-3`); generated client patterns use `v=20`.
 
 ## First loads
 
@@ -17,7 +17,11 @@ MDBList ratings start alongside TMDB artwork metadata and trends, using the know
 
 Finished image bytes return before R2 and edge writes finish. `waitUntil` keeps those writes running; the canonical render lease is released only after its R2 write completes. Same-worker callers share the completed bytes during persistence, so an IMDb or TMDB request in that interval does not trigger another render. A storage failure retains the normal retry cooldown. The redundant pre-lease R2 read is removed, while the post-lease check still closes cache races.
 
-Renderer `v2-bp-layout-21` keeps its intermediate canvas in raw pixels instead of compressing and immediately decoding PNG. Dynamic colors use a materialized 64×64 sample: Sharp's `stats()` ignores pending resize operations, so the old chain scanned the entire canvas. Color analysis is skipped when there is no trend badge. Output remains 500×750 WebP with the same tag/genre/rating geometry; fixed-color output was pixel-identical in an offline comparison. The renderer deploy workflow runs image tests before deploying.
+Renderer `v2-bp-layout-22` renders directly on the delivered 500×750 canvas instead of building a 780×1170 canvas and shrinking it afterward. The approved overlay measurements are scaled from the existing design grid, so tag/genre/rating proportions stay consistent while Sharp processes substantially fewer pixels. Dynamic colors still use a materialized 64×64 sample, and color analysis is skipped when there is no trend badge. The renderer Worker hashes incoming render requests across two named container instances, matching the configured `max_instances: 2`, while `/health` stays pinned to one instance. The renderer deploy workflow runs image tests before deploying.
+
+## Trend labels
+
+Daily TMDB rank remains the first choice (`#N Today`). When a title is outside TMDB's page-one daily trend list, the overlay can still show a truthful release status from title metadata: `New` for a short just-released window, `In Cinema` during the bounded theatrical window before home release, or `Coming <date>` for future releases. TV titles can use `New` or `Coming <date>`. If none of those conditions is true, the trend label stays blank rather than inventing popularity.
 
 ## Freshness and failures
 

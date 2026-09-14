@@ -5,7 +5,7 @@ const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
 const CACHE_VERSION = 'production-cache-19';
 // Delivery changes must not invalidate finished artwork in R2.
-const DELIVERY_VERSION = 'cold-pipeline-2';
+const DELIVERY_VERSION = 'cold-pipeline-3';
 const STALE_TREND_SECONDS = 172800;
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
@@ -15,6 +15,21 @@ const OVERLAY_LANGUAGES = ['en', 'es', 'fr', 'de', 'it', 'pt', 'ja', 'ko'];
 
 const TODAY_LABELS = {
   en: 'Today', es: 'Hoy', fr: "Aujourd’hui", de: 'Heute', it: 'Oggi', pt: 'Hoje', ja: '今日', ko: '오늘',
+};
+
+const TREND_STATUS_LABELS = {
+  en: { new: 'New', cinema: 'In Cinema', coming: 'Coming' },
+  es: { new: 'Nuevo', cinema: 'En cines', coming: 'Próximamente' },
+  fr: { new: 'Nouveau', cinema: 'Au cinéma', coming: 'Bientôt' },
+  de: { new: 'Neu', cinema: 'Im Kino', coming: 'Demnächst' },
+  it: { new: 'Nuovo', cinema: 'Al cinema', coming: 'Prossimamente' },
+  pt: { new: 'Novo', cinema: 'Nos cinemas', coming: 'Em breve' },
+  ja: { new: '新着', cinema: '上映中', coming: '近日公開' },
+  ko: { new: '신규', cinema: '극장 상영 중', coming: '공개 예정' },
+};
+
+const TREND_DATE_LOCALES = {
+  en: 'en-GB', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', it: 'it-IT', pt: 'pt-BR', ja: 'ja-JP', ko: 'ko-KR',
 };
 
 const GENRE_TRANSLATIONS = {
@@ -80,29 +95,59 @@ async function resolveTmdbId(type, rawId, key, context) {
 }
 
 
-function theatricalLabel(details, type, region = 'US', now = new Date()) {
-  if (type !== 'movie') return '';
-  const dates = details.release_dates?.results?.find(item => item.iso_3166_1 === region)?.release_dates || [];
+function validDay(value) {
+  const day = String(value || '').slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : '';
+}
+
+function releaseStatusLabel(details, type, region = 'US', language = 'en', now = new Date()) {
+  const labels = TREND_STATUS_LABELS[language] || TREND_STATUS_LABELS.en;
   const today = now.toISOString().slice(0, 10);
-  const theatrical = dates.filter(item => [2, 3].includes(Number(item.type)))
-    .map(item => String(item.release_date || '').slice(0, 10))
-    .filter(day => /^\d{4}-\d{2}-\d{2}$/.test(day)).sort();
-  if (!theatrical.length) return '';
-  const first = theatrical[0];
-  if (first > today) {
-    const formatted = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(first + 'T00:00:00Z'));
-    return 'Coming ' + formatted;
+  let releaseDay = '';
+  let theatricalDay = '';
+  let homeReleased = false;
+
+  if (type === 'movie') {
+    const dates = details.release_dates?.results?.find(item => item.iso_3166_1 === region)?.release_dates || [];
+    const theatrical = dates.filter(item => [2, 3].includes(Number(item.type)))
+      .map(item => validDay(item.release_date)).filter(Boolean).sort();
+    theatricalDay = theatrical[0] || '';
+    releaseDay = theatricalDay || validDay(details.release_date);
+    homeReleased = dates.some(item => [4, 5, 6].includes(Number(item.type)) && validDay(item.release_date) <= today);
+  } else {
+    releaseDay = validDay(details.first_air_date);
   }
-  const daysSince = (Date.parse(today) - Date.parse(first)) / 86400000;
-  const homeReleased = dates.some(item => [4, 5, 6].includes(Number(item.type)) && String(item.release_date || '').slice(0, 10) <= today);
-  // TMDB supplies release dates, not live cinema listings. Use a bounded theatrical window.
-  return daysSince <= 45 && !homeReleased ? 'In Cinema' : '';
+
+  if (!releaseDay) return '';
+  if (releaseDay > today) {
+    const formatted = new Intl.DateTimeFormat(TREND_DATE_LOCALES[language] || TREND_DATE_LOCALES.en, {
+      day: 'numeric', month: 'short', timeZone: 'UTC',
+    }).format(new Date(releaseDay + 'T00:00:00Z'));
+    return `${labels.coming} ${formatted}`;
+  }
+
+  const daysSince = Math.floor((Date.parse(today) - Date.parse(releaseDay)) / 86400000);
+  if (daysSince < 0) return '';
+  if (daysSince <= (type === 'tv' ? 14 : 7)) return labels.new;
+  // TMDB supplies release dates, not live cinema listings. Use a bounded
+  // theatrical window and stop once a home-release date has arrived.
+  if (type === 'movie' && theatricalDay && daysSince <= 45 && !homeReleased) return labels.cinema;
+  // Movies without detailed regional release data can still truthfully be
+  // called new for a short period using their normal release_date.
+  if (type === 'movie' && !theatricalDay && daysSince <= 14) return labels.new;
+  return '';
 }
 
 async function trendLabel(type, id, key, language = 'en', context) {
-  const data = await tmdbFetch(`/trending/${type}/day?language=en-US&page=1`, key, context);
-  const index = (data.results || []).findIndex((item) => String(item.id) === String(id));
-  return index >= 0 ? `#${index + 1} ${TODAY_LABELS[language] || TODAY_LABELS.en}` : '';
+  try {
+    const data = await tmdbFetch(`/trending/${type}/day?language=en-US&page=1`, key, context);
+    const index = (data.results || []).findIndex((item) => String(item.id) === String(id));
+    return index >= 0 ? `#${index + 1} ${TODAY_LABELS[language] || TODAY_LABELS.en}` : '';
+  } catch {
+    // Release-status fallbacks can still produce a truthful label if TMDB's
+    // daily trending endpoint is temporarily unavailable.
+    return '';
+  }
 }
 
 function certification(details, type) {
@@ -687,7 +732,7 @@ async function renderPoster(context, state, id) {
   if (!artwork.path && !sourceUrl) throw posterError('artwork-missing');
 
   const resolvedTrend = tags.has('trend')
-    ? theatricalLabel(details, type, String(env.POSTERS_RELEASE_REGION || 'US').toUpperCase()) || trendRank
+    ? trendRank || releaseStatusLabel(details, type, String(env.POSTERS_RELEASE_REGION || 'US').toUpperCase(), overlayLanguage)
     : '';
   if (!['ok', 'upstream', 'cache-hit', 'missing', 'disabled', 'not-configured'].includes(rating.status)) {
     // A ratings-provider outage must not replace a good cached overlay with one
@@ -758,6 +803,7 @@ async function renderPoster(context, state, id) {
     headers.set('x-kollection-logo-source', logo.source);
     headers.set('x-kollection-tmdb-id', id);
     headers.set('x-kollection-overlay-language', overlayLanguage);
+    headers.set('x-kollection-trend-label', resolvedTrend || 'none');
     headers.set('x-kollection-generated-at', String(Date.now()));
     headers.set('x-kollection-fresh-until', String(freshUntil(Date.now(), state)));
     return { body: output, headers: [...headers], status: 200 };

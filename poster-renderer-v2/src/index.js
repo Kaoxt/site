@@ -21,6 +21,19 @@ function authorized(request, env) {
   return Boolean(expected && provided && expected === provided);
 }
 
+function renderShard(request) {
+  // Each distinct container name maps to a separate Cloudflare container
+  // instance. CF-Ray is unique per request and cheap to hash, so bursts are
+  // spread across both configured max_instances without reading the POST body.
+  const key = request.headers.get('cf-ray') || crypto.randomUUID();
+  let hash = 2166136261;
+  for (let i = 0; i < key.length; i++) {
+    hash ^= key.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash & 1;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -33,7 +46,8 @@ export default {
       return json({ error: 'Not found.' }, 404);
     }
 
-    const instance = getContainer(env.POSTER_RENDERER, 'primary-v21');
+    const shard = url.pathname === '/health' ? 0 : renderShard(request);
+    const instance = getContainer(env.POSTER_RENDERER, `primary-v22-${shard}`);
     return instance.fetch(request);
   },
 };
