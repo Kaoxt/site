@@ -37,10 +37,16 @@ function sampleFromTrending(item, type, index) {
   const genreMap = type === 'tv' ? TV_GENRES : MOVIE_GENRES;
   const firstGenre = Array.isArray(item?.genre_ids) ? genreMap.get(Number(item.genre_ids[0])) || '' : '';
   const rating = Number(item?.vote_average);
+  const lifecycle = type === 'tv'
+    ? { returningSeries: 'Returning' }
+    : index === 0
+      ? { newMovie: 'New' }
+      : { inCinema: 'In Cinema' };
   return {
     type,
     id: String(item.id),
     trend: `#${index + 1} Today`,
+    ...lifecycle,
     rating: Number.isFinite(rating) && rating > 0 ? rating.toFixed(1) : '',
     genre: firstGenre,
     age: type === 'tv' ? 'TV-14' : 'PG-13',
@@ -65,9 +71,9 @@ export async function onRequestGet({ env }) {
 
     if (samples.length < 3) {
       const fallback = [
-        { type: 'movie', id: '27205', trend: '#1 Today', rating: '6.8', genre: 'Drama', age: 'PG-13', quality: '4K' },
-        { type: 'movie', id: '155', trend: '#2 Today', rating: '8.5', genre: 'Crime', age: 'PG-13', quality: '4K' },
-        { type: 'tv', id: '1399', trend: '#1 Today', rating: '9.2', genre: 'Drama', age: 'TV-MA', quality: '4K' },
+        { type: 'movie', id: '27205', trend: '#1 Today', newMovie: 'New', rating: '6.8', genre: 'Drama', age: 'PG-13', quality: '4K' },
+        { type: 'movie', id: '155', trend: '#2 Today', inCinema: 'In Cinema', rating: '8.5', genre: 'Crime', age: 'PG-13', quality: '4K' },
+        { type: 'tv', id: '1399', trend: '#1 Today', returningSeries: 'Returning', rating: '9.2', genre: 'Drama', age: 'TV-MA', quality: '4K' },
       ];
       for (const item of fallback) {
         if (samples.length >= 3) break;
