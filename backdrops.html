@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/secondary-pages.css?v=20260909-3" />
   <link rel="stylesheet" href="/backdrops/styles.css?v=20260913-2" />
-  <link rel="stylesheet" href="/backdrops/title-mode.css?v=20260913-2" />
+  <link rel="stylesheet" href="/backdrops/title-mode.css?v=20260913-3" />
   <link rel="stylesheet" href="/backdrops/folder-builder.css?v=20260913-1" />
   <script src="/components.js?v=20260908-3" defer></script>
 </head>
@@ -188,10 +188,16 @@
         </div>
 
         <div class="canvas-stage">
-          <div id="emptyState" class="empty-state">
-            <div class="empty-icon" aria-hidden="true">▧</div>
-            <strong>Build a backdrop</strong>
-            <span>Search TMDB or load an MDBList list to create a backdrop.</span>
+          <div id="emptyState" class="empty-state backdrop-empty-state">
+            <div class="backdrop-empty-icon" aria-hidden="true">
+              <svg viewBox="0 0 64 48" focusable="false">
+                <rect x="6" y="7" width="52" height="34" rx="5"></rect>
+                <path d="M12 33l10-9 8 7 7-6 15 12"></path>
+                <circle cx="45" cy="17" r="3"></circle>
+              </svg>
+            </div>
+            <strong>Your backdrop will appear here</strong>
+            <span>Configure a source and generate a backdrop to preview it here.</span>
           </div>
           <canvas id="backdropCanvas" width="1280" height="720" aria-label="Backdrop preview"></canvas>
           <div id="renderBusy" class="render-busy" hidden><span></span>Rendering backdrop…</div>
