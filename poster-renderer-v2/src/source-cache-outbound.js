@@ -112,7 +112,7 @@ export async function sourceCacheOutbound(request, env, context) {
   return sourceResponse(bytes, contentType, metadata, 'MISS');
 }
 
-export async function pruneExpiredSourceArt(env, now = Date.now(), maxPages = 10) {
+export async function pruneExpiredSourceArt(env, now = Date.now(), maxPages = 50) {
   let cursor;
   let pages = 0;
   do {
