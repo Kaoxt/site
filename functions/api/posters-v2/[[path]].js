@@ -40,6 +40,10 @@ function positiveInt(value, fallback, min = 1, max = 1000000) {
   return Math.min(max, Math.max(min, parsed));
 }
 
+function renderFailureCooldownMs(env) {
+  return positiveInt(env?.POSTERS_FAILURE_COOLDOWN_SECONDS, 300, 30, 3600) * 1000;
+}
+
 function normalizeOverlayLanguage(value) {
   const language = String(value || 'en').toLowerCase().split('-')[0];
   return OVERLAY_LANGUAGES.includes(language) ? language : 'en';
@@ -777,7 +781,7 @@ async function renderUnderLease(context, state, id, key, background) {
     return result;
   } finally {
     // Cool down failures so every catalog scroll doesn't retry an unavailable provider.
-    await lease.release(success ? 0 : 30000).catch(() => {});
+    await lease.release(success ? 0 : renderFailureCooldownMs(context.env)).catch(() => {});
   }
 }
 
