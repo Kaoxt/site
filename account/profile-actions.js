@@ -91,9 +91,34 @@
       });
   }
 
-  function activeSetupForProfile(profileIndex, setups) {
+  function setupCollectionKey(value) {
+    return String(value || '').trim().replace(/-community$/i, '');
+  }
+
+  function activeSetupForProfile(profileIndex, setups, liveCollections = []) {
     const candidates = completedSetupsForProfile(profileIndex, setups);
-    return candidates.find((item) => item?.lastAppliedAt) || candidates[0] || null;
+    const explicitlyApplied = candidates.find((item) => item?.lastAppliedAt);
+    if (explicitlyApplied) return explicitlyApplied;
+
+    const liveIds = new Set((Array.isArray(liveCollections) ? liveCollections : [])
+      .map((item) => setupCollectionKey(item?.id))
+      .filter(Boolean));
+
+    if (liveIds.size) {
+      const matching = candidates
+        .map((item) => {
+          const expected = Array.isArray(item?.config?.selectedCollectionGroupIds)
+            ? item.config.selectedCollectionGroupIds.map(setupCollectionKey).filter(Boolean)
+            : [];
+          const matched = expected.filter((id) => liveIds.has(id)).length;
+          return { item, expected: expected.length, matched };
+        })
+        .filter((entry) => entry.expected > 0 && entry.matched === entry.expected)
+        .sort((a, b) => b.expected - a.expected || (Date.parse(b.item?.updatedAt || '') || 0) - (Date.parse(a.item?.updatedAt || '') || 0));
+      if (matching.length) return matching[0].item;
+    }
+
+    return candidates[0] || null;
   }
 
   function setLastSync(userId) {
@@ -145,7 +170,7 @@
     const allCompletedSetups = (setups || [])
       .filter((item) => Number(item?.draftStep || 0) >= 7)
       .sort((a, b) => (Date.parse(b?.updatedAt || '') || 0) - (Date.parse(a?.updatedAt || '') || 0));
-    const activeSetup = activeSetupForProfile(id, setups);
+    const activeSetup = activeSetupForProfile(id, setups, eligibility?.collections || []);
     const showSetupPicker = eligibility?.state === 'kollection';
     const setupOptions = allCompletedSetups.length
       ? [
@@ -430,7 +455,7 @@
         availability.classList.remove('account-profile-setup-checking');
         if (result.eligible) {
           if (result.state === 'kollection') {
-            const activeSetup = activeSetupForProfile(id, setups);
+            const activeSetup = activeSetupForProfile(id, setups, result.collections || []);
             if (activeSetup) {
               row.dataset.activeSavedSetupId = String(activeSetup.id || '');
               availability.textContent = `Using saved setup · ${activeSetup.name || 'My Kollection'}`;
