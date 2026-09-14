@@ -40,7 +40,7 @@
       tags: [...new Set(tags)].sort().join(','),
       ratingSource: ratingSource(),
     });
-    return `https://kollection.tv/api/posters-v2/{type}/{imdb_id}.webp?${params}`;
+    return `https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?${params}`;
   }
 
   function refreshPattern() {
