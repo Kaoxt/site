@@ -1146,3 +1146,13 @@ body.light .profile-clear-collection-btn{
     width:100%;
   }
 }
+
+
+/* Automatic setup naming */
+.setup-name-field{
+  margin-bottom:18px;
+}
+.setup-name-field small{
+  display:block;
+  margin-top:2px;
+}
