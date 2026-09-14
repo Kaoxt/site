@@ -161,7 +161,10 @@ function normalizeRatingSource(value) {
 }
 
 function normalizeTags(value) {
-  const requested = new Set(String(value || 'trend,rating').split(',').map((v) => v.trim().toLowerCase()).filter(Boolean));
+  // Defaults apply only when the parameter is absent. An explicit empty
+  // tags= value means the user intentionally disabled every Smart Tag.
+  const raw = value == null ? 'trend,rating' : String(value);
+  const requested = new Set(raw.split(',').map((v) => v.trim().toLowerCase()).filter(Boolean));
   return ALLOWED_TAGS.filter((tag) => requested.has(tag));
 }
 
