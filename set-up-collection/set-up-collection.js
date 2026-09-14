@@ -1065,7 +1065,7 @@
 
       $('#existingSetupBackBtn').onclick = renderWelcome;
       $('#existingSetupStartBtn')?.addEventListener('click', () => setStep(1));
-      $('[data-saved-id]').forEach(button => {
+      document.querySelectorAll('[data-saved-id]').forEach(button => {
         button.onclick = () => {
           const id = String(button.dataset.savedId || '').trim();
           if (!id) return;
