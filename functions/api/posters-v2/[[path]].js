@@ -550,50 +550,54 @@ async function originalPosterFallback(context, state, reason) {
 async function renderPoster(context, state, id, persistentKey) {
   const { request, env } = context;
   const { url, type, preview, tags, sourceUrl, overlayOnly, overlayLanguage } = state;
+
+  const append = type === 'movie' ? 'images,release_dates,external_ids' : 'images,content_ratings,external_ids';
+  const details = await tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null&language=en-US`, env.TMDB_API_KEY, context);
+  if (!details.poster_path && !sourceUrl) throw posterError('artwork-missing');
+  const smartLayout = url.searchParams.get('source') === 'smart';
+  const artwork = sourceUrl ? { path: '', source: 'upstream-addon' } : choosePoster(details, smartLayout);
+  const smartTextless = !overlayOnly && smartLayout && artwork.source === 'smart-textless';
+  const logo = chooseLogo(details, smartTextless);
+  if (!artwork.path && !sourceUrl) throw posterError('artwork-missing');
+
+  const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
+  const [rating, resolvedTrend] = await Promise.all([
+    tags.has('rating')
+      ? resolveRating(details, type, requestedRatingSource, env, context)
+      : Promise.resolve({ value: '', label: '', source: requestedRatingSource, status: 'disabled' }),
+    tags.has('trend')
+      ? Promise.resolve(theatricalLabel(details, type, String(env.POSTERS_RELEASE_REGION || 'US').toUpperCase()))
+          .then((label) => label || trendLabel(type, id, env.TMDB_API_KEY, overlayLanguage, context))
+      : Promise.resolve(''),
+  ]);
+  if (!['ok', 'upstream', 'cache-hit', 'missing', 'disabled', 'not-configured'].includes(rating.status)) {
+    // A ratings-provider outage must not replace a good cached overlay with one
+    // missing its rating for the entire cache lifetime.
+    throw posterError('rating-unavailable');
+  }
+
+  const payload = {
+    posterPath: artwork.path,
+    sourceUrl,
+    overlayOnly: Boolean(overlayOnly),
+    logoPath: overlayOnly ? '' : logo.path,
+    title: smartTextless ? String(details.title || details.name || '').slice(0, 80) : '',
+    rating: rating.value,
+    ratingLabel: rating.label,
+    genre: tags.has('genre') ? localizeGenre(details.genres?.[0]?.name || '', overlayLanguage) : '',
+    age: tags.has('age') ? certification(details, type) : '',
+    trend: resolvedTrend,
+    quality: '',
+    smartLayout,
+    overlayColor: url.searchParams.get('overlayColor') || 'dynamic',
+  };
+
+  // Reserve quota and renderer concurrency only after metadata/rating work has
+  // succeeded. Provider failures must not consume a render reservation.
   const slot = await acquirePosterRenderSlot(env, request, { signal: context.signal });
   if (!slot.allowed) throw posterError(slot.reason);
 
   try {
-    const append = type === 'movie' ? 'images,release_dates,external_ids' : 'images,content_ratings,external_ids';
-    const details = await tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null&language=en-US`, env.TMDB_API_KEY, context);
-    if (!details.poster_path && !sourceUrl) throw posterError('artwork-missing');
-    const smartLayout = url.searchParams.get('source') === 'smart';
-    const artwork = sourceUrl ? { path: '', source: 'upstream-addon' } : choosePoster(details, smartLayout);
-    const smartTextless = !overlayOnly && smartLayout && artwork.source === 'smart-textless';
-    const logo = chooseLogo(details, smartTextless);
-    if (!artwork.path && !sourceUrl) throw posterError('artwork-missing');
-
-    const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
-    const [rating, resolvedTrend] = await Promise.all([
-      tags.has('rating')
-        ? resolveRating(details, type, requestedRatingSource, env, context)
-        : Promise.resolve({ value: '', label: '', source: requestedRatingSource, status: 'disabled' }),
-      tags.has('trend')
-        ? Promise.resolve(theatricalLabel(details, type, String(env.POSTERS_RELEASE_REGION || 'US').toUpperCase()))
-            .then((label) => label || trendLabel(type, id, env.TMDB_API_KEY, overlayLanguage, context))
-        : Promise.resolve(''),
-    ]);
-    if (!['ok', 'upstream', 'cache-hit', 'missing', 'disabled', 'not-configured'].includes(rating.status)) {
-      // A ratings-provider outage must not replace a good cached overlay with one
-      // missing its rating for the entire cache lifetime.
-      throw posterError('rating-unavailable');
-    }
-    const payload = {
-      posterPath: artwork.path,
-      sourceUrl,
-      overlayOnly: Boolean(overlayOnly),
-      logoPath: overlayOnly ? '' : logo.path,
-      title: smartTextless ? String(details.title || details.name || '').slice(0, 80) : '',
-      rating: rating.value,
-      ratingLabel: rating.label,
-      genre: tags.has('genre') ? localizeGenre(details.genres?.[0]?.name || '', overlayLanguage) : '',
-      age: tags.has('age') ? certification(details, type) : '',
-      trend: resolvedTrend,
-      quality: '',
-      smartLayout,
-      overlayColor: url.searchParams.get('overlayColor') || 'dynamic',
-    };
-
     const rendererBase = String(env.POSTERS_V2_RENDERER_URL || DEFAULT_RENDERER_URL).replace(/\/$/, '');
     const rendered = await fetch(`${rendererBase}/render`, {
       method: 'POST',
