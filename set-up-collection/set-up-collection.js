@@ -1165,6 +1165,196 @@
     $('#nextBtn').onclick = () => setStep(2);
   }
 
+  function openSmartOverlayConfigurator() {
+    const posterHelper = window.KollectionPosterSettings;
+    if (!posterHelper) {
+      alert('Poster settings are still loading. Try Configure again in a moment.', 'error');
+      return;
+    }
+  
+    const current = posterHelper.normalize(
+      state.posterSettings || posterHelper.readLocal() || {}
+    );
+    const ratingSources = [
+      ['average', 'Average'],
+      ['imdb', 'IMDb'],
+      ['score', 'Score'],
+      ['letterboxd', 'Letterboxd'],
+      ['mal', 'MyAnimeList'],
+      ['rogerebert', 'RogerEbert'],
+      ['tomatometer', 'Tomatometer'],
+      ['popcornmeter', 'Popcornmeter'],
+      ['tmdb', 'TMDB Rating'],
+    ];
+    const tagOptions = [
+      ['trend', 'Trend Tags', 'Trending, In Cinema, movie/series lifecycle, directors, studios, and cast'],
+      ['quality', 'Quality Tags', '4K, HD, Dolby Vision, HDR10+, Atmos, and DTS:X when available'],
+      ['genre', 'Genre', 'Genre label at the bottom of the poster'],
+      ['rating', 'Rating', 'Rating badge at the bottom of the poster'],
+      ['age', 'Age Rating', 'PG-13, TV-MA, R, and similar age classifications'],
+    ];
+    const trendDetailOptions = [
+      ['studio', 'Notable Studios', 'A24 Film, Pixar Film, Studio Ghibli'],
+      ['director', 'Notable Directors', 'Christopher Nolan Film, Denis Villeneuve Film'],
+      ['cast', 'Notable Cast', 'Leonardo DiCaprio, Zendaya, Florence Pugh'],
+      ['inCinema', 'In Cinema', 'Movies currently in their theatrical window'],
+      ['rank', 'Daily Rank', '#1 Today, #8 Today'],
+      ['newMovie', 'New Movie', 'Recently released movies'],
+      ['comingSoon', 'Coming Soon', 'Upcoming movie or series releases'],
+      ['newSeries', 'New Series', 'Recently premiered TV series'],
+      ['returningSeries', 'Returning Series', 'Ongoing or returning TV series'],
+      ['limitedSeries', 'Limited Series', 'Miniseries and limited TV events'],
+    ];
+  
+    document.getElementById('smartOverlayModalRoot')?.remove();
+    const root = document.createElement('div');
+    root.id = 'smartOverlayModalRoot';
+    root.className = 'smart-overlay-modal-root open';
+    root.innerHTML = `
+      <div class="smart-overlay-modal-backdrop" data-smart-overlay-close>
+        <section class="smart-overlay-modal" role="dialog" aria-modal="true" aria-labelledby="smartOverlayModalTitle">
+          <header class="smart-overlay-modal-head">
+            <div>
+              <span class="smart-overlay-modal-kicker">SMART OVERLAY POSTERS</span>
+              <h3 id="smartOverlayModalTitle">Configure poster overlays</h3>
+            </div>
+            <button class="smart-overlay-modal-x" type="button" aria-label="Close" data-smart-overlay-close></button>
+          </header>
+          <div class="smart-overlay-modal-body">
+            <p class="smart-overlay-modal-copy">Choose the poster style, tags, rating source, and Trend Tag details for this collection. These settings stay inside your setup instead of sending you to the Posters page.</p>
+  
+            <section class="smart-overlay-modal-section">
+              <div class="smart-overlay-modal-section-head">
+                <span>POSTER STYLE</span>
+                <strong>Choose your poster style</strong>
+              </div>
+              <div class="smart-overlay-style-grid">
+                <label class="smart-overlay-choice">
+                  <input type="radio" name="setupPosterSource" value="smart" ${current.source === 'smart' ? 'checked' : ''}>
+                  <span><b>Smart Overlay Posters</b><small>Uses the adaptive overlay layout for the selected artwork.</small></span>
+                </label>
+                <label class="smart-overlay-choice">
+                  <input type="radio" name="setupPosterSource" value="tmdb" ${current.source === 'tmdb' ? 'checked' : ''}>
+                  <span><b>Original Posters</b><small>Keeps the original poster composition while adding enabled tags.</small></span>
+                </label>
+              </div>
+              <label class="smart-overlay-provider-field">
+                <span>Artwork provider</span>
+                <select id="setupArtworkProvider" aria-label="Artwork provider">
+                  <option value="tmdb" selected>The Movie Database (TMDB)</option>
+                </select>
+                <small>TMDB is currently the available poster artwork provider.</small>
+              </label>
+            </section>
+  
+            <section class="smart-overlay-modal-section">
+              <div class="smart-overlay-modal-section-head">
+                <span>SMART TAGS</span>
+                <strong>Choose your poster overlays</strong>
+              </div>
+              <div class="smart-overlay-tag-grid">
+                ${tagOptions.map(([value, label, copy]) => `
+                  <label class="smart-overlay-tag-option">
+                    <input type="checkbox" value="${value}" data-setup-poster-tag ${current.tags.includes(value) ? 'checked' : ''}>
+                    <span><b>${label}</b><small>${copy}</small></span>
+                  </label>`).join('')}
+              </div>
+            </section>
+  
+            <section id="setupRatingSourceSection" class="smart-overlay-modal-section smart-overlay-detail-section" ${current.tags.includes('rating') ? '' : 'hidden'}>
+              <div class="smart-overlay-detail-copy">
+                <strong>Rating source</strong>
+                <small>Choose which rating Smart Overlay Posters should request.</small>
+              </div>
+              <select id="setupRatingSource" aria-label="Rating source">
+                ${ratingSources.map(([value, label]) => `<option value="${value}" ${current.ratingSource === value ? 'selected' : ''}>${label}</option>`).join('')}
+              </select>
+            </section>
+  
+            <section id="setupTrendDetailsSection" class="smart-overlay-modal-section smart-overlay-trend-section" ${current.tags.includes('trend') ? '' : 'hidden'}>
+              <div class="smart-overlay-modal-section-head">
+                <span>TREND TAG DETAILS</span>
+                <strong>Choose what can appear in the Trend Tag area</strong>
+                <small>Priority: Studio → Director → Cast → In Cinema → Rank → New Movie → Coming Soon → New Series → Returning → Limited</small>
+              </div>
+              <div class="smart-overlay-trend-grid">
+                ${trendDetailOptions.map(([value, label, copy]) => `
+                  <label class="smart-overlay-trend-option">
+                    <input type="checkbox" value="${value}" data-setup-trend-detail ${current.trendDetails.includes(value) ? 'checked' : ''}>
+                    <span><b>${label}</b><small>${copy}</small></span>
+                  </label>`).join('')}
+              </div>
+            </section>
+          </div>
+          <footer class="smart-overlay-modal-footer">
+            <button class="smart-overlay-modal-button" type="button" data-smart-overlay-close>Cancel</button>
+            <button class="smart-overlay-modal-button primary" id="saveSmartOverlaySettingsBtn" type="button">Save settings</button>
+          </footer>
+        </section>
+      </div>`;
+  
+    document.body.appendChild(root);
+    document.documentElement.classList.add('smart-overlay-modal-open');
+  
+    const closeModal = () => {
+      document.documentElement.classList.remove('smart-overlay-modal-open');
+      document.removeEventListener('keydown', onKeyDown);
+      root.remove();
+    };
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') closeModal();
+    };
+    document.addEventListener('keydown', onKeyDown);
+  
+    root.querySelectorAll('[data-smart-overlay-close]').forEach((node) => {
+      node.addEventListener('click', (event) => {
+        if (event.currentTarget.classList.contains('smart-overlay-modal-backdrop') && event.target !== event.currentTarget) return;
+        closeModal();
+      });
+    });
+  
+    const ratingTag = root.querySelector('[data-setup-poster-tag][value="rating"]');
+    const trendTag = root.querySelector('[data-setup-poster-tag][value="trend"]');
+    const ratingSection = root.querySelector('#setupRatingSourceSection');
+    const trendSection = root.querySelector('#setupTrendDetailsSection');
+    const syncConditionalSections = () => {
+      if (ratingSection) ratingSection.hidden = !ratingTag?.checked;
+      if (trendSection) trendSection.hidden = !trendTag?.checked;
+    };
+    ratingTag?.addEventListener('change', syncConditionalSections);
+    trendTag?.addEventListener('change', syncConditionalSections);
+  
+    root.querySelector('#saveSmartOverlaySettingsBtn')?.addEventListener('click', () => {
+      const source = root.querySelector('input[name="setupPosterSource"]:checked')?.value || 'smart';
+      const tags = [...root.querySelectorAll('[data-setup-poster-tag]:checked')].map((input) => input.value);
+      const trendDetails = [...root.querySelectorAll('[data-setup-trend-detail]:checked')].map((input) => input.value);
+      const ratingSource = root.querySelector('#setupRatingSource')?.value || 'average';
+  
+      state.posterSettings = posterHelper.normalize({
+        source,
+        tags,
+        ratingSource,
+        trendDetails,
+        artworkProvider: 'tmdb',
+      });
+      state.backup = null;
+  
+      const hidden = $('#posterSettingsJson');
+      if (hidden) hidden.value = JSON.stringify(state.posterSettings);
+  
+      try {
+        localStorage.setItem(posterHelper.STORAGE_KEY, JSON.stringify({
+          version: 4,
+          ...state.posterSettings,
+        }));
+      } catch {}
+  
+      closeModal();
+    });
+  
+    requestAnimationFrame(() => root.querySelector('.smart-overlay-modal-x')?.focus());
+  }
+
   function renderAi() {
     const custom = state.aiSetupMode === 'custom';
     const managedHost = CFG.aiometadataHosts[0];
@@ -1231,18 +1421,17 @@
               <p>Turn this on if you want The Kollection to use Smart Overlay Posters throughout your Nuvio collection.</p>
             </div>
           </div>
-          <label class="toggle-row smart-overlay-toggle" for="posterOverlaysEnabled">
-            <input id="posterOverlaysEnabled" type="checkbox" ${state.posterOverlaysEnabled ? 'checked' : ''}>
-            <span>
-              <b>Enable Smart Overlay Posters for this collection</b>
-              <small>Off by default. When enabled, Home rows, collection folders, and AIOMetadata library/meta posters all use your Kollection poster settings.</small>
-            </span>
-          </label>
-          <input id="posterSettingsJson" type="hidden" value="${esc(JSON.stringify(posterSettings))}">
-          <div id="smartOverlaySettings" class="smart-overlay-settings" ${state.posterOverlaysEnabled ? '' : 'hidden'}>
-            <div><span>Current setup</span><b>${esc(posterSummary)}</b></div>
-            <a class="ghost small" href="/posters" target="_blank" rel="noopener">Customize Smart Overlay Posters</a>
+          <div class="smart-overlay-control-row">
+            <label class="toggle-row smart-overlay-toggle" for="posterOverlaysEnabled">
+              <input id="posterOverlaysEnabled" type="checkbox" ${state.posterOverlaysEnabled ? 'checked' : ''}>
+              <span>
+                <b>Enable Smart Overlay Posters for this collection</b>
+                <small>Off by default. When enabled, Home rows, collection folders, and AIOMetadata library/meta posters all use your Kollection poster settings.</small>
+              </span>
+            </label>
+            <button class="ghost small smart-overlay-configure-btn" id="configurePosterOverlaysBtn" type="button">Configure</button>
           </div>
+          <input id="posterSettingsJson" type="hidden" value="${esc(JSON.stringify(posterSettings))}">
         </div>
         ${custom ? `<div class="callout">The uploaded file supplies your AIOMetadata preferences and matching catalog definitions. Any required The Kollection catalog missing from your file falls back to the built-in catalog definition.</div>` : ''}
         <div class="actions"><button class="ghost" id="backBtn">Back</button><button class="btn" id="nextBtn">Continue to Bingecat</button></div>
@@ -1261,10 +1450,9 @@
         const hidden = $('#posterSettingsJson');
         if (hidden) hidden.value = JSON.stringify(state.posterSettings);
       }
-      const settingsPanel = $('#smartOverlaySettings');
-      if (settingsPanel) settingsPanel.hidden = !state.posterOverlaysEnabled;
       state.backup = null;
     };
+    $('#configurePosterOverlaysBtn').onclick = openSmartOverlayConfigurator;
     $$('.key-visibility-toggle').forEach(button => {
       button.onclick = () => {
         const input = document.getElementById(button.dataset.target);
