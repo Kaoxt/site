@@ -6,6 +6,10 @@ on:
       - 'functions/api/posters-v2/**'
       - 'functions/_lib/poster-*.js'
       - 'tests/poster-cache.test.mjs'
+      - 'tests/setup-poster-routing.test.mjs'
+      - 'set-up-collection/poster-settings.js'
+      - 'set-up-collection/set-up-collection.js'
+      - 'set-up-collection.html'
       - 'poster-renderer-v2/**'
       - '.github/workflows/test-posters.yml'
   pull_request:
@@ -13,6 +17,10 @@ on:
       - 'functions/api/posters-v2/**'
       - 'functions/_lib/poster-*.js'
       - 'tests/poster-cache.test.mjs'
+      - 'tests/setup-poster-routing.test.mjs'
+      - 'set-up-collection/poster-settings.js'
+      - 'set-up-collection/set-up-collection.js'
+      - 'set-up-collection.html'
       - 'poster-renderer-v2/**'
       - '.github/workflows/test-posters.yml'
 
@@ -28,7 +36,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: node --test tests/poster-cache.test.mjs
+      - run: node --test tests/poster-cache.test.mjs tests/setup-poster-routing.test.mjs
 
   renderer:
     runs-on: ubuntu-latest
