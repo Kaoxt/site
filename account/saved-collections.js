@@ -279,7 +279,7 @@
 
     actions.append(resume, remove);
     row.append(copy, actions);
-    return { row, resume, badge, originMessage, complete };
+    return { row, resume, badge, originMessage, meta, complete };
   }
 
   async function render(collections) {
@@ -307,6 +307,12 @@
             ui.resume.textContent = 'Edit';
             ui.resume.setAttribute('aria-label', `Edit ${item.name || 'saved setup'}`);
             ui.originMessage.hidden = true;
+            if (result.repairedProfileLink && ui.meta) {
+              const parts = [];
+              if (item.nuvioProfileName) parts.push(item.nuvioProfileName);
+              if (item.updatedAt) parts.push(`Last synced ${formatDate(item.updatedAt)}`);
+              ui.meta.textContent = parts.join(' · ') || 'Setup complete';
+            }
           } else {
             ui.badge.textContent = 'Invalid';
             ui.badge.dataset.state = 'invalid';
