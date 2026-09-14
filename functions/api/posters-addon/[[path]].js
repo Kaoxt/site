@@ -47,7 +47,7 @@ function parseConfig(token) {
     v: 2,
     upstream: upstream.toString(),
     source: ['smart', 'tmdb', 'inherit'].includes(config.source) ? config.source : 'smart',
-    tags: Array.isArray(config.tags) ? config.tags.filter((x) => typeof x === 'string') : ['trend', 'rating'],
+    tags: Array.isArray(config.tags) ? config.tags.filter((x) => typeof x === 'string') : ['trend', 'genre', 'rating'],
     ratingSource: typeof config.ratingSource === 'string' ? config.ratingSource : 'average',
   };
 }
@@ -95,8 +95,8 @@ function posterUrl(config, type, id, sourceUrl = '') {
   if (!normalizedId) return '';
   const mediaType = type === 'series' || type === 'tv' ? 'tv' : 'movie';
   const tags = new Set(config.tags);
-  if (!tags.has('quality')) tags.add('trend');
   const params = new URLSearchParams({
+    v: '21',
     source: config.source,
     tags: [...tags].sort().join(','),
     ratingSource: config.ratingSource,

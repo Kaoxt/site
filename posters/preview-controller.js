@@ -81,9 +81,10 @@
   const selectedOverlayLanguage = () => document.getElementById('postersLanguage')?.value || 'en';
 
   function localizeTrend(value, index, language) {
-    const match = String(value || '').match(/#\s*(\d+)/);
-    const rank = match?.[1] || String(index + 1);
-    return `#${rank} ${TODAY_LABELS[language] || TODAY_LABELS.en}`;
+    const text = String(value || '').trim();
+    const match = text.match(/#\s*(\d+)/);
+    if (match) return `#${match[1]} ${TODAY_LABELS[language] || TODAY_LABELS.en}`;
+    return text || `#${index + 1} ${TODAY_LABELS[language] || TODAY_LABELS.en}`;
   }
 
   function localizeGenre(value, language) {
@@ -205,7 +206,7 @@
       nextImg.className = 'poster-service-image';
       nextImg.alt = currentImg.alt || 'Poster preview artwork';
       nextImg.decoding = 'async';
-      const params = new URLSearchParams({ source, provider, tags: 'none', preview: '1', previewVersion: `client-base-3-${source}-${provider}` });
+      const params = new URLSearchParams({ v: '21', source, provider, tags: 'none', preview: '1', previewVersion: `client-base-4-${source}-${provider}` });
       nextImg.addEventListener('load', () => {
         if (generation !== requestGeneration) return resolve();
         currentImg.replaceWith(nextImg);

@@ -35,7 +35,7 @@
   function buildPosterPattern() {
     const tags = selectedTags();
     const params = new URLSearchParams({
-      v: '20',
+      v: '21',
       source: selectedSource(),
       tags: [...new Set(tags)].sort().join(','),
       ratingSource: ratingSource(),

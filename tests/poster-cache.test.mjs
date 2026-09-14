@@ -214,6 +214,54 @@ test('trend labels prefer daily rank and fall back to truthful release status', 
   assert.match(response.headers.get('x-kollection-trend-label'), /^Coming /);
 });
 
+test('series fallback tags match BetterPosters lifecycle labels', async () => {
+  const day = offset => new Date(Date.now() + offset * 86400000).toISOString().slice(0, 10);
+
+  const limited = harness();
+  limited.detailsOverride = { first_air_date: day(-180), type: 'Miniseries', status: 'Ended' };
+  const limitedContext = limited.context('155');
+  limitedContext.request = new Request('https://kollection.tv/api/posters-v2/tv/155.webp?v=21&source=smart&tags=trend,genre,rating&ratingSource=average');
+  await (await onRequest(limitedContext)).arrayBuffer(); await limited.flush();
+  assert.equal(limited.payloads.at(-1).trend, 'Limited Series');
+
+  const returning = harness();
+  returning.detailsOverride = { first_air_date: day(-700), type: 'Scripted', status: 'Returning Series' };
+  const returningContext = returning.context('278');
+  returningContext.request = new Request('https://kollection.tv/api/posters-v2/tv/278.webp?v=21&source=smart&tags=trend,genre,rating&ratingSource=average');
+  await (await onRequest(returningContext)).arrayBuffer(); await returning.flush();
+  assert.equal(returning.payloads.at(-1).trend, 'Returning');
+
+  const newSeries = harness();
+  newSeries.detailsOverride = { first_air_date: day(-4), type: 'Scripted', status: 'Returning Series' };
+  const newSeriesContext = newSeries.context('13');
+  newSeriesContext.request = new Request('https://kollection.tv/api/posters-v2/tv/13.webp?v=21&source=smart&tags=trend,genre,rating&ratingSource=average');
+  await (await onRequest(newSeriesContext)).arrayBuffer(); await newSeries.flush();
+  assert.equal(newSeries.payloads.at(-1).trend, 'New Series');
+});
+
+test('polished layout version gets its own persistent poster variant', async () => {
+  const h = harness();
+  const first = await h.request('27205', '&v=20');
+  await first.arrayBuffer(); await h.flush();
+  assert.equal(h.count.render, 1);
+
+  const second = await h.request('27205', '&v=21');
+  await second.arrayBuffer(); await h.flush();
+  assert.equal(h.count.render, 2, 'v21 should not reuse a v20 rendered R2 image');
+  assert.equal(h.bucket.posters().length, 2);
+});
+
+test('default poster tags include genre with trend and rating', async () => {
+  const h = harness();
+  const context = h.context('27205');
+  context.request = new Request('https://kollection.tv/api/posters-v2/movie/27205.webp?v=21&source=smart&ratingSource=average');
+  const response = await onRequest(context);
+  await response.arrayBuffer(); await h.flush();
+  assert.equal(h.payloads.at(-1).genre, 'Drama');
+  assert.equal(h.payloads.at(-1).trend, '#1 Today');
+  assert.equal(h.payloads.at(-1).rating, '8.6');
+});
+
 test('cold image returns before cache writes while its lease and shared bytes remain available', { timeout: 2000 }, async () => {
   const h = harness();
   const finishStorage = deferred();

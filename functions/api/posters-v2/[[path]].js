@@ -18,14 +18,14 @@ const TODAY_LABELS = {
 };
 
 const TREND_STATUS_LABELS = {
-  en: { new: 'New', cinema: 'In Cinema', coming: 'Coming' },
-  es: { new: 'Nuevo', cinema: 'En cines', coming: 'Próximamente' },
-  fr: { new: 'Nouveau', cinema: 'Au cinéma', coming: 'Bientôt' },
-  de: { new: 'Neu', cinema: 'Im Kino', coming: 'Demnächst' },
-  it: { new: 'Nuovo', cinema: 'Al cinema', coming: 'Prossimamente' },
-  pt: { new: 'Novo', cinema: 'Nos cinemas', coming: 'Em breve' },
-  ja: { new: '新着', cinema: '上映中', coming: '近日公開' },
-  ko: { new: '신규', cinema: '극장 상영 중', coming: '공개 예정' },
+  en: { new: 'New', newSeries: 'New Series', limited: 'Limited Series', returning: 'Returning', cinema: 'In Cinema', coming: 'Coming' },
+  es: { new: 'Nuevo', newSeries: 'Nueva serie', limited: 'Serie limitada', returning: 'De vuelta', cinema: 'En cines', coming: 'Próximamente' },
+  fr: { new: 'Nouveau', newSeries: 'Nouvelle série', limited: 'Mini-série', returning: 'De retour', cinema: 'Au cinéma', coming: 'Bientôt' },
+  de: { new: 'Neu', newSeries: 'Neue Serie', limited: 'Miniserie', returning: 'Zurück', cinema: 'Im Kino', coming: 'Demnächst' },
+  it: { new: 'Nuovo', newSeries: 'Nuova serie', limited: 'Miniserie', returning: 'Di ritorno', cinema: 'Al cinema', coming: 'Prossimamente' },
+  pt: { new: 'Novo', newSeries: 'Nova série', limited: 'Série limitada', returning: 'De volta', cinema: 'Nos cinemas', coming: 'Em breve' },
+  ja: { new: '新着', newSeries: '新シリーズ', limited: 'リミテッドシリーズ', returning: '続編', cinema: '上映中', coming: '近日公開' },
+  ko: { new: '신규', newSeries: '새 시리즈', limited: '리미티드 시리즈', returning: '복귀', cinema: '극장 상영 중', coming: '공개 예정' },
 };
 
 const TREND_DATE_LOCALES = {
@@ -128,13 +128,23 @@ function releaseStatusLabel(details, type, region = 'US', language = 'en', now =
 
   const daysSince = Math.floor((Date.parse(today) - Date.parse(releaseDay)) / 86400000);
   if (daysSince < 0) return '';
-  if (daysSince <= (type === 'tv' ? 14 : 7)) return labels.new;
+
+  if (type === 'tv') {
+    const seriesType = String(details.type || '').toLowerCase();
+    const seriesStatus = String(details.status || '').toLowerCase();
+    if (seriesType === 'miniseries') return labels.limited;
+    if (daysSince <= 14) return labels.newSeries;
+    if (seriesStatus === 'returning series') return labels.returning;
+    return '';
+  }
+
+  if (daysSince <= 7) return labels.new;
   // TMDB supplies release dates, not live cinema listings. Use a bounded
   // theatrical window and stop once a home-release date has arrived.
-  if (type === 'movie' && theatricalDay && daysSince <= 45 && !homeReleased) return labels.cinema;
+  if (theatricalDay && daysSince <= 45 && !homeReleased) return labels.cinema;
   // Movies without detailed regional release data can still truthfully be
   // called new for a short period using their normal release_date.
-  if (type === 'movie' && !theatricalDay && daysSince <= 14) return labels.new;
+  if (!theatricalDay && daysSince <= 14) return labels.new;
   return '';
 }
 
@@ -212,7 +222,7 @@ function normalizeRatingSource(value) {
 function normalizeTags(value) {
   // Defaults apply only when the parameter is absent. An explicit empty
   // tags= value means the user intentionally disabled every Smart Tag.
-  const raw = value == null ? 'trend,rating' : String(value);
+  const raw = value == null ? 'trend,genre,rating' : String(value);
   const requested = new Set(raw.split(',').map((v) => v.trim().toLowerCase()).filter(Boolean));
   return ALLOWED_TAGS.filter((tag) => requested.has(tag));
 }
@@ -245,6 +255,9 @@ function posterVariant(url, preview, env) {
   const tags = normalizeTags(url.searchParams.get('tags'));
   return {
     version: CACHE_VERSION,
+    // Keep visual revisions isolated without invalidating unrelated poster
+    // variants. v=21 is the BetterPosters-polish layout.
+    layoutVersion: String(url.searchParams.get('v') || '20').slice(0, 24),
     scope: preview ? 'preview' : 'production',
     source: url.searchParams.get('source') === 'smart' ? 'smart' : 'tmdb',
     provider: url.searchParams.get('provider') || 'tmdb',
@@ -631,6 +644,7 @@ function cacheRequestFor(request, env) {
   const incoming = new URL(request.url);
   const preview = incoming.searchParams.get('preview') === '1';
   const cacheUrl = new URL(`${incoming.origin}${incoming.pathname}`);
+  const layoutVersion = String(incoming.searchParams.get('v') || '20').slice(0, 24);
   const source = incoming.searchParams.get('source') === 'smart' ? 'smart' : 'tmdb';
   const provider = incoming.searchParams.get('provider') || 'tmdb';
   const tags = normalizeTags(incoming.searchParams.get('tags'));
@@ -640,6 +654,7 @@ function cacheRequestFor(request, env) {
   const sourceUrl = normalizeSourceUrl(incoming.searchParams.get('sourceUrl'));
   const overlayOnly = incoming.searchParams.get('overlayOnly') === '1';
 
+  cacheUrl.searchParams.set('v', layoutVersion);
   cacheUrl.searchParams.set('source', source);
   cacheUrl.searchParams.set('provider', provider);
   cacheUrl.searchParams.set('tags', tags.join(','));
