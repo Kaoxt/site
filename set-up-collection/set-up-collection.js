@@ -29,6 +29,8 @@
     nuvioSessionRestored: false,
     nuvioDeviceLoginBusy: false,
     profileCreateOpen: false,
+    profileEligibility: null,
+    profileEligibilityBusy: false,
     addons: [],
     existingCollections: [],
 
@@ -298,6 +300,7 @@
     state.profileId = null;
     state.profileName = null;
     state.addonProfileId = null;
+    state.profileEligibility = null;
     state.nuvioEmail = '';
     state.nuvioSessionRestored = true;
     state.backup = null;
@@ -418,6 +421,7 @@
     state.profileName = created.name;
     state.addonProfileId = created.usesPrimaryAddons ? 1 : created.id;
     state.profileCreateOpen = false;
+    state.profileEligibility = null;
     state.backup = null;
     return created;
   }
@@ -874,6 +878,9 @@
   }
 
   async function prepareReview() {
+    if (!await ensureSelectedProfileEligible()) {
+      throw new Error('Clear the old collection from this Nuvio profile before continuing.');
+    }
     await loadKaoxtAssets();
     ensureCollectionSelection();
     const selectedPack = selectedCollectionPack();
@@ -904,6 +911,9 @@
   }
 
   async function installEverything() {
+    if (!await ensureSelectedProfileEligible()) {
+      throw new Error('Clear the old collection from this Nuvio profile before installing The Kollection.');
+    }
     if (!state.backup || !state.collectionPack) await prepareReview();
     state.installStarted = true;
 
@@ -946,6 +956,127 @@
       if (!state.token) await restoreNuvioSession();
       setStep(1);
     };
+  }
+
+
+  function profileEligibilityMessage(result) {
+    if (!result) return '';
+    if (result.state === 'kollection') return 'This profile already uses a collection created through The Kollection setup and is available to update.';
+    if (result.state === 'available') return 'This profile is available for Set Up Collection.';
+    if (result.state === 'blocked') return 'This profile already has collection data that was not created through The Kollection Set Up Collection wizard. Clear the old collection before continuing.';
+    return result.message || 'The Kollection could not verify whether this profile is available.';
+  }
+
+  function renderProfileEligibility(result) {
+    const host = $('#profileEligibilityHost');
+    const next = $('#nextBtn');
+    if (!host) return;
+
+    if (state.profileEligibilityBusy) {
+      host.hidden = false;
+      host.className = 'profile-eligibility-card checking';
+      host.innerHTML = '<strong>Checking profile availability…</strong><span>Verifying the selected Nuvio profile before setup.</span>';
+      if (next) next.disabled = true;
+      return;
+    }
+
+    if (!result) {
+      host.hidden = true;
+      host.innerHTML = '';
+      if (next) next.disabled = true;
+      return;
+    }
+
+    if (result.eligible) {
+      host.hidden = false;
+      host.className = 'profile-eligibility-card available';
+      host.innerHTML = `<strong>Available for Set Up Collection</strong><span>${esc(profileEligibilityMessage(result))}</span>`;
+      if (next) next.disabled = false;
+      return;
+    }
+
+    host.hidden = false;
+    host.className = 'profile-eligibility-card blocked';
+    const canClear = result.state === 'blocked';
+    host.innerHTML = `
+      <div class="profile-eligibility-copy">
+        <strong>Not available for Set Up Collection</strong>
+        <span>${esc(profileEligibilityMessage(result))}</span>
+      </div>
+      <div class="profile-eligibility-actions">
+        ${canClear ? '<button class="ghost profile-clear-collection-btn" id="clearOldCollectionBtn" type="button">Clear old collection</button>' : '<button class="ghost" id="retryProfileEligibilityBtn" type="button">Try again</button>'}
+      </div>
+      <small class="profile-eligibility-note">${canClear ? 'Clearing removes the current Nuvio collection layout from this profile. It does not delete the profile, add-ons, plugins, or saved Kollection setups.' : 'Setup stays blocked until this profile can be verified.'}</small>`;
+    if (next) next.disabled = true;
+
+    $('#clearOldCollectionBtn')?.addEventListener('click', async () => {
+      const button = $('#clearOldCollectionBtn');
+      if (!confirm('Clear the current collection from this Nuvio profile? This cannot be undone from The Kollection.')) return;
+      if (button) {
+        button.disabled = true;
+        button.textContent = 'Clearing…';
+      }
+      try {
+        const cleared = await window.KollectionCollectionEligibility.clear(state.profileId);
+        state.profileEligibility = cleared;
+        renderProfileEligibility(cleared);
+        alert('Old collection cleared. This profile is now available for Set Up Collection.', 'success');
+      } catch (error) {
+        state.profileEligibility = result;
+        renderProfileEligibility(result);
+        alert(error?.message || 'Could not clear the old collection from this profile.', 'error');
+      }
+    });
+
+    $('#retryProfileEligibilityBtn')?.addEventListener('click', () => {
+      refreshSelectedProfileEligibility({ force: true });
+    });
+  }
+
+  async function refreshSelectedProfileEligibility(options = {}) {
+    if (!state.token || !state.profileId || !window.KollectionCollectionEligibility) {
+      state.profileEligibility = null;
+      state.profileEligibilityBusy = false;
+      renderProfileEligibility(null);
+      return null;
+    }
+
+    const checkedProfileId = Number(state.profileId);
+    state.profileEligibilityBusy = true;
+    renderProfileEligibility(state.profileEligibility);
+
+    try {
+      const result = await window.KollectionCollectionEligibility.check(checkedProfileId, {
+        force: options.force !== false,
+      });
+      if (Number(state.profileId) !== checkedProfileId) return null;
+      state.profileEligibility = result;
+      return result;
+    } catch (error) {
+      if (Number(state.profileId) !== checkedProfileId) return null;
+      state.profileEligibility = {
+        profileId: checkedProfileId,
+        eligible: false,
+        state: 'unknown',
+        message: error?.message || 'Could not verify this profile.',
+      };
+      return state.profileEligibility;
+    } finally {
+      if (Number(state.profileId) === checkedProfileId) {
+        state.profileEligibilityBusy = false;
+        renderProfileEligibility(state.profileEligibility);
+      }
+    }
+  }
+
+  async function ensureSelectedProfileEligible() {
+    const result = await refreshSelectedProfileEligibility({ force: true });
+    if (result?.eligible) return true;
+    if (state.step !== 1) {
+      setStep(1);
+      setTimeout(() => renderProfileEligibility(state.profileEligibility), 0);
+    }
+    return false;
   }
 
   function renderNuvio() {
@@ -999,12 +1130,15 @@
             </div>
             <small>If a secondary profile uses Primary add-ons, add-ons are installed on Profile 1 while collections stay on the selected profile.</small>
           </div>
+          <div id="profileEligibilityHost" class="profile-eligibility-card checking" role="status" aria-live="polite">
+            <strong>Checking profile availability…</strong><span>Verifying the selected Nuvio profile before setup.</span>
+          </div>
           ${state.profileCreateOpen ? `<div class="profile-create-card">
             <div class="field"><label for="newProfileName">Profile name</label><input id="newProfileName" type="text" maxlength="40" placeholder="New profile"></div>
             <label class="toggle-row"><input id="inheritPrimary" type="checkbox" checked><span><b>Use Profile 1 add-ons</b><small>Recommended if you want this profile to share the primary profile’s add-ons.</small></span></label>
             <div class="actions compact"><button class="ghost" id="cancelProfileBtn" type="button">Cancel</button><button class="btn" id="createProfileBtn" type="button">Create profile</button></div>
           </div>` : ''}
-          <div class="actions"><button class="ghost" id="backBtn">Back</button><button class="btn" id="nextBtn">Continue</button></div>`}
+          <div class="actions"><button class="ghost" id="backBtn">Back</button><button class="btn" id="nextBtn" disabled>Continue</button></div>`}
       </div>`);
 
     $('#backBtn').onclick = () => setStep(0);
@@ -1130,8 +1264,10 @@
       state.profileId = p.id;
       state.profileName = p.name;
       state.addonProfileId = p.usesPrimaryAddons ? 1 : p.id;
+      state.profileEligibility = null;
       state.backup = null;
       rememberActiveProfile(p);
+      refreshSelectedProfileEligibility({ force: true });
     };
 
     $('#newProfileBtn').onclick = () => {
@@ -1162,7 +1298,12 @@
       };
     }
 
-    $('#nextBtn').onclick = () => setStep(2);
+    $('#nextBtn').onclick = async () => {
+      const eligible = await ensureSelectedProfileEligible();
+      if (!eligible) return;
+      setStep(2);
+    };
+    refreshSelectedProfileEligibility({ force: true });
   }
 
   function openSmartOverlayConfigurator() {
