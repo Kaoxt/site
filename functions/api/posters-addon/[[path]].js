@@ -48,6 +48,9 @@ function parseConfig(token) {
     upstream: upstream.toString(),
     source: ['smart', 'tmdb', 'inherit'].includes(config.source) ? config.source : 'smart',
     tags: Array.isArray(config.tags) ? config.tags.filter((x) => typeof x === 'string') : ['trend', 'genre', 'rating'],
+    trendDetails: Array.isArray(config.trendDetails)
+      ? config.trendDetails.map(String).filter((value) => ['studio', 'director', 'cast', 'rank', 'release'].includes(value))
+      : ['studio', 'director', 'cast', 'rank', 'release'],
     ratingSource: typeof config.ratingSource === 'string' ? config.ratingSource : 'average',
   };
 }
@@ -96,10 +99,11 @@ function posterUrl(config, type, id, sourceUrl = '') {
   const mediaType = type === 'series' || type === 'tv' ? 'tv' : 'movie';
   const tags = new Set(config.tags);
   const params = new URLSearchParams({
-    v: '21',
+    v: '22',
     source: config.source,
     tags: [...tags].sort().join(','),
     ratingSource: config.ratingSource,
+    trendDetails: config.trendDetails.join(','),
   });
   try {
     const original = new URL(String(sourceUrl || ''));
