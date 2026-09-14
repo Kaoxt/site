@@ -258,6 +258,94 @@
     });
   }
 
+
+  async function openClearCollection(profile, row) {
+    const id = profileId(profile);
+    const name = profileName(profile);
+    openModal(`
+      <header class="account-modal-head">
+        <h3>Clear collection from ${esc(name)}?</h3>
+        <button class="account-modal-x" type="button" data-modal-close aria-label="Close">×</button>
+      </header>
+      <div class="account-modal-body">
+        <p class="account-modal-copy">This profile currently has collection data that was not created through The Kollection Set Up Collection wizard. Clear that old collection before using this profile for a Kollection setup.</p>
+        <div class="account-copy-note"><strong>What this clears:</strong> the current Nuvio collection layout on this profile. It does not delete the Nuvio profile, its add-ons or plugins, or your saved Kollection setups.</div>
+        <p class="account-modal-status" id="accountClearCollectionStatus" role="status"></p>
+      </div>
+      <footer class="account-modal-footer">
+        <button class="account-modal-button" type="button" data-modal-close>Cancel</button>
+        <button class="account-modal-button danger" type="button" id="accountClearCollectionConfirm">Clear old collection</button>
+      </footer>`);
+
+    const confirm = document.getElementById('accountClearCollectionConfirm');
+    const status = document.getElementById('accountClearCollectionStatus');
+    confirm?.addEventListener('click', async () => {
+      confirm.disabled = true;
+      status.textContent = 'Clearing the old collection…';
+      try {
+        const result = await window.KollectionCollectionEligibility?.clear?.(id);
+        if (!result?.eligible) throw new Error('The collection could not be cleared from this profile.');
+        setLastSync(window.__kollectionProfileActionUserId || 'default');
+        const availability = row?.querySelector('.account-profile-copy small');
+        if (availability) {
+          availability.textContent = 'Available for Set Up Collection';
+          availability.classList.remove('account-profile-setup-unavailable', 'account-profile-setup-checking');
+          availability.classList.add('account-profile-setup-available');
+        }
+        row?.classList.remove('account-profile-ineligible');
+        row?.querySelector('[data-clear-profile-collection]')?.remove();
+        status.textContent = 'Old collection cleared. This profile is now available for Set Up Collection.';
+        window.KollectionSavedCollections?.load?.();
+        setTimeout(closeModal, 900);
+      } catch (error) {
+        status.textContent = error?.message || 'Could not clear the old collection.';
+        confirm.disabled = false;
+      }
+    });
+  }
+
+  async function readProfileEligibility(row, profile) {
+    const availability = row?.querySelector('.account-profile-copy small');
+    if (availability) {
+      availability.textContent = 'Checking Set Up Collection availability…';
+      availability.classList.remove('account-profile-setup-available', 'account-profile-setup-unavailable');
+      availability.classList.add('account-profile-setup-checking');
+    }
+
+    try {
+      const result = await window.KollectionCollectionEligibility?.check?.(profileId(profile), { force: true });
+      if (!result) throw new Error('Profile availability could not be checked.');
+      row.dataset.collectionEligibility = result.eligible ? 'eligible' : 'ineligible';
+
+      if (availability) {
+        availability.classList.remove('account-profile-setup-checking');
+        if (result.eligible) {
+          availability.textContent = result.state === 'kollection'
+            ? 'Available for Set Up Collection · Kollection installed'
+            : 'Available for Set Up Collection';
+          availability.classList.add('account-profile-setup-available');
+          availability.classList.remove('account-profile-setup-unavailable');
+        } else {
+          availability.textContent = 'Not available for Set Up Collection';
+          availability.classList.add('account-profile-setup-unavailable');
+          availability.classList.remove('account-profile-setup-available');
+        }
+      }
+
+      row.classList.toggle('account-profile-ineligible', !result.eligible);
+      return result;
+    } catch (error) {
+      row.dataset.collectionEligibility = 'unknown';
+      if (availability) {
+        availability.textContent = 'Set Up Collection availability could not be verified';
+        availability.classList.remove('account-profile-setup-checking', 'account-profile-setup-available');
+        availability.classList.add('account-profile-setup-unavailable');
+      }
+      row.classList.add('account-profile-ineligible');
+      return { eligible: false, state: 'unknown', message: error?.message || 'Could not verify this profile.' };
+    }
+  }
+
   async function enhanceRow(row) {
     if (!row || row.dataset.profileActionsReady === 'true') return;
     const id = Number(row.dataset.profileId);
@@ -270,6 +358,8 @@
       profile = profiles.find((p) => profileId(p) === id);
     } catch { return; }
     if (!profile) return;
+
+    const eligibility = await readProfileEligibility(row, profile);
 
     row.querySelector('.account-profile-editor')?.remove();
     row.querySelector('.account-profile-message')?.remove();
@@ -290,6 +380,17 @@
       copy.addEventListener('click', () => openCopySettings(profile));
 
       actions.append(edit, copy);
+
+      if (!eligibility?.eligible) {
+        const clearCollection = document.createElement('button');
+        clearCollection.type = 'button';
+        clearCollection.className = 'account-profile-action warning';
+        clearCollection.dataset.clearProfileCollection = 'true';
+        clearCollection.textContent = 'Clear Collection';
+        clearCollection.addEventListener('click', () => openClearCollection(profile, row));
+        actions.appendChild(clearCollection);
+      }
+
       if (id !== 1) {
         const del = document.createElement('button');
         del.type = 'button'; del.className = 'account-profile-action danger'; del.textContent = 'Delete';
