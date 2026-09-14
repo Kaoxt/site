@@ -2,7 +2,7 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'production-cache-16';
+const CACHE_VERSION = 'production-cache-17';
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
 const DEFAULT_MDBLIST_CACHE_DAYS = 30;
@@ -537,6 +537,8 @@ export async function onRequest(context) {
     const headers = new Headers();
     persistent.writeHttpMetadata(headers);
     headers.set('content-type', 'image/webp');
+    headers.set('access-control-allow-origin', '*');
+    headers.set('cdn-cache-control', 'max-age=604800, stale-while-revalidate=86400');
     headers.set('cache-control', posterCacheControl(preview, requestedTags, requestedTags.has('trend')));
     headers.set('etag', persistent.httpEtag);
     headers.set('x-kollection-cache', 'MISS');
@@ -598,6 +600,8 @@ export async function onRequest(context) {
     const cacheControl = posterCacheControl(preview, tags, Boolean(payload.trend));
     const headers = new Headers(rendered.headers);
     headers.set('content-type', 'image/webp');
+    headers.set('access-control-allow-origin', '*');
+    headers.set('cdn-cache-control', 'max-age=604800, stale-while-revalidate=86400');
     headers.set('cache-control', cacheControl);
     headers.set('x-kollection-posters', 'v2-sharp');
     headers.set('x-kollection-render-version', CACHE_VERSION);
