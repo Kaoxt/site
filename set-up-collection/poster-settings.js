@@ -4,7 +4,8 @@
   const STORAGE_KEY = 'kollection-posters-settings-v1';
   const ALLOWED_TAGS = ['trend', 'quality', 'genre', 'rating', 'age'];
   const RATING_SOURCES = ['average', 'score', 'imdb', 'letterboxd', 'mal', 'rogerebert', 'tomatometer', 'popcornmeter', 'tmdb'];
-  const TREND_DETAILS = ['studio', 'director', 'cast', 'rank', 'release'];
+  const TREND_DETAILS = ['studio', 'director', 'cast', 'inCinema', 'rank', 'newMovie', 'comingSoon', 'newSeries', 'returningSeries', 'limitedSeries'];
+  const LEGACY_RELEASE_DETAILS = ['inCinema', 'newMovie', 'comingSoon', 'newSeries', 'returningSeries', 'limitedSeries'];
 
   function normalize(value) {
     const input = value && typeof value === 'object' ? value : {};
@@ -14,10 +15,13 @@
     const ratingSource = RATING_SOURCES.includes(String(input.ratingSource || '').toLowerCase())
       ? String(input.ratingSource).toLowerCase()
       : 'average';
-    const requestedTrendDetails = Array.isArray(input.trendDetails)
+    const requestedTrendDetails = new Set(Array.isArray(input.trendDetails)
       ? input.trendDetails.map(String)
-      : TREND_DETAILS;
-    const trendDetails = TREND_DETAILS.filter(type => requestedTrendDetails.includes(type));
+      : TREND_DETAILS);
+    if (requestedTrendDetails.has('release')) {
+      LEGACY_RELEASE_DETAILS.forEach(type => requestedTrendDetails.add(type));
+    }
+    const trendDetails = TREND_DETAILS.filter(type => requestedTrendDetails.has(type));
     return { source, tags, ratingSource, trendDetails, artworkProvider: 'tmdb' };
   }
 
@@ -33,7 +37,7 @@
   function pattern(value) {
     const settings = normalize(value);
     const params = new URLSearchParams({
-      v: '22',
+      v: '23',
       source: settings.source,
       tags: [...new Set(settings.tags)].sort().join(','),
       ratingSource: settings.ratingSource,
@@ -65,7 +69,7 @@
       enableRatingPosters: true,
     }));
     config.kollectionPosters = {
-      version: 3,
+      version: 4,
       enabled: true,
       posterSource: settings.source,
       ratingSource: settings.ratingSource,
