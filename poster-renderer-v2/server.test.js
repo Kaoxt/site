@@ -47,6 +47,28 @@ test('smart and original outputs keep visible top tags and genre/rating at portr
   }
 });
 
+test('polished top tags stay compact and split cleanly when quality is enabled', async () => {
+  await fixture();
+  const plain = await renderPoster({ posterPath: '/polish.jpg', smartLayout: true });
+  const trendOnly = await renderPoster({ posterPath: '/polish.jpg', smartLayout: true, trend: '#5 Today' });
+  const split = await renderPoster({ posterPath: '/polish.jpg', smartLayout: true, trend: 'Returning', quality: '4K' });
+
+  const changedPixels = async (a, b, region, threshold = 15) => {
+    const before = await sharp(a).extract(region).raw().toBuffer();
+    const after = await sharp(b).extract(region).raw().toBuffer();
+    return after.reduce((n, value, index) => n + (Math.abs(value - before[index]) > threshold ? 1 : 0), 0);
+  };
+
+  assert.ok(await changedPixels(plain, trendOnly, { left: 100, top: 0, width: 300, height: 50 }) > 500);
+  assert.ok(await changedPixels(plain, trendOnly, { left: 80, top: 56, width: 340, height: 8 }) < 350,
+    'top tag should end near 50px instead of forming a tall banner');
+
+  assert.ok(await changedPixels(plain, split, { left: 10, top: 0, width: 300, height: 50 }) > 500,
+    'trend tag should occupy the left side when quality is enabled');
+  assert.ok(await changedPixels(plain, split, { left: 380, top: 0, width: 110, height: 50 }) > 250,
+    'quality tag should occupy the right side');
+});
+
 test('upstream-only artwork does not fetch a title logo and provider errors remain failures', async () => {
   await fixture();
   const fetchImage = globalThis.fetch, calls = [];
