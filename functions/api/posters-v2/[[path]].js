@@ -19,14 +19,14 @@ const TODAY_LABELS = {
 };
 
 const TREND_STATUS_LABELS = {
-  en: { new: 'New', newSeries: 'New Series', limited: 'Limited Series', returning: 'Returning', cinema: 'In Cinema', coming: 'Coming' },
-  es: { new: 'Nuevo', newSeries: 'Nueva serie', limited: 'Serie limitada', returning: 'De vuelta', cinema: 'En cines', coming: 'Próximamente' },
-  fr: { new: 'Nouveau', newSeries: 'Nouvelle série', limited: 'Mini-série', returning: 'De retour', cinema: 'Au cinéma', coming: 'Bientôt' },
-  de: { new: 'Neu', newSeries: 'Neue Serie', limited: 'Miniserie', returning: 'Zurück', cinema: 'Im Kino', coming: 'Demnächst' },
-  it: { new: 'Nuovo', newSeries: 'Nuova serie', limited: 'Miniserie', returning: 'Di ritorno', cinema: 'Al cinema', coming: 'Prossimamente' },
-  pt: { new: 'Novo', newSeries: 'Nova série', limited: 'Série limitada', returning: 'De volta', cinema: 'Nos cinemas', coming: 'Em breve' },
-  ja: { new: '新着', newSeries: '新シリーズ', limited: 'リミテッドシリーズ', returning: '続編', cinema: '上映中', coming: '近日公開' },
-  ko: { new: '신규', newSeries: '새 시리즈', limited: '리미티드 시리즈', returning: '복귀', cinema: '극장 상영 중', coming: '공개 예정' },
+  en: { newMovie: 'New', newSeries: 'New Series', limitedSeries: 'Limited Series', returningSeries: 'Returning', inCinema: 'In Cinema', comingSoon: 'Coming' },
+  es: { newMovie: 'Nuevo', newSeries: 'Nueva serie', limitedSeries: 'Serie limitada', returningSeries: 'De vuelta', inCinema: 'En cines', comingSoon: 'Próximamente' },
+  fr: { newMovie: 'Nouveau', newSeries: 'Nouvelle série', limitedSeries: 'Mini-série', returningSeries: 'De retour', inCinema: 'Au cinéma', comingSoon: 'Bientôt' },
+  de: { newMovie: 'Neu', newSeries: 'Neue Serie', limitedSeries: 'Miniserie', returningSeries: 'Zurück', inCinema: 'Im Kino', comingSoon: 'Demnächst' },
+  it: { newMovie: 'Nuovo', newSeries: 'Nuova serie', limitedSeries: 'Miniserie', returningSeries: 'Di ritorno', inCinema: 'Al cinema', comingSoon: 'Prossimamente' },
+  pt: { newMovie: 'Novo', newSeries: 'Nova série', limitedSeries: 'Série limitada', returningSeries: 'De volta', inCinema: 'Nos cinemas', comingSoon: 'Em breve' },
+  ja: { newMovie: '新着', newSeries: '新シリーズ', limitedSeries: 'リミテッドシリーズ', returningSeries: '続編', inCinema: '上映中', comingSoon: '近日公開' },
+  ko: { newMovie: '신규', newSeries: '새 시리즈', limitedSeries: '리미티드 시리즈', returningSeries: '복귀', inCinema: '극장 상영 중', comingSoon: '공개 예정' },
 };
 
 const TREND_DATE_LOCALES = {
@@ -101,9 +101,18 @@ function validDay(value) {
   return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : '';
 }
 
-function releaseStatusLabel(details, type, region = 'US', language = 'en', now = new Date()) {
+function releaseLifecycleLabels(details, type, region = 'US', language = 'en', now = new Date()) {
   const labels = TREND_STATUS_LABELS[language] || TREND_STATUS_LABELS.en;
   const today = now.toISOString().slice(0, 10);
+  const result = {
+    inCinema: '',
+    newMovie: '',
+    comingSoon: '',
+    newSeries: '',
+    returningSeries: '',
+    limitedSeries: '',
+  };
+
   let releaseDay = '';
   let theatricalDay = '';
   let homeReleased = false;
@@ -119,34 +128,33 @@ function releaseStatusLabel(details, type, region = 'US', language = 'en', now =
     releaseDay = validDay(details.first_air_date);
   }
 
-  if (!releaseDay) return '';
+  if (!releaseDay) return result;
   if (releaseDay > today) {
     const formatted = new Intl.DateTimeFormat(TREND_DATE_LOCALES[language] || TREND_DATE_LOCALES.en, {
       day: 'numeric', month: 'short', timeZone: 'UTC',
     }).format(new Date(releaseDay + 'T00:00:00Z'));
-    return `${labels.coming} ${formatted}`;
+    result.comingSoon = `${labels.comingSoon} ${formatted}`;
+    return result;
   }
 
   const daysSince = Math.floor((Date.parse(today) - Date.parse(releaseDay)) / 86400000);
-  if (daysSince < 0) return '';
+  if (daysSince < 0) return result;
 
   if (type === 'tv') {
     const seriesType = String(details.type || '').toLowerCase();
     const seriesStatus = String(details.status || '').toLowerCase();
-    if (seriesType === 'miniseries') return labels.limited;
-    if (daysSince <= 14) return labels.newSeries;
-    if (seriesStatus === 'returning series') return labels.returning;
-    return '';
+    if (daysSince <= 14) result.newSeries = labels.newSeries;
+    if (seriesStatus === 'returning series') result.returningSeries = labels.returningSeries;
+    if (seriesType === 'miniseries') result.limitedSeries = labels.limitedSeries;
+    return result;
   }
 
-  if (daysSince <= 7) return labels.new;
-  // TMDB supplies release dates, not live cinema listings. Use a bounded
-  // theatrical window and stop once a home-release date has arrived.
-  if (theatricalDay && daysSince <= 45 && !homeReleased) return labels.cinema;
-  // Movies without detailed regional release data can still truthfully be
-  // called new for a short period using their normal release_date.
-  if (!theatricalDay && daysSince <= 14) return labels.new;
-  return '';
+  // These can overlap by design. Selection/priority decides what is shown.
+  // That makes "In Cinema" genuinely independent instead of being hidden by
+  // the first-week "New" label.
+  if (daysSince <= 14) result.newMovie = labels.newMovie;
+  if (theatricalDay && daysSince <= 45 && !homeReleased) result.inCinema = labels.inCinema;
+  return result;
 }
 
 async function trendLabel(type, id, key, language = 'en', context) {
@@ -799,14 +807,14 @@ async function renderPoster(context, state, id) {
   const logo = chooseLogo(details, smartTextless);
   if (!artwork.path && !sourceUrl) throw posterError('artwork-missing');
 
-  const releaseTrend = tags.has('trend') && trendDetails.includes('release')
-    ? releaseStatusLabel(details, type, String(env.POSTERS_RELEASE_REGION || 'US').toUpperCase(), overlayLanguage)
-    : '';
+  const lifecycle = tags.has('trend')
+    ? releaseLifecycleLabels(details, type, String(env.POSTERS_RELEASE_REGION || 'US').toUpperCase(), overlayLanguage)
+    : {};
   const trendChoice = tags.has('trend')
     ? chooseTrendDisplay({
         trendDetails,
         rank: trendRank,
-        release: releaseTrend,
+        lifecycle,
         spotlights: spotlightLabels(details),
       })
     : { label: '', source: 'none' };
