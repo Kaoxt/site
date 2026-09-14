@@ -1050,3 +1050,99 @@ body.light .smart-overlay-modal-button.primary{
     align-self:flex-end;
   }
 }
+
+
+/* Nuvio profile eligibility gate */
+.profile-eligibility-card{
+  margin-top:14px;
+  padding:15px 16px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:15px;
+  background:rgba(255,255,255,.025);
+  display:grid;
+  gap:5px;
+}
+.profile-eligibility-card[hidden]{display:none!important}
+.profile-eligibility-card>strong,
+.profile-eligibility-copy>strong{
+  font-size:13.5px;
+  line-height:1.35;
+}
+.profile-eligibility-card>span,
+.profile-eligibility-copy>span{
+  color:var(--muted);
+  font-size:12.5px;
+  line-height:1.5;
+}
+.profile-eligibility-card.checking{
+  border-color:rgba(255,255,255,.08);
+}
+.profile-eligibility-card.available{
+  border-color:rgba(82,196,118,.22);
+  background:rgba(82,196,118,.055);
+}
+.profile-eligibility-card.available>strong{
+  color:#b6e7c3;
+}
+.profile-eligibility-card.blocked{
+  border-color:rgba(255,91,107,.28);
+  background:rgba(255,91,107,.055);
+  gap:12px;
+}
+.profile-eligibility-copy{
+  display:grid;
+  gap:5px;
+}
+.profile-eligibility-card.blocked .profile-eligibility-copy>strong{
+  color:#ffb1b8;
+}
+.profile-eligibility-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.profile-clear-collection-btn{
+  border-color:rgba(255,91,107,.30)!important;
+  color:#ffd0d4!important;
+}
+.profile-clear-collection-btn:hover{
+  border-color:rgba(255,91,107,.48)!important;
+  background:rgba(255,91,107,.08)!important;
+}
+.profile-eligibility-note{
+  display:block;
+  color:var(--muted);
+  font-size:11.5px;
+  line-height:1.48;
+}
+body.light .profile-eligibility-card{
+  border-color:rgba(0,0,0,.10);
+  background:rgba(255,255,255,.66);
+}
+body.light .profile-eligibility-card.available{
+  border-color:rgba(40,130,70,.22);
+  background:rgba(40,130,70,.055);
+}
+body.light .profile-eligibility-card.available>strong{
+  color:#287344;
+}
+body.light .profile-eligibility-card.blocked{
+  border-color:rgba(180,35,47,.22);
+  background:rgba(180,35,47,.05);
+}
+body.light .profile-eligibility-card.blocked .profile-eligibility-copy>strong{
+  color:#b4232f;
+}
+body.light .profile-clear-collection-btn{
+  color:#a52631!important;
+  border-color:rgba(180,35,47,.24)!important;
+}
+@media(max-width:620px){
+  .profile-eligibility-card{
+    padding:14px;
+  }
+  .profile-eligibility-actions .ghost{
+    width:100%;
+  }
+}
