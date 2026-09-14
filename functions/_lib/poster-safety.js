@@ -90,68 +90,56 @@ async function reserveDbBudget(env, request) {
   const maxClientHourly = intEnv(env, 'POSTERS_MAX_CLIENT_HOURLY_RENDERS', DEFAULT_MAX_CLIENT_HOURLY_RENDERS, 1, 100000);
   const policy = thresholds(env, maxDaily);
 
-  await db.prepare(
-    `INSERT INTO poster_usage_daily (day, renders, updated_at)
+  // Initialize independent counters together instead of two network round trips.
+  await db.batch([
+    db.prepare(`INSERT INTO poster_usage_daily (day, renders, updated_at)
      VALUES (?, 0, CURRENT_TIMESTAMP)
-     ON CONFLICT(day) DO NOTHING`
-  ).bind(day).run();
-
-  const dailyRow = await db.prepare(
-    'SELECT renders FROM poster_usage_daily WHERE day = ?'
-  ).bind(day).first();
-  const currentDaily = Number(dailyRow?.renders || 0);
-
-  if (currentDaily >= policy.hardStopAt) {
-    return {
-      allowed: false,
-      reason: 'hard-stop-budget',
-      maxDaily,
-      dailyRenders: currentDaily,
-      ...policy,
-    };
-  }
-
-  const conservationMode = currentDaily >= policy.conserveAt;
-
-  await db.prepare(
-    `INSERT INTO poster_usage_client_hourly (hour, client_hash, renders, updated_at)
+     ON CONFLICT(day) DO NOTHING`).bind(day),
+    db.prepare(`INSERT INTO poster_usage_client_hourly (hour, client_hash, renders, updated_at)
      VALUES (?, ?, 0, CURRENT_TIMESTAMP)
-     ON CONFLICT(hour, client_hash) DO NOTHING`
-  ).bind(hour, clientHash).run();
+     ON CONFLICT(hour, client_hash) DO NOTHING`).bind(hour, clientHash),
+  ]);
 
   const clientUpdate = await db.prepare(
     `UPDATE poster_usage_client_hourly
      SET renders = renders + 1, updated_at = CURRENT_TIMESTAMP
-     WHERE hour = ? AND client_hash = ? AND renders < ?`
-  ).bind(hour, clientHash, maxClientHourly).run();
+     WHERE hour = ? AND client_hash = ? AND renders < ?
+       AND EXISTS (SELECT 1 FROM poster_usage_daily WHERE day = ? AND renders < ?)`
+  ).bind(hour, clientHash, maxClientHourly, day, policy.hardStopAt).run();
 
   if (!clientUpdate?.meta?.changes) {
+    const dailyRow = await db.prepare('SELECT renders FROM poster_usage_daily WHERE day = ?').bind(day).first();
+    if (Number(dailyRow?.renders || 0) >= policy.hardStopAt) {
+      return { allowed: false, reason: 'hard-stop-budget', maxDaily, dailyRenders: Number(dailyRow.renders), ...policy };
+    }
     return { allowed: false, reason: 'client-hourly-limit', maxClientHourly };
   }
 
   const dailyUpdate = await db.prepare(
     `UPDATE poster_usage_daily
      SET renders = renders + 1, updated_at = CURRENT_TIMESTAMP
-     WHERE day = ? AND renders < ?`
-  ).bind(day, policy.hardStopAt).run();
+     WHERE day = ? AND renders < ? RETURNING renders`
+  ).bind(day, policy.hardStopAt).first();
 
-  if (!dailyUpdate?.meta?.changes) {
+  if (!dailyUpdate) {
     return {
       allowed: false,
       reason: 'hard-stop-budget',
       maxDaily,
-      dailyRenders: currentDaily,
+      dailyRenders: policy.hardStopAt,
       ...policy,
     };
   }
 
+  const currentDaily = Number(dailyUpdate.renders);
+  const conservationMode = currentDaily - 1 >= policy.conserveAt;
   return {
     allowed: true,
     reason: conservationMode ? 'budget-reserved-conservation' : 'budget-reserved',
     conservationMode,
     maxDaily,
     maxClientHourly,
-    dailyRenders: currentDaily + 1,
+    dailyRenders: currentDaily,
     ...policy,
   };
 }

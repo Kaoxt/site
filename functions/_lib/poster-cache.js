@@ -6,17 +6,24 @@ export function posterBucket(env) {
   return env.POSTER_CACHE || env.IMAGES || null;
 }
 
-export async function singleFlight(env, key, work) {
+export async function singleFlight(env, key, work, retainUntil = () => null) {
   const scope = posterBucket(env) || env.DB || env;
   let pending = flights.get(scope);
   if (!pending) flights.set(scope, pending = new Map());
   if (pending.has(key)) return pending.get(key);
   const promise = Promise.resolve().then(work);
   pending.set(key, promise);
+  let result;
+  const cleanup = () => { if (pending.get(key) === promise) pending.delete(key); };
   try {
-    return await promise;
+    result = await promise;
+    return result;
   } finally {
-    if (pending.get(key) === promise) pending.delete(key);
+    // A completed image can be returned immediately while its storage writes
+    // finish. Keep sharing those bytes until storage can satisfy new requests.
+    const completion = retainUntil(result);
+    if (completion) Promise.resolve(completion).then(cleanup, cleanup);
+    else cleanup();
   }
 }
 

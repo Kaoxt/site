@@ -5,7 +5,7 @@ const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
 const CACHE_VERSION = 'production-cache-19';
 // Delivery changes must not invalidate finished artwork in R2.
-const DELIVERY_VERSION = 'cache-first-1';
+const DELIVERY_VERSION = 'cold-pipeline-2';
 const STALE_TREND_SECONDS = 172800;
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
@@ -650,16 +650,35 @@ async function originalPosterFallback(context, state, reason) {
   return json({ error: 'Poster artwork is temporarily unavailable.', reason }, 503);
 }
 
-async function renderPoster(context, state, id, persistentKey) {
+async function measured(context, name, work) {
+  const started = Date.now();
+  try { return await work(); }
+  finally { context.timings?.push(`${name};dur=${Date.now() - started}`); }
+}
+
+async function renderPoster(context, state, id) {
   const { request, env } = context;
   const { url, type, preview, tags, sourceUrl, overlayOnly, overlayLanguage } = state;
 
   const append = type === 'movie' ? 'images,release_dates,external_ids' : 'images,content_ratings,external_ids';
-  const detailsPromise = tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null&language=en-US`, env.TMDB_API_KEY, context);
-  const trendPromise = tags.has('trend')
-    ? trendLabel(type, id, env.TMDB_API_KEY, overlayLanguage, context)
-    : Promise.resolve('');
-  const details = await detailsPromise;
+  const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
+  const detailsPromise = measured(context, 'metadata', () => tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null&language=en-US`, env.TMDB_API_KEY, context));
+  // MDBList's TMDB endpoint needs only the ID. Start it alongside TMDB, while
+  // sources that actually need title details still wait for those details.
+  const ratingDetails = env.MDBLIST_API_KEY && MDBLIST_RATING_SOURCES.has(requestedRatingSource)
+    ? Promise.resolve({ id }) : detailsPromise;
+  const [details, rating, trendRank, quality] = await Promise.all([
+    detailsPromise,
+    tags.has('rating')
+      ? measured(context, 'ratings', async () => resolveRating(await ratingDetails, type, requestedRatingSource, env, context))
+      : Promise.resolve({ value: '', label: '', source: requestedRatingSource, status: 'disabled' }),
+    tags.has('trend')
+      ? measured(context, 'trend', () => trendLabel(type, id, env.TMDB_API_KEY, overlayLanguage, context))
+      : Promise.resolve(''),
+    tags.has('quality')
+      ? measured(context, 'quality', async () => resolveQuality(await detailsPromise, type, env, context))
+      : Promise.resolve({ value: '', source: 'aiostreams', status: 'disabled' }),
+  ]);
   if (!details.poster_path && !sourceUrl) throw posterError('artwork-missing');
   const smartLayout = url.searchParams.get('source') === 'smart';
   const artwork = sourceUrl ? { path: '', source: 'upstream-addon' } : choosePoster(details, smartLayout);
@@ -667,16 +686,6 @@ async function renderPoster(context, state, id, persistentKey) {
   const logo = chooseLogo(details, smartTextless);
   if (!artwork.path && !sourceUrl) throw posterError('artwork-missing');
 
-  const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
-  const [rating, trendRank, quality] = await Promise.all([
-    tags.has('rating')
-      ? resolveRating(details, type, requestedRatingSource, env, context)
-      : Promise.resolve({ value: '', label: '', source: requestedRatingSource, status: 'disabled' }),
-    trendPromise,
-    tags.has('quality')
-      ? resolveQuality(details, type, env, context)
-      : Promise.resolve({ value: '', source: 'aiostreams', status: 'disabled' }),
-  ]);
   const resolvedTrend = tags.has('trend')
     ? theatricalLabel(details, type, String(env.POSTERS_RELEASE_REGION || 'US').toUpperCase()) || trendRank
     : '';
@@ -709,17 +718,17 @@ async function renderPoster(context, state, id, persistentKey) {
 
   // Reserve quota and renderer concurrency only after metadata/rating work has
   // succeeded. Provider failures must not consume a render reservation.
-  const slot = await acquirePosterRenderSlot(env, request, { signal: context.signal });
+  const slot = await measured(context, 'admission', () => acquirePosterRenderSlot(env, request, { signal: context.signal }));
   if (!slot.allowed) throw posterError(slot.reason);
 
   try {
     const rendererBase = String(env.POSTERS_V2_RENDERER_URL || DEFAULT_RENDERER_URL).replace(/\/$/, '');
-    const rendered = await fetch(`${rendererBase}/render`, {
+    const rendered = await measured(context, 'renderer', () => fetch(`${rendererBase}/render`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', accept: 'image/webp', 'x-kollection-render-key': String(env.POSTERS_RENDERER_AUTH_TOKEN) },
       body: JSON.stringify(payload),
       signal: AbortSignal.any([context.signal, AbortSignal.timeout(10000)]),
-    });
+    }));
     if (!rendered.ok) {
       await rendered.body?.cancel();
       throw posterError('renderer-' + rendered.status);
@@ -869,10 +878,9 @@ function deliveryResponse(response, state) {
 }
 
 async function renderUnderLease(context, state, id, key, background) {
-  const alreadySaved = await loadSaved(context, state, key);
-  if (isFresh(alreadySaved)) return toResult(alreadySaved);
-  await alreadySaved?.body?.cancel();
-  const lease = await acquirePosterLease(context.env, key);
+  // The request already checked storage. Check again after taking the lease to
+  // close the race, without a third serial R2 read on every cold request.
+  const lease = await measured(context, 'lease', () => acquirePosterLease(context.env, key));
   if (!lease.acquired) {
     if (background) return null; // Another request is already refreshing the saved overlay.
     const deadline = Date.now() + 5000;
@@ -884,18 +892,26 @@ async function renderUnderLease(context, state, id, key, background) {
     }
     throw posterError('render-in-progress');
   }
+  let saving = false;
   let success = false;
   try {
     // Close the race between the cache read and acquiring the distributed lease.
     const ready = await loadSaved(context, state, key);
     if (isFresh(ready)) { success = true; return await toResult(ready); }
     await ready?.body?.cancel();
-    const result = await renderPoster(context, state, id, key);
-    success = result.persisted !== false;
+    const result = await renderPoster(context, state, id);
+    // Hold the distributed lease until the canonical image is durable, but send
+    // the completed image to the client without waiting for that storage write.
+    result.completion = (async () => {
+      const persisted = await saveResult(context, state, key, result);
+      await lease.release(persisted ? 0 : renderFailureCooldownMs(context.env)).catch(() => {});
+    })();
+    saving = true;
+    context.waitUntil(result.completion);
     return result;
   } finally {
     // Cool down failures so every catalog scroll doesn't retry an unavailable provider.
-    await lease.release(success ? 0 : renderFailureCooldownMs(context.env)).catch(() => {});
+    if (!saving) context.waitUntil(lease.release(success ? 0 : renderFailureCooldownMs(context.env)).catch(() => {}));
   }
 }
 
@@ -912,20 +928,21 @@ async function refreshPoster(context, state, background = false) {
       const key = await persistentPosterKey(state.type, id, state.url, state.preview, context.env);
       state.canonicalKey = key;
       const result = await singleFlight(context.env, `poster-render:${key}`,
-        () => renderUnderLease(workContext, state, id, key, background));
+        () => renderUnderLease(workContext, state, id, key, background), result => result?.completion);
       if (!result) return null;
       // Save an IMDb-addressed copy too: subsequent R2 hits need zero ID lookups.
       // The canonical TMDB key still shares work across both supported ID formats.
-      await Promise.allSettled([
-        saveResult(context, state, key, result),
+      const completion = Promise.allSettled([
+        result.completion,
         putEdge(state, fromResult(result)),
         ...(state.rawKey !== key ? [saveResult(context, state, state.rawKey, result)] : []),
       ]);
-      return result;
+      context.waitUntil(completion);
+      return { ...result, completion };
     } finally {
       clearTimeout(timer);
     }
-  });
+  }, result => result?.completion);
 }
 
 function serveSaved(context, state, saved, edgeHit = false) {
@@ -1011,13 +1028,14 @@ async function handlePoster(context) {
 
 export async function onRequest(context) {
   const started = Date.now();
+  const timings = [];
   let response;
-  try { response = await handlePoster(context); }
+  try { response = await handlePoster({ ...context, timings, waitUntil: promise => context.waitUntil(promise) }); }
   catch { response = json({ error: 'Poster service is temporarily unavailable.' }, 503); }
   const headers = new Headers(response.headers);
   headers.set('access-control-allow-origin', '*');
   headers.set('x-kollection-delivery', DELIVERY_VERSION);
-  headers.set('server-timing', `poster;dur=${Date.now() - started};desc="Poster handler"`);
+  headers.set('server-timing', [`poster;dur=${Date.now() - started};desc="Poster handler"`, ...timings].join(', '));
   if (context.request.method === 'HEAD') await response.body?.cancel();
   return new Response(context.request.method === 'HEAD' ? null : response.body, { status: response.status, headers });
 }

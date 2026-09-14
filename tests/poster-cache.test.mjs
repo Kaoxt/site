@@ -26,7 +26,10 @@ class D1 {
     return { ...execute([]), bind: (...args) => execute(args) };
   }
   async batch(statements) { return Promise.all(statements.map(statement => statement.run())); }
-  used() { return this.sqlite.prepare('SELECT renders FROM poster_usage_daily').get()?.renders || 0; }
+  used() {
+    if (!this.sqlite.prepare("SELECT 1 FROM sqlite_master WHERE name = 'poster_usage_daily'").get()) return 0;
+    return this.sqlite.prepare('SELECT renders FROM poster_usage_daily').get()?.renders || 0;
+  }
 }
 
 class Bucket {
@@ -93,12 +96,14 @@ function harness(overrides = {}) {
         return Response.json({ results: [{ id: 27205 }, { id: 603 }, { id: 550 }] });
       }
       count.details++;
+      if (h.detailsHook) await h.detailsHook();
       const id = Number(url.pathname.split('/').at(-1));
       return Response.json({ id, title: 'Test title', name: 'Test series', poster_path: '/poster.jpg', vote_average: 8.1,
         genres: [{ name: 'Drama' }], images: { posters: [], logos: [] }, external_ids: { imdb_id: 'tt1375666' } });
     }
     if (url.hostname === 'api.mdblist.com') {
       count.ratings++;
+      if (h.ratingsHook) await h.ratingsHook();
       await pause(5);
       return h.ratingStatus === 200 ? Response.json({ score_average: 86, score: 85, ratings: [{ source: 'imdb', value: 8.8 }] })
         : new Response('unavailable', { status: h.ratingStatus });
@@ -147,6 +152,69 @@ function harness(overrides = {}) {
   };
   return h;
 }
+
+test('cold MDBList lookup starts before TMDB details finish', { timeout: 2000 }, async () => {
+  const h = harness();
+  const detailsStarted = deferred(), ratingsStarted = deferred(), finishDetails = deferred();
+  h.detailsHook = async () => { detailsStarted.resolve(); await finishDetails.promise; };
+  h.ratingsHook = () => ratingsStarted.resolve();
+  const pending = h.request('27205');
+  try {
+    await detailsStarted.promise;
+    await ratingsStarted.promise;
+    assert.equal(h.count.render, 0);
+  } finally { finishDetails.resolve(); }
+  const response = await pending;
+  await response.arrayBuffer(); await h.flush();
+  assert.equal(h.payloads[0].rating, '8.6');
+  assert.equal(h.payloads[0].genre, 'Drama');
+  assert.match(response.headers.get('server-timing'), /metadata;dur=\d+/);
+  assert.equal(h.count.ratings, 1);
+});
+
+test('cold image returns before cache writes while its lease and shared bytes remain available', { timeout: 2000 }, async () => {
+  const h = harness();
+  const finishStorage = deferred();
+  const put = h.bucket.put.bind(h.bucket), putEdge = h.edge.put.bind(h.edge);
+  h.bucket.put = async (key, ...args) => {
+    if (key.startsWith('poster-cache/')) await finishStorage.promise;
+    return put(key, ...args);
+  };
+  h.edge.put = async (request, response) => {
+    if (!request.url.includes('__poster-data/')) await finishStorage.promise;
+    return putEdge(request, response);
+  };
+  try {
+    const first = await h.request('27205');
+    const body = await first.arrayBuffer();
+    assert.equal(h.bucket.posters().length, 0);
+    assert.equal(h.db.sqlite.prepare('SELECT COUNT(*) AS n FROM poster_render_leases').get().n, 1);
+    const second = await h.request('tt1375666');
+    assert.deepEqual(await second.arrayBuffer(), body);
+    assert.equal(h.count.render, 1);
+    assert.equal(h.db.used(), 1);
+  } finally { finishStorage.resolve(); }
+  await h.flush();
+  assert.equal(h.bucket.posters().length, 2);
+  assert.equal(h.db.sqlite.prepare('SELECT COUNT(*) AS n FROM poster_render_leases').get().n, 0);
+  h.edge.clear();
+  const saved = await h.request('27205');
+  assert.equal(saved.headers.get('x-kollection-persistent-cache'), 'HIT');
+  await saved.arrayBuffer(); await h.flush();
+  assert.equal(h.count.render, 1);
+});
+
+test('concurrent cold admissions still enforce daily and per-client limits', async () => {
+  for (const [daily, hourly, expected] of [[100, 2, 2], [3, 100, 3]]) {
+    const h = harness({ POSTERS_MAX_DAILY_RENDERS: String(daily), POSTERS_MAX_CLIENT_HOURLY_RENDERS: String(hourly),
+      POSTERS_MAX_CONCURRENT_RENDERS: '20', POSTERS_CONSERVE_AT_PERCENT: '100', POSTERS_HARD_STOP_AT_PERCENT: '100' });
+    const slots = await Promise.all(Array.from({ length: 12 }, () => acquirePosterRenderSlot(h.env, h.context().request)));
+    try {
+      assert.equal(slots.filter(slot => slot.allowed).length, expected);
+      assert.equal(h.db.used(), expected);
+    } finally { slots.forEach(slot => slot.release()); }
+  }
+});
 
 test('IMDb-addressed R2 hit needs no credentials, metadata calls, or budget writes', async () => {
   const h = harness(); const expected = await h.seed();

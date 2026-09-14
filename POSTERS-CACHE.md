@@ -9,7 +9,13 @@ The AIOMetadata pattern replaces only `poster`. It does not change a title's bac
 3. On an IMDb miss, cached ID metadata locates the existing TMDB-addressed R2 poster. That legacy poster is reused and an IMDb-addressed copy is saved to avoid future ID lookups. Both IDs still share one render lock.
 4. Only a true cache miss renders a new image. Refreshes and cold requests share in-flight work; D1 leases coordinate separate Worker instances. The finished canonical R2 write completes before a successful lease is released.
 
-The artwork version remains `production-cache-19`, preserving previously rendered 500×750 images. The delivery version is independent (`cache-first-1`); generated client patterns use `v=20` so old CDN responses don't hide the new delivery behavior.
+The artwork version remains `production-cache-19`, preserving previously rendered 500×750 images. The delivery version is independent (`cold-pipeline-2`); generated client patterns use `v=20`.
+
+## First loads
+
+MDBList ratings start alongside TMDB artwork metadata and trends, using the known TMDB ID. TMDB ratings and OMDb still wait for the details they require. Quality lookups retain their own cache and only run when selected. Budget admission happens after all required metadata succeeds, using three database round trips instead of five after schema setup. Daily and hourly limits still apply.
+
+Finished image bytes return before R2 and edge writes finish. `waitUntil` keeps those writes running; the canonical render lease is released only after its R2 write completes. Same-worker callers share the completed bytes during persistence, so an IMDb or TMDB request in that interval does not trigger another render. A storage failure retains the normal retry cooldown. The redundant pre-lease R2 read is removed, while the post-lease check still closes cache races.
 
 ## Freshness and failures
 
@@ -30,7 +36,7 @@ Quality Tags can optionally use AIOStreams without exposing its credentials in g
 
 Daily/hourly rendering safeguards are unchanged. A bounded local queue absorbs bursts; identical variants share work locally and through a short D1 lease. New rendering has a 25-second abort deadline, with shorter individual upstream timeouts. The D1 lease table is created automatically on the existing `DB` binding.
 
-Responses expose `X-Kollection-Delivery`, `X-Kollection-Cache`, `X-Kollection-Persistent-Cache`, `X-Kollection-Stale`, `X-Kollection-Generated-At`, and `X-Kollection-Fresh-Until`. `Server-Timing: poster` measures origin-handler time, not Nuvio's complete loading time. A CDN hit can replay those origin diagnostics; check `CF-Cache-Status` and measure client wall time separately.
+Responses expose `X-Kollection-Delivery`, `X-Kollection-Cache`, `X-Kollection-Persistent-Cache`, `X-Kollection-Stale`, `X-Kollection-Generated-At`, and `X-Kollection-Fresh-Until`. `Server-Timing: poster` measures origin-handler time, not Nuvio's complete loading time. Cold responses also report `lease`, `metadata`, `ratings`, `trend`, `quality` (when enabled), `admission`, and `renderer` durations. Parallel stages overlap, so their durations must not be added together. A CDN hit can replay those origin diagnostics; check `CF-Cache-Status` and measure client wall time separately.
 
 ## Tests
 
