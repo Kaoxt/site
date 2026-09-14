@@ -55,7 +55,7 @@ async function smartBottomInfo(genre, ratingLabel) {
 }
 
 async function titleImage(title){const text=String(title||'').trim();if(!text)return null;const fontSize=text.length>30?42:text.length>20?50:60;const shadow={text:{text:`<span foreground="#000000" alpha="68%" weight="bold">${esc(text)}</span>`,font:`DejaVu Sans ${fontSize}`,width:700,height:180,align:'center',rgba:true}},foreground={text:{text:`<span foreground="#ffffff" weight="bold">${esc(text)}</span>`,font:`DejaVu Sans ${fontSize}`,width:700,height:180,align:'center',rgba:true}};return sharp({create:{width:700,height:184,channels:4,background:{r:0,g:0,b:0,alpha:0}}}).composite([{input:shadow,top:3,left:1},{input:foreground,top:0,left:0}]).png().toBuffer();}
-async function smartLogoImage(logoPath){if(!logoPath)return null;try{const response=await fetch(`${TMDB_LOGO_BASE}${logoPath}`,{headers:{accept:'image/*'}});if(!response.ok)return null;const input=Buffer.from(await response.arrayBuffer()),meta=await sharp(input).metadata();if(!meta.width||!meta.height)return null;const scale=Math.min(680/meta.width,215/meta.height,1),width=Math.max(1,Math.round(meta.width*scale)),height=Math.max(1,Math.round(meta.height*scale));return{buffer:await sharp(input).resize(width,height,{fit:'inside',withoutEnlargement:true}).png().toBuffer(),width,height};}catch{return null;}}
+async function smartLogoImage(logoPath){if(!logoPath)return null;try{const response=await fetch(`${TMDB_LOGO_BASE}${logoPath}`,{headers:{accept:'image/*'},signal:AbortSignal.timeout(3000)});if(!response.ok)return null;const input=Buffer.from(await response.arrayBuffer()),meta=await sharp(input).metadata();if(!meta.width||!meta.height)return null;const scale=Math.min(680/meta.width,215/meta.height,1),width=Math.max(1,Math.round(meta.width*scale)),height=Math.max(1,Math.round(meta.height*scale));return{buffer:await sharp(input).resize(width,height,{fit:'inside',withoutEnlargement:true}).png().toBuffer(),width,height};}catch{return null;}}
 function smartBottomBackdrop(){return Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${POSTER_WIDTH}" height="330"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="0.48" stop-color="#000" stop-opacity="0.05"/><stop offset="0.76" stop-color="#000" stop-opacity="0.20"/><stop offset="1" stop-color="#000" stop-opacity="0.48"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/></svg>`);}
 async function readJson(req){const chunks=[];for await(const chunk of req)chunks.push(chunk);const raw=Buffer.concat(chunks).toString('utf8');return raw?JSON.parse(raw):{};}
 
@@ -63,7 +63,7 @@ async function renderPoster(body){
  const{posterPath,sourceUrl,logoPath='',title='',smartLayout=false,overlayOnly=false,rating='',ratingLabel='',genre='',trend='',age='',quality='',overlayColor='dynamic'}=body||{};
  const posterUrl=sourceUrl||(posterPath?`${TMDB_IMAGE_BASE}${posterPath}`:'');if(!posterUrl)throw new Error('posterPath or sourceUrl is required');
  const logoPromise=smartLayout&&!overlayOnly&&logoPath?smartLogoImage(logoPath):Promise.resolve(null);
- const res=await fetch(posterUrl,{headers:{accept:'image/*'}});if(!res.ok)throw new Error(`Source image fetch failed: ${res.status}`);
+ const res=await fetch(posterUrl,{headers:{accept:'image/*'},signal:AbortSignal.timeout(4000)});if(!res.ok)throw new Error(`Source image fetch failed: ${res.status}`);
  const input=Buffer.from(await res.arrayBuffer()),resized=await sharp(input).resize(POSTER_WIDTH,POSTER_HEIGHT,{fit:'cover'}).png().toBuffer(),composites=[];
  const resolvedRatingLabel=ratingLabel||(rating?`★ ${rating}`:'');
  const dynamicFill=overlayColor==='dynamic'?await dynamicAccent(resized):overlayColor;
@@ -81,8 +81,8 @@ async function renderPoster(body){
   composites.push({input:smartBottomBackdrop(),top:POSTER_HEIGHT-330,left:0});
   const info=await smartBottomInfo(genre,resolvedRatingLabel);if(info)composites.push({input:info,top:SMART_BOTTOM_INFO_TOP,left:30});
  }
- const composed=await sharp(resized).composite(composites).png().toBuffer();
- return sharp(composed).resize(500,750,{fit:'fill'}).webp({quality:80,effort:3,smartSubsample:true}).toBuffer();
+ const composed=await sharp(resized).composite(composites).raw().toBuffer({resolveWithObject:true});
+ return sharp(composed.data,{raw:{width:composed.info.width,height:composed.info.height,channels:composed.info.channels}}).resize(500,750,{fit:'fill'}).webp({quality:80,effort:3,smartSubsample:true}).toBuffer();
 }
 
 const server=http.createServer(async(req,res)=>{try{if(req.method==='GET'&&req.url==='/health'){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return res.end(JSON.stringify({ok:true,renderer:'kollection-posters-v2-bp-layout-20'}));}if(req.method!=='POST'||req.url!=='/render'){res.writeHead(404,{'content-type':'application/json'});return res.end(JSON.stringify({error:'Not found'}));}const body=await readJson(req),started=Date.now(),output=await renderPoster(body);res.writeHead(200,{'content-type':'image/webp','content-length':String(output.length),'cache-control':'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800','x-kollection-renderer':'v2-bp-layout-20','x-kollection-render-ms':String(Date.now()-started)});res.end(output);}catch(error){res.writeHead(400,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:error?.message||'Render failed'}));}});
