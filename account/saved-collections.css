@@ -7,9 +7,11 @@
 .account-origin-badge { display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: .02em; border: 1px solid var(--account-border); }
 .account-origin-badge[data-state="valid"] { color: #a7f3d0; background: rgba(16,185,129,.10); border-color: rgba(16,185,129,.32); }
 .account-origin-badge[data-state="active"] { color: #c7d2fe; background: rgba(99,102,241,.13); border-color: rgba(129,140,248,.38); }
+.account-origin-badge[data-state="editable"] { color: #bae6fd; background: rgba(14,165,233,.10); border-color: rgba(56,189,248,.30); }
 .account-origin-badge[data-state="invalid"] { color: #fecaca; background: rgba(239,68,68,.10); border-color: rgba(239,68,68,.34); }
 .account-origin-badge[data-state="unknown"] { color: #fde68a; background: rgba(245,158,11,.10); border-color: rgba(245,158,11,.30); }
 .account-origin-message { color: #f4a7a7 !important; max-width: 680px; }
+.account-origin-message.account-origin-message-info { color: var(--account-muted) !important; }
 .account-saved-invalid { border-color: rgba(239,68,68,.28); background: rgba(239,68,68,.035); }
 .account-saved-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
 .account-small-button { min-height: 36px; padding: 0 12px; border-radius: 11px; font-size: 13px; }
