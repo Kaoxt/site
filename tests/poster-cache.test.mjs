@@ -82,7 +82,7 @@ function harness(overrides = {}) {
   const env = { IMAGES: bucket, DB: db, TMDB_API_KEY: 'test-tmdb-secret', MDBLIST_API_KEY: 'test-mdb-secret', POSTERS_RENDERER_AUTH_TOKEN: 'test-render-secret', ...overrides };
   const jobs = [];
   const count = { find: 0, details: 0, trend: 0, ratings: 0, quality: 0, render: 0, fallback: 0 };
-  const h = { bucket, edge, db, env, jobs, count, payloads: [], qualityAuth: [], qualityResolution: '2160p', qualityStatus: 200, renderStatus: 200, ratingStatus: 200 };
+  const h = { bucket, edge, db, env, jobs, count, payloads: [], qualityAuth: [], qualityResolution: '2160p', qualityResults: null, qualityStatus: 200, renderStatus: 200, ratingStatus: 200 };
   globalThis.caches = { default: edge };
   globalThis.fetch = async (input, options = {}) => {
     const url = new URL(typeof input === 'string' ? input : input.url);
@@ -118,7 +118,7 @@ function harness(overrides = {}) {
       return Response.json({
         success: true,
         data: {
-          results: [{ parsedFile: { resolution: h.qualityResolution } }],
+          results: h.qualityResults || [{ parsedFile: { resolution: h.qualityResolution } }],
           errors: {},
         },
       });
