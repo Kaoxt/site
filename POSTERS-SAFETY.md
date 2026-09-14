@@ -55,4 +55,4 @@ See [POSTERS-CACHE.md](POSTERS-CACHE.md) for the cache hierarchy, freshness wind
 
 Catalog bursts wait up to five seconds for a local rendering slot (maximum 64 queued requests). Rejected queue requests no longer consume a render reservation. Conservation mode reduces admission to one concurrent render; already admitted work may finish.
 
-The existing `DB` binding also gets a small `poster_render_leases` table automatically. A 60-second owner-checked lease coalesces rendering of the same poster variant across Workers; failures impose a 30-second retry cooldown. No new Cloudflare service or secrets are required. These changes do not raise daily or hourly budgets.
+The existing `DB` binding also gets a small `poster_render_leases` table automatically. A 60-second owner-checked lease coalesces rendering of the same poster variant across Workers; failures impose a five-minute retry cooldown by default (`POSTERS_FAILURE_COOLDOWN_SECONDS`, minimum 30 seconds, maximum one hour). No new Cloudflare service or secrets are required. These changes do not raise daily or hourly budgets.
