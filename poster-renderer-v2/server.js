@@ -61,6 +61,51 @@ async function smartAuxTag(text) {
   return { buffer: await sharp(svg).png().toBuffer(), width, height };
 }
 
+function smartTrendFontSize(text) {
+  const length = String(text || '').length;
+  if (length > 21) return 34;
+  if (length > 16) return 38;
+  if (length > 11) return 43;
+  return 48;
+}
+
+async function addSmartTopTags(composites, { trend = '', quality = '', audio = '', dynamicFill = '#29292d' } = {}) {
+  if (quality) {
+    const q = await smartTopTag(quality, {
+      fill: '#f4f4f5',
+      fillOpacity: .96,
+      width: smartTagWidth(quality, 108, 280),
+      fontSize: String(quality).length > 8 ? 32 : 37,
+      textColor: '#111318',
+    });
+    const qLeft = POSTER_WIDTH - SAFE_MARGIN - q.width;
+    if (trend) {
+      const availableWidth = Math.max(px(238), qLeft - SAFE_MARGIN - px(18));
+      const width = Math.min(smartTagWidth(trend, 238, 590), availableWidth);
+      const t = await smartTopTag(trend, {
+        fill: dynamicFill,
+        width,
+        fontSize: smartTrendFontSize(trend),
+      });
+      composites.push({ input: t.buffer, top: 0, left: SAFE_MARGIN });
+    }
+    composites.push({ input: q.buffer, top: 0, left: qLeft });
+    if (audio) {
+      const a = await smartAuxTag(audio);
+      composites.push({ input: a.buffer, top: SMART_TOP_HEIGHT + px(12), left: POSTER_WIDTH - SAFE_MARGIN - a.width });
+    }
+    return;
+  }
+  if (trend) {
+    const t = await smartTopTag(trend, {
+      fill: dynamicFill,
+      width: smartTagWidth(trend, 238, 590),
+      fontSize: smartTrendFontSize(trend),
+    });
+    composites.push({ input: t.buffer, top: 0, left: Math.round((POSTER_WIDTH - t.width) / 2) });
+  }
+}
+
 async function originalBadgeImage(text, { width = px(250), height = ORIGINAL_BADGE_HEIGHT, fill = '#101116', fillOpacity = 0.93, textColor = '#ffffff', fontSize = 44, radius = 16, strokeOpacity = 0.14 } = {}) {
   const resolvedFontSize = px(fontSize), resolvedRadius = px(radius);
   const background = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect x="1" y="1" width="${width-2}" height="${height-2}" rx="${resolvedRadius}" fill="${fill}" fill-opacity="${fillOpacity}" stroke="#ffffff" stroke-opacity="${strokeOpacity}" stroke-width="1"/></svg>`);
@@ -101,15 +146,13 @@ export async function renderPoster(body){
  const dynamicFill=overlayColor==='dynamic'&&trend?await dynamicAccent(resized.data,canvasOptions):overlayColor;
  if(smartLayout){
   composites.push({input:smartBottomBackdrop(),top:POSTER_HEIGHT-px(275),left:0});
-  if(quality){if(trend){const t=await smartTopTag(trend,{fill:dynamicFill,width:smartTagWidth(trend,238,590)});composites.push({input:t.buffer,top:0,left:SAFE_MARGIN});}const q=await smartTopTag(quality,{fill:'#f4f4f5',fillOpacity:.96,width:smartTagWidth(quality,108,280),fontSize:37,textColor:'#111318'});composites.push({input:q.buffer,top:0,left:POSTER_WIDTH-SAFE_MARGIN-q.width});if(audio){const a=await smartAuxTag(audio);composites.push({input:a.buffer,top:SMART_TOP_HEIGHT+px(12),left:POSTER_WIDTH-SAFE_MARGIN-a.width});}}
-  else if(trend){const t=await smartTopTag(trend,{fill:dynamicFill,width:smartTagWidth(trend,238,590)});composites.push({input:t.buffer,top:0,left:Math.round((POSTER_WIDTH-t.width)/2)});}
+  await addSmartTopTags(composites,{trend,quality,audio,dynamicFill});
   if(age){const width=smartTagWidth(age,132,205),badge=await originalBadgeImage(age,{width,height:px(64),fill:'#111216',fillOpacity:.50,fontSize:34,radius:8,strokeOpacity:.20});composites.push({input:badge,top:SMART_AGE_TOP,left:Math.round((POSTER_WIDTH-width)/2)});}
   if(!overlayOnly){const logo=await logoPromise;if(logo){const left=Math.round((POSTER_WIDTH-logo.width)/2),top=SMART_LOGO_ZONE_TOP+Math.round(((SMART_LOGO_ZONE_BOTTOM-SMART_LOGO_ZONE_TOP)-logo.height)/2);composites.push({input:logo.buffer,top,left});}else if(title){const b=await titleImage(title);if(b)composites.push({input:b,top:px(790),left:px(40)});}}
   const info=await smartBottomInfo(genre,resolvedRatingLabel);if(info)composites.push({input:info,top:SMART_BOTTOM_INFO_TOP,left:px(30)});
  }else{
   if(age){const width=smartTagWidth(age,132,205),badge=await originalBadgeImage(age,{width,height:px(64),fill:'#111216',fillOpacity:.50,fontSize:34,radius:8,strokeOpacity:.20});composites.push({input:badge,top:SMART_AGE_TOP,left:Math.round((POSTER_WIDTH-width)/2)});}
-  if(quality){if(trend){const t=await smartTopTag(trend,{fill:dynamicFill,width:smartTagWidth(trend,238,590)});composites.push({input:t.buffer,top:0,left:SAFE_MARGIN});}const q=await smartTopTag(quality,{fill:'#f4f4f5',fillOpacity:.96,width:smartTagWidth(quality,108,280),fontSize:37,textColor:'#111318'});composites.push({input:q.buffer,top:0,left:POSTER_WIDTH-SAFE_MARGIN-q.width});if(audio){const a=await smartAuxTag(audio);composites.push({input:a.buffer,top:SMART_TOP_HEIGHT+px(12),left:POSTER_WIDTH-SAFE_MARGIN-a.width});}}
-  else if(trend){const t=await smartTopTag(trend,{fill:dynamicFill,width:smartTagWidth(trend,238,590)});composites.push({input:t.buffer,top:0,left:Math.round((POSTER_WIDTH-t.width)/2)});}
+  await addSmartTopTags(composites,{trend,quality,audio,dynamicFill});
   composites.push({input:smartBottomBackdrop(),top:POSTER_HEIGHT-px(275),left:0});
   const info=await smartBottomInfo(genre,resolvedRatingLabel);if(info)composites.push({input:info,top:SMART_BOTTOM_INFO_TOP,left:px(30)});
  }
