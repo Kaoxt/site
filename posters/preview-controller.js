@@ -77,7 +77,7 @@
   const selectedSource = () => document.querySelector('input[name="posterSource"]:checked')?.value || 'smart';
   const selectedProvider = () => document.getElementById('artworkProvider')?.value || 'tmdb';
   const selectedRatingSource = () => document.getElementById('ratingSource')?.value || 'average';
-  const selectedTags = () => [...document.querySelectorAll('.tag-option input[type="checkbox"]:checked')].map((input) => input.value);
+  const selectedTags = () => [...document.querySelectorAll('#tagOptions .tag-option > input[type="checkbox"]:checked')].map((input) => input.value);
   const selectedTrendDetails = () => [...document.querySelectorAll('[data-trend-detail]:checked')].map((input) => input.value);
   const selectedOverlayLanguage = () => document.getElementById('postersLanguage')?.value || 'en';
 
@@ -221,7 +221,7 @@
       nextImg.className = 'poster-service-image';
       nextImg.alt = currentImg.alt || 'Poster preview artwork';
       nextImg.decoding = 'async';
-      const params = new URLSearchParams({ v: '21', source, provider, tags: 'none', preview: '1', previewVersion: `client-base-4-${source}-${provider}` });
+      const params = new URLSearchParams({ v: '22', source, provider, tags: 'none', preview: '1', previewVersion: `client-base-5-${source}-${provider}` });
       nextImg.addEventListener('load', () => {
         if (generation !== requestGeneration) return resolve();
         currentImg.replaceWith(nextImg);
