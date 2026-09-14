@@ -30,15 +30,17 @@
 
   const selectedSource = () => document.querySelector('input[name="posterSource"]:checked')?.value || 'smart';
   const selectedTags = () => [...document.querySelectorAll('.tag-option input[type="checkbox"]:checked')].map((input) => input.value);
+  const selectedTrendDetails = () => [...document.querySelectorAll('[data-trend-detail]:checked')].map((input) => input.value);
   const ratingSource = () => document.getElementById('ratingSource')?.value || 'average';
 
   function buildPosterPattern() {
     const tags = selectedTags();
     const params = new URLSearchParams({
-      v: '21',
+      v: '22',
       source: selectedSource(),
       tags: [...new Set(tags)].sort().join(','),
       ratingSource: ratingSource(),
+      trendDetails: selectedTrendDetails().join(','),
     });
     return `https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?${params}`;
   }
@@ -59,7 +61,7 @@
   document.getElementById('catalogNextBtn')?.addEventListener('click', () => setAddonMode(false));
   document.getElementById('postersBackBtn')?.addEventListener('click', () => setAddonMode(false));
 
-  document.querySelectorAll('input[name="posterSource"], .tag-option input[type="checkbox"]')
+  document.querySelectorAll('input[name="posterSource"], .tag-option input[type="checkbox"], [data-trend-detail]')
     .forEach((input) => input.addEventListener('change', refreshPattern));
   document.addEventListener('change', (event) => {
     if (event.target?.id === 'ratingSource') refreshPattern();
