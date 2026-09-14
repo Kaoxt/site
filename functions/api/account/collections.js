@@ -60,6 +60,7 @@ export async function onRequestPost(context) {
     const draftStep = Math.max(0, Math.trunc(Number(input.draftStep) || 0));
     const profileId = Number.isFinite(Number(input.nuvioProfileId)) ? Number(input.nuvioProfileId) : null;
     const profileName = String(input.nuvioProfileName || '').trim().slice(0, 120);
+    const markApplied = Boolean(input.markApplied) && profileId != null;
     const now = new Date().toISOString();
     const db = await savedCollectionsDb(context.env);
 
@@ -71,11 +72,17 @@ export async function onRequestPost(context) {
       return json({ error: `You can save up to ${MAX_SETUPS_PER_PROFILE} setups per Nuvio profile. Delete an existing setup before creating another.` }, 409, auth.cookie ? { 'Set-Cookie': auth.cookie } : {});
     }
 
+    if (markApplied) {
+      await db.prepare(
+        `UPDATE ${TABLE} SET last_applied_at = NULL WHERE user_id = ?1 AND last_nuvio_profile_id IS ?2`
+      ).bind(auth.session.id, profileId).run();
+    }
+
     await db.prepare(
-      `INSERT INTO ${TABLE} (id, user_id, name, config_json, draft_step, last_nuvio_profile_id, last_nuvio_profile_name, created_at, updated_at)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?8)`
-    ).bind(id, auth.session.id, name, configJson, draftStep, profileId, profileName || null, now).run();
-    return json({ collection: { id, name, draftStep, nuvioProfileId: profileId, nuvioProfileName: profileName, config: clean, secretsSaved: Boolean(encryptedSecrets), createdAt: now, updatedAt: now } }, 201, auth.cookie ? { 'Set-Cookie': auth.cookie } : {});
+      `INSERT INTO ${TABLE} (id, user_id, name, config_json, draft_step, last_nuvio_profile_id, last_nuvio_profile_name, last_applied_at, created_at, updated_at)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?9)`
+    ).bind(id, auth.session.id, name, configJson, draftStep, profileId, profileName || null, markApplied ? now : null, now).run();
+    return json({ collection: { id, name, draftStep, nuvioProfileId: profileId, nuvioProfileName: profileName, lastAppliedAt: markApplied ? now : null, config: clean, secretsSaved: Boolean(encryptedSecrets), createdAt: now, updatedAt: now } }, 201, auth.cookie ? { 'Set-Cookie': auth.cookie } : {});
   } catch (error) {
     console.error(error);
     return json({ error: error?.message || 'Could not save collection.' }, 400);
