@@ -378,6 +378,13 @@
     document.addEventListener('input', () => setTimeout(captureVisible, 0), true);
     document.addEventListener('click', () => setTimeout(captureVisible, 80), true);
     window.addEventListener('kollection:nuvio-signed-in', () => setTimeout(applyVisible, 200));
+    window.addEventListener('kollection:nuvio-profile-changed', event => {
+      const detail = event?.detail || {};
+      const id = Number(detail.profileId ?? detail.profile?.id ?? detail.profile?.profile_index);
+      if (Number.isFinite(id) && id >= 1) snapshot.profileId = id;
+      const name = String(detail.profileName || detail.profile?.name || '').trim();
+      if (name) snapshot.profileName = name;
+    });
     window.addEventListener('kollection:collection-selection-changed', event => {
       const detail = event?.detail || {};
       if (Array.isArray(detail.selectedCollectionGroupIds)) {
