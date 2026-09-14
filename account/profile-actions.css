@@ -63,3 +63,37 @@ html[data-theme="light"] .account-modal-button.primary { background: #181a20; co
   .account-copy-route { grid-template-columns: 1fr; }
   .account-copy-arrow { display: none; }
 }
+
+
+/* Set Up Collection profile eligibility */
+.account-profile-copy small.account-profile-setup-checking{
+  color:var(--account-muted);
+}
+.account-profile-copy small.account-profile-setup-available{
+  color:#9ed7ae;
+}
+.account-profile-copy small.account-profile-setup-unavailable{
+  color:#ff9d9d;
+}
+.account-profile-row.account-profile-ineligible{
+  border-color:rgba(255,91,107,.24);
+}
+.account-profile-action.warning{
+  color:#ffd08a;
+  border-color:rgba(255,186,84,.30);
+}
+.account-profile-action.warning:hover{
+  color:#ffe0ad;
+  border-color:rgba(255,186,84,.48);
+  background:rgba(255,186,84,.07);
+}
+html[data-theme="light"] .account-profile-copy small.account-profile-setup-available{
+  color:#287344;
+}
+html[data-theme="light"] .account-profile-copy small.account-profile-setup-unavailable{
+  color:#b4232f;
+}
+html[data-theme="light"] .account-profile-action.warning{
+  color:#8a5a00;
+  border-color:rgba(160,105,0,.28);
+}
