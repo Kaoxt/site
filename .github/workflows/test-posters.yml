@@ -63,6 +63,7 @@ jobs:
         with:
           node-version: '24'
       - run: node --check set-up-collection/folder-editor.js
+      - run: node --check set-up-collection/set-up-collection.js
       - run: node --test tests/poster-cache.test.mjs tests/setup-poster-routing.test.mjs
 
   renderer:
