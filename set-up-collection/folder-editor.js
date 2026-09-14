@@ -200,6 +200,18 @@
     ['limitedSeries', 'Limited Series'],
   ]);
 
+  const SMART_RATING_SOURCES = Object.freeze([
+    ['average', 'Average'],
+    ['imdb', 'IMDb'],
+    ['score', 'Score'],
+    ['letterboxd', 'Letterboxd'],
+    ['mal', 'MyAnimeList'],
+    ['rogerebert', 'RogerEbert'],
+    ['tomatometer', 'Tomatometer'],
+    ['popcornmeter', 'Popcornmeter'],
+    ['tmdb', 'TMDB Rating'],
+  ]);
+
   function editingSavedSetup() {
     const params = new URLSearchParams(window.location.search);
     return params.get('edit') === '1' && Boolean(params.get('saved'));
@@ -270,6 +282,23 @@
             </label>
 
             <div id="smartOverlayModalControls" class="smart-overlay-modal-controls" ${state.posterOverlaysEnabled ? '' : 'hidden'}>
+              <div class="smart-overlay-modal-fields">
+                <label class="smart-overlay-modal-field">
+                  <span>Poster style</span>
+                  <select id="existingSmartPosterSource">
+                    <option value="smart" ${current.source === 'smart' ? 'selected' : ''}>Smart Layout artwork</option>
+                    <option value="tmdb" ${current.source === 'tmdb' ? 'selected' : ''}>Original TMDB artwork</option>
+                  </select>
+                  <small>Choose the artwork layout used before your selected overlays are applied.</small>
+                </label>
+                <label class="smart-overlay-modal-field" id="existingSmartRatingField">
+                  <span>Rating source</span>
+                  <select id="existingSmartRatingSource">
+                    ${SMART_RATING_SOURCES.map(([value, label]) => `<option value="${value}" ${current.ratingSource === value ? 'selected' : ''}>${label}</option>`).join('')}
+                  </select>
+                  <small>Used when the Rating overlay is enabled.</small>
+                </label>
+              </div>
               <div class="smart-overlay-modal-group">
                 <div class="smart-overlay-modal-group-copy"><b>Poster overlays</b><span>Turn individual overlay types on or off.</span></div>
                 <div class="smart-overlay-modal-grid">
@@ -292,10 +321,6 @@
                 </div>
               </div>
 
-              <div class="smart-overlay-modal-advanced">
-                <span>Need poster source, rating provider, or other advanced options?</span>
-                <a class="ghost small" href="/posters" target="_blank" rel="noopener">Advanced settings</a>
-              </div>
             </div>
 
             <p id="smartOverlayModalStatus" class="smart-overlay-modal-status" role="status"></p>
@@ -316,12 +341,15 @@
     const saveButton = root.querySelector('#saveSmartOverlayBtn');
     const enabledInput = root.querySelector('#smartOverlayModalEnabled');
     const controls = root.querySelector('#smartOverlayModalControls');
+    const ratingField = root.querySelector('#existingSmartRatingField');
     const trendGroup = root.querySelector('#smartOverlayModalTrendDetails');
     const status = root.querySelector('#smartOverlayModalStatus');
 
     const refreshVisibility = () => {
       controls.hidden = !enabledInput.checked;
+      const ratingOn = Boolean(root.querySelector('[data-smart-overlay-tag][value="rating"]')?.checked);
       const trendOn = Boolean(root.querySelector('[data-smart-overlay-tag][value="trend"]')?.checked);
+      if (ratingField) ratingField.classList.toggle('is-muted', !ratingOn);
       if (trendGroup) trendGroup.hidden = !enabledInput.checked || !trendOn;
       status.textContent = '';
     };
@@ -355,9 +383,14 @@
         return;
       }
 
-      const nextSettings = helper
-        ? helper.normalize({ ...current, tags: nextTags, trendDetails: nextTrendDetails })
-        : { ...current, tags: nextTags, trendDetails: nextTrendDetails };
+      const configured = {
+        ...current,
+        source: root.querySelector('#existingSmartPosterSource')?.value || current.source || 'smart',
+        ratingSource: root.querySelector('#existingSmartRatingSource')?.value || current.ratingSource || 'average',
+        tags: nextTags,
+        trendDetails: nextTrendDetails,
+      };
+      const nextSettings = helper ? helper.normalize(configured) : configured;
 
       state.posterOverlaysEnabled = nextEnabled;
       state.posterSettings = nextSettings;

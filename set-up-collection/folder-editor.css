@@ -312,6 +312,39 @@ body.light .collection-category-row.selected .collection-section-check::after{
   gap:22px;
   margin-top:22px;
 }
+.smart-overlay-modal-fields{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.smart-overlay-modal-field{
+  display:grid;
+  gap:8px;
+  min-width:0;
+  padding:14px;
+  border:1px solid var(--line-soft);
+  border-radius:14px;
+  background:rgba(255,255,255,.018);
+  transition:opacity .16s ease;
+}
+.smart-overlay-modal-field>span{font-size:13px;font-weight:750;color:var(--text)}
+.smart-overlay-modal-field select{
+  width:100%;
+  min-height:46px;
+  border:1px solid var(--line-soft);
+  border-radius:12px;
+  background:rgba(255,255,255,.04);
+  color:var(--text);
+  padding:0 12px;
+  font:inherit;
+  outline:none;
+}
+.smart-overlay-modal-field select:focus{
+  border-color:rgba(111,124,255,.72);
+  box-shadow:0 0 0 3px rgba(111,124,255,.11);
+}
+.smart-overlay-modal-field small{color:var(--muted);font-size:11px;line-height:1.45}
+.smart-overlay-modal-field.is-muted{opacity:.54}
 .smart-overlay-modal-controls[hidden],
 .smart-overlay-modal-group[hidden]{display:none!important}
 .smart-overlay-modal-group{display:grid;gap:11px}
@@ -384,6 +417,8 @@ body.light .smart-overlay-modal{
 body.light .smart-overlay-modal-backdrop{background:rgba(230,233,240,.45)}
 body.light .smart-overlay-modal-master,
 body.light .smart-overlay-modal-choice{background:rgba(255,255,255,.82)}
+body.light .smart-overlay-modal-field,
+body.light .smart-overlay-modal-field select{background:rgba(255,255,255,.82)}
 body.light .smart-overlay-modal-button.primary{background:#181a20;color:#fff;border-color:#181a20}
 
 @media(max-width:760px){
@@ -395,6 +430,7 @@ body.light .smart-overlay-modal-button.primary{background:#181a20;color:#fff;bor
   .smart-overlay-modal-head h3{font-size:19px}
   .smart-overlay-modal-body{padding:20px 18px}
   .smart-overlay-modal-footer{padding:14px 18px 18px}
+  .smart-overlay-modal-fields{grid-template-columns:1fr}
   .smart-overlay-modal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:620px){

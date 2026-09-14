@@ -46,12 +46,20 @@ test('AIOMetadata poster routing is enabled for every catalog and library meta',
   assert.equal(config.catalogs.find(catalog => catalog.id === 'folder-only').showInHome, false);
 });
 
-test('Set Up Collection offers Smart Overlay Posters as an explicit opt-in', async () => {
+test('Set Up Collection offers Smart Overlay Posters with an in-place Configure modal', async () => {
   const source = await readFile(new URL('../set-up-collection/set-up-collection.js', import.meta.url), 'utf8');
   assert.match(source, /posterOverlaysEnabled: false/);
   assert.match(source, /id="posterOverlaysEnabled"/);
   assert.match(source, /Enable Smart Overlay Posters for this collection/);
   assert.match(source, /Off by default/);
+  assert.match(source, /id="configureSetupSmartOverlayBtn"/);
+  assert.match(source, /root\.id = 'setupSmartOverlayModalRoot'/);
+  assert.match(source, /id="setupSmartPosterSource"/);
+  assert.match(source, /id="setupSmartRatingSource"/);
+  assert.match(source, />Configure<\/button>/);
+  assert.match(source, />Save changes<\/button>/);
+  assert.doesNotMatch(source, /Current setup/);
+  assert.doesNotMatch(source, /Customize Smart Overlay Posters/);
   assert.match(source, /state\.posterOverlaysEnabled && window\.KollectionPosterSettings/);
   assert.match(source, /KollectionPosterSettings\.applyToAioConfig\(config, state\.posterSettings\)/);
   assert.match(source, /Smart Overlay Posters · \$\{state\.posterOverlaysEnabled \? 'Enabled' : 'Off'\}/);
@@ -95,6 +103,9 @@ test('existing setup uses a Configure modal for Smart Overlay Poster options', a
   for (const detail of ['inCinema', 'rank', 'newMovie', 'comingSoon', 'newSeries', 'returningSeries', 'limitedSeries']) {
     assert.ok(source.includes("['" + detail + "',"), 'missing Trend Tag detail ' + detail);
   }
+  assert.match(source, /id="existingSmartPosterSource"/);
+  assert.match(source, /id="existingSmartRatingSource"/);
+  assert.doesNotMatch(source, /href="\/posters"/);
   assert.match(source, /state\.posterOverlaysEnabled = nextEnabled/);
   assert.match(source, /state\.posterSettings = nextSettings/);
   assert.match(source, /kollection:poster-settings-changed/);
