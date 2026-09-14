@@ -34,7 +34,6 @@
 
   function buildPosterPattern() {
     const tags = selectedTags();
-    if (!tags.includes('quality') && !tags.includes('trend')) tags.push('trend');
     const params = new URLSearchParams({
       v: '20',
       source: selectedSource(),
