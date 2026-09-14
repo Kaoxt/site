@@ -124,6 +124,57 @@
     };
   }
 
+  async function prepareInstall(options = {}) {
+    const name = String(options.name ?? savedName ?? '').trim().replace(/\s+/g, ' ').slice(0, 120);
+    if (!name) throw new Error('Give this setup a name before adding it to your profile.');
+
+    const session = await window.KollectionNuvioAuth?.getSession?.();
+    if (!session?.authenticated) throw new Error('Sign in with Nuvio before finishing this setup.');
+
+    captureVisible();
+    savedName = name;
+
+    const profileId = Number(options.profileId ?? snapshot.profileId);
+    const profileName = String(options.profileName ?? snapshot.profileName ?? '').trim();
+    if (!Number.isFinite(profileId) || profileId < 1) throw new Error('Choose a Nuvio profile before finishing this setup.');
+
+    snapshot.profileId = profileId;
+    if (profileName) snapshot.profileName = profileName;
+
+    const secrets = window.KollectionSetupSync?.getSecrets?.() || undefined;
+    const payload = {
+      name: savedName,
+      draftStep: 6,
+      nuvioProfileId: profileId,
+      nuvioProfileName: profileName,
+      config: serializableConfig(),
+      ...(secrets && (secrets.mdblistKey || secrets.tmdbKey) ? { secrets } : {}),
+    };
+
+    const url = savedId
+      ? `/api/account/collections/${encodeURIComponent(savedId)}`
+      : '/api/account/collections';
+    const result = await readJson(await fetch(url, {
+      method: savedId ? 'PATCH' : 'POST',
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }));
+
+    if (!savedId) {
+      savedId = result.collection?.id || '';
+      if (savedId) {
+        const next = new URL(window.location.href);
+        next.searchParams.set('saved', savedId);
+        next.searchParams.set('edit', '1');
+        history.replaceState(null, '', next);
+      }
+    }
+
+    return result.collection || {};
+  }
+
   async function saveApplied(options = {}) {
     const name = String(options.name ?? savedName ?? '').trim().replace(/\s+/g, ' ').slice(0, 120);
     if (!name) throw new Error('Give this setup a name before adding it to your profile.');
@@ -429,6 +480,7 @@
     getId,
     getName,
     setName,
+    prepareInstall,
     saveApplied,
   });
 
