@@ -302,8 +302,8 @@
           ui.resume.removeAttribute('aria-disabled');
           ui.badge.hidden = false;
           if (result.state === 'valid') {
-            ui.badge.textContent = 'Verified';
-            ui.badge.dataset.state = 'valid';
+            ui.badge.textContent = item.lastAppliedAt ? 'Active' : 'Verified';
+            ui.badge.dataset.state = item.lastAppliedAt ? 'active' : 'valid';
             ui.resume.textContent = 'Edit';
             ui.resume.setAttribute('aria-label', `Edit ${item.name || 'saved setup'}`);
             ui.originMessage.hidden = true;
