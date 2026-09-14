@@ -49,6 +49,27 @@
     try { localStorage.setItem(profileStorageKey(), String(profileId)); } catch {}
   };
 
+  const readPendingCreatedProfileId = (validIds) => {
+    try {
+      const raw = localStorage.getItem('kollection-nuvio-pending-profile');
+      if (!raw) return null;
+      const pending = JSON.parse(raw);
+      const pendingUserId = String(pending?.userId || '');
+      const pendingProfileId = Number(pending?.profileId);
+      const age = Date.now() - Number(pending?.createdAt || 0);
+      if (pendingUserId && currentUserId && pendingUserId !== String(currentUserId)) return null;
+      if (!Number.isFinite(pendingProfileId) || !validIds.includes(pendingProfileId)) return null;
+      if (Number.isFinite(age) && age > 24 * 60 * 60 * 1000) {
+        localStorage.removeItem('kollection-nuvio-pending-profile');
+        return null;
+      }
+      localStorage.removeItem('kollection-nuvio-pending-profile');
+      return pendingProfileId;
+    } catch {
+      return null;
+    }
+  };
+
   const readLastSync = () => {
     try { return localStorage.getItem(lastSyncStorageKey()) || ''; }
     catch { return ''; }
@@ -298,8 +319,9 @@
       }
 
       const validIds = currentProfiles.map(profileIndex).filter((id) => Number.isFinite(id) && id >= 1);
+      const pendingCreatedId = readPendingCreatedProfileId(validIds);
       const storedId = readSelectedProfileId();
-      selectedProfileId = validIds.includes(storedId) ? storedId : validIds[0];
+      selectedProfileId = pendingCreatedId || (validIds.includes(storedId) ? storedId : validIds[0]);
       if (selectedProfileId) writeSelectedProfileId(selectedProfileId);
 
       for (const profile of currentProfiles) {
