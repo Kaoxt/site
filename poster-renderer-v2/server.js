@@ -2,7 +2,7 @@ import http from 'node:http';
 import sharp from 'sharp';
 
 const PORT = Number(process.env.PORT || 8080);
-const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
+const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w342';
 const TMDB_LOGO_BASE = 'https://image.tmdb.org/t/p/original';
 const POSTER_WIDTH = 780;
 const POSTER_HEIGHT = 1170;
