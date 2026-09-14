@@ -267,6 +267,30 @@
     return savedId || '';
   }
 
+  async function rename(value) {
+    const nextName = setName(value);
+    if (!nextName) throw new Error('Enter a setup name.');
+    if (!savedId) return nextName;
+
+    setStatus('Updating setup name…');
+    const result = await readJson(await fetch(`/api/account/collections/${encodeURIComponent(savedId)}`, {
+      method: 'PATCH',
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: nextName }),
+    }));
+    savedName = result?.collection?.name || nextName;
+    setStatus('Setup name updated.', 'success');
+    setTimeout(() => {
+      if (/Setup name updated\./i.test(String(status()?.textContent || ''))) setStatus('');
+    }, 2200);
+    window.dispatchEvent(new CustomEvent('kollection:setup-renamed', {
+      detail: { id: savedId, name: savedName },
+    }));
+    return savedName;
+  }
+
   function showResumeNotice(message) {
     if (restoreNoticeShown) return;
     restoreNoticeShown = true;
@@ -490,6 +514,7 @@
     getId,
     getName,
     setName,
+    rename,
     prepareInstall,
     saveApplied,
   });
