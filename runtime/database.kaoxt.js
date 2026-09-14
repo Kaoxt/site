@@ -3174,8 +3174,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/The%20Lord%20of%20the%20Rings/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/The%20Lord%20of%20the%20Rings/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/The%20Lord%20of%20the%20Rings/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/The%20Lord%20of%20the%20Rings/cover.webp",
         "catalogSources": [
           {
             "type": "all",
@@ -3185,7 +3185,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/The%20Lord%20of%20the%20Rings/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/The%20Lord%20of%20the%20Rings/backdrop.webp"
       },
       {
         "id": "170e92cc-e50a-4cdf-875c-22744a9df4a9",
@@ -3201,8 +3201,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/Dune/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/Dune/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/Dune/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/Dune/cover.webp",
         "catalogSources": [
           {
             "type": "all",
@@ -3212,7 +3212,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/Dune/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/Dune/backdrop.webp"
       },
       {
         "id": "b0543d15-2352-4844-8149-da49211e09c9",
@@ -3235,8 +3235,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/Star%20Wars/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/Star%20Wars/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/Star%20Wars/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/Star%20Wars/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3252,7 +3252,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/Star%20Wars/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/Star%20Wars/backdrop.webp"
       },
       {
         "id": "4293724e-6854-4e66-9b98-2bce408d8888",
@@ -3268,8 +3268,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/The%20Matrix/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/The%20Matrix/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/The%20Matrix/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/The%20Matrix/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3279,7 +3279,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/The%20Matrix/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/The%20Matrix/backdrop.webp"
       },
       {
         "id": "b6866160-3a6e-4040-b54d-bc1bacbe0046",
@@ -3295,8 +3295,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/Jurassic%20Park/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/Jurassic%20Park/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/Jurassic%20Park/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/Jurassic%20Park/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3306,7 +3306,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/Jurassic%20Park/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/Jurassic%20Park/backdrop.webp"
       },
       {
         "id": "c72f4077-8c3c-4e64-888d-44632ab464bd",
@@ -3336,8 +3336,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/Spider-Man/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/Spider-Man/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/Spider-Man/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/Spider-Man/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3358,7 +3358,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/Spider-Man/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/Spider-Man/backdrop.webp"
       },
       {
         "id": "0dcc130d-cd40-4ab5-8c48-4f72c6ae5aa0",
@@ -3381,8 +3381,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/Batman/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/Batman/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/Batman/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/Batman/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3398,7 +3398,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/Batman/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/Batman/backdrop.webp"
       },
       {
         "id": "7709dc92-3ed6-45ac-9e83-94be83e80673",
@@ -3414,8 +3414,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/Pirates%20of%20the%20Caribbean/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/Pirates%20of%20the%20Caribbean/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/Pirates%20of%20the%20Caribbean/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/Pirates%20of%20the%20Caribbean/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3425,7 +3425,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/Pirates%20of%20the%20Caribbean/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/Pirates%20of%20the%20Caribbean/backdrop.webp"
       },
       {
         "id": "09a54334-4676-4fa4-954e-2f5dcb66959d",
@@ -3441,8 +3441,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/Avatar/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/Avatar/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/Avatar/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/Avatar/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3452,7 +3452,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/Avatar/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/Avatar/backdrop.webp"
       },
       {
         "id": "0884cd83-5abf-44d5-8088-33c7ee77c535",
@@ -3468,8 +3468,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/007/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/007/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/007/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/007/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3479,7 +3479,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/007/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/007/backdrop.webp"
       },
       {
         "id": "005990b2-3b3c-46dc-a905-4af466742f13",
@@ -3495,8 +3495,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/Mission%20Impossible/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/Mission%20Impossible/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/Mission%20Impossible/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/Mission%20Impossible/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3506,7 +3506,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/Mission%20Impossible/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/Mission%20Impossible/backdrop.webp"
       },
       {
         "id": "e16c9366-dfbe-4b5b-b7fc-39e1d2c56f21",
@@ -3529,8 +3529,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/Transformers/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/Transformers/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/Transformers/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/Transformers/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3546,7 +3546,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/Transformers/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/Transformers/backdrop.webp"
       },
       {
         "id": "acf7232a-4cfd-4df7-be91-0b064cea9c94",
@@ -3569,8 +3569,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/TMNT/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/TMNT/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/TMNT/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/TMNT/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3586,7 +3586,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/TMNT/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/TMNT/backdrop.webp"
       },
       {
         "id": "2aefac91-f3ff-4632-98e1-b2a9fecebeee",
@@ -3602,8 +3602,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/Harry%20Potter/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/Harry%20Potter/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/Harry%20Potter/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/Harry%20Potter/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3613,7 +3613,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/Harry%20Potter/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/Harry%20Potter/backdrop.webp"
       },
       {
         "id": "881bfb03-811d-457c-87a9-3c68dcee422c",
@@ -3629,8 +3629,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/Indiana%20Jones/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/Indiana%20Jones/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/Indiana%20Jones/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/Indiana%20Jones/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3640,7 +3640,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/Indiana%20Jones/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/Indiana%20Jones/backdrop.webp"
       },
       {
         "id": "5c39d59f-d4c7-4cec-8ff3-0bf81e6beac9",
@@ -3656,8 +3656,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/Back%20to%20the%20Future/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/Back%20to%20the%20Future/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/Back%20to%20the%20Future/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/Back%20to%20the%20Future/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3667,7 +3667,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/Back%20to%20the%20Future/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/Back%20to%20the%20Future/backdrop.webp"
       },
       {
         "id": "7e438f78-0d3a-487c-93fc-311bf05e1ca6",
@@ -3683,8 +3683,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/Fast%20and%20the%20Furious/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/Fast%20and%20the%20Furious/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/Fast%20and%20the%20Furious/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/Fast%20and%20the%20Furious/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3694,7 +3694,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/Fast%20and%20the%20Furious/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/Fast%20and%20the%20Furious/backdrop.webp"
       },
       {
         "id": "3f705b48-ff3a-42aa-b943-aeadb991660b",
@@ -3710,8 +3710,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/The%20Conjuring/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/The%20Conjuring/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/The%20Conjuring/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/The%20Conjuring/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3721,7 +3721,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/The%20Conjuring/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/The%20Conjuring/backdrop.webp"
       },
       {
         "id": "84e503b0-10a6-47bc-835e-45ee0ce11e21",
@@ -3737,8 +3737,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/Saw/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/Saw/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/Saw/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/Saw/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3748,7 +3748,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/Saw/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/Saw/backdrop.webp"
       },
       {
         "id": "0d9b7676-3d0b-4782-9e49-451f1a84d924",
@@ -3764,8 +3764,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/Halloween/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/Halloween/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/Halloween/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/Halloween/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3775,7 +3775,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/Halloween/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/Halloween/backdrop.webp"
       },
       {
         "id": "0c87e131-1dfe-47c6-8386-7b91fc1f59ed",
@@ -3791,8 +3791,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/Friday%20the%2013th/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/Friday%20the%2013th/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/Friday%20the%2013th/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/Friday%20the%2013th/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3802,7 +3802,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/Friday%20the%2013th/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/Friday%20the%2013th/backdrop.webp"
       },
       {
         "id": "347bdfa8-9898-41f0-a8f5-fa7cf4c2729c",
@@ -3818,8 +3818,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/Scream/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/Scream/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/Scream/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/Scream/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3829,7 +3829,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/Scream/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/Scream/backdrop.webp"
       },
       {
         "id": "820cb30a-5aae-4202-8e14-7ee93876cefd",
@@ -3845,8 +3845,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Movie%20Collections/Child's%20Play/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Movie%20Collections/Child's%20Play/cover.webp",
+        "titleLogoUrl": "https://kao-xt.com/Franchises/Child's%20Play/logo.webp",
+        "coverImageUrl": "https://kao-xt.com/Franchises/Child's%20Play/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3856,7 +3856,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Movie%20Collections/Child's%20Play/backdrop.webp"
+        "heroBackdropUrl": "https://kao-xt.com/Franchises/Child's%20Play/backdrop.webp"
       }
     ],
     "pinToTop": true,
