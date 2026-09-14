@@ -3,7 +3,8 @@
 
   const params = new URLSearchParams(window.location.search);
   let savedId = params.get('saved') || '';
-  let savedName = 'My Kollection';
+  const targetProfileId = Number(params.get('targetProfile')) || null;
+  let savedName = '';
   let targetStep = 0;
   let restoring = Boolean(savedId);
   let snapshot = {
@@ -123,60 +124,88 @@
     };
   }
 
-  async function save() {
-    const button = saveButton();
-    if (button) button.disabled = true;
-    setStatus('Saving…');
+  async function saveApplied(options = {}) {
+    const name = String(options.name ?? savedName ?? '').trim().replace(/\s+/g, ' ').slice(0, 120);
+    if (!name) throw new Error('Give this setup a name before adding it to your profile.');
 
-    try {
-      const session = await window.KollectionNuvioAuth?.getSession?.();
-      if (!session?.authenticated) throw new Error('Sign in with Nuvio before saving this setup.');
+    const session = await window.KollectionNuvioAuth?.getSession?.();
+    if (!session?.authenticated) throw new Error('Sign in with Nuvio before finishing this setup.');
 
-      captureVisible();
-      if (!savedId) {
-        const entered = window.prompt('Name this saved setup:', savedName || 'My Kollection');
-        if (entered === null) {
-          setStatus('');
-          return;
-        }
-        savedName = entered.trim() || 'My Kollection';
+    captureVisible();
+    savedName = name;
+
+    const profileId = Number(options.profileId ?? snapshot.profileId);
+    const profileName = String(options.profileName ?? snapshot.profileName ?? '').trim();
+    if (!Number.isFinite(profileId) || profileId < 1) throw new Error('Choose a Nuvio profile before finishing this setup.');
+
+    snapshot.profileId = profileId;
+    if (profileName) snapshot.profileName = profileName;
+
+    const secrets = window.KollectionSetupSync?.getSecrets?.() || undefined;
+    const payload = {
+      name: savedName,
+      draftStep: 7,
+      nuvioProfileId: profileId,
+      nuvioProfileName: profileName,
+      config: serializableConfig(),
+      markApplied: true,
+      ...(secrets && (secrets.mdblistKey || secrets.tmdbKey) ? { secrets } : {}),
+    };
+
+    setStatus(savedId ? 'Updating saved setup…' : 'Saving setup…');
+
+    const url = savedId
+      ? `/api/account/collections/${encodeURIComponent(savedId)}`
+      : '/api/account/collections';
+    const result = await readJson(await fetch(url, {
+      method: savedId ? 'PATCH' : 'POST',
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }));
+
+    if (!savedId) {
+      savedId = result.collection?.id || '';
+      if (savedId) {
+        const next = new URL(window.location.href);
+        next.searchParams.set('saved', savedId);
+        next.searchParams.set('edit', '1');
+        history.replaceState(null, '', next);
       }
-
-      const payload = {
-        name: savedName,
-        draftStep: currentStep(),
-        nuvioProfileId: snapshot.profileId,
-        nuvioProfileName: snapshot.profileName,
-        config: serializableConfig(),
-      };
-
-      const url = savedId
-        ? `/api/account/collections/${encodeURIComponent(savedId)}`
-        : '/api/account/collections';
-      const result = await readJson(await fetch(url, {
-        method: savedId ? 'PATCH' : 'POST',
-        credentials: 'same-origin',
-        cache: 'no-store',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      }));
-
-      if (!savedId) {
-        savedId = result.collection?.id || '';
-        if (savedId) {
-          const next = new URL(window.location.href);
-          next.searchParams.set('saved', savedId);
-          history.replaceState(null, '', next);
-        }
-      }
-
-      setStatus('Saved to your account.', 'success');
-      setTimeout(() => setStatus(''), 3500);
-    } catch (error) {
-      setStatus(error?.message || 'Could not save this setup.', 'error');
-    } finally {
-      if (button) button.disabled = false;
     }
+
+    const collection = result.collection || {};
+    const syncedAt = collection.updatedAt || new Date().toISOString();
+    setStatus('Saved automatically to Your setups.', 'success');
+    window.dispatchEvent(new CustomEvent('kollection:setup-auto-saved', {
+      detail: {
+        id: savedId,
+        name: savedName,
+        profileId,
+        profileName,
+        syncedAt,
+        draftStep: 7,
+        lastAppliedAt: collection.lastAppliedAt || syncedAt,
+      },
+    }));
+    window.dispatchEvent(new CustomEvent('kollection:setup-synced', {
+      detail: { id: savedId, syncedAt, draftStep: 7 },
+    }));
+    return collection;
+  }
+
+  function getName() {
+    return savedName || '';
+  }
+
+  function setName(value) {
+    savedName = String(value || '').trim().replace(/\s+/g, ' ').slice(0, 120);
+    return savedName;
+  }
+
+  function getId() {
+    return savedId || '';
   }
 
   function showResumeNotice(message) {
@@ -350,8 +379,8 @@
       snapshot = {
         ...snapshot,
         ...(item?.config && typeof item.config === 'object' ? item.config : {}),
-        profileId: item?.nuvioProfileId ?? snapshot.profileId,
-        profileName: item?.nuvioProfileName || snapshot.profileName,
+        profileId: targetProfileId ?? item?.nuvioProfileId ?? snapshot.profileId,
+        profileName: targetProfileId ? snapshot.profileName : (item?.nuvioProfileName || snapshot.profileName),
       };
       collectionRestoreApplied = false;
       restoring = true;
@@ -363,8 +392,6 @@
   }
 
   function init() {
-    saveButton()?.addEventListener('click', save);
-
     const panel = $('#panelHost');
     if (panel) {
       const observer = new MutationObserver(() => {
@@ -397,6 +424,13 @@
 
     loadSaved();
   }
+
+  window.KollectionSavedSetup = Object.freeze({
+    getId,
+    getName,
+    setName,
+    saveApplied,
+  });
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();
