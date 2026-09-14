@@ -230,7 +230,6 @@
           <p id="existingSmartOverlaySummary">${enabled ? esc(summary) : 'Smart Overlay Posters are off for this collection.'}</p>
         </div>
         <div class="existing-smart-overlay-actions">
-          <span id="existingSmartOverlayStatus" class="existing-smart-overlay-status ${enabled ? 'enabled' : ''}">${enabled ? 'On' : 'Off'}</span>
           <button class="ghost small" id="configureSmartOverlayBtn" type="button" aria-haspopup="dialog" aria-controls="smartOverlayModalRoot">Configure</button>
         </div>
         <input id="posterOverlaysEnabled" type="checkbox" ${enabled ? 'checked' : ''} hidden>
@@ -311,7 +310,6 @@
     document.body.appendChild(root);
     document.documentElement.classList.add('smart-overlay-modal-open');
 
-    const modal = root.querySelector('.smart-overlay-modal');
     const backdrop = root.querySelector('.smart-overlay-modal-backdrop');
     const closeButton = root.querySelector('.smart-overlay-modal-x');
     const cancelButton = root.querySelector('#cancelSmartOverlayBtn');
@@ -367,17 +365,11 @@
       const savedEnabled = host.querySelector('#posterOverlaysEnabled');
       const savedJson = host.querySelector('#posterSettingsJson');
       const summary = host.querySelector('#existingSmartOverlaySummary');
-      const badge = host.querySelector('#existingSmartOverlayStatus');
       if (savedEnabled) savedEnabled.checked = nextEnabled;
       if (savedJson) savedJson.value = JSON.stringify(nextSettings);
       if (summary) summary.textContent = nextEnabled
         ? (helper?.label(nextSettings) || 'Smart Overlay Posters')
         : 'Smart Overlay Posters are off for this collection.';
-      if (badge) {
-        badge.textContent = nextEnabled ? 'On' : 'Off';
-        badge.classList.toggle('enabled', nextEnabled);
-      }
-
       invalidateState(state);
       window.dispatchEvent(new CustomEvent('kollection:poster-settings-changed', {
         detail: {
