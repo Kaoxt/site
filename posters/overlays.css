@@ -221,3 +221,47 @@ body.light .rating-source-row,html[data-theme="light"] .rating-source-row{border
   .poster-mock .overlay-age{left:6px;top:6px;font-size:8px}
   .poster-mock .overlay-genre{bottom:6px;font-size:8px}
 }
+
+
+/* Trend Tag detail choices — nested options inside the Trend card. */
+#tagOptions .trend-card{flex-wrap:wrap;align-items:center}
+.trend-details-row{
+  order:3;
+  flex:0 0 100%;
+  display:grid;
+  gap:12px;
+  margin:5px 0 0;
+  padding:15px 0 0;
+  border-top:1px solid rgba(255,255,255,.09);
+}
+.trend-details-row[hidden]{display:none!important}
+.trend-details-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.trend-details-heading>div{display:grid;gap:3px}
+.trend-details-heading strong{font-size:15px!important}
+.trend-details-heading small{color:#8f929d;font-size:11.5px!important;line-height:1.35}
+.trend-priority-note{max-width:290px;text-align:right;color:#696d76!important}
+.trend-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.trend-detail-option{
+  display:flex;align-items:center;gap:10px;min-height:58px;padding:10px 11px;
+  border:1px solid rgba(255,255,255,.09);border-radius:12px;background:#0c0d10;cursor:pointer
+}
+.trend-detail-option:hover{border-color:rgba(255,255,255,.16);background:#101114}
+.trend-detail-option input{
+  appearance:none;-webkit-appearance:none;width:22px;height:22px;flex:0 0 22px;margin:0;
+  border:1.5px solid #555963;border-radius:6px;background:#17191e;display:grid;place-items:center
+}
+.trend-detail-option input:checked{border-color:#43db7a;background:#43db7a}
+.trend-detail-option input:checked:after{content:'✓';color:#07150c;font-size:15px;font-weight:900;line-height:1}
+.trend-detail-option span{display:grid;gap:2px;min-width:0}
+.trend-detail-option b{font-size:12.5px;color:#f0f1f4}
+.trend-detail-option small{font-size:10.5px!important;color:#737780!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.light .trend-details-row,html[data-theme="light"] .trend-details-row{border-top-color:rgba(0,0,0,.09)}
+body.light .trend-detail-option,html[data-theme="light"] .trend-detail-option{background:#fff;border-color:rgba(0,0,0,.1)}
+body.light .trend-detail-option:hover,html[data-theme="light"] .trend-detail-option:hover{background:#f7f7f8}
+body.light .trend-detail-option b,html[data-theme="light"] .trend-detail-option b{color:#222329}
+
+@media(max-width:620px){
+  .trend-details-heading{flex-direction:column;gap:7px}
+  .trend-priority-note{max-width:none;text-align:left}
+  .trend-detail-grid{grid-template-columns:1fr}
+}
