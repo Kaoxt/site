@@ -46,11 +46,15 @@ test('AIOMetadata poster routing is enabled for every catalog and library meta',
   assert.equal(config.catalogs.find(catalog => catalog.id === 'folder-only').showInHome, false);
 });
 
-test('Set Up Collection applies poster routing only when the user enables it', async () => {
+test('Set Up Collection offers Smart Overlay Posters as an explicit opt-in', async () => {
   const source = await readFile(new URL('../set-up-collection/set-up-collection.js', import.meta.url), 'utf8');
+  assert.match(source, /posterOverlaysEnabled: false/);
   assert.match(source, /id="posterOverlaysEnabled"/);
+  assert.match(source, /Enable Smart Overlay Posters for this collection/);
+  assert.match(source, /Off by default/);
   assert.match(source, /state\.posterOverlaysEnabled && window\.KollectionPosterSettings/);
   assert.match(source, /KollectionPosterSettings\.applyToAioConfig\(config, state\.posterSettings\)/);
+  assert.match(source, /Smart Overlay Posters · \$\{state\.posterOverlaysEnabled \? 'Enabled' : 'Off'\}/);
 });
 
 
