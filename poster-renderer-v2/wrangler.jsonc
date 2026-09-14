@@ -5,6 +5,15 @@
   "compatibility_date": "2026-09-09",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
+  "triggers": {
+    "crons": ["17 8 * * *"]
+  },
+  "r2_buckets": [
+    {
+      "binding": "SOURCE_ART",
+      "bucket_name": "kollection-images"
+    }
+  ],
   "routes": [
     {
       "pattern": "poster-renderer.kollection.tv",
