@@ -176,7 +176,7 @@ test('cold MDBList lookup starts before TMDB details finish', { timeout: 2000 },
 });
 
 
-test('trend labels prefer daily rank and fall back to truthful release status', async () => {
+test('movie lifecycle Trend Tags are independently selectable', async () => {
   const day = offset => new Date(Date.now() + offset * 86400000).toISOString().slice(0, 10);
   const release = offset => day(offset) + 'T00:00:00Z';
 
@@ -185,7 +185,7 @@ test('trend labels prefer daily rank and fall back to truthful release status', 
     release_date: day(10),
     release_dates: { results: [{ iso_3166_1: 'US', release_dates: [{ type: 3, release_date: release(10) }] }] },
   };
-  await (await ranked.request('27205')).arrayBuffer(); await ranked.flush();
+  await (await ranked.request('27205', '&trendDetails=rank')).arrayBuffer(); await ranked.flush();
   assert.equal(ranked.payloads.at(-1).trend, '#1 Today');
 
   const fresh = harness();
@@ -193,25 +193,27 @@ test('trend labels prefer daily rank and fall back to truthful release status', 
     release_date: day(-3),
     release_dates: { results: [{ iso_3166_1: 'US', release_dates: [{ type: 3, release_date: release(-3) }] }] },
   };
-  await (await fresh.request('155')).arrayBuffer(); await fresh.flush();
+  await (await fresh.request('155', '&trendDetails=newMovie')).arrayBuffer(); await fresh.flush();
   assert.equal(fresh.payloads.at(-1).trend, 'New');
 
   const cinema = harness();
   cinema.detailsOverride = {
-    release_date: day(-20),
-    release_dates: { results: [{ iso_3166_1: 'US', release_dates: [{ type: 3, release_date: release(-20) }] }] },
+    release_date: day(-3),
+    release_dates: { results: [{ iso_3166_1: 'US', release_dates: [{ type: 3, release_date: release(-3) }] }] },
   };
-  await (await cinema.request('278')).arrayBuffer(); await cinema.flush();
+  const cinemaResponse = await cinema.request('278', '&trendDetails=inCinema');
+  await cinemaResponse.arrayBuffer(); await cinema.flush();
   assert.equal(cinema.payloads.at(-1).trend, 'In Cinema');
+  assert.equal(cinemaResponse.headers.get('x-kollection-trend-source'), 'inCinema');
 
   const coming = harness();
   coming.detailsOverride = {
     release_date: day(12),
     release_dates: { results: [{ iso_3166_1: 'US', release_dates: [{ type: 3, release_date: release(12) }] }] },
   };
-  const response = await coming.request('13'); await response.arrayBuffer(); await coming.flush();
+  const response = await coming.request('13', '&trendDetails=comingSoon'); await response.arrayBuffer(); await coming.flush();
   assert.match(coming.payloads.at(-1).trend, /^Coming /);
-  assert.match(response.headers.get('x-kollection-trend-label'), /^Coming /);
+  assert.equal(response.headers.get('x-kollection-trend-source'), 'comingSoon');
 });
 
 test('series fallback tags match BetterPosters lifecycle labels', async () => {
@@ -220,41 +222,41 @@ test('series fallback tags match BetterPosters lifecycle labels', async () => {
   const limited = harness();
   limited.detailsOverride = { first_air_date: day(-180), type: 'Miniseries', status: 'Ended' };
   const limitedContext = limited.context('155');
-  limitedContext.request = new Request('https://kollection.tv/api/posters-v2/tv/155.webp?v=22&source=smart&tags=trend,genre,rating&ratingSource=average&trendDetails=studio,director,cast,rank,release');
+  limitedContext.request = new Request('https://kollection.tv/api/posters-v2/tv/155.webp?v=23&source=smart&tags=trend,genre,rating&ratingSource=average&trendDetails=limitedSeries');
   await (await onRequest(limitedContext)).arrayBuffer(); await limited.flush();
   assert.equal(limited.payloads.at(-1).trend, 'Limited Series');
 
   const returning = harness();
   returning.detailsOverride = { first_air_date: day(-700), type: 'Scripted', status: 'Returning Series' };
   const returningContext = returning.context('278');
-  returningContext.request = new Request('https://kollection.tv/api/posters-v2/tv/278.webp?v=22&source=smart&tags=trend,genre,rating&ratingSource=average&trendDetails=studio,director,cast,rank,release');
+  returningContext.request = new Request('https://kollection.tv/api/posters-v2/tv/278.webp?v=23&source=smart&tags=trend,genre,rating&ratingSource=average&trendDetails=returningSeries');
   await (await onRequest(returningContext)).arrayBuffer(); await returning.flush();
   assert.equal(returning.payloads.at(-1).trend, 'Returning');
 
   const newSeries = harness();
   newSeries.detailsOverride = { first_air_date: day(-4), type: 'Scripted', status: 'Returning Series' };
   const newSeriesContext = newSeries.context('13');
-  newSeriesContext.request = new Request('https://kollection.tv/api/posters-v2/tv/13.webp?v=22&source=smart&tags=trend,genre,rating&ratingSource=average&trendDetails=studio,director,cast,rank,release');
+  newSeriesContext.request = new Request('https://kollection.tv/api/posters-v2/tv/13.webp?v=23&source=smart&tags=trend,genre,rating&ratingSource=average&trendDetails=newSeries');
   await (await onRequest(newSeriesContext)).arrayBuffer(); await newSeries.flush();
   assert.equal(newSeries.payloads.at(-1).trend, 'New Series');
 });
 
-test('trend-detail layout version gets its own persistent poster variant', async () => {
+test('split lifecycle layout version gets its own persistent poster variant', async () => {
   const h = harness();
-  const first = await h.request('27205', '&v=21');
+  const first = await h.request('27205', '&v=22&trendDetails=rank,release');
   await first.arrayBuffer(); await h.flush();
   assert.equal(h.count.render, 1);
 
-  const second = await h.request('27205', '&v=22&trendDetails=studio,director,cast,rank,release');
+  const second = await h.request('27205', '&v=23&trendDetails=inCinema,rank,newMovie,comingSoon,newSeries,returningSeries,limitedSeries');
   await second.arrayBuffer(); await h.flush();
-  assert.equal(h.count.render, 2, 'v22 should not reuse a v21 rendered R2 image');
+  assert.equal(h.count.render, 2, 'v23 should not reuse a v22 rendered R2 image');
   assert.equal(h.bucket.posters().length, 2);
 });
 
 test('default poster tags include genre with trend and rating', async () => {
   const h = harness();
   const context = h.context('27205');
-  context.request = new Request('https://kollection.tv/api/posters-v2/movie/27205.webp?v=22&source=smart&ratingSource=average&trendDetails=studio,director,cast,rank,release');
+  context.request = new Request('https://kollection.tv/api/posters-v2/movie/27205.webp?v=23&source=smart&ratingSource=average&trendDetails=studio,director,cast,inCinema,rank,newMovie,comingSoon,newSeries,returningSeries,limitedSeries');
   const response = await onRequest(context);
   await response.arrayBuffer(); await h.flush();
   assert.equal(h.payloads.at(-1).genre, 'Drama');
@@ -268,7 +270,7 @@ test('Trend Tag details can prioritize notable directors over daily rank', async
     production_companies: [],
     credits: { crew: [{ job: 'Director', name: 'Christopher Nolan' }], cast: [] },
   };
-  const response = await h.request('27205', '&trendDetails=director,rank,release');
+  const response = await h.request('27205', '&trendDetails=director,rank');
   await response.arrayBuffer(); await h.flush();
   assert.equal(h.payloads.at(-1).trend, 'Christopher Nolan Film');
   assert.equal(response.headers.get('x-kollection-trend-source'), 'director');

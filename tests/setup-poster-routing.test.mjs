@@ -12,11 +12,11 @@ test('Kollection poster pattern is valid for AIOMetadata placeholders', () => {
     ratingSource: 'average',
   });
   assert.match(pattern, /^https:\/\/kollection\.tv\/api\/posters-v2\/\{type\}\/\{tmdb_id\}\.webp\?/);
-  assert.match(pattern, /v=22/);
+  assert.match(pattern, /v=23/);
   assert.match(pattern, /source=smart/);
   assert.match(pattern, /tags=genre%2Crating%2Ctrend/);
   assert.match(pattern, /ratingSource=average/);
-  assert.match(pattern, /trendDetails=studio%2Cdirector%2Ccast%2Crank%2Crelease/);
+  assert.match(pattern, /trendDetails=studio%2Cdirector%2Ccast%2CinCinema%2Crank%2CnewMovie%2CcomingSoon%2CnewSeries%2CreturningSeries%2ClimitedSeries/);
   assert.match(pattern, /language=\{language_short\}/);
 });
 
@@ -59,4 +59,16 @@ test('saved collection setups persist the poster overlay selection', async () =>
   assert.match(source, /posterOverlaysEnabled: Boolean\(snapshot\.posterOverlaysEnabled\)/);
   assert.match(source, /kollection:restore-poster-settings/);
   assert.match(source, /posterSettingsJson/);
+});
+
+
+test('legacy grouped release preference expands into the new lifecycle choices', () => {
+  const normalized = Posters.normalize({
+    source: 'smart',
+    tags: ['trend'],
+    trendDetails: ['rank', 'release'],
+  });
+  assert.deepEqual(normalized.trendDetails, [
+    'inCinema', 'rank', 'newMovie', 'comingSoon', 'newSeries', 'returningSeries', 'limitedSeries'
+  ]);
 });

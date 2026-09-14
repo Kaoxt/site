@@ -96,13 +96,38 @@ const CAST = new Map([
   ['Al Pacino', 'Al Pacino'],
 ]);
 
-export const TREND_DETAIL_TYPES = Object.freeze(['studio', 'director', 'cast', 'rank', 'release']);
+export const TREND_DETAIL_TYPES = Object.freeze([
+  'studio',
+  'director',
+  'cast',
+  'inCinema',
+  'rank',
+  'newMovie',
+  'comingSoon',
+  'newSeries',
+  'returningSeries',
+  'limitedSeries',
+]);
+
+const LEGACY_RELEASE_DETAILS = Object.freeze([
+  'inCinema',
+  'newMovie',
+  'comingSoon',
+  'newSeries',
+  'returningSeries',
+  'limitedSeries',
+]);
 
 export function normalizeTrendDetails(value) {
   const raw = value == null || value === ''
     ? TREND_DETAIL_TYPES
-    : String(value).split(',').map(item => item.trim().toLowerCase()).filter(Boolean);
+    : String(value).split(',').map(item => item.trim()).filter(Boolean);
   const requested = new Set(raw);
+  // Existing saved v22 configs used one "release" switch. Expand it into the
+  // individual lifecycle switches so nobody silently loses their old behavior.
+  if (requested.has('release')) {
+    for (const type of LEGACY_RELEASE_DETAILS) requested.add(type);
+  }
   return TREND_DETAIL_TYPES.filter(type => requested.has(type));
 }
 
@@ -141,16 +166,22 @@ export function spotlightLabels(details) {
 export function chooseTrendDisplay({
   trendDetails,
   rank = '',
-  release = '',
+  lifecycle = {},
   spotlights = {},
 }) {
   const selected = new Set(trendDetails || []);
-  // Match BetterPosters' discovery priority for the supported categories:
-  // notable studio/director/cast first, then daily rank, then release status.
+  // Curated discovery labels win first. In Cinema is deliberately independent
+  // and outranks daily rank; the remaining movie/TV lifecycle labels are
+  // individually selectable fallbacks.
   if (selected.has('studio') && spotlights.studio) return { label: spotlights.studio, source: 'studio' };
   if (selected.has('director') && spotlights.director) return { label: spotlights.director, source: 'director' };
   if (selected.has('cast') && spotlights.cast) return { label: spotlights.cast, source: 'cast' };
+  if (selected.has('inCinema') && lifecycle.inCinema) return { label: lifecycle.inCinema, source: 'inCinema' };
   if (selected.has('rank') && rank) return { label: rank, source: 'rank' };
-  if (selected.has('release') && release) return { label: release, source: 'release' };
+  if (selected.has('newMovie') && lifecycle.newMovie) return { label: lifecycle.newMovie, source: 'newMovie' };
+  if (selected.has('comingSoon') && lifecycle.comingSoon) return { label: lifecycle.comingSoon, source: 'comingSoon' };
+  if (selected.has('newSeries') && lifecycle.newSeries) return { label: lifecycle.newSeries, source: 'newSeries' };
+  if (selected.has('returningSeries') && lifecycle.returningSeries) return { label: lifecycle.returningSeries, source: 'returningSeries' };
+  if (selected.has('limitedSeries') && lifecycle.limitedSeries) return { label: lifecycle.limitedSeries, source: 'limitedSeries' };
   return { label: '', source: 'none' };
 }

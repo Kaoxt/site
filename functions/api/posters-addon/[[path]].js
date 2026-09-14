@@ -1,4 +1,12 @@
 const POSTER_BASE = 'https://kollection.tv/api/posters-v2';
+const TREND_DETAILS = ['studio','director','cast','inCinema','rank','newMovie','comingSoon','newSeries','returningSeries','limitedSeries'];
+const LEGACY_RELEASE_DETAILS = ['inCinema','newMovie','comingSoon','newSeries','returningSeries','limitedSeries'];
+
+function normalizeTrendDetails(values) {
+  const selected = new Set(Array.isArray(values) ? values.map(String) : TREND_DETAILS);
+  if (selected.has('release')) LEGACY_RELEASE_DETAILS.forEach(value => selected.add(value));
+  return TREND_DETAILS.filter(value => selected.has(value));
+}
 
 function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
@@ -48,9 +56,7 @@ function parseConfig(token) {
     upstream: upstream.toString(),
     source: ['smart', 'tmdb', 'inherit'].includes(config.source) ? config.source : 'smart',
     tags: Array.isArray(config.tags) ? config.tags.filter((x) => typeof x === 'string') : ['trend', 'genre', 'rating'],
-    trendDetails: Array.isArray(config.trendDetails)
-      ? config.trendDetails.map(String).filter((value) => ['studio', 'director', 'cast', 'rank', 'release'].includes(value))
-      : ['studio', 'director', 'cast', 'rank', 'release'],
+    trendDetails: normalizeTrendDetails(config.trendDetails),
     ratingSource: typeof config.ratingSource === 'string' ? config.ratingSource : 'average',
   };
 }
@@ -99,7 +105,7 @@ function posterUrl(config, type, id, sourceUrl = '') {
   const mediaType = type === 'series' || type === 'tv' ? 'tv' : 'movie';
   const tags = new Set(config.tags);
   const params = new URLSearchParams({
-    v: '22',
+    v: '23',
     source: config.source,
     tags: [...tags].sort().join(','),
     ratingSource: config.ratingSource,

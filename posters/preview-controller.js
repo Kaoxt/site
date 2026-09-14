@@ -97,13 +97,13 @@
 
   function sampleFor(index) {
     const base = samples[index] || [
-      { type:'movie', id:'27205', trend:'#1 Today', release:'New', rating:'8.8', genre:'Sci-Fi', age:'PG-13', quality:'4K · DV', audio:'Atmos', director:'Christopher Nolan Film' },
-      { type:'movie', id:'155', trend:'#2 Today', release:'In Cinema', rating:'9.0', genre:'Action', age:'PG-13', quality:'4K · HDR', audio:'Atmos', director:'Christopher Nolan Film', cast:'Christian Bale' },
-      { type:'tv', id:'1399', trend:'#1 Today', release:'Returning', rating:'9.2', genre:'Drama', age:'TV-MA', quality:'4K · DV', audio:'Atmos', studio:'HBO Original' },
+      { type:'movie', id:'27205', trend:'#1 Today', newMovie:'New', rating:'8.8', genre:'Sci-Fi', age:'PG-13', quality:'4K · DV', audio:'Atmos', director:'Christopher Nolan Film' },
+      { type:'movie', id:'155', trend:'#2 Today', inCinema:'In Cinema', rating:'9.0', genre:'Action', age:'PG-13', quality:'4K · HDR', audio:'Atmos', director:'Christopher Nolan Film', cast:'Christian Bale' },
+      { type:'tv', id:'1399', trend:'#1 Today', returningSeries:'Returning', rating:'9.2', genre:'Drama', age:'TV-MA', quality:'4K · DV', audio:'Atmos', studio:'HBO Original' },
     ][index] || {};
     const id = String(base.id || '');
     if (id === '27205' || id === '155') return { ...base, director: base.director || 'Christopher Nolan Film' };
-    if (id === '1399') return { ...base, studio: base.studio || 'HBO Original', release: base.release || 'Returning' };
+    if (id === '1399') return { ...base, studio: base.studio || 'HBO Original', returningSeries: base.returningSeries || 'Returning' };
     return base;
   }
 
@@ -112,8 +112,13 @@
     if (selected.has('studio') && sample.studio) return sample.studio;
     if (selected.has('director') && sample.director) return sample.director;
     if (selected.has('cast') && sample.cast) return sample.cast;
+    if (selected.has('inCinema') && sample.inCinema) return sample.inCinema;
     if (selected.has('rank')) return localizeTrend(sample.trend, index, language);
-    if (selected.has('release') && sample.release) return sample.release;
+    if (selected.has('newMovie') && sample.newMovie) return sample.newMovie;
+    if (selected.has('comingSoon') && sample.comingSoon) return sample.comingSoon;
+    if (selected.has('newSeries') && sample.newSeries) return sample.newSeries;
+    if (selected.has('returningSeries') && sample.returningSeries) return sample.returningSeries;
+    if (selected.has('limitedSeries') && sample.limitedSeries) return sample.limitedSeries;
     return '';
   }
 
@@ -226,7 +231,7 @@
       nextImg.className = 'poster-service-image';
       nextImg.alt = currentImg.alt || 'Poster preview artwork';
       nextImg.decoding = 'async';
-      const params = new URLSearchParams({ v: '22', source, provider, tags: 'none', preview: '1', previewVersion: `client-base-5-${source}-${provider}` });
+      const params = new URLSearchParams({ v: '23', source, provider, tags: 'none', preview: '1', previewVersion: `client-base-5-${source}-${provider}` });
       nextImg.addEventListener('load', () => {
         if (generation !== requestGeneration) return resolve();
         currentImg.replaceWith(nextImg);
@@ -245,7 +250,7 @@
 
   async function loadSamples() {
     try {
-      const response = await fetch('/api/posters-preview-samples?previewVersion=client-2', { headers: { accept: 'application/json' }, cache: 'default' });
+      const response = await fetch('/api/posters-preview-samples?previewVersion=client-3', { headers: { accept: 'application/json' }, cache: 'default' });
       if (response.ok) {
         const data = await response.json();
         if (Array.isArray(data?.samples) && data.samples.length >= 3) samples = data.samples.slice(0, 3);
@@ -253,9 +258,9 @@
     } catch {}
     if (samples.length < 3) {
       samples = [
-        { type:'movie', id:'27205', trend:'#1 Today', release:'New', rating:'8.8', genre:'Sci-Fi', age:'PG-13', quality:'4K · DV', audio:'Atmos', director:'Christopher Nolan Film' },
-        { type:'movie', id:'155', trend:'#2 Today', release:'In Cinema', rating:'9.0', genre:'Action', age:'PG-13', quality:'4K · HDR', audio:'Atmos', director:'Christopher Nolan Film', cast:'Christian Bale' },
-        { type:'tv', id:'1399', trend:'#1 Today', release:'Returning', rating:'9.2', genre:'Drama', age:'TV-MA', quality:'4K · DV', audio:'Atmos', studio:'HBO Original' },
+        { type:'movie', id:'27205', trend:'#1 Today', newMovie:'New', rating:'8.8', genre:'Sci-Fi', age:'PG-13', quality:'4K · DV', audio:'Atmos', director:'Christopher Nolan Film' },
+        { type:'movie', id:'155', trend:'#2 Today', inCinema:'In Cinema', rating:'9.0', genre:'Action', age:'PG-13', quality:'4K · HDR', audio:'Atmos', director:'Christopher Nolan Film', cast:'Christian Bale' },
+        { type:'tv', id:'1399', trend:'#1 Today', returningSeries:'Returning', rating:'9.2', genre:'Drama', age:'TV-MA', quality:'4K · DV', audio:'Atmos', studio:'HBO Original' },
       ];
     }
   }
