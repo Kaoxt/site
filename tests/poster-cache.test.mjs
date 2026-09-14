@@ -282,7 +282,10 @@ test('Trend Tag details can prioritize notable directors over daily rank', async
 });
 
 test('richer AIOStreams quality includes Dolby Vision and Atmos', async () => {
-  const h = harness();
+  const h = harness({
+    POSTERS_AIOSTREAMS_URL: 'https://aiostreams.example',
+    POSTERS_AIOSTREAMS_AUTH: 'dXNlcjpwYXNz',
+  });
   h.qualityResults = [{
     parsedFile: {
       resolution: '2160p',
