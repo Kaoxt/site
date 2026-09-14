@@ -36,7 +36,7 @@
     const tags = selectedTags();
     if (!tags.includes('quality') && !tags.includes('trend')) tags.push('trend');
     const params = new URLSearchParams({
-      v: '18',
+      v: '19',
       source: selectedSource(),
       tags: [...new Set(tags)].sort().join(','),
       ratingSource: ratingSource(),
