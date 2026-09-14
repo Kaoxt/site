@@ -498,7 +498,6 @@ async function originalPosterFallback(type, id, env, reason, details = null) {
           status: 200,
           headers: {
             'content-type': artwork.headers.get('content-type') || 'image/jpeg',
-            'content-length': artwork.headers.get('content-length') || '',
             'access-control-allow-origin': '*',
             'cache-control': cacheControl,
             'cdn-cache-control': cacheControl,
