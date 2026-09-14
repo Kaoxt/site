@@ -1971,11 +1971,19 @@
       window.KollectionSavedSetup?.setName?.(setupName);
 
       try {
-        if (!state.installCompleted) await installEverything();
-        loading('Saving your setup to your account…');
-        if (!window.KollectionSavedSetup?.saveApplied) {
+        if (!window.KollectionSavedSetup?.prepareInstall || !window.KollectionSavedSetup?.saveApplied) {
           throw new Error('The setup save service is not ready. Refresh the page and try again.');
         }
+        if (!state.installCompleted) {
+          loading('Saving setup details…');
+          await window.KollectionSavedSetup.prepareInstall({
+            name: setupName,
+            profileId: state.profileId,
+            profileName: state.profileName,
+          });
+          await installEverything();
+        }
+        loading('Saving your setup to your account…');
         await window.KollectionSavedSetup.saveApplied({
           name: setupName,
           profileId: state.profileId,
