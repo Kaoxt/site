@@ -142,11 +142,23 @@
     } catch {}
 
     const profileSetups = completedSetupsForProfile(id, setups);
+    const allCompletedSetups = (setups || [])
+      .filter((item) => Number(item?.draftStep || 0) >= 7)
+      .sort((a, b) => (Date.parse(b?.updatedAt || '') || 0) - (Date.parse(a?.updatedAt || '') || 0));
     const activeSetup = activeSetupForProfile(id, setups);
     const showSetupPicker = eligibility?.state === 'kollection';
-    const setupOptions = profileSetups.length
-      ? profileSetups.map((item) => `<option value="${esc(item.id)}" ${item.id === activeSetup?.id ? 'selected' : ''}>${esc(item.name || 'My Kollection')}${item.id === activeSetup?.id ? ' · Current' : ''}</option>`).join('')
-      : '<option value="">No saved setup linked</option>';
+    const setupOptions = allCompletedSetups.length
+      ? [
+          ...(!activeSetup ? ['<option value="" selected>Choose a saved setup</option>'] : []),
+          ...allCompletedSetups.map((item) => {
+            const onThisProfile = Number(item?.nuvioProfileId) === id;
+            const suffix = item.id === activeSetup?.id
+              ? ' · Current'
+              : (!onThisProfile && item?.nuvioProfileName ? ` · from ${item.nuvioProfileName}` : '');
+            return `<option value="${esc(item.id)}" ${item.id === activeSetup?.id ? 'selected' : ''}>${esc(item.name || 'My Kollection')}${esc(suffix)}</option>`;
+          }),
+        ].join('')
+      : '<option value="">No saved setups available</option>';
 
     openModal(`
       <header class="account-modal-head">
@@ -159,10 +171,10 @@
         ${showSetupPicker ? `
           <label class="account-modal-field account-profile-setup-field">
             <span>Saved setup</span>
-            <select id="accountEditSavedSetup" ${profileSetups.length ? '' : 'disabled'}>${setupOptions}</select>
-            <small>${profileSetups.length > 1
-              ? 'Choose a different saved setup to switch this profile. The Kollection setup page will open so the selected setup can be safely applied.'
-              : (profileSetups.length === 1 ? 'This is the saved setup currently linked to this profile.' : 'No completed saved setup is linked to this profile yet.')}</small>
+            <select id="accountEditSavedSetup" ${allCompletedSetups.length ? '' : 'disabled'}>${setupOptions}</select>
+            <small>${allCompletedSetups.length
+              ? 'Choose a saved setup to switch this profile. The Kollection setup page will open so the selected setup can be safely applied. If the setup belongs to another profile, a profile-specific copy will be created.'
+              : 'No completed saved setups are available yet.'}</small>
           </label>` : ''}
         <p class="account-modal-status" id="accountEditStatus" role="status"></p>
       </div>
@@ -189,7 +201,8 @@
       const nextName = String(input?.value || '').trim();
       if (!nextName) { status.textContent = 'Enter a profile name.'; return; }
       const selectedSetupId = String(setupSelect?.value || '');
-      const switchingSetup = Boolean(selectedSetupId && activeSetup && selectedSetupId !== activeSetup.id);
+      const selectedSetup = allCompletedSetups.find((item) => String(item?.id || '') === selectedSetupId) || null;
+      const switchingSetup = Boolean(selectedSetupId && selectedSetupId !== String(activeSetup?.id || ''));
 
       save.disabled = true;
       status.textContent = switchingSetup ? 'Saving profile before opening the selected setup…' : 'Saving…';
@@ -211,6 +224,9 @@
           target.searchParams.set('edit', '1');
           target.searchParams.set('targetProfile', String(id));
           target.searchParams.set('switch', '1');
+          if (selectedSetup && Number(selectedSetup.nuvioProfileId) !== id) {
+            target.searchParams.set('clone', '1');
+          }
           window.location.href = target.pathname + target.search;
           return;
         }
