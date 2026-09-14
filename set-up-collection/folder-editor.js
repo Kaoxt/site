@@ -179,6 +179,134 @@
     }, 0);
   }
 
+  const SMART_OVERLAY_TAGS = Object.freeze([
+    ['trend', 'Trend Tag'],
+    ['quality', 'Quality'],
+    ['genre', 'Genre'],
+    ['rating', 'Rating'],
+    ['age', 'Age Rating'],
+  ]);
+
+  const SMART_TREND_DETAILS = Object.freeze([
+    ['studio', 'Notable Studios'],
+    ['director', 'Notable Directors'],
+    ['cast', 'Notable Cast'],
+    ['inCinema', 'In Cinema'],
+    ['rank', 'Daily Rank'],
+    ['newMovie', 'New Movie'],
+    ['comingSoon', 'Coming Soon'],
+    ['newSeries', 'New Series'],
+    ['returningSeries', 'Returning Series'],
+    ['limitedSeries', 'Limited Series'],
+  ]);
+
+  function editingSavedSetup() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('edit') === '1' && Boolean(params.get('saved'));
+  }
+
+  function currentPosterSettings(state) {
+    const helper = window.KollectionPosterSettings;
+    if (!helper) return {
+      source: 'smart',
+      tags: ['trend', 'genre', 'rating'],
+      ratingSource: 'average',
+      trendDetails: SMART_TREND_DETAILS.map(([value]) => value),
+    };
+    return helper.normalize(state.posterSettings || helper.readLocal?.() || {});
+  }
+
+  function smartOverlayEditorHtml(state, esc) {
+    if (!editingSavedSetup()) return '';
+    const settings = currentPosterSettings(state);
+    state.posterSettings = settings;
+    const tags = new Set(settings.tags || []);
+    const trendDetails = new Set(settings.trendDetails || []);
+    const enabled = Boolean(state.posterOverlaysEnabled);
+
+    return `
+      <section class="existing-smart-overlay-editor" aria-labelledby="existingSmartOverlayTitle">
+        <div class="existing-smart-overlay-head">
+          <div>
+            <span class="badge">Existing setup</span>
+            <h3 id="existingSmartOverlayTitle">Smart Overlay Posters</h3>
+            <p>Change the overlays for this saved collection. Your updated choices will be used when you continue and update the collection in Nuvio.</p>
+          </div>
+          <label class="existing-smart-master">
+            <input id="posterOverlaysEnabled" type="checkbox" ${enabled ? 'checked' : ''}>
+            <span><b>${enabled ? 'On' : 'Off'}</b><small>Use Smart Overlay Posters</small></span>
+          </label>
+        </div>
+        <input id="posterSettingsJson" type="hidden" value="${esc(JSON.stringify(settings))}">
+        <div id="existingSmartOverlayControls" class="existing-smart-overlay-controls" ${enabled ? '' : 'hidden'}>
+          <div class="existing-smart-overlay-group">
+            <div class="existing-smart-overlay-copy"><b>Poster overlays</b><span>Turn individual overlay types on or off.</span></div>
+            <div class="existing-smart-overlay-grid">
+              ${SMART_OVERLAY_TAGS.map(([value, label]) => `
+                <label class="existing-smart-overlay-choice">
+                  <input type="checkbox" data-smart-overlay-tag value="${value}" ${tags.has(value) ? 'checked' : ''}>
+                  <span>${label}</span>
+                </label>`).join('')}
+            </div>
+          </div>
+          <div id="existingTrendDetailGroup" class="existing-smart-overlay-group" ${tags.has('trend') ? '' : 'hidden'}>
+            <div class="existing-smart-overlay-copy"><b>Trend Tag details</b><span>Choose which labels are allowed in the Trend Tag area.</span></div>
+            <div class="existing-smart-overlay-grid trend-details">
+              ${SMART_TREND_DETAILS.map(([value, label]) => `
+                <label class="existing-smart-overlay-choice">
+                  <input type="checkbox" data-smart-trend-detail value="${value}" ${trendDetails.has(value) ? 'checked' : ''}>
+                  <span>${label}</span>
+                </label>`).join('')}
+            </div>
+          </div>
+          <div class="existing-smart-overlay-footer">
+            <span id="existingSmartOverlaySummary">${esc(window.KollectionPosterSettings?.label(settings) || 'Smart Overlay Posters')}</span>
+            <a class="ghost small" href="/posters" target="_blank" rel="noopener">Advanced poster settings</a>
+          </div>
+        </div>
+      </section>`;
+  }
+
+  function bindSmartOverlayEditor(state, host, invalidateState) {
+    if (!editingSavedSetup()) return;
+    const helper = window.KollectionPosterSettings;
+    const master = host.querySelector('#posterOverlaysEnabled');
+    const controls = host.querySelector('#existingSmartOverlayControls');
+    const hidden = host.querySelector('#posterSettingsJson');
+    const trendGroup = host.querySelector('#existingTrendDetailGroup');
+    const summary = host.querySelector('#existingSmartOverlaySummary');
+    if (!master || !hidden) return;
+
+    const write = () => {
+      const current = currentPosterSettings(state);
+      const tags = [...host.querySelectorAll('[data-smart-overlay-tag]:checked')].map(input => input.value);
+      const trendDetails = [...host.querySelectorAll('[data-smart-trend-detail]:checked')].map(input => input.value);
+      state.posterOverlaysEnabled = Boolean(master.checked);
+      state.posterSettings = helper
+        ? helper.normalize({ ...current, tags, trendDetails })
+        : { ...current, tags, trendDetails };
+      hidden.value = JSON.stringify(state.posterSettings);
+      controls.hidden = !state.posterOverlaysEnabled;
+      const trendOn = tags.includes('trend');
+      if (trendGroup) trendGroup.hidden = !trendOn;
+      const masterLabel = master.closest('.existing-smart-master')?.querySelector('b');
+      if (masterLabel) masterLabel.textContent = state.posterOverlaysEnabled ? 'On' : 'Off';
+      if (summary) summary.textContent = helper?.label(state.posterSettings) || 'Smart Overlay Posters';
+      invalidateState(state);
+      window.dispatchEvent(new CustomEvent('kollection:poster-settings-changed', {
+        detail: {
+          enabled: state.posterOverlaysEnabled,
+          settings: clone(state.posterSettings),
+          source: 'existing-setup',
+        },
+      }));
+    };
+
+    master.addEventListener('change', write);
+    host.querySelectorAll('[data-smart-overlay-tag]').forEach(input => input.addEventListener('change', write));
+    host.querySelectorAll('[data-smart-trend-detail]').forEach(input => input.addEventListener('change', write));
+  }
+
   function render(options) {
     const {
       state, host, panel, $, $$, esc, alert, loading, setStep,
@@ -204,7 +332,8 @@
       'STEP 5 · CUSTOMIZE',
       'Choose and edit your collection',
       'Choose the sections you want first, then open any selected section to remove individual folders. Only the folders you keep will be added to Nuvio and used to prepare AIOMetadata.',
-      `<div class="card collection-editor-shell">
+      `${smartOverlayEditorHtml(state, esc)}
+      <div class="card collection-editor-shell">
         <div class="collection-select-toolbar">
           <div>
             <b id="sectionSelectionCount">${selectedCount} of ${groups.length} sections selected</b>
@@ -238,6 +367,8 @@
         <div class="actions"><button class="ghost" id="backBtn">Back</button><button class="btn" id="nextBtn" ${selectedCount ? '' : 'disabled'}>Continue to review</button></div>
       </div>`
     );
+
+    bindSmartOverlayEditor(state, host, invalidate);
 
     const syncOverview = () => {
       state.selectedCollectionGroupIds = $$('.section-checkbox:checked').map(input => input.value);

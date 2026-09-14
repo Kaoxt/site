@@ -19,6 +19,9 @@ on:
       - 'set-up-collection/poster-settings.js'
       - 'set-up-collection/set-up-collection.js'
       - 'set-up-collection/saved-setup.js'
+      - 'set-up-collection/folder-editor.js'
+      - 'set-up-collection/folder-editor.css'
+      - 'set-up-collection/existing-setup-picker.js'
       - 'set-up-collection.html'
       - 'poster-renderer-v2/**'
       - '.github/workflows/test-posters.yml'
@@ -40,6 +43,9 @@ on:
       - 'set-up-collection/poster-settings.js'
       - 'set-up-collection/set-up-collection.js'
       - 'set-up-collection/saved-setup.js'
+      - 'set-up-collection/folder-editor.js'
+      - 'set-up-collection/folder-editor.css'
+      - 'set-up-collection/existing-setup-picker.js'
       - 'set-up-collection.html'
       - 'poster-renderer-v2/**'
       - '.github/workflows/test-posters.yml'
@@ -56,6 +62,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - run: node --check set-up-collection/folder-editor.js
       - run: node --test tests/poster-cache.test.mjs tests/setup-poster-routing.test.mjs
 
   renderer:
