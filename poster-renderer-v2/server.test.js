@@ -51,7 +51,7 @@ test('polished top tags stay compact and split cleanly when quality is enabled',
   await fixture();
   const plain = await renderPoster({ posterPath: '/polish.jpg', smartLayout: true });
   const trendOnly = await renderPoster({ posterPath: '/polish.jpg', smartLayout: true, trend: '#5 Today' });
-  const split = await renderPoster({ posterPath: '/polish.jpg', smartLayout: true, trend: 'Returning', quality: '4K' });
+  const split = await renderPoster({ posterPath: '/polish.jpg', smartLayout: true, trend: 'Christopher Nolan Film', quality: '4K · DV', audio: 'Atmos' });
 
   const changedPixels = async (a, b, region, threshold = 15) => {
     const before = await sharp(a).extract(region).raw().toBuffer();
@@ -65,8 +65,12 @@ test('polished top tags stay compact and split cleanly when quality is enabled',
 
   assert.ok(await changedPixels(plain, split, { left: 10, top: 0, width: 300, height: 50 }) > 500,
     'trend tag should occupy the left side when quality is enabled');
-  assert.ok(await changedPixels(plain, split, { left: 380, top: 0, width: 110, height: 50 }) > 250,
+  assert.ok(await changedPixels(plain, split, { left: 315, top: 0, width: 175, height: 50 }) > 250,
     'quality tag should occupy the right side');
+  assert.ok(await changedPixels(plain, split, { left: 375, top: 55, width: 115, height: 45 }) > 150,
+    'audio tag should render beneath quality');
+  assert.ok(await changedPixels(plain, split, { left: 296, top: 0, width: 10, height: 48 }) < 180,
+    'long spotlight label should leave a clean gap before quality');
 });
 
 test('upstream-only artwork does not fetch a title logo and provider errors remain failures', async () => {
