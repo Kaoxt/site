@@ -9,7 +9,7 @@ The AIOMetadata pattern replaces only `poster`. It does not change a title's bac
 3. On an IMDb miss, cached ID metadata locates the existing TMDB-addressed R2 poster. That legacy poster is reused and an IMDb-addressed copy is saved to avoid future ID lookups. Both IDs still share one render lock.
 4. Only a true cache miss renders a new image. Refreshes and cold requests share in-flight work; D1 leases coordinate separate Worker instances. The finished canonical R2 write completes before a successful lease is released.
 
-The artwork version remains `production-cache-19`, preserving previously rendered 500×750 images. The delivery version is independent (`cold-pipeline-3`); generated client patterns use `v=22`. The layout version is part of both edge and persistent cache keys, so visual revisions do not require a global artwork-cache purge.
+The artwork version remains `production-cache-19`, preserving previously rendered 500×750 images. The delivery version is independent (`cold-pipeline-3`); generated client patterns use `v=23`. The layout version is part of both edge and persistent cache keys, so visual revisions do not require a global artwork-cache purge.
 
 ## First loads
 
@@ -29,9 +29,9 @@ Custom upstream-addon artwork still follows its existing direct-fetch path rathe
 
 ## Trend Tag details
 
-The Trend Tag is now a configurable discovery slot rather than only a TMDB rank/release label. Poster URLs carry a `trendDetails` list with any of `studio,director,cast,rank,release`. The default priority mirrors the supported BetterPosters discovery order: notable studio, notable director, notable cast, daily rank, then release/lifecycle status. This lets a matching title show labels such as `Christopher Nolan Film` or `A24 Film`; disabling a category removes it from consideration without disabling the Trend Tag itself.
+The Trend Tag is now a configurable discovery slot rather than only a TMDB rank/release label. Poster URLs carry a `trendDetails` list with independently selectable values: `studio,director,cast,inCinema,rank,newMovie,comingSoon,newSeries,returningSeries,limitedSeries`. The default priority is notable studio, notable director, notable cast, **In Cinema**, daily rank, New Movie, Coming Soon, New Series, Returning Series, then Limited Series. This lets a matching title show labels such as `Christopher Nolan Film`, `A24 Film`, or `In Cinema`, and every movie/series lifecycle label can be disabled on its own without turning off the overall Trend Tag.
 
-Director/cast credits are appended to the existing TMDB details request only when those Trend Tag details are selected. The daily trending endpoint is skipped when Daily Rank is disabled, so user choices can also reduce upstream work. The selected detail list is included in edge and persistent poster cache variants.
+Director/cast credits are appended to the existing TMDB details request only when those Trend Tag details are selected. The daily trending endpoint is skipped when Daily Rank is disabled, so user choices can also reduce upstream work. Movie lifecycle signals are evaluated independently, so a film can qualify for both New Movie and In Cinema and the selected priority decides which label is shown. Existing v22 configs that used the old grouped `release` choice are automatically expanded to all six lifecycle choices. The selected detail list is included in edge and persistent poster cache variants.
 
 ## Rich quality tags
 
