@@ -11,10 +11,14 @@
   function normalizeString(value) {
     if (typeof value !== 'string' || !value) return value;
 
-    return value.replace(/https?:\/\/(?:www\.)?(?:kao-xt|ka-oxt)\.com(?:\/images)?(?=\/|$)([^\s"'<>]*)/gi, (match, tail) => {
+    const normalizedHost = value.replace(/https?:\/\/(?:www\.)?(?:kao-xt|ka-oxt)\.com(?:\/images)?(?=\/|$)([^\s"'<>]*)/gi, (match, tail) => {
       const suffix = String(tail || '');
       return `https://kollection.tv/images${suffix.startsWith('/') ? suffix : `/${suffix}`}`;
     });
+
+    return normalizedHost
+      .replace(/\/images\/Movie%20Collections\//gi, '/images/Franchises/')
+      .replace(/\/images\/Movie Collections\//gi, '/images/Franchises/');
   }
 
   function normalizeDeep(value) {
