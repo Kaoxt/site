@@ -328,7 +328,11 @@
       status.textContent = '';
     };
 
-    const close = () => closeSmartOverlayModal(root);
+    let keyHandler = null;
+    const close = () => {
+      if (keyHandler) document.removeEventListener('keydown', keyHandler);
+      closeSmartOverlayModal(root);
+    };
     closeButton.addEventListener('click', close);
     cancelButton.addEventListener('click', close);
     backdrop.addEventListener('click', event => {
@@ -337,9 +341,8 @@
     enabledInput.addEventListener('change', refreshVisibility);
     root.querySelectorAll('[data-smart-overlay-tag]').forEach(input => input.addEventListener('change', refreshVisibility));
 
-    const keyHandler = event => {
+    keyHandler = event => {
       if (event.key !== 'Escape' || !document.body.contains(root)) return;
-      document.removeEventListener('keydown', keyHandler);
       close();
     };
     document.addEventListener('keydown', keyHandler);
@@ -383,7 +386,6 @@
           source: 'existing-setup',
         },
       }));
-      document.removeEventListener('keydown', keyHandler);
       close();
     });
 
