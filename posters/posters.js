@@ -11,6 +11,7 @@
   const sourceInputs = [...document.querySelectorAll('input[name="posterSource"]')];
   const sourceCards = [...document.querySelectorAll('.choice-card')];
   const tagInputs = [...document.querySelectorAll('.tag-option input[type="checkbox"]')];
+  const trendInput = tagInputs.find((input) => input.value === 'trend');
   const ratingInput = tagInputs.find((input) => input.value === 'rating');
   const posterMocks = [...document.querySelectorAll('.poster-mock')];
   const previewDescription = document.getElementById('previewDescription');
@@ -54,6 +55,32 @@
   ratingCard?.append(ratingSourceRow);
   const ratingSource = ratingSourceRow.querySelector('#ratingSource');
 
+  const trendDetailOptions = [
+    ['studio', 'Notable Studios', 'A24 Film, Pixar Film, Studio Ghibli'],
+    ['director', 'Notable Directors', 'Christopher Nolan Film, Denis Villeneuve Film'],
+    ['cast', 'Notable Cast', 'Leonardo DiCaprio, Zendaya, Florence Pugh'],
+    ['rank', 'Daily Rank', '#1 Today, #8 Today'],
+    ['release', 'Release Status', 'New, In Cinema, Returning, Limited Series'],
+  ];
+  const trendCard = trendInput?.closest('.tag-option');
+  const trendDetailsRow = document.createElement('div');
+  trendDetailsRow.className = 'trend-details-row';
+  trendDetailsRow.innerHTML = `
+    <div class="trend-details-heading">
+      <div><strong>Trend Tag Details</strong><small>Choose what can appear in the top Trend Tag area.</small></div>
+      <small class="trend-priority-note">Priority: Studio → Director → Cast → Rank → Release</small>
+    </div>
+    <div class="trend-detail-grid">
+      ${trendDetailOptions.map(([value, label, example]) => `
+        <label class="trend-detail-option">
+          <input type="checkbox" value="${value}" data-trend-detail checked>
+          <span><b>${label}</b><small>${example}</small></span>
+        </label>`).join('')}
+    </div>`;
+  trendCard?.classList.add('trend-card');
+  trendCard?.append(trendDetailsRow);
+  const trendDetailInputs = [...trendDetailsRow.querySelectorAll('[data-trend-detail]')];
+
   const readSavedSettings = () => {
     try {
       const raw = localStorage.getItem(SETTINGS_KEY);
@@ -68,10 +95,12 @@
     try {
       const source = document.querySelector('input[name="posterSource"]:checked')?.value || 'smart';
       const tags = tagInputs.filter((input) => input.checked).map((input) => input.value);
+      const trendDetails = trendDetailInputs.filter((input) => input.checked).map((input) => input.value);
       localStorage.setItem(SETTINGS_KEY, JSON.stringify({
-        version: 2,
+        version: 3,
         source,
         tags,
+        trendDetails,
         ratingSource: ratingSource?.value || 'average',
         artworkProvider: artworkProvider?.value || 'tmdb',
       }));
@@ -90,6 +119,11 @@
     if (Array.isArray(saved.tags)) {
       const tagSet = new Set(saved.tags.map(String));
       tagInputs.forEach((input) => { input.checked = tagSet.has(input.value); });
+    }
+
+    if (Array.isArray(saved.trendDetails)) {
+      const trendSet = new Set(saved.trendDetails.map(String));
+      trendDetailInputs.forEach((input) => { input.checked = trendSet.has(input.value); });
     }
 
     if (ratingSource && typeof saved.ratingSource === 'string') {
@@ -181,6 +215,7 @@
 
   const selectedSource = () => document.querySelector('input[name="posterSource"]:checked')?.value || 'smart';
   const selectedTags = () => tagInputs.filter((input) => input.checked).map((input) => input.value);
+  const selectedTrendDetails = () => trendDetailInputs.filter((input) => input.checked).map((input) => input.value);
   const selectedRatingSource = () => ratingSource?.value || 'average';
 
   const sourceLabel = (source) => ({
@@ -213,6 +248,7 @@
 
     sourceCards.forEach((card) => card.classList.toggle('selected', card.querySelector('input')?.checked));
     ratingSourceRow.hidden = !ratingInput?.checked;
+    trendDetailsRow.hidden = !trendInput?.checked;
 
     posterMocks.forEach((posterMock) => {
       posterMock.classList.remove('tags-off');
@@ -264,13 +300,15 @@
   const posterPattern = () => {
     const source = selectedSource();
     const tags = selectedTags().join(',');
-    return `https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?v=21&source=${encodeURIComponent(source)}&tags=${encodeURIComponent(tags)}&ratingSource=${encodeURIComponent(selectedRatingSource())}`;
+    const trendDetails = selectedTrendDetails().join(',');
+    return `https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?v=22&source=${encodeURIComponent(source)}&tags=${encodeURIComponent(tags)}&ratingSource=${encodeURIComponent(selectedRatingSource())}&trendDetails=${encodeURIComponent(trendDetails)}`;
   };
 
   const buildOutput = () => {
     const source = selectedSource();
     const tags = selectedTags();
     const ratingProvider = selectedRatingSource();
+    const trendDetails = selectedTrendDetails();
 
     if (importedConfig) {
       const clone = structuredClone(importedConfig);
@@ -287,11 +325,12 @@
       config.customPosterUrlPattern = posterPattern();
 
       config.kollectionPosters = {
-        version: 2,
+        version: 3,
         usageMode: usageMode || 'setup',
         posterSource: source,
         ratingSource: ratingProvider,
-        smartTags: { enabled: true, tags, fixedPlacement: true },
+        trendDetails,
+        smartTags: { enabled: true, tags, trendDetails, fixedPlacement: true },
         renderer: 'https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp'
       };
 
@@ -310,7 +349,8 @@
       config: {
         posterSource: source,
         ratingSource: ratingProvider,
-        smartTags: { enabled: true, tags, fixedPlacement: true },
+        trendDetails,
+        smartTags: { enabled: true, tags, trendDetails, fixedPlacement: true },
         posterUrlPattern: posterPattern(),
         aiometadata: {
           posterRatingProvider: 'custom',
@@ -339,6 +379,11 @@
 
   sourceInputs.forEach((input) => input.addEventListener('change', persistAndRefresh));
   tagInputs.forEach((input) => input.addEventListener('change', persistAndRefresh));
+  trendDetailInputs.forEach((input) => input.addEventListener('change', () => {
+    if (!trendDetailInputs.some((item) => item.checked)) input.checked = true;
+    persistAndRefresh();
+    document.dispatchEvent(new CustomEvent('kollection:poster-settings-changed'));
+  }));
   ratingSource?.addEventListener('change', persistAndRefresh);
   artworkProvider?.addEventListener('change', saveSettings);
 
