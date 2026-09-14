@@ -917,6 +917,7 @@ async function refreshPoster(context, state, background = false) {
       // Save an IMDb-addressed copy too: subsequent R2 hits need zero ID lookups.
       // The canonical TMDB key still shares work across both supported ID formats.
       await Promise.allSettled([
+        saveResult(context, state, key, result),
         putEdge(state, fromResult(result)),
         ...(state.rawKey !== key ? [saveResult(context, state, state.rawKey, result)] : []),
       ]);
