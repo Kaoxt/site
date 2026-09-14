@@ -69,7 +69,7 @@
       const source = document.querySelector('input[name="posterSource"]:checked')?.value || 'smart';
       const tags = tagInputs.filter((input) => input.checked).map((input) => input.value);
       localStorage.setItem(SETTINGS_KEY, JSON.stringify({
-        version: 1,
+        version: 2,
         source,
         tags,
         ratingSource: ratingSource?.value || 'average',
@@ -264,7 +264,7 @@
   const posterPattern = () => {
     const source = selectedSource();
     const tags = selectedTags().join(',');
-    return `https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?source=${encodeURIComponent(source)}&tags=${encodeURIComponent(tags)}&ratingSource=${encodeURIComponent(selectedRatingSource())}`;
+    return `https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?v=21&source=${encodeURIComponent(source)}&tags=${encodeURIComponent(tags)}&ratingSource=${encodeURIComponent(selectedRatingSource())}`;
   };
 
   const buildOutput = () => {
