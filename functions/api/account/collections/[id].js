@@ -62,6 +62,7 @@ async function update(context) {
     const profileId = input.nuvioProfileId === undefined ? existing.last_nuvio_profile_id : (Number.isFinite(Number(input.nuvioProfileId)) ? Number(input.nuvioProfileId) : null);
     const profileName = input.nuvioProfileName === undefined ? (existing.last_nuvio_profile_name || '') : String(input.nuvioProfileName || '').trim().slice(0, 120);
     const clean = input.config === undefined ? parseRow(existing).config : sanitizeConfig(input.config).clean;
+    const markApplied = Boolean(input.markApplied) && profileId != null;
 
     if (await duplicateName(db, auth.session.id, profileId, name, context.params.id)) {
       return json({ error: `A saved setup named “${name}” already exists for this profile. Choose a different name.` }, 409, auth.cookie ? { 'Set-Cookie': auth.cookie } : {});
@@ -81,10 +82,16 @@ async function update(context) {
     }
     const configJson = storageConfig(clean, encryptedSecrets);
     const updatedAt = new Date().toISOString();
+    if (markApplied) {
+      await db.prepare(
+        `UPDATE ${TABLE} SET last_applied_at = NULL WHERE user_id = ?1 AND last_nuvio_profile_id IS ?2 AND id <> ?3`
+      ).bind(auth.session.id, profileId, context.params.id).run();
+    }
+    const lastAppliedAt = markApplied ? updatedAt : (existing.last_applied_at || null);
     await db.prepare(
-      `UPDATE ${TABLE} SET name=?1, config_json=?2, draft_step=?3, last_nuvio_profile_id=?4, last_nuvio_profile_name=?5, updated_at=?6 WHERE id=?7 AND user_id=?8`
-    ).bind(name, configJson, draftStep, profileId, profileName || null, updatedAt, context.params.id, auth.session.id).run();
-    return json({ collection: { id: context.params.id, name, draftStep, nuvioProfileId: profileId == null ? null : Number(profileId), nuvioProfileName: profileName, lastAppliedAt: existing.last_applied_at || null, config: clean, secretsSaved: Boolean(encryptedSecrets), createdAt: existing.created_at, updatedAt } }, 200, auth.cookie ? { 'Set-Cookie': auth.cookie } : {});
+      `UPDATE ${TABLE} SET name=?1, config_json=?2, draft_step=?3, last_nuvio_profile_id=?4, last_nuvio_profile_name=?5, last_applied_at=?6, updated_at=?7 WHERE id=?8 AND user_id=?9`
+    ).bind(name, configJson, draftStep, profileId, profileName || null, lastAppliedAt, updatedAt, context.params.id, auth.session.id).run();
+    return json({ collection: { id: context.params.id, name, draftStep, nuvioProfileId: profileId == null ? null : Number(profileId), nuvioProfileName: profileName, lastAppliedAt, config: clean, secretsSaved: Boolean(encryptedSecrets), createdAt: existing.created_at, updatedAt } }, 200, auth.cookie ? { 'Set-Cookie': auth.cookie } : {});
   } catch (error) { console.error(error); return json({ error: error?.message || 'Could not update saved collection.' }, 400); }
 }
 export async function onRequestDelete(context) {
