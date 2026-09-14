@@ -125,3 +125,50 @@ html[data-theme="light"] .save-setup-status[data-kind="info"]{color:#4d57b8}
     width:auto;
   }
 }
+
+
+/* Toolbar action order: Start Over, then Update Existing. */
+.setup-toolbar>.setup-toolbar-actions{
+  grid-template-columns:minmax(0,1fr) auto auto;
+  grid-template-rows:auto;
+}
+.setup-toolbar-actions .save-setup-status{
+  grid-column:1;
+  grid-row:1;
+}
+#resetBtn{
+  grid-column:2;
+  grid-row:1;
+}
+#updateExistingToolbarBtn{
+  grid-column:3;
+  grid-row:1;
+}
+
+@media(max-width:760px){
+  .setup-toolbar{
+    align-items:flex-start !important;
+  }
+  .setup-toolbar>.setup-toolbar-actions{
+    grid-template-columns:1fr;
+    grid-template-rows:auto auto auto;
+    width:min(220px,100%);
+    align-self:flex-start;
+  }
+  .setup-toolbar-actions .save-setup-status{
+    grid-column:1;
+    grid-row:1;
+    text-align:right;
+    max-width:none;
+  }
+  #resetBtn{
+    grid-column:1;
+    grid-row:2;
+    width:100%;
+  }
+  #updateExistingToolbarBtn{
+    grid-column:1;
+    grid-row:3;
+    width:100%;
+  }
+}
