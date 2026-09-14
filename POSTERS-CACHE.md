@@ -17,6 +17,8 @@ MDBList ratings start alongside TMDB artwork metadata and trends, using the know
 
 Finished image bytes return before R2 and edge writes finish. `waitUntil` keeps those writes running; the canonical render lease is released only after its R2 write completes. Same-worker callers share the completed bytes during persistence, so an IMDb or TMDB request in that interval does not trigger another render. A storage failure retains the normal retry cooldown. The redundant pre-lease R2 read is removed, while the post-lease check still closes cache races.
 
+Renderer `v2-bp-layout-21` keeps its intermediate canvas in raw pixels instead of compressing and immediately decoding PNG. Dynamic colors use a materialized 64×64 sample: Sharp's `stats()` ignores pending resize operations, so the old chain scanned the entire canvas. Color analysis is skipped when there is no trend badge. Output remains 500×750 WebP with the same tag/genre/rating geometry; fixed-color output was pixel-identical in an offline comparison. The renderer deploy workflow runs image tests before deploying.
+
 ## Freshness and failures
 
 - Trend posters are fresh for up to six hours, never beyond their stored UTC day. They can be served stale for up to 48 more hours while revalidating through `waitUntil`.

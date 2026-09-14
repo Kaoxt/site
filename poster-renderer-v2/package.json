@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
+    "test": "node --test server.test.js",
     "deploy": "wrangler deploy"
   },
   "dependencies": {

@@ -33,7 +33,7 @@ export default {
       return json({ error: 'Not found.' }, 404);
     }
 
-    const instance = getContainer(env.POSTER_RENDERER, 'primary-v20');
+    const instance = getContainer(env.POSTER_RENDERER, 'primary-v21');
     return instance.fetch(request);
   },
 };

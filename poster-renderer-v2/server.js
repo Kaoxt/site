@@ -1,5 +1,6 @@
 import http from 'node:http';
 import sharp from 'sharp';
+import { pathToFileURL } from 'node:url';
 
 const PORT = Number(process.env.PORT || 8080);
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w342';
@@ -21,9 +22,12 @@ const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 function rgbToHex(r, g, b) { return `#${[r, g, b].map((v) => clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0')).join('')}`; }
 
-async function dynamicAccent(imageBuffer) {
+export async function dynamicAccent(imageBuffer, inputOptions) {
   try {
-    const sample = await sharp(imageBuffer).resize(64, 64, { fit: 'cover' }).modulate({ saturation: 1.22, brightness: 0.96 }).stats();
+    // stats() ignores pending resize operations. Materialize the small sample
+    // first, otherwise every new poster scans all 912,600 full-canvas pixels.
+    const thumbnail = await sharp(imageBuffer, inputOptions).resize(64, 64, { fit: 'cover' }).raw().toBuffer({ resolveWithObject: true });
+    const sample = await sharp(thumbnail.data, { raw: { width: thumbnail.info.width, height: thumbnail.info.height, channels: thumbnail.info.channels } }).stats();
     let { r, g, b } = sample.dominant;
     const max = Math.max(r, g, b, 1), min = Math.min(r, g, b);
     if (max - min < 22) { r *= 0.72; g *= 0.72; b *= 0.72; }
@@ -59,14 +63,17 @@ async function smartLogoImage(logoPath){if(!logoPath)return null;try{const respo
 function smartBottomBackdrop(){return Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${POSTER_WIDTH}" height="330"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="0.48" stop-color="#000" stop-opacity="0.05"/><stop offset="0.76" stop-color="#000" stop-opacity="0.20"/><stop offset="1" stop-color="#000" stop-opacity="0.48"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/></svg>`);}
 async function readJson(req){const chunks=[];for await(const chunk of req)chunks.push(chunk);const raw=Buffer.concat(chunks).toString('utf8');return raw?JSON.parse(raw):{};}
 
-async function renderPoster(body){
+export async function renderPoster(body){
  const{posterPath,sourceUrl,logoPath='',title='',smartLayout=false,overlayOnly=false,rating='',ratingLabel='',genre='',trend='',age='',quality='',overlayColor='dynamic'}=body||{};
  const posterUrl=sourceUrl||(posterPath?`${TMDB_IMAGE_BASE}${posterPath}`:'');if(!posterUrl)throw new Error('posterPath or sourceUrl is required');
  const logoPromise=smartLayout&&!overlayOnly&&logoPath?smartLogoImage(logoPath):Promise.resolve(null);
  const res=await fetch(posterUrl,{headers:{accept:'image/*'},signal:AbortSignal.timeout(4000)});if(!res.ok)throw new Error(`Source image fetch failed: ${res.status}`);
- const input=Buffer.from(await res.arrayBuffer()),resized=await sharp(input).resize(POSTER_WIDTH,POSTER_HEIGHT,{fit:'cover'}).png().toBuffer(),composites=[];
+ // Keep the intermediate canvas as pixels; PNG encoding followed immediately
+ // by PNG decoding adds CPU work without improving the final WebP image.
+ const input=Buffer.from(await res.arrayBuffer()),resized=await sharp(input).resize(POSTER_WIDTH,POSTER_HEIGHT,{fit:'cover'}).raw().toBuffer({resolveWithObject:true}),composites=[];
+ const canvasOptions={raw:{width:resized.info.width,height:resized.info.height,channels:resized.info.channels}};
  const resolvedRatingLabel=ratingLabel||(rating?`★ ${rating}`:'');
- const dynamicFill=overlayColor==='dynamic'?await dynamicAccent(resized):overlayColor;
+ const dynamicFill=overlayColor==='dynamic'&&trend?await dynamicAccent(resized.data,canvasOptions):overlayColor;
  if(smartLayout){
   composites.push({input:smartBottomBackdrop(),top:POSTER_HEIGHT-330,left:0});
   if(quality){if(trend){const t=await smartTopTag(trend,{fill:dynamicFill,width:smartTagWidth(trend,300,390)});composites.push({input:t.buffer,top:0,left:SAFE_MARGIN});}const q=await smartTopTag(quality,{fill:'#f3f4f6',fillOpacity:.9,width:smartTagWidth(quality,112,160),fontSize:42,textColor:'#111318'});composites.push({input:q.buffer,top:0,left:POSTER_WIDTH-SAFE_MARGIN-q.width});}
@@ -81,9 +88,9 @@ async function renderPoster(body){
   composites.push({input:smartBottomBackdrop(),top:POSTER_HEIGHT-330,left:0});
   const info=await smartBottomInfo(genre,resolvedRatingLabel);if(info)composites.push({input:info,top:SMART_BOTTOM_INFO_TOP,left:30});
  }
- const composed=await sharp(resized).composite(composites).raw().toBuffer({resolveWithObject:true});
+ const composed=await sharp(resized.data,canvasOptions).composite(composites).raw().toBuffer({resolveWithObject:true});
  return sharp(composed.data,{raw:{width:composed.info.width,height:composed.info.height,channels:composed.info.channels}}).resize(500,750,{fit:'fill'}).webp({quality:80,effort:3,smartSubsample:true}).toBuffer();
 }
 
-const server=http.createServer(async(req,res)=>{try{if(req.method==='GET'&&req.url==='/health'){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return res.end(JSON.stringify({ok:true,renderer:'kollection-posters-v2-bp-layout-20'}));}if(req.method!=='POST'||req.url!=='/render'){res.writeHead(404,{'content-type':'application/json'});return res.end(JSON.stringify({error:'Not found'}));}const body=await readJson(req),started=Date.now(),output=await renderPoster(body);res.writeHead(200,{'content-type':'image/webp','content-length':String(output.length),'cache-control':'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800','x-kollection-renderer':'v2-bp-layout-20','x-kollection-render-ms':String(Date.now()-started)});res.end(output);}catch(error){res.writeHead(400,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:error?.message||'Render failed'}));}});
-server.listen(PORT,'0.0.0.0',()=>console.log(`Kollection Posters v2 renderer listening on ${PORT}`));
+const server=http.createServer(async(req,res)=>{try{if(req.method==='GET'&&req.url==='/health'){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return res.end(JSON.stringify({ok:true,renderer:'kollection-posters-v2-bp-layout-21'}));}if(req.method!=='POST'||req.url!=='/render'){res.writeHead(404,{'content-type':'application/json'});return res.end(JSON.stringify({error:'Not found'}));}const body=await readJson(req),started=Date.now(),output=await renderPoster(body);res.writeHead(200,{'content-type':'image/webp','content-length':String(output.length),'cache-control':'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800','x-kollection-renderer':'v2-bp-layout-21','x-kollection-render-ms':String(Date.now()-started)});res.end(output);}catch(error){res.writeHead(400,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:error?.message||'Render failed'}));}});
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)server.listen(PORT,'0.0.0.0',()=>console.log(`Kollection Posters v2 renderer listening on ${PORT}`));
