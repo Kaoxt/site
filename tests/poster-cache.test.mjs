@@ -245,7 +245,6 @@ test('polished layout version gets its own persistent poster variant', async () 
   await first.arrayBuffer(); await h.flush();
   assert.equal(h.count.render, 1);
 
-  h.edge.clear();
   const second = await h.request('27205', '&v=21');
   await second.arrayBuffer(); await h.flush();
   assert.equal(h.count.render, 2, 'v21 should not reuse a v20 rendered R2 image');
