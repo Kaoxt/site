@@ -66,6 +66,7 @@
     previewCollections: null,
     finalCollections: null,
     installStarted: false,
+    installCompleted: false,
   };
 
   const nav = $('#stepNav');
@@ -995,6 +996,8 @@
 
     loading('Adding The Kollection to Nuvio…');
     await pushCollections(state.finalCollections);
+    state.installCompleted = true;
+    window.KollectionCollectionEligibility?.invalidate?.(state.profileId);
   }
 
   function renderWelcome() {
@@ -1938,16 +1941,46 @@
   function renderInstall() {
     const selectedPack = selectedCollectionPack();
     const bcNeeded = shouldInstallBingecat(selectedPack);
+    const existingName = window.KollectionSavedSetup?.getName?.() || '';
+    const buttonLabel = state.installCompleted ? 'Finish setup' : 'Set Up The Kollection';
     host.innerHTML = panel('STEP 7 · SET UP', 'Ready to set up The Kollection',
       `Set Up Collection will generate the required AIOMetadata configuration${state.aiChunks.length === 1 ? '' : 's'}, install ${bcNeeded ? 'AIOMetadata and your personal Bingecat manifest' : 'AIOMetadata'}, ${state.posterOverlaysEnabled ? 'apply Smart Overlay Posters to the collection, ' : ''}rewrite the collection sources, and add ${selectedPack.length} selected section${selectedPack.length === 1 ? '' : 's'} to Nuvio.`,
       `<div class="card">
+        <div class="field setup-name-field">
+          <label for="setupName">Setup name</label>
+          <input id="setupName" type="text" maxlength="120" autocomplete="off" value="${esc(existingName)}" placeholder="Give this setup a name">
+          <small>This name will appear in Your setups and on the Nuvio profile using it. The setup saves automatically after it is successfully added.</small>
+        </div>
         <div class="callout good"><strong>Provision-first flow:</strong> if AIOMetadata configuration fails before Nuvio add-ons are installed, your Nuvio collection is left unchanged.</div>
-        <div class="actions"><button class="ghost" id="backBtn">Back</button><button class="btn" id="installBtn">Set Up The Kollection</button></div>
+        <div class="actions"><button class="ghost" id="backBtn" ${state.installCompleted ? 'disabled' : ''}>Back</button><button class="btn" id="installBtn">${buttonLabel}</button></div>
       </div>`);
-    $('#backBtn').onclick = () => setStep(5);
+    $('#backBtn').onclick = () => {
+      if (!state.installCompleted) setStep(5);
+    };
+    $('#setupName')?.addEventListener('input', event => {
+      window.KollectionSavedSetup?.setName?.(event.target.value);
+    });
     $('#installBtn').onclick = async () => {
+      const nameInput = $('#setupName');
+      const setupName = String(nameInput?.value || '').trim().replace(/\s+/g, ' ');
+      if (!setupName) {
+        alert('Give this setup a name before adding it to your Nuvio profile.', 'error');
+        nameInput?.focus();
+        return;
+      }
+      window.KollectionSavedSetup?.setName?.(setupName);
+
       try {
-        await installEverything();
+        if (!state.installCompleted) await installEverything();
+        loading('Saving your setup to your account…');
+        if (!window.KollectionSavedSetup?.saveApplied) {
+          throw new Error('The setup save service is not ready. Refresh the page and try again.');
+        }
+        await window.KollectionSavedSetup.saveApplied({
+          name: setupName,
+          profileId: state.profileId,
+          profileName: state.profileName,
+        });
         setStep(7);
       } catch (e) {
         if (state.step === 1 && !state.profileEligibility?.eligible) {
@@ -1955,7 +1988,10 @@
           return;
         }
         renderInstall();
-        alert(`${e.message}${state.installStarted ? ' Your pre-setup backup is still available from the Review step.' : ''}`, 'error');
+        const suffix = state.installCompleted
+          ? ' The Kollection is already on your Nuvio profile; use Finish setup to retry saving it to Your setups.'
+          : (state.installStarted ? ' Your pre-setup backup is still available from the Review step.' : '');
+        alert(`${e.message}${suffix}`, 'error');
       }
     };
   }
@@ -2048,6 +2084,7 @@
       previewCollections: null,
       finalCollections: null,
       installStarted: false,
+      installCompleted: false,
     });
     setStep(0);
   };
