@@ -275,6 +275,24 @@ test('HEAD preserves the cached GET body and invalid IDs never reach upstream', 
   assert.equal(h.count.render, 1); await h.flush();
 });
 
+test('explicit empty tags stay disabled instead of restoring defaults', async () => {
+  const h = harness();
+  const context = h.context();
+  const url = new URL(context.request.url);
+  url.searchParams.set('tags', '');
+  context.request = new Request(url);
+  const response = await onRequest(context);
+  await response.arrayBuffer();
+  await h.flush();
+
+  assert.equal(response.status, 200);
+  assert.equal(h.count.trend, 0);
+  assert.equal(h.count.ratings, 0);
+  assert.equal(h.payloads.at(-1).trend, '');
+  assert.equal(h.payloads.at(-1).rating, '');
+  assert.equal(h.payloads.at(-1).genre, '');
+});
+
 test('metadata storage contains no API keys and survives an edge-cache eviction', async () => {
   const h = harness(); let loads = 0;
   const load = async () => ({ id: ++loads });
