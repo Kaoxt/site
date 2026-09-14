@@ -11,8 +11,6 @@
   const sourceInputs = [...document.querySelectorAll('input[name="posterSource"]')];
   const sourceCards = [...document.querySelectorAll('.choice-card')];
   const tagInputs = [...document.querySelectorAll('.tag-option input[type="checkbox"]')];
-  const trendInput = tagInputs.find((input) => input.value === 'trend');
-  const qualityInput = tagInputs.find((input) => input.value === 'quality');
   const ratingInput = tagInputs.find((input) => input.value === 'rating');
   const posterMocks = [...document.querySelectorAll('.poster-mock')];
   const previewDescription = document.getElementById('previewDescription');
@@ -203,21 +201,12 @@
     tmdb: 'TMDB'
   }[selectedRatingSource()] || 'AVG');
 
-  const syncTrendConstraint = () => {
-    if (!trendInput || !qualityInput) return;
-    const forced = !qualityInput.checked;
-    if (forced) trendInput.checked = true;
-    trendInput.disabled = forced;
-    trendInput.closest('.tag-option')?.classList.toggle('is-forced', forced);
-  };
-
   const refreshServicePreviews = () => {
     // Preview rendering is intentionally handled by preview-controller.js.
     // Tag/rating changes are client-side and do not invoke the Sharp renderer.
   };
 
   const refreshPreview = () => {
-    syncTrendConstraint();
     const source = selectedSource();
     const enabledTags = new Set(selectedTags());
     const qualityOn = enabledTags.has('quality');
@@ -238,8 +227,8 @@
 
     const tagText = `${enabledTags.size} Smart Tag${enabledTags.size === 1 ? '' : 's'} enabled.`;
     const placementText = qualityOn
-      ? ' Trend shifts right while Quality is enabled.'
-      : ' Trend stays centered and is always enabled while Quality is off.';
+      ? ' Trend stays on the left while Quality is enabled.'
+      : ' Trend stays centered when enabled.';
     const inheritNote = source === 'inherit'
       ? ' The live examples use TMDB artwork for previewing, while your generated AIOmetadata config preserves its existing poster provider.'
       : '';
