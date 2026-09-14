@@ -1000,6 +1000,88 @@
     window.KollectionCollectionEligibility?.invalidate?.(state.profileId);
   }
 
+  function formatSetupDate(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    try {
+      return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(date);
+    } catch {
+      return date.toLocaleDateString();
+    }
+  }
+
+  async function renderExistingSetupPicker() {
+    if (!state.token) await restoreNuvioSession();
+    if (!state.token) {
+      setStep(1);
+      alert('Sign in with Nuvio to choose an existing setup.', 'info');
+      return;
+    }
+
+    host.innerHTML = panel('SET UP COLLECTION', 'Update Existing', 
+      'Choose one of your saved Kollection setups. It will open directly at Step 5 so you can change the collection sections and folders before updating Nuvio.',
+      `<div class="card">
+        <div class="existing-setup-loading">Loading your saved setups…</div>
+      </div>`);
+
+    try {
+      const response = await fetch('/api/account/collections', {
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data?.error || `Could not load saved setups (HTTP ${response.status}).`);
+
+      const setups = Array.isArray(data?.collections) ? data.collections : [];
+      host.innerHTML = panel('SET UP COLLECTION', 'Update Existing',
+        'Choose one of your saved Kollection setups. It will open directly at Step 5 so you can change the collection sections and folders before updating Nuvio.',
+        `<div class="card">
+          ${setups.length ? `
+            <div class="existing-setup-list">
+              ${setups.map(item => {
+                const profile = item?.nuvioProfileName || 'Nuvio profile';
+                const updated = formatSetupDate(item?.updatedAt);
+                return `<button class="existing-setup-choice" type="button" data-saved-id="${esc(item?.id || '')}">
+                  <span class="existing-setup-copy">
+                    <strong>${esc(item?.name || 'My Kollection')}</strong>
+                    <small>${esc(profile)}${updated ? ` · Updated ${esc(updated)}` : ''}</small>
+                  </span>
+                  <span class="existing-setup-action">Update</span>
+                </button>`;
+              }).join('')}
+            </div>
+          ` : `
+            <div class="existing-setup-empty">
+              <strong>No saved setups yet</strong>
+              <span>Finish and save a Kollection setup first, then it will appear here for future updates.</span>
+            </div>
+          `}
+          <div class="actions">
+            <button class="ghost" id="existingSetupBackBtn" type="button">Back</button>
+            ${!setups.length ? '<button class="btn" id="existingSetupStartBtn" type="button">Start setup</button>' : ''}
+          </div>
+        </div>`);
+
+      $('#existingSetupBackBtn').onclick = renderWelcome;
+      $('#existingSetupStartBtn')?.addEventListener('click', () => setStep(1));
+      $('[data-saved-id]').forEach(button => {
+        button.onclick = () => {
+          const id = String(button.dataset.savedId || '').trim();
+          if (!id) return;
+          const next = new URL(window.location.href);
+          next.search = '';
+          next.searchParams.set('saved', id);
+          next.searchParams.set('update', '1');
+          window.location.href = next.toString();
+        };
+      });
+    } catch (error) {
+      renderWelcome();
+      alert(error?.message || 'Could not load your saved setups.', 'error');
+    }
+  }
+
   function renderWelcome() {
     host.innerHTML = panel('SET UP COLLECTION', '',
       'AIOMetadata handles the main collection catalogs. Bingecat is optional and can add personalized For You recommendations.',
@@ -1009,8 +1091,9 @@
           <div class="hero-check"><i>2</i><b>Prepare AIOMetadata</b><span>Use the built-in configuration or provide your own AIOMetadata JSON file.</span></div>
           <div class="hero-check"><i>3</i><b>Choose recommendations</b><span>Connect your personal Bingecat manifest or skip Bingecat entirely.</span></div>
         </div>
-        <div class="actions right"><button class="btn" id="startBtn">Start setup</button></div>
+        <div class="actions right"><button class="ghost" id="updateExistingBtn" type="button">Update Existing</button><button class="btn" id="startBtn">Start setup</button></div>
       </div>`);
+    $('#updateExistingBtn').onclick = renderExistingSetupPicker;
     $('#startBtn').onclick = async () => {
       if (!state.token) await restoreNuvioSession();
       setStep(1);
