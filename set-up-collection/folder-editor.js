@@ -292,10 +292,6 @@
                 </div>
               </div>
 
-              <div class="smart-overlay-modal-advanced">
-                <span>Need poster source, rating provider, or other advanced options?</span>
-                <a class="ghost small" href="/posters" target="_blank" rel="noopener">Advanced settings</a>
-              </div>
             </div>
 
             <p id="smartOverlayModalStatus" class="smart-overlay-modal-status" role="status"></p>
