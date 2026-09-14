@@ -1263,14 +1263,35 @@ body.light .existing-setup-choice:hover {
 }
 
 .existing-setup-action{
-  border:0;
-  font:inherit;
+  min-height:38px;
+  padding:0 15px;
+  border:1px solid var(--line-soft);
+  border-radius:999px;
+  background:rgba(255,255,255,.07);
+  color:var(--text);
+  font-family:inherit;
+  font-size:12.5px;
+  font-weight:700;
+  line-height:1;
+  letter-spacing:-.01em;
   cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
 }
 
 .existing-setup-action.secondary{
   background:transparent;
-  border:1px solid var(--line-soft);
+  border-color:var(--line-soft);
+}
+
+.existing-setup-action:hover{
+  background:rgba(255,255,255,.095);
+  border-color:var(--line);
+}
+
+.existing-setup-action.secondary:hover{
+  background:rgba(255,255,255,.045);
 }
 
 .existing-setup-action:disabled{
@@ -1286,11 +1307,15 @@ body.light .existing-setup-choice:hover {
   .existing-setup-actions{
     flex-direction:column;
     align-items:stretch;
-    min-width:92px;
+    min-width:86px;
+    gap:7px;
   }
 
   .existing-setup-action{
     width:100%;
+    min-height:36px;
+    padding:0 13px;
+    font-size:12px;
   }
 }
 
