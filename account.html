@@ -36,7 +36,7 @@
   <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
   <script src="/nuvio-auth/collection-eligibility.js?v=20260914-1"></script>
   <script src="/account/account.js?v=20260914-newprofile1"></script>
-  <script src="/account/profile-actions.js?v=20260914-savedsetup2"></script>
+  <script src="/account/profile-actions.js?v=20260914-savedsetup3"></script>
   <script src="/account/avatar-edit.js?v=20260909-3"></script>
   <script src="/account/saved-collections.js?v=20260914-active1"></script>
   <script>(()=>{const loader=document.getElementById('accountBootLoader'),signedIn=document.getElementById('accountSignedIn'),signedOut=document.getElementById('accountSignedOut'),profiles=document.getElementById('accountProfiles'),profilesStatus=document.getElementById('accountProfilesStatus');if(!loader)return;let finished=false;const finish=()=>{if(finished)return;finished=true;loader.classList.add('is-ready');setTimeout(()=>loader.remove(),260);observer.disconnect()},ready=()=>{if(signedOut&&!signedOut.hidden)return true;if(signedIn&&!signedIn.hidden){if(profiles&&profiles.children.length>0)return true;const status=String(profilesStatus?.textContent||'').trim();if(status&&!/^Loading Nuvio profiles/i.test(status))return true}return false},observer=new MutationObserver(()=>{if(ready())requestAnimationFrame(()=>requestAnimationFrame(finish))});[signedIn,signedOut,profiles,profilesStatus].filter(Boolean).forEach(node=>observer.observe(node,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']}));if(ready())finish();window.addEventListener('load',()=>{if(ready())requestAnimationFrame(()=>requestAnimationFrame(finish))},{once:true});setTimeout(finish,8000)})();</script>
