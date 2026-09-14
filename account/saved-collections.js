@@ -4,6 +4,7 @@
   const NUVIO_API = 'https://api.nuvio.tv';
   const NUVIO_KEY = 'sb_publishable_1Clq8rlTVACkdcZuqr6_AD__xUUC_EN';
   let busy = false;
+  let reloadPending = false;
 
   async function readJson(response) {
     const body = await response.json().catch(() => ({}));
@@ -143,7 +144,14 @@
 
   async function getActiveKollectionContext(userId) {
     const profileId = activeProfileIdForUser(userId);
-    if (!profileId || !window.KollectionCollectionEligibility) return null;
+    if (!profileId) return null;
+
+    const activeRow = document.querySelector(`#accountProfiles .account-profile-row[data-profile-id="${CSS.escape(String(profileId))}"]`);
+    if (activeRow?.dataset?.collectionEligibilityState === 'kollection') {
+      return { profileId, eligibility: { state: 'kollection', eligible: true, hasKollection: true } };
+    }
+
+    if (!window.KollectionCollectionEligibility) return null;
     try {
       const eligibility = await window.KollectionCollectionEligibility.check(profileId, { force: true });
       if (eligibility?.state !== 'kollection' || !eligibility?.hasKollection) return null;
@@ -382,7 +390,10 @@
   }
 
   async function load() {
-    if (busy) return;
+    if (busy) {
+      reloadPending = true;
+      return;
+    }
     const container = document.getElementById('accountSavedCollections');
     const status = document.getElementById('accountSavedStatus');
     if (!container) return;
@@ -405,7 +416,13 @@
     } catch (error) {
       empty(container, 'Saved collection storage needs the Cloudflare D1 database binding before it can be used.');
       if (status) status.textContent = error?.message || 'Could not load saved setups.';
-    } finally { busy = false; }
+    } finally {
+      busy = false;
+      if (reloadPending) {
+        reloadPending = false;
+        setTimeout(load, 0);
+      }
+    }
   }
 
   function init() {
@@ -413,6 +430,12 @@
     window.addEventListener('kollection:nuvio-signed-in', load);
     window.addEventListener('kollection:setup-synced', load);
     window.addEventListener('kollection:nuvio-profile-changed', load);
+    window.addEventListener('kollection:profile-eligibility-resolved', event => {
+      const activeRow = document.querySelector('#accountProfiles .account-profile-row.active-profile');
+      const activeId = Number(activeRow?.dataset?.profileId);
+      const resolvedId = Number(event?.detail?.profileId);
+      if (Number.isFinite(activeId) && activeId === resolvedId) load();
+    });
     window.addEventListener('kollection:nuvio-signed-out', () => {
       const container = document.getElementById('accountSavedCollections');
       const status = document.getElementById('accountSavedStatus');
