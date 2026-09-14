@@ -262,6 +262,45 @@ test('default poster tags include genre with trend and rating', async () => {
   assert.equal(h.payloads.at(-1).rating, '8.6');
 });
 
+test('Trend Tag details can prioritize notable directors over daily rank', async () => {
+  const h = harness();
+  h.detailsOverride = {
+    production_companies: [],
+    credits: { crew: [{ job: 'Director', name: 'Christopher Nolan' }], cast: [] },
+  };
+  const response = await h.request('27205', '&trendDetails=director,rank,release');
+  await response.arrayBuffer(); await h.flush();
+  assert.equal(h.payloads.at(-1).trend, 'Christopher Nolan Film');
+  assert.equal(response.headers.get('x-kollection-trend-source'), 'director');
+
+  const rankOnly = harness();
+  rankOnly.detailsOverride = h.detailsOverride;
+  const rankResponse = await rankOnly.request('27205', '&trendDetails=rank');
+  await rankResponse.arrayBuffer(); await rankOnly.flush();
+  assert.equal(rankOnly.payloads.at(-1).trend, '#1 Today');
+  assert.equal(rankResponse.headers.get('x-kollection-trend-source'), 'rank');
+});
+
+test('richer AIOStreams quality includes Dolby Vision and Atmos', async () => {
+  const h = harness();
+  h.qualityResults = [{
+    parsedFile: {
+      resolution: '2160p',
+      visualTags: ['DV', 'HDR10'],
+      audioTags: ['Dolby Atmos'],
+      quality: 'REMUX',
+    },
+    name: 'Movie.2160p.DV.HDR10.TrueHD.Atmos.REMUX',
+  }];
+  const response = await h.request('27205', '&tags=trend,genre,rating,quality&trendDetails=rank');
+  await response.arrayBuffer(); await h.flush();
+  assert.equal(h.payloads.at(-1).quality, '4K · DV');
+  assert.equal(h.payloads.at(-1).audio, 'Atmos');
+  assert.match(response.headers.get('x-kollection-quality-tokens') || '', /4K/);
+  assert.match(response.headers.get('x-kollection-quality-tokens') || '', /DV/);
+  assert.match(response.headers.get('x-kollection-quality-tokens') || '', /ATMOS/);
+});
+
 test('cold image returns before cache writes while its lease and shared bytes remain available', { timeout: 2000 }, async () => {
   const h = harness();
   const finishStorage = deferred();
