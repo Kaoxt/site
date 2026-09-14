@@ -551,10 +551,10 @@ async function resolveQuality(details, type, env, context) {
   const aioId = type === 'tv' ? `${imdbId}:1:1` : imdbId;
   let response;
   try {
-    const endpoint = new URL('/api/v1/search', config.baseUrl + '/');
+    const endpoint = new URL(config.baseUrl + '/api/v1/search');
     endpoint.searchParams.set('type', aioType);
     endpoint.searchParams.set('id', aioId);
-    response = await fetch(endpoint, {
+    response = await fetch(endpoint.toString(), {
       headers: { accept: 'application/json', authorization: config.authorization },
       signal: context?.signal ? AbortSignal.any([context.signal, AbortSignal.timeout(5000)]) : AbortSignal.timeout(5000),
     });
