@@ -1091,9 +1091,8 @@
           <div class="hero-check"><i>2</i><b>Prepare AIOMetadata</b><span>Use the built-in configuration or provide your own AIOMetadata JSON file.</span></div>
           <div class="hero-check"><i>3</i><b>Choose recommendations</b><span>Connect your personal Bingecat manifest or skip Bingecat entirely.</span></div>
         </div>
-        <div class="actions right">${state.token ? '<button class="ghost" id="updateExistingBtn" type="button">Update Existing</button>' : ''}<button class="btn" id="startBtn">Start setup</button></div>
+        <div class="actions right"><button class="btn" id="startBtn">Start setup</button></div>
       </div>`);
-    $('#updateExistingBtn')?.addEventListener('click', renderExistingSetupPicker);
     $('#startBtn').onclick = async () => {
       if (!state.token) await restoreNuvioSession();
       setStep(1);
@@ -2153,10 +2152,22 @@
     });
   }
 
+  function syncSetupToolbarActions() {
+    const reset = $('#resetBtn');
+    const update = $('#updateExistingToolbarBtn');
+
+    if (reset) reset.hidden = state.step === 0;
+    if (update) {
+      update.hidden = !state.token;
+      update.onclick = state.token ? renderExistingSetupPicker : null;
+    }
+  }
+
   function render() {
     renderNav();
     const fn = [renderWelcome, renderNuvio, renderAi, renderBingecat, renderCustomize, renderReview, renderInstall, renderDone][state.step];
     fn();
+    syncSetupToolbarActions();
   }
 
   $('#resetBtn').onclick = () => {
@@ -2233,6 +2244,7 @@
     state.backup = null;
     if (state.step === 0) renderWelcome();
     else if (state.step === 1) renderNuvio();
+    syncSetupToolbarActions();
   });
 
   window.addEventListener('kollection:nuvio-signed-in', async () => {
@@ -2240,6 +2252,7 @@
     const restored = await restoreNuvioSession();
     if (restored && state.step === 0) renderWelcome();
     else if (restored && state.step === 1) renderNuvio();
+    syncSetupToolbarActions();
   });
 
   async function initialize() {
@@ -2247,6 +2260,7 @@
     const restored = await restoreNuvioSession();
     if (restored && state.step === 0) renderWelcome();
     else if (restored && state.step === 1) renderNuvio();
+    syncSetupToolbarActions();
   }
 
   initialize();
