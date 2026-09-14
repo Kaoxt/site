@@ -736,3 +736,317 @@ body.light .smart-overlay-settings{border-top-color:rgba(0,0,0,.08)}
   .smart-overlay-settings{align-items:stretch;flex-direction:column}
   .smart-overlay-settings .ghost{width:100%}
 }
+
+
+/* Smart Overlay Posters configure modal — account-profile style */
+.smart-overlay-control-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  padding-top:14px;
+}
+.smart-overlay-control-row .smart-overlay-toggle{
+  flex:1 1 auto;
+  min-width:0;
+  padding:0;
+}
+.smart-overlay-configure-btn{
+  flex:0 0 auto;
+  min-width:104px;
+  justify-content:center;
+}
+.smart-overlay-modal-root{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  pointer-events:none;
+}
+.smart-overlay-modal-root.open{pointer-events:auto}
+.smart-overlay-modal-backdrop{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  padding:24px;
+  background:rgba(5,6,8,.48);
+  backdrop-filter:blur(16px) saturate(.92);
+  -webkit-backdrop-filter:blur(16px) saturate(.92);
+}
+.smart-overlay-modal{
+  width:min(680px,100%);
+  max-height:min(88vh,860px);
+  overflow:auto;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:22px;
+  background:rgba(22,22,24,.98);
+  box-shadow:0 28px 90px rgba(0,0,0,.58);
+  color:var(--text);
+}
+.smart-overlay-modal-head{
+  min-height:74px;
+  padding:20px 26px;
+  border-bottom:1px solid rgba(255,255,255,.09);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+}
+.smart-overlay-modal-head>div{display:grid;gap:4px}
+.smart-overlay-modal-kicker{
+  color:var(--muted);
+  font-size:10.5px;
+  font-weight:800;
+  letter-spacing:.12em;
+}
+.smart-overlay-modal-head h3{
+  margin:0;
+  font-size:22px;
+  letter-spacing:-.025em;
+}
+.smart-overlay-modal-x{
+  width:42px;
+  height:42px;
+  padding:0;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:50%;
+  background:rgba(255,255,255,.025);
+  color:var(--muted);
+  font-size:0;
+  line-height:0;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.smart-overlay-modal-x::before{
+  content:"×";
+  display:block;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:24px;
+  font-weight:400;
+  line-height:1;
+  transform:translateY(-1px);
+}
+.smart-overlay-modal-x:hover{
+  color:var(--text);
+  background:rgba(255,255,255,.06);
+}
+.smart-overlay-modal-body{padding:26px;display:grid;gap:18px}
+.smart-overlay-modal-copy{
+  margin:0;
+  color:var(--muted);
+  line-height:1.55;
+}
+.smart-overlay-modal-section{
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:17px;
+  background:rgba(255,255,255,.022);
+  padding:18px;
+}
+.smart-overlay-modal-section[hidden]{display:none!important}
+.smart-overlay-modal-section-head{
+  display:grid;
+  gap:5px;
+  margin-bottom:14px;
+}
+.smart-overlay-modal-section-head>span{
+  color:var(--muted);
+  font-size:10.5px;
+  font-weight:800;
+  letter-spacing:.11em;
+}
+.smart-overlay-modal-section-head>strong{
+  font-size:15px;
+}
+.smart-overlay-modal-section-head>small{
+  color:var(--muted);
+  font-size:11.5px;
+  line-height:1.45;
+}
+.smart-overlay-style-grid,
+.smart-overlay-tag-grid,
+.smart-overlay-trend-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.smart-overlay-choice,
+.smart-overlay-tag-option,
+.smart-overlay-trend-option{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  gap:11px;
+  align-items:flex-start;
+  min-width:0;
+  padding:14px;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:14px;
+  background:rgba(255,255,255,.025);
+  cursor:pointer;
+}
+.smart-overlay-choice input,
+.smart-overlay-tag-option input,
+.smart-overlay-trend-option input{
+  width:18px;
+  height:18px;
+  margin:2px 0 0;
+  accent-color:#7c83ff;
+}
+.smart-overlay-choice span,
+.smart-overlay-tag-option span,
+.smart-overlay-trend-option span{
+  display:grid;
+  gap:4px;
+  min-width:0;
+}
+.smart-overlay-choice b,
+.smart-overlay-tag-option b,
+.smart-overlay-trend-option b{
+  font-size:13px;
+  line-height:1.3;
+}
+.smart-overlay-choice small,
+.smart-overlay-tag-option small,
+.smart-overlay-trend-option small{
+  color:var(--muted);
+  font-size:11.5px;
+  line-height:1.42;
+}
+.smart-overlay-provider-field{
+  display:grid;
+  gap:8px;
+  margin-top:14px;
+}
+.smart-overlay-provider-field>span{
+  font-size:12px;
+  font-weight:750;
+}
+.smart-overlay-provider-field select,
+.smart-overlay-detail-section select{
+  width:100%;
+  min-height:48px;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:13px;
+  background:rgba(255,255,255,.04);
+  color:var(--text);
+  padding:0 14px;
+  font:inherit;
+  outline:none;
+}
+.smart-overlay-provider-field>small{
+  color:var(--muted);
+  font-size:11.5px;
+}
+.smart-overlay-detail-section{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(190px,.7fr);
+  align-items:center;
+  gap:16px;
+}
+.smart-overlay-detail-copy{display:grid;gap:4px}
+.smart-overlay-detail-copy strong{font-size:14px}
+.smart-overlay-detail-copy small{
+  color:var(--muted);
+  font-size:11.5px;
+  line-height:1.4;
+}
+.smart-overlay-modal-footer{
+  padding:18px 26px 24px;
+  display:flex;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.smart-overlay-modal-button{
+  min-height:44px;
+  padding:0 18px;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:13px;
+  background:rgba(255,255,255,.025);
+  color:var(--text);
+  font:inherit;
+  font-weight:750;
+  cursor:pointer;
+}
+.smart-overlay-modal-button.primary{
+  background:#f4f4f6;
+  color:#17171a;
+  border-color:#f4f4f6;
+}
+html.smart-overlay-modal-open{overflow:hidden}
+body.light .smart-overlay-modal{
+  background:rgba(248,249,252,.98);
+  border-color:rgba(0,0,0,.10);
+  box-shadow:0 28px 90px rgba(24,30,45,.24);
+}
+body.light .smart-overlay-modal-backdrop{background:rgba(230,233,240,.45)}
+body.light .smart-overlay-modal-head,
+body.light .smart-overlay-modal-section,
+body.light .smart-overlay-choice,
+body.light .smart-overlay-tag-option,
+body.light .smart-overlay-trend-option,
+body.light .smart-overlay-provider-field select,
+body.light .smart-overlay-detail-section select,
+body.light .smart-overlay-modal-button{
+  border-color:rgba(0,0,0,.10);
+}
+body.light .smart-overlay-modal-section,
+body.light .smart-overlay-choice,
+body.light .smart-overlay-tag-option,
+body.light .smart-overlay-trend-option,
+body.light .smart-overlay-provider-field select,
+body.light .smart-overlay-detail-section select,
+body.light .smart-overlay-modal-button{
+  background:rgba(255,255,255,.82);
+}
+body.light .smart-overlay-modal-button.primary{
+  background:#181a20;
+  color:#fff;
+  border-color:#181a20;
+}
+@media(max-width:680px){
+  .smart-overlay-control-row{
+    align-items:flex-start;
+    gap:12px;
+  }
+  .smart-overlay-configure-btn{
+    min-width:92px;
+    padding-left:13px;
+    padding-right:13px;
+  }
+  .smart-overlay-modal-backdrop{
+    padding:12px;
+    align-items:center;
+  }
+  .smart-overlay-modal{
+    border-radius:18px;
+    max-height:92vh;
+  }
+  .smart-overlay-modal-head{
+    min-height:64px;
+    padding:16px 18px;
+  }
+  .smart-overlay-modal-head h3{font-size:19px}
+  .smart-overlay-modal-body{
+    padding:20px 18px;
+    gap:14px;
+  }
+  .smart-overlay-modal-footer{padding:14px 18px 18px}
+  .smart-overlay-style-grid,
+  .smart-overlay-tag-grid,
+  .smart-overlay-trend-grid{
+    grid-template-columns:1fr;
+  }
+  .smart-overlay-detail-section{
+    grid-template-columns:1fr;
+  }
+}
+@media(max-width:520px){
+  .smart-overlay-control-row{
+    flex-direction:column;
+  }
+  .smart-overlay-configure-btn{
+    align-self:flex-end;
+  }
+}
