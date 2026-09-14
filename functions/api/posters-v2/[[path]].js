@@ -751,10 +751,7 @@ async function renderPoster(context, state, id, persistentKey) {
     headers.set('x-kollection-overlay-language', overlayLanguage);
     headers.set('x-kollection-generated-at', String(Date.now()));
     headers.set('x-kollection-fresh-until', String(freshUntil(Date.now(), state)));
-    const result = { body: output, headers: [...headers], status: 200 };
-    // Finish the shared-storage write before releasing the cross-Worker lease.
-    result.persisted = await saveResult(context, state, persistentKey, result);
-    return result;
+    return { body: output, headers: [...headers], status: 200 };
   } finally {
     slot.release();
   }
