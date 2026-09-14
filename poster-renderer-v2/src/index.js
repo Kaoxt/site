@@ -52,7 +52,7 @@ export default {
     }
 
     const shard = url.pathname === '/health' ? 0 : renderShard(request);
-    const instance = getContainer(env.POSTER_RENDERER, `primary-v25-${shard}`);
+    const instance = getContainer(env.POSTER_RENDERER, `primary-v26-${shard}`);
     return instance.fetch(request);
   },
 

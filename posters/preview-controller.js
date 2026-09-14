@@ -60,6 +60,7 @@
     .client-preview-top.split-layout .client-preview-quality{right:10px}
     .client-preview-tag{display:inline-flex;align-items:center;justify-content:center;height:29px;min-height:29px;padding:0 11px;border-radius:0 0 6px 6px;background:rgba(18,18,20,.78);color:#fff;font-family:Inter,"Segoe UI",Arial,sans-serif;font-size:clamp(11px,1.65vw,16px);font-weight:700;line-height:1;letter-spacing:-.015em;white-space:nowrap;text-shadow:0 2px 6px rgba(0,0,0,.72);backdrop-filter:blur(4px);box-sizing:border-box}
     .client-preview-quality{font-size:clamp(10px,1.45vw,14px);min-width:42px}
+    .client-preview-audio{position:absolute;right:10px;top:35px;padding:4px 8px;border:1px solid rgba(255,255,255,.12);border-radius:7px;background:rgba(17,18,22,.74);color:#f4f4f6;font-size:clamp(8px,1.15vw,11px);font-weight:700;line-height:1;text-shadow:0 1px 3px rgba(0,0,0,.6)}
     .client-preview-age{position:absolute;left:50%;top:58%;transform:translate(-50%,-50%);padding:5px 8px;border-radius:7px;background:rgba(15,16,20,.66);color:#fff;font-size:clamp(8px,1.25vw,12px);font-weight:750;text-shadow:0 2px 5px rgba(0,0,0,.8)}
     .client-preview-bottom{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);width:calc(100% - 16px);color:#dedee2;text-align:center;font-size:clamp(15px,2.25vw,23px);font-weight:700;line-height:1.05;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 2px rgba(0,0,0,.95),0 0 8px rgba(0,0,0,.95),0 0 16px rgba(0,0,0,.7)}
 
@@ -77,7 +78,8 @@
   const selectedSource = () => document.querySelector('input[name="posterSource"]:checked')?.value || 'smart';
   const selectedProvider = () => document.getElementById('artworkProvider')?.value || 'tmdb';
   const selectedRatingSource = () => document.getElementById('ratingSource')?.value || 'average';
-  const selectedTags = () => [...document.querySelectorAll('.tag-option input[type="checkbox"]:checked')].map((input) => input.value);
+  const selectedTags = () => [...document.querySelectorAll('#tagOptions .tag-option > input[type="checkbox"]:checked')].map((input) => input.value);
+  const selectedTrendDetails = () => [...document.querySelectorAll('[data-trend-detail]:checked')].map((input) => input.value);
   const selectedOverlayLanguage = () => document.getElementById('postersLanguage')?.value || 'en';
 
   function localizeTrend(value, index, language) {
@@ -94,11 +96,25 @@
   }
 
   function sampleFor(index) {
-    return samples[index] || [
-      { trend:'#1 Today', rating:'6.8', genre:'Drama', age:'PG-13', quality:'4K' },
-      { trend:'#2 Today', rating:'5.2', genre:'Comedy', age:'PG-13', quality:'4K' },
-      { trend:'#1 Today', rating:'7.4', genre:'Drama', age:'TV-14', quality:'4K' },
+    const base = samples[index] || [
+      { type:'movie', id:'27205', trend:'#1 Today', release:'New', rating:'8.8', genre:'Sci-Fi', age:'PG-13', quality:'4K · DV', audio:'Atmos', director:'Christopher Nolan Film' },
+      { type:'movie', id:'155', trend:'#2 Today', release:'In Cinema', rating:'9.0', genre:'Action', age:'PG-13', quality:'4K · HDR', audio:'Atmos', director:'Christopher Nolan Film', cast:'Christian Bale' },
+      { type:'tv', id:'1399', trend:'#1 Today', release:'Returning', rating:'9.2', genre:'Drama', age:'TV-MA', quality:'4K · DV', audio:'Atmos', studio:'HBO Original' },
     ][index] || {};
+    const id = String(base.id || '');
+    if (id === '27205' || id === '155') return { ...base, director: base.director || 'Christopher Nolan Film' };
+    if (id === '1399') return { ...base, studio: base.studio || 'HBO Original', release: base.release || 'Returning' };
+    return base;
+  }
+
+  function trendPreviewText(sample, index, language) {
+    const selected = new Set(selectedTrendDetails());
+    if (selected.has('studio') && sample.studio) return sample.studio;
+    if (selected.has('director') && sample.director) return sample.director;
+    if (selected.has('cast') && sample.cast) return sample.cast;
+    if (selected.has('rank')) return localizeTrend(sample.trend, index, language);
+    if (selected.has('release') && sample.release) return sample.release;
+    return '';
   }
 
   function ensureClientLayer(posterMock) {
@@ -106,7 +122,7 @@
     if (layer) return layer;
     layer = document.createElement('div');
     layer.className = 'client-preview-layer';
-    layer.innerHTML = `<div class="client-preview-top"><span class="client-preview-tag client-preview-trend"></span><span class="client-preview-tag client-preview-quality"></span></div><span class="client-preview-age"></span><div class="client-preview-bottom"></div>`;
+    layer.innerHTML = `<div class="client-preview-top"><span class="client-preview-tag client-preview-trend"></span><span class="client-preview-tag client-preview-quality"></span></div><span class="client-preview-audio"></span><span class="client-preview-age"></span><div class="client-preview-bottom"></div>`;
     posterMock.appendChild(layer);
     return layer;
   }
@@ -126,6 +142,7 @@
       const top = layer.querySelector('.client-preview-top');
       const trend = layer.querySelector('.client-preview-trend');
       const quality = layer.querySelector('.client-preview-quality');
+      const audio = layer.querySelector('.client-preview-audio');
       const age = layer.querySelector('.client-preview-age');
       const bottom = layer.querySelector('.client-preview-bottom');
 
@@ -133,13 +150,16 @@
       top.classList.toggle('split-layout', qualityOn);
       top.classList.toggle('center-layout', !qualityOn);
 
-      trend.textContent = localizeTrend(sample.trend, index, language);
-      trend.hidden = !tags.has('trend');
-      trend.style.display = tags.has('trend') ? '' : 'none';
+      trend.textContent = trendPreviewText(sample, index, language);
+      trend.hidden = !tags.has('trend') || !trend.textContent;
+      trend.style.display = tags.has('trend') && trend.textContent ? '' : 'none';
 
       quality.textContent = sample.quality || '4K';
       quality.hidden = !qualityOn;
       quality.style.display = qualityOn ? '' : 'none';
+      audio.textContent = sample.audio || '';
+      audio.hidden = !qualityOn || !audio.textContent;
+      audio.style.display = qualityOn && audio.textContent ? '' : 'none';
 
       age.textContent = sample.age || (sample.type === 'tv' ? 'TV-14' : 'PG-13');
       age.hidden = !tags.has('age');
@@ -206,7 +226,7 @@
       nextImg.className = 'poster-service-image';
       nextImg.alt = currentImg.alt || 'Poster preview artwork';
       nextImg.decoding = 'async';
-      const params = new URLSearchParams({ v: '21', source, provider, tags: 'none', preview: '1', previewVersion: `client-base-4-${source}-${provider}` });
+      const params = new URLSearchParams({ v: '22', source, provider, tags: 'none', preview: '1', previewVersion: `client-base-5-${source}-${provider}` });
       nextImg.addEventListener('load', () => {
         if (generation !== requestGeneration) return resolve();
         currentImg.replaceWith(nextImg);
@@ -233,9 +253,9 @@
     } catch {}
     if (samples.length < 3) {
       samples = [
-        { type:'movie', id:'27205', trend:'#1 Today', rating:'6.8', genre:'Drama', age:'PG-13', quality:'4K' },
-        { type:'movie', id:'155', trend:'#2 Today', rating:'8.5', genre:'Crime', age:'PG-13', quality:'4K' },
-        { type:'tv', id:'1399', trend:'#1 Today', rating:'9.2', genre:'Drama', age:'TV-MA', quality:'4K' },
+        { type:'movie', id:'27205', trend:'#1 Today', release:'New', rating:'8.8', genre:'Sci-Fi', age:'PG-13', quality:'4K · DV', audio:'Atmos', director:'Christopher Nolan Film' },
+        { type:'movie', id:'155', trend:'#2 Today', release:'In Cinema', rating:'9.0', genre:'Action', age:'PG-13', quality:'4K · HDR', audio:'Atmos', director:'Christopher Nolan Film', cast:'Christian Bale' },
+        { type:'tv', id:'1399', trend:'#1 Today', release:'Returning', rating:'9.2', genre:'Drama', age:'TV-MA', quality:'4K · DV', audio:'Atmos', studio:'HBO Original' },
       ];
     }
   }
@@ -259,7 +279,7 @@
     const target = event.target;
     if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
     const isBaseChange = target.matches('input[name="posterSource"], #artworkProvider');
-    const isOverlayChange = target.matches('.tag-option input[type="checkbox"], #ratingSource, #postersLanguage');
+    const isOverlayChange = target.matches('.tag-option input[type="checkbox"], [data-trend-detail], #ratingSource, #postersLanguage');
     if (!isBaseChange && !isOverlayChange) return;
     syncUiState();
     if (!started) return;

@@ -82,7 +82,7 @@ function harness(overrides = {}) {
   const env = { IMAGES: bucket, DB: db, TMDB_API_KEY: 'test-tmdb-secret', MDBLIST_API_KEY: 'test-mdb-secret', POSTERS_RENDERER_AUTH_TOKEN: 'test-render-secret', ...overrides };
   const jobs = [];
   const count = { find: 0, details: 0, trend: 0, ratings: 0, quality: 0, render: 0, fallback: 0 };
-  const h = { bucket, edge, db, env, jobs, count, payloads: [], qualityAuth: [], qualityResolution: '2160p', qualityStatus: 200, renderStatus: 200, ratingStatus: 200 };
+  const h = { bucket, edge, db, env, jobs, count, payloads: [], qualityAuth: [], qualityResolution: '2160p', qualityResults: null, qualityStatus: 200, renderStatus: 200, ratingStatus: 200 };
   globalThis.caches = { default: edge };
   globalThis.fetch = async (input, options = {}) => {
     const url = new URL(typeof input === 'string' ? input : input.url);
@@ -118,7 +118,7 @@ function harness(overrides = {}) {
       return Response.json({
         success: true,
         data: {
-          results: [{ parsedFile: { resolution: h.qualityResolution } }],
+          results: h.qualityResults || [{ parsedFile: { resolution: h.qualityResolution } }],
           errors: {},
         },
       });
@@ -220,46 +220,93 @@ test('series fallback tags match BetterPosters lifecycle labels', async () => {
   const limited = harness();
   limited.detailsOverride = { first_air_date: day(-180), type: 'Miniseries', status: 'Ended' };
   const limitedContext = limited.context('155');
-  limitedContext.request = new Request('https://kollection.tv/api/posters-v2/tv/155.webp?v=21&source=smart&tags=trend,genre,rating&ratingSource=average');
+  limitedContext.request = new Request('https://kollection.tv/api/posters-v2/tv/155.webp?v=22&source=smart&tags=trend,genre,rating&ratingSource=average&trendDetails=studio,director,cast,rank,release');
   await (await onRequest(limitedContext)).arrayBuffer(); await limited.flush();
   assert.equal(limited.payloads.at(-1).trend, 'Limited Series');
 
   const returning = harness();
   returning.detailsOverride = { first_air_date: day(-700), type: 'Scripted', status: 'Returning Series' };
   const returningContext = returning.context('278');
-  returningContext.request = new Request('https://kollection.tv/api/posters-v2/tv/278.webp?v=21&source=smart&tags=trend,genre,rating&ratingSource=average');
+  returningContext.request = new Request('https://kollection.tv/api/posters-v2/tv/278.webp?v=22&source=smart&tags=trend,genre,rating&ratingSource=average&trendDetails=studio,director,cast,rank,release');
   await (await onRequest(returningContext)).arrayBuffer(); await returning.flush();
   assert.equal(returning.payloads.at(-1).trend, 'Returning');
 
   const newSeries = harness();
   newSeries.detailsOverride = { first_air_date: day(-4), type: 'Scripted', status: 'Returning Series' };
   const newSeriesContext = newSeries.context('13');
-  newSeriesContext.request = new Request('https://kollection.tv/api/posters-v2/tv/13.webp?v=21&source=smart&tags=trend,genre,rating&ratingSource=average');
+  newSeriesContext.request = new Request('https://kollection.tv/api/posters-v2/tv/13.webp?v=22&source=smart&tags=trend,genre,rating&ratingSource=average&trendDetails=studio,director,cast,rank,release');
   await (await onRequest(newSeriesContext)).arrayBuffer(); await newSeries.flush();
   assert.equal(newSeries.payloads.at(-1).trend, 'New Series');
 });
 
-test('polished layout version gets its own persistent poster variant', async () => {
+test('trend-detail layout version gets its own persistent poster variant', async () => {
   const h = harness();
-  const first = await h.request('27205', '&v=20');
+  const first = await h.request('27205', '&v=21');
   await first.arrayBuffer(); await h.flush();
   assert.equal(h.count.render, 1);
 
-  const second = await h.request('27205', '&v=21');
+  const second = await h.request('27205', '&v=22&trendDetails=studio,director,cast,rank,release');
   await second.arrayBuffer(); await h.flush();
-  assert.equal(h.count.render, 2, 'v21 should not reuse a v20 rendered R2 image');
+  assert.equal(h.count.render, 2, 'v22 should not reuse a v21 rendered R2 image');
   assert.equal(h.bucket.posters().length, 2);
 });
 
 test('default poster tags include genre with trend and rating', async () => {
   const h = harness();
   const context = h.context('27205');
-  context.request = new Request('https://kollection.tv/api/posters-v2/movie/27205.webp?v=21&source=smart&ratingSource=average');
+  context.request = new Request('https://kollection.tv/api/posters-v2/movie/27205.webp?v=22&source=smart&ratingSource=average&trendDetails=studio,director,cast,rank,release');
   const response = await onRequest(context);
   await response.arrayBuffer(); await h.flush();
   assert.equal(h.payloads.at(-1).genre, 'Drama');
   assert.equal(h.payloads.at(-1).trend, '#1 Today');
   assert.equal(h.payloads.at(-1).rating, '8.6');
+});
+
+test('Trend Tag details can prioritize notable directors over daily rank', async () => {
+  const h = harness();
+  h.detailsOverride = {
+    production_companies: [],
+    credits: { crew: [{ job: 'Director', name: 'Christopher Nolan' }], cast: [] },
+  };
+  const response = await h.request('27205', '&trendDetails=director,rank,release');
+  await response.arrayBuffer(); await h.flush();
+  assert.equal(h.payloads.at(-1).trend, 'Christopher Nolan Film');
+  assert.equal(response.headers.get('x-kollection-trend-source'), 'director');
+
+  const rankOnly = harness();
+  rankOnly.detailsOverride = h.detailsOverride;
+  const rankResponse = await rankOnly.request('27205', '&trendDetails=rank');
+  await rankResponse.arrayBuffer(); await rankOnly.flush();
+  assert.equal(rankOnly.payloads.at(-1).trend, '#1 Today');
+  assert.equal(rankResponse.headers.get('x-kollection-trend-source'), 'rank');
+});
+
+test('richer AIOStreams quality includes Dolby Vision and Atmos', async () => {
+  const h = harness({
+    POSTERS_AIOSTREAMS_URL: 'https://aiostreams.example',
+    POSTERS_AIOSTREAMS_AUTH: 'dXNlcjpwYXNz',
+  });
+  h.qualityResults = [{
+    parsedFile: {
+      resolution: '2160p',
+      visualTags: ['DV', 'HDR10'],
+      audioTags: ['Dolby Atmos'],
+      quality: 'REMUX',
+    },
+    name: 'Movie.2160p.DV.HDR10.TrueHD.Atmos.REMUX',
+  }];
+  const context = h.context('27205');
+  const qualityUrl = new URL(context.request.url);
+  qualityUrl.searchParams.set('tags', 'trend,genre,rating,quality');
+  qualityUrl.searchParams.set('trendDetails', 'rank');
+  context.request = new Request(qualityUrl);
+  const response = await onRequest(context);
+  await response.arrayBuffer(); await h.flush();
+  assert.equal(h.payloads.at(-1).quality, '4K · DV');
+  assert.equal(h.payloads.at(-1).audio, 'Atmos');
+  assert.match(response.headers.get('x-kollection-quality-tokens') || '', /4K/);
+  assert.match(response.headers.get('x-kollection-quality-tokens') || '', /DV/);
+  assert.match(response.headers.get('x-kollection-quality-tokens') || '', /ATMOS/);
 });
 
 test('cold image returns before cache writes while its lease and shared bytes remain available', { timeout: 2000 }, async () => {

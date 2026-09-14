@@ -9,7 +9,7 @@ The AIOMetadata pattern replaces only `poster`. It does not change a title's bac
 3. On an IMDb miss, cached ID metadata locates the existing TMDB-addressed R2 poster. That legacy poster is reused and an IMDb-addressed copy is saved to avoid future ID lookups. Both IDs still share one render lock.
 4. Only a true cache miss renders a new image. Refreshes and cold requests share in-flight work; D1 leases coordinate separate Worker instances. The finished canonical R2 write completes before a successful lease is released.
 
-The artwork version remains `production-cache-19`, preserving previously rendered 500×750 images. The delivery version is independent (`cold-pipeline-3`); generated client patterns use `v=21`. The layout version is part of both edge and persistent cache keys, so visual revisions do not require a global artwork-cache purge.
+The artwork version remains `production-cache-19`, preserving previously rendered 500×750 images. The delivery version is independent (`cold-pipeline-3`); generated client patterns use `v=22`. The layout version is part of both edge and persistent cache keys, so visual revisions do not require a global artwork-cache purge.
 
 ## First loads
 
@@ -17,7 +17,7 @@ MDBList ratings start alongside TMDB artwork metadata and trends, using the know
 
 Finished image bytes return before R2 and edge writes finish. `waitUntil` keeps those writes running; the canonical render lease is released only after its R2 write completes. Same-worker callers share the completed bytes during persistence, so an IMDb or TMDB request in that interval does not trigger another render. A storage failure retains the normal retry cooldown. The redundant pre-lease R2 read is removed, while the post-lease check still closes cache races.
 
-Renderer `v2-bp-layout-25` renders directly on the delivered 500×750 canvas instead of building a 780×1170 canvas and shrinking it afterward. Its overlay geometry follows the compact BetterPosters-style presentation: a shorter top tab with rounded lower corners, Inter typography, split trend-left/quality-right placement, a subtler age badge, and smaller genre/rating text over a restrained bottom gradient. Adaptive trend colors are intentionally darkened for reliable white-text contrast. The renderer Worker hashes incoming render requests across two named container instances, matching the configured `max_instances: 2`, while `/health` stays pinned to one instance. The renderer deploy workflow runs image tests before deploying.
+Renderer `v2-bp-layout-26` renders directly on the delivered 500×750 canvas instead of building a 780×1170 canvas and shrinking it afterward. Its overlay geometry follows the compact BetterPosters-style presentation: a shorter top tab with rounded lower corners, Inter typography, split trend-left/quality-right placement, a subtler age badge, and smaller genre/rating text over a restrained bottom gradient. Adaptive trend colors are intentionally darkened for reliable white-text contrast. The renderer Worker hashes incoming render requests across two named container instances, matching the configured `max_instances: 2`, while `/health` stays pinned to one instance. The renderer deploy workflow runs image tests before deploying.
 
 ## Shared source artwork
 
@@ -26,6 +26,16 @@ TMDB poster bytes now have their own cache, separate from rendered overlays. The
 The persistent source-art retention window is **30 days since source access**. Accesses refresh the retention timestamp, with persistent touches coalesced to at most once every 12 hours so popular artwork can stay cached indefinitely without rewriting the object for every request. A daily scheduled cleanup removes expired objects under the source-art prefix. Each renderer container also keeps a bounded in-memory LRU (96 images / 24 MB) so repeated variants can skip even the R2 read while the container remains warm.
 
 Custom upstream-addon artwork still follows its existing direct-fetch path rather than being persisted into the shared TMDB source cache. This avoids mixing private or provider-specific artwork URLs into the shared store.
+
+## Trend Tag details
+
+The Trend Tag is now a configurable discovery slot rather than only a TMDB rank/release label. Poster URLs carry a `trendDetails` list with any of `studio,director,cast,rank,release`. The default priority mirrors the supported BetterPosters discovery order: notable studio, notable director, notable cast, daily rank, then release/lifecycle status. This lets a matching title show labels such as `Christopher Nolan Film` or `A24 Film`; disabling a category removes it from consideration without disabling the Trend Tag itself.
+
+Director/cast credits are appended to the existing TMDB details request only when those Trend Tag details are selected. The daily trending endpoint is skipped when Daily Rank is disabled, so user choices can also reduce upstream work. The selected detail list is included in edge and persistent poster cache variants.
+
+## Rich quality tags
+
+AIOStreams quality parsing now preserves one useful token from each available category: resolution (`4K`/`HD`), source (`REMUX`/`WEB-DL`), visual format (`DV`/`HDR10+`/`HDR`), and audio (`Atmos`/`DTS:X`). The top-right quality tag combines resolution and visual format (for example `4K · DV`), while audio is rendered as a smaller companion tag underneath. Cached legacy `4K`/`HD` values remain readable.
 
 ## Trend labels
 

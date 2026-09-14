@@ -35,6 +35,9 @@ function parseConfig(token) {
     defaults,
     source: ['smart', 'tmdb'].includes(raw.source) ? raw.source : 'smart',
     tags: Array.isArray(raw.tags) ? raw.tags.map(String).filter(Boolean).slice(0, 8) : ['trend', 'genre', 'rating'],
+    trendDetails: Array.isArray(raw.trendDetails)
+      ? raw.trendDetails.map(String).filter(value => ['studio', 'director', 'cast', 'rank', 'release'].includes(value)).slice(0, 5)
+      : ['studio', 'director', 'cast', 'rank', 'release'],
     ratingSource: String(raw.ratingSource || 'average'),
     language: ['en', 'es', 'fr', 'de', 'it', 'pt', 'ja', 'ko'].includes(String(raw.language || '').toLowerCase()) ? String(raw.language).toLowerCase() : 'en',
     sort: ['shuffle', 'list', 'newest', 'oldest'].includes(raw.sort) ? raw.sort : 'shuffle',
@@ -43,11 +46,12 @@ function parseConfig(token) {
 
 function posterUrl(config, type, id) {
   const params = new URLSearchParams({
-    v: '21',
+    v: '22',
     source: config.source,
     provider: 'tmdb-bp11',
     tags: [...new Set(config.tags)].sort().join(','),
     ratingSource: config.ratingSource,
+    trendDetails: config.trendDetails.join(','),
     language: config.language,
   });
   const mediaType = type === 'series' ? 'tv' : 'movie';

@@ -55,6 +55,57 @@ async function smartTopTag(text, { fill = '#29292d', fillOpacity = 0.94, width, 
   return { buffer: await sharp(svg).png().toBuffer(), width: resolvedWidth, height: SMART_TOP_HEIGHT };
 }
 
+async function smartAuxTag(text) {
+  const width = smartTagWidth(text, 112, 220), height = px(56), radius = px(13), safeText = esc(text), fontSize = px(32);
+  const svg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect x="0" y="0" width="${width}" height="${height}" rx="${radius}" fill="#111216" fill-opacity=".74" stroke="#fff" stroke-opacity=".12"/><text x="${width/2}" y="${height/2 + px(1)}" text-anchor="middle" dominant-baseline="middle" font-family="Inter, DejaVu Sans" font-size="${fontSize}" font-weight="700" letter-spacing="-.25" fill="#f5f5f6">${safeText}</text></svg>`);
+  return { buffer: await sharp(svg).png().toBuffer(), width, height };
+}
+
+function smartTrendFontSize(text) {
+  const length = String(text || '').length;
+  if (length > 21) return 34;
+  if (length > 16) return 38;
+  if (length > 11) return 43;
+  return 48;
+}
+
+async function addSmartTopTags(composites, { trend = '', quality = '', audio = '', dynamicFill = '#29292d' } = {}) {
+  if (quality) {
+    const q = await smartTopTag(quality, {
+      fill: '#f4f4f5',
+      fillOpacity: .96,
+      width: smartTagWidth(quality, 108, 280),
+      fontSize: String(quality).length > 8 ? 32 : 37,
+      textColor: '#111318',
+    });
+    const qLeft = POSTER_WIDTH - SAFE_MARGIN - q.width;
+    if (trend) {
+      const availableWidth = Math.max(px(238), qLeft - SAFE_MARGIN - px(18));
+      const width = Math.min(smartTagWidth(trend, 238, 590), availableWidth);
+      const t = await smartTopTag(trend, {
+        fill: dynamicFill,
+        width,
+        fontSize: smartTrendFontSize(trend),
+      });
+      composites.push({ input: t.buffer, top: 0, left: SAFE_MARGIN });
+    }
+    composites.push({ input: q.buffer, top: 0, left: qLeft });
+    if (audio) {
+      const a = await smartAuxTag(audio);
+      composites.push({ input: a.buffer, top: SMART_TOP_HEIGHT + px(12), left: POSTER_WIDTH - SAFE_MARGIN - a.width });
+    }
+    return;
+  }
+  if (trend) {
+    const t = await smartTopTag(trend, {
+      fill: dynamicFill,
+      width: smartTagWidth(trend, 238, 590),
+      fontSize: smartTrendFontSize(trend),
+    });
+    composites.push({ input: t.buffer, top: 0, left: Math.round((POSTER_WIDTH - t.width) / 2) });
+  }
+}
+
 async function originalBadgeImage(text, { width = px(250), height = ORIGINAL_BADGE_HEIGHT, fill = '#101116', fillOpacity = 0.93, textColor = '#ffffff', fontSize = 44, radius = 16, strokeOpacity = 0.14 } = {}) {
   const resolvedFontSize = px(fontSize), resolvedRadius = px(radius);
   const background = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect x="1" y="1" width="${width-2}" height="${height-2}" rx="${resolvedRadius}" fill="${fill}" fill-opacity="${fillOpacity}" stroke="#ffffff" stroke-opacity="${strokeOpacity}" stroke-width="1"/></svg>`);
@@ -77,7 +128,7 @@ function smartBottomBackdrop(){const height=px(275);return Buffer.from(`<svg xml
 async function readJson(req){const chunks=[];for await(const chunk of req)chunks.push(chunk);const raw=Buffer.concat(chunks).toString('utf8');return raw?JSON.parse(raw):{};}
 
 export async function renderPoster(body){
- const{posterPath,sourceUrl,logoPath='',title='',smartLayout=false,overlayOnly=false,rating='',ratingLabel='',genre='',trend='',age='',quality='',overlayColor='dynamic'}=body||{};
+ const{posterPath,sourceUrl,logoPath='',title='',smartLayout=false,overlayOnly=false,rating='',ratingLabel='',genre='',trend='',age='',quality='',audio='',overlayColor='dynamic'}=body||{};
  const posterUrl=sourceUrl||(posterPath?`${TMDB_IMAGE_BASE}${posterPath}`:'');if(!posterUrl)throw new Error('posterPath or sourceUrl is required');
  const logoPromise=smartLayout&&!overlayOnly&&logoPath?smartLogoImage(logoPath):Promise.resolve(null);
  let source;
@@ -95,15 +146,13 @@ export async function renderPoster(body){
  const dynamicFill=overlayColor==='dynamic'&&trend?await dynamicAccent(resized.data,canvasOptions):overlayColor;
  if(smartLayout){
   composites.push({input:smartBottomBackdrop(),top:POSTER_HEIGHT-px(275),left:0});
-  if(quality){if(trend){const t=await smartTopTag(trend,{fill:dynamicFill,width:smartTagWidth(trend,238,590)});composites.push({input:t.buffer,top:0,left:SAFE_MARGIN});}const q=await smartTopTag(quality,{fill:'#f4f4f5',fillOpacity:.96,width:smartTagWidth(quality,108,158),fontSize:39,textColor:'#111318'});composites.push({input:q.buffer,top:0,left:POSTER_WIDTH-SAFE_MARGIN-q.width});}
-  else if(trend){const t=await smartTopTag(trend,{fill:dynamicFill,width:smartTagWidth(trend,238,590)});composites.push({input:t.buffer,top:0,left:Math.round((POSTER_WIDTH-t.width)/2)});}
+  await addSmartTopTags(composites,{trend,quality,audio,dynamicFill});
   if(age){const width=smartTagWidth(age,132,205),badge=await originalBadgeImage(age,{width,height:px(64),fill:'#111216',fillOpacity:.50,fontSize:34,radius:8,strokeOpacity:.20});composites.push({input:badge,top:SMART_AGE_TOP,left:Math.round((POSTER_WIDTH-width)/2)});}
   if(!overlayOnly){const logo=await logoPromise;if(logo){const left=Math.round((POSTER_WIDTH-logo.width)/2),top=SMART_LOGO_ZONE_TOP+Math.round(((SMART_LOGO_ZONE_BOTTOM-SMART_LOGO_ZONE_TOP)-logo.height)/2);composites.push({input:logo.buffer,top,left});}else if(title){const b=await titleImage(title);if(b)composites.push({input:b,top:px(790),left:px(40)});}}
   const info=await smartBottomInfo(genre,resolvedRatingLabel);if(info)composites.push({input:info,top:SMART_BOTTOM_INFO_TOP,left:px(30)});
  }else{
   if(age){const width=smartTagWidth(age,132,205),badge=await originalBadgeImage(age,{width,height:px(64),fill:'#111216',fillOpacity:.50,fontSize:34,radius:8,strokeOpacity:.20});composites.push({input:badge,top:SMART_AGE_TOP,left:Math.round((POSTER_WIDTH-width)/2)});}
-  if(quality){if(trend){const t=await smartTopTag(trend,{fill:dynamicFill,width:smartTagWidth(trend,238,590)});composites.push({input:t.buffer,top:0,left:SAFE_MARGIN});}const q=await smartTopTag(quality,{fill:'#f4f4f5',fillOpacity:.96,width:smartTagWidth(quality,108,158),fontSize:39,textColor:'#111318'});composites.push({input:q.buffer,top:0,left:POSTER_WIDTH-SAFE_MARGIN-q.width});}
-  else if(trend){const t=await smartTopTag(trend,{fill:dynamicFill,width:smartTagWidth(trend,238,590)});composites.push({input:t.buffer,top:0,left:Math.round((POSTER_WIDTH-t.width)/2)});}
+  await addSmartTopTags(composites,{trend,quality,audio,dynamicFill});
   composites.push({input:smartBottomBackdrop(),top:POSTER_HEIGHT-px(275),left:0});
   const info=await smartBottomInfo(genre,resolvedRatingLabel);if(info)composites.push({input:info,top:SMART_BOTTOM_INFO_TOP,left:px(30)});
  }
@@ -115,5 +164,5 @@ export async function renderPoster(body){
  return output;
 }
 
-const server=http.createServer(async(req,res)=>{try{if(req.method==='GET'&&req.url==='/health'){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return res.end(JSON.stringify({ok:true,renderer:'kollection-posters-v2-bp-layout-25'}));}if(req.method!=='POST'||req.url!=='/render'){res.writeHead(404,{'content-type':'application/json'});return res.end(JSON.stringify({error:'Not found'}));}const body=await readJson(req),started=Date.now(),output=await renderPoster(body);res.writeHead(200,{'content-type':'image/webp','content-length':String(output.length),'cache-control':'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800','x-kollection-renderer':'v2-bp-layout-25','x-kollection-render-ms':String(Date.now()-started),'x-kollection-source-cache':String(output.kollectionSourceCache||'BYPASS'),'x-kollection-source-cache-version':SOURCE_CACHE_VERSION,'x-kollection-source-cache-key':String(output.kollectionSourceCacheKey||'').slice(0,16),'x-kollection-source-retention-until':String(output.kollectionSourceRetentionUntil||0)});res.end(output);}catch(error){res.writeHead(400,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:error?.message||'Render failed'}));}});
+const server=http.createServer(async(req,res)=>{try{if(req.method==='GET'&&req.url==='/health'){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return res.end(JSON.stringify({ok:true,renderer:'kollection-posters-v2-bp-layout-26'}));}if(req.method!=='POST'||req.url!=='/render'){res.writeHead(404,{'content-type':'application/json'});return res.end(JSON.stringify({error:'Not found'}));}const body=await readJson(req),started=Date.now(),output=await renderPoster(body);res.writeHead(200,{'content-type':'image/webp','content-length':String(output.length),'cache-control':'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800','x-kollection-renderer':'v2-bp-layout-26','x-kollection-render-ms':String(Date.now()-started),'x-kollection-source-cache':String(output.kollectionSourceCache||'BYPASS'),'x-kollection-source-cache-version':SOURCE_CACHE_VERSION,'x-kollection-source-cache-key':String(output.kollectionSourceCacheKey||'').slice(0,16),'x-kollection-source-retention-until':String(output.kollectionSourceRetentionUntil||0)});res.end(output);}catch(error){res.writeHead(400,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:error?.message||'Render failed'}));}});
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)server.listen(PORT,'0.0.0.0',()=>console.log(`Kollection Posters v2 renderer listening on ${PORT}`));
