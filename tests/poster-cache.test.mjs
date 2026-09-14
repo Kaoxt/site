@@ -79,7 +79,7 @@ function harness(overrides = {}) {
   const env = { IMAGES: bucket, DB: db, TMDB_API_KEY: 'test-tmdb-secret', MDBLIST_API_KEY: 'test-mdb-secret', POSTERS_RENDERER_AUTH_TOKEN: 'test-render-secret', ...overrides };
   const jobs = [];
   const count = { find: 0, details: 0, trend: 0, ratings: 0, quality: 0, render: 0, fallback: 0 };
-  const h = { bucket, edge, db, env, jobs, count, payloads: [], qualityAuth: [], qualityResolution: '2160p', renderStatus: 200, ratingStatus: 200 };
+  const h = { bucket, edge, db, env, jobs, count, payloads: [], qualityAuth: [], qualityResolution: '2160p', qualityStatus: 200, renderStatus: 200, ratingStatus: 200 };
   globalThis.caches = { default: edge };
   globalThis.fetch = async (input, options = {}) => {
     const url = new URL(typeof input === 'string' ? input : input.url);
@@ -106,6 +106,7 @@ function harness(overrides = {}) {
     if (url.hostname === 'aiostreams.example') {
       count.quality++;
       h.qualityAuth.push(options.headers?.authorization || options.headers?.Authorization || '');
+      if (h.qualityStatus !== 200) return new Response('unavailable', { status: h.qualityStatus });
       return Response.json({
         success: true,
         data: {
@@ -239,6 +240,53 @@ test('quality tag uses real cached AIOStreams resolution only when enabled', asy
   await h.flush();
   assert.equal(h.count.quality, 1);
   assert.equal(h.payloads.at(-1).quality, '4K');
+});
+
+test('enabling AIOStreams changes only the quality poster cache namespace', async () => {
+  const h = harness();
+  const withoutSource = h.context('27205');
+  const firstUrl = new URL(withoutSource.request.url);
+  firstUrl.searchParams.set('tags', 'genre,rating,quality');
+  withoutSource.request = new Request(firstUrl);
+  await (await onRequest(withoutSource)).arrayBuffer();
+  await h.flush();
+  assert.equal(h.count.quality, 0);
+  assert.equal(h.payloads.at(-1).quality, '');
+  assert.equal(h.count.render, 1);
+
+  h.env.POSTERS_AIOSTREAMS_URL = 'https://aiostreams.example';
+  h.env.POSTERS_AIOSTREAMS_AUTH = 'dXNlcjpwYXNz';
+
+  const withSource = h.context('27205');
+  const secondUrl = new URL(withSource.request.url);
+  secondUrl.searchParams.set('tags', 'genre,rating,quality');
+  withSource.request = new Request(secondUrl);
+  await (await onRequest(withSource)).arrayBuffer();
+  await h.flush();
+  assert.equal(h.count.quality, 1);
+  assert.equal(h.payloads.at(-1).quality, '4K');
+  assert.equal(h.count.render, 2);
+});
+
+test('AIOStreams outage does not consume render budget for an uncached quality poster', async () => {
+  const h = harness({
+    POSTERS_AIOSTREAMS_URL: 'https://aiostreams.example',
+    POSTERS_AIOSTREAMS_AUTH: 'dXNlcjpwYXNz',
+  });
+  h.qualityStatus = 503;
+  const context = h.context('27205');
+  const url = new URL(context.request.url);
+  url.searchParams.set('tags', 'genre,rating,quality');
+  context.request = new Request(url);
+
+  const response = await onRequest(context);
+  await response.arrayBuffer();
+  await h.flush();
+
+  assert.equal(response.headers.get('x-kollection-poster-fallback'), 'quality-unavailable');
+  assert.equal(h.count.quality, 1);
+  assert.equal(h.count.render, 0);
+  assert.equal(h.db.used(), 0);
 });
 
 test('different overlay variants reuse metadata but keep separate rendered outputs', async () => {
