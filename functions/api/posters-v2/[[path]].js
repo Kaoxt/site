@@ -486,6 +486,100 @@ async function resolveRating(details, type, requestedSource, env, context) {
   return { value: '', label: '', source, status: 'unsupported' };
 }
 
+function aiostreamsQualityConfig(env) {
+  const rawUrl = String(env?.POSTERS_AIOSTREAMS_URL || env?.AIOSTREAMS_URL || '').trim();
+  const rawAuth = String(env?.POSTERS_AIOSTREAMS_AUTH || env?.AIOSTREAMS_AUTH || '').trim();
+  if (!rawUrl || !rawAuth) return null;
+  try {
+    const url = new URL(rawUrl);
+    if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) return null;
+    return {
+      baseUrl: url.toString().replace(/\/$/, ''),
+      authorization: /^Basic\s+/i.test(rawAuth) ? rawAuth : `Basic ${rawAuth}`,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function qualityCacheSeconds(details) {
+  const date = String(details?.release_date || details?.first_air_date || '');
+  const releasedAt = Date.parse(date);
+  const recent = Number.isFinite(releasedAt) && Date.now() - releasedAt < 14 * 86400000;
+  return recent ? 86400 : 30 * 86400;
+}
+
+function qualityFromAiostreamsResults(results) {
+  let hd = false;
+  for (const result of Array.isArray(results) ? results.slice(0, 5) : []) {
+    const parsed = result?.parsedFile || {};
+    const resolution = String(parsed.resolution || '').toLowerCase();
+    const searchable = [
+      resolution,
+      result?.name,
+      result?.title,
+      result?.description,
+      result?.behaviorHints?.filename,
+      result?.behaviorHints?.bingeGroup,
+    ].filter(Boolean).join(' ').toUpperCase();
+
+    if (/\b(2160P|4K|UHD)\b/.test(searchable)) return '4K';
+    if (/\b1080P\b/.test(searchable)) hd = true;
+  }
+  return hd ? 'HD' : '';
+}
+
+async function resolveQuality(details, type, env, context) {
+  const imdbId = String(details?.external_ids?.imdb_id || '');
+  if (!imdbId) return { value: '', source: 'aiostreams', status: 'missing-id' };
+
+  const config = aiostreamsQualityConfig(env);
+  if (!config) return { value: '', source: 'aiostreams', status: 'not-configured' };
+  if (!env.DB) return { value: '', source: 'aiostreams', status: 'quality-cache-unavailable' };
+
+  const provider = 'quality-aiostreams';
+  const maxAgeSeconds = qualityCacheSeconds(details);
+  try {
+    await ensureRatingTables(env.DB);
+    const cached = await readCachedRating(env.DB, provider, imdbId, maxAgeSeconds);
+    if (cached) return { value: cached.value, source: 'aiostreams', status: 'cache-hit' };
+  } catch {
+    return { value: '', source: 'aiostreams', status: 'quality-cache-error' };
+  }
+
+  const aioType = type === 'tv' ? 'series' : 'movie';
+  const aioId = type === 'tv' ? `${imdbId}:1:1` : imdbId;
+  let response;
+  try {
+    const endpoint = new URL('/api/v1/search', config.baseUrl + '/');
+    endpoint.searchParams.set('type', aioType);
+    endpoint.searchParams.set('id', aioId);
+    response = await fetch(endpoint, {
+      headers: { accept: 'application/json', authorization: config.authorization },
+      signal: context?.signal ? AbortSignal.any([context.signal, AbortSignal.timeout(5000)]) : AbortSignal.timeout(5000),
+    });
+  } catch {
+    return { value: '', source: 'aiostreams', status: 'aiostreams-network-error' };
+  }
+
+  if (!response.ok) return { value: '', source: 'aiostreams', status: `aiostreams-${response.status}` };
+
+  let payload;
+  try { payload = await response.json(); }
+  catch { return { value: '', source: 'aiostreams', status: 'aiostreams-invalid-json' }; }
+
+  if (!payload?.success) return { value: '', source: 'aiostreams', status: 'aiostreams-error' };
+  const results = payload?.data?.results || [];
+  const errors = payload?.data?.errors || {};
+  if (!results.length && errors && Object.keys(errors).length) {
+    return { value: '', source: 'aiostreams', status: 'aiostreams-provider-error' };
+  }
+
+  const value = qualityFromAiostreamsResults(results);
+  try { await writeCachedRating(env.DB, provider, imdbId, value, value); } catch {}
+  return { value, source: 'aiostreams', status: results.length ? 'upstream' : 'upstream-empty' };
+}
+
 function cacheRequestFor(request) {
   const incoming = new URL(request.url);
   const preview = incoming.searchParams.get('preview') === '1';
@@ -565,7 +659,7 @@ async function renderPoster(context, state, id, persistentKey) {
   if (!artwork.path && !sourceUrl) throw posterError('artwork-missing');
 
   const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
-  const [rating, resolvedTrend] = await Promise.all([
+  const [rating, resolvedTrend, quality] = await Promise.all([
     tags.has('rating')
       ? resolveRating(details, type, requestedRatingSource, env, context)
       : Promise.resolve({ value: '', label: '', source: requestedRatingSource, status: 'disabled' }),
@@ -573,11 +667,19 @@ async function renderPoster(context, state, id, persistentKey) {
       ? Promise.resolve(theatricalLabel(details, type, String(env.POSTERS_RELEASE_REGION || 'US').toUpperCase()))
           .then((label) => label || trendLabel(type, id, env.TMDB_API_KEY, overlayLanguage, context))
       : Promise.resolve(''),
+    tags.has('quality')
+      ? resolveQuality(details, type, env, context)
+      : Promise.resolve({ value: '', source: 'aiostreams', status: 'disabled' }),
   ]);
   if (!['ok', 'upstream', 'cache-hit', 'missing', 'disabled', 'not-configured'].includes(rating.status)) {
     // A ratings-provider outage must not replace a good cached overlay with one
     // missing its rating for the entire cache lifetime.
     throw posterError('rating-unavailable');
+  }
+  if (!['upstream', 'upstream-empty', 'cache-hit', 'missing-id', 'disabled', 'not-configured'].includes(quality.status)) {
+    // Don't cache a long-lived poster with a missing quality badge because the
+    // configured quality source happened to be unavailable during this request.
+    throw posterError('quality-unavailable');
   }
 
   const payload = {
@@ -591,7 +693,7 @@ async function renderPoster(context, state, id, persistentKey) {
     genre: tags.has('genre') ? localizeGenre(details.genres?.[0]?.name || '', overlayLanguage) : '',
     age: tags.has('age') ? certification(details, type) : '',
     trend: resolvedTrend,
-    quality: '',
+    quality: quality.value,
     smartLayout,
     overlayColor: url.searchParams.get('overlayColor') || 'dynamic',
   };
@@ -632,6 +734,8 @@ async function renderPoster(context, state, id, persistentKey) {
     headers.set('x-kollection-cache-scope', preview ? 'preview' : 'production');
     headers.set('x-kollection-rating-source', rating.source);
     headers.set('x-kollection-rating-status', rating.status);
+    headers.set('x-kollection-quality-source', quality.source);
+    headers.set('x-kollection-quality-status', quality.status);
     headers.set('x-kollection-artwork-source', artwork.source);
     headers.set('x-kollection-logo-source', logo.source);
     headers.set('x-kollection-tmdb-id', id);
