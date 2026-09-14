@@ -2,7 +2,7 @@ import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'production-cache-18';
+const CACHE_VERSION = 'production-cache-19';
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
 const DEFAULT_MDBLIST_CACHE_DAYS = 30;
@@ -577,7 +577,15 @@ export async function onRequest(context) {
     if (!artwork.path && !sourceUrl) return json({ error: 'TMDB has no poster artwork for this title.' }, 404);
 
     const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
-    const rating = tags.has('rating') ? await resolveRating(details, type, requestedRatingSource, env) : { value: '', label: '', source: requestedRatingSource, status: 'disabled' };
+    const [rating, resolvedTrend] = await Promise.all([
+      tags.has('rating')
+        ? resolveRating(details, type, requestedRatingSource, env)
+        : Promise.resolve({ value: '', label: '', source: requestedRatingSource, status: 'disabled' }),
+      tags.has('trend')
+        ? Promise.resolve(theatricalLabel(details, type, String(env.POSTERS_RELEASE_REGION || 'US').toUpperCase()))
+            .then((label) => label || trendLabel(type, id, env.TMDB_API_KEY, overlayLanguage))
+        : Promise.resolve(''),
+    ]);
     const payload = {
       posterPath: artwork.path,
       sourceUrl,
@@ -588,7 +596,7 @@ export async function onRequest(context) {
       ratingLabel: rating.label,
       genre: tags.has('genre') ? localizeGenre(details.genres?.[0]?.name || '', overlayLanguage) : '',
       age: tags.has('age') ? certification(details, type) : '',
-      trend: tags.has('trend') ? (theatricalLabel(details, type, String(env.POSTERS_RELEASE_REGION || 'US').toUpperCase()) || await trendLabel(type, id, env.TMDB_API_KEY, overlayLanguage)) : '',
+      trend: resolvedTrend,
       quality: '',
       smartLayout,
       overlayColor: url.searchParams.get('overlayColor') || 'dynamic',
