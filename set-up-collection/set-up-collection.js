@@ -1091,9 +1091,9 @@
           <div class="hero-check"><i>2</i><b>Prepare AIOMetadata</b><span>Use the built-in configuration or provide your own AIOMetadata JSON file.</span></div>
           <div class="hero-check"><i>3</i><b>Choose recommendations</b><span>Connect your personal Bingecat manifest or skip Bingecat entirely.</span></div>
         </div>
-        <div class="actions right"><button class="ghost" id="updateExistingBtn" type="button">Update Existing</button><button class="btn" id="startBtn">Start setup</button></div>
+        <div class="actions right">${state.token ? '<button class="ghost" id="updateExistingBtn" type="button">Update Existing</button>' : ''}<button class="btn" id="startBtn">Start setup</button></div>
       </div>`);
-    $('#updateExistingBtn').onclick = renderExistingSetupPicker;
+    $('#updateExistingBtn')?.addEventListener('click', renderExistingSetupPicker);
     $('#startBtn').onclick = async () => {
       if (!state.token) await restoreNuvioSession();
       setStep(1);
@@ -2231,19 +2231,22 @@
     state.nuvioEmail = '';
     state.nuvioSessionRestored = true;
     state.backup = null;
-    if (state.step === 1) renderNuvio();
+    if (state.step === 0) renderWelcome();
+    else if (state.step === 1) renderNuvio();
   });
 
   window.addEventListener('kollection:nuvio-signed-in', async () => {
     state.nuvioSessionRestored = false;
     const restored = await restoreNuvioSession();
-    if (restored && state.step === 1) renderNuvio();
+    if (restored && state.step === 0) renderWelcome();
+    else if (restored && state.step === 1) renderNuvio();
   });
 
   async function initialize() {
     render();
     const restored = await restoreNuvioSession();
-    if (restored && state.step === 1) renderNuvio();
+    if (restored && state.step === 0) renderWelcome();
+    else if (restored && state.step === 1) renderNuvio();
   }
 
   initialize();
