@@ -644,6 +644,7 @@ function cacheRequestFor(request, env) {
   const incoming = new URL(request.url);
   const preview = incoming.searchParams.get('preview') === '1';
   const cacheUrl = new URL(`${incoming.origin}${incoming.pathname}`);
+  const layoutVersion = String(incoming.searchParams.get('v') || '20').slice(0, 24);
   const source = incoming.searchParams.get('source') === 'smart' ? 'smart' : 'tmdb';
   const provider = incoming.searchParams.get('provider') || 'tmdb';
   const tags = normalizeTags(incoming.searchParams.get('tags'));
@@ -653,6 +654,7 @@ function cacheRequestFor(request, env) {
   const sourceUrl = normalizeSourceUrl(incoming.searchParams.get('sourceUrl'));
   const overlayOnly = incoming.searchParams.get('overlayOnly') === '1';
 
+  cacheUrl.searchParams.set('v', layoutVersion);
   cacheUrl.searchParams.set('source', source);
   cacheUrl.searchParams.set('provider', provider);
   cacheUrl.searchParams.set('tags', tags.join(','));
