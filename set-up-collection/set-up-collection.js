@@ -1985,6 +1985,8 @@
       nuvioSessionRestored: authSnapshot.nuvioSessionRestored,
       nuvioDeviceLoginBusy: false,
       profileCreateOpen: false,
+      profileEligibility: null,
+      profileEligibilityBusy: false,
       addons: [],
       existingCollections: [],
       mdblistKey: '',
@@ -2024,6 +2026,8 @@
     state.profileId = null;
     state.profileName = null;
     state.addonProfileId = null;
+    state.profileEligibility = null;
+    state.profileEligibilityBusy = false;
     state.nuvioEmail = '';
     state.nuvioSessionRestored = true;
     state.backup = null;
