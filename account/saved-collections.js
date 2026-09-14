@@ -37,6 +37,21 @@
     };
   }
 
+  function parseCollections(value) {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch { return []; }
+    }
+    return [];
+  }
+
+  function collectionKey(value) {
+    return String(value || '').trim().replace(/-community$/i, '');
+  }
+
   async function pullProfileCollections(profileId) {
     const tokenResult = await window.KollectionNuvioAuth?.getAccessToken?.();
     const accessToken = tokenResult?.accessToken;
@@ -56,16 +71,16 @@
     const data = await response.json().catch(() => []);
     if (!response.ok) throw new Error(`Could not verify Nuvio collections (HTTP ${response.status}).`);
     const rows = Array.isArray(data) ? data : [];
-    return rows.length ? (rows[0]?.collections_json || []) : [];
+    return rows.length ? parseCollections(rows[0]?.collections_json) : [];
   }
 
   function liveIds(collections) {
-    return new Set((collections || []).map(item => String(item?.id || '').trim()).filter(Boolean));
+    return new Set(parseCollections(collections).map(item => collectionKey(item?.id)).filter(Boolean));
   }
 
   function expectedIds(item) {
     const ids = item?.config?.selectedCollectionGroupIds;
-    return Array.isArray(ids) ? ids.map(value => String(value || '').trim()).filter(Boolean) : [];
+    return Array.isArray(ids) ? ids.map(collectionKey).filter(Boolean) : [];
   }
 
   async function verifyCompletedSetup(item, cache) {
@@ -140,9 +155,7 @@
       remove.disabled = true;
       try {
         await readJson(await fetch(`/api/account/collections/${encodeURIComponent(item.id)}`, {
-          method: 'DELETE',
-          credentials: 'same-origin',
-          cache: 'no-store',
+          method: 'DELETE', credentials: 'same-origin', cache: 'no-store',
         }));
         await load();
       } catch (error) {
@@ -161,11 +174,7 @@
     const container = document.getElementById('accountSavedCollections');
     if (!container) return;
     container.innerHTML = '';
-
-    if (!collections.length) {
-      empty(container);
-      return;
-    }
+    if (!collections.length) { empty(container); return; }
 
     const cache = new Map();
     const pending = [];
@@ -217,7 +226,6 @@
     const container = document.getElementById('accountSavedCollections');
     const status = document.getElementById('accountSavedStatus');
     if (!container) return;
-
     busy = true;
     if (status) status.textContent = 'Loading saved setups…';
     try {
@@ -227,22 +235,15 @@
         if (status) status.textContent = '';
         return;
       }
-
-      const data = await readJson(await fetch('/api/account/collections', {
-        credentials: 'same-origin',
-        cache: 'no-store',
-      }));
+      const data = await readJson(await fetch('/api/account/collections', { credentials: 'same-origin', cache: 'no-store' }));
       const collections = Array.isArray(data.collections) ? data.collections : [];
       await render(collections);
       if (status) status.textContent = collections.length
-        ? `${collections.length} saved setup${collections.length === 1 ? '' : 's'}. Completed setups are verified against the linked Nuvio profile before editing.`
-        : '';
+        ? `${collections.length} saved setup${collections.length === 1 ? '' : 's'}. Completed setups are verified against the linked Nuvio profile before editing.` : '';
     } catch (error) {
       empty(container, 'Saved collection storage needs the Cloudflare D1 database binding before it can be used.');
       if (status) status.textContent = error?.message || 'Could not load saved setups.';
-    } finally {
-      busy = false;
-    }
+    } finally { busy = false; }
   }
 
   function init() {
@@ -259,7 +260,6 @@
   }
 
   window.KollectionSavedCollections = Object.freeze({ load });
-
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();
 })();
