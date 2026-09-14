@@ -104,6 +104,29 @@
     if (state.step === 2) renderAi();
   });
 
+  window.addEventListener('kollection:existing-collection-policy', event => {
+    const detail = event?.detail || {};
+    const profileId = Number(detail.profileId || 0);
+    if (!profileId || profileId !== Number(state.profileId)) return;
+
+    state.profileEligibility = {
+      profileId,
+      eligible: Boolean(detail.eligible),
+      state: detail.state || (detail.blocked ? 'blocked' : 'available'),
+      existingCount: Number(detail.existingCount || 0),
+      externalCount: Number(detail.externalCount || 0),
+      hasKollection: Boolean(detail.hasKollection),
+      message: detail.message || '',
+    };
+
+    if (!state.profileEligibility.eligible && state.step > 1) {
+      setStep(1);
+      return;
+    }
+
+    if (state.step === 1) renderProfileEligibility(state.profileEligibility);
+  });
+
   function esc(value) {
     return String(value ?? '')
       .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
