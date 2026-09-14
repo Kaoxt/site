@@ -14,6 +14,8 @@
     aiHostMode: '',
     aiSelfHostUrl: '',
     aiCustomFileName: '',
+    posterOverlaysEnabled: false,
+    posterSettings: null,
     bingecatSkipped: false,
     bingecatManifestUrl: '',
     selectedCollectionGroupIds: [],
@@ -77,6 +79,13 @@
     const customFile = $('.file-status b');
     if (customFile) snapshot.aiCustomFileName = customFile.textContent.trim();
 
+    const posterToggle = $('#posterOverlaysEnabled');
+    if (posterToggle) snapshot.posterOverlaysEnabled = Boolean(posterToggle.checked);
+    const posterSettingsJson = $('#posterSettingsJson');
+    if (posterSettingsJson?.value) {
+      try { snapshot.posterSettings = JSON.parse(posterSettingsJson.value); } catch {}
+    }
+
     const bcUrl = $('#bcUrl');
     if (bcUrl?.value?.trim()) snapshot.bingecatManifestUrl = bcUrl.value.trim();
 
@@ -93,12 +102,16 @@
   function serializableConfig() {
     captureVisible();
     return {
-      version: 2,
+      version: 3,
       aiSetupMode: snapshot.aiSetupMode === 'custom' ? 'custom' : 'built-in',
       aiHostPreference: snapshot.aiHostPreference || '',
       aiHostMode: snapshot.aiHostMode || '',
       aiSelfHostUrl: snapshot.aiSelfHostUrl || '',
       aiCustomFileName: snapshot.aiCustomFileName || '',
+      posterOverlaysEnabled: Boolean(snapshot.posterOverlaysEnabled),
+      posterSettings: snapshot.posterSettings && typeof snapshot.posterSettings === 'object'
+        ? JSON.parse(JSON.stringify(snapshot.posterSettings))
+        : null,
       bingecatSkipped: Boolean(snapshot.bingecatSkipped),
       bingecatManifestUrl: snapshot.bingecatManifestUrl || '',
       selectedCollectionGroupIds: Array.isArray(snapshot.selectedCollectionGroupIds)
@@ -211,6 +224,25 @@
     }
 
     if (step === 2) {
+      const posterToggle = $('#posterOverlaysEnabled');
+      if (posterToggle) {
+        const desiredEnabled = Boolean(snapshot.posterOverlaysEnabled);
+        let currentSettings = null;
+        try { currentSettings = JSON.parse($('#posterSettingsJson')?.value || 'null'); } catch {}
+        const settingsChanged = desiredEnabled && snapshot.posterSettings &&
+          JSON.stringify(currentSettings || null) !== JSON.stringify(snapshot.posterSettings);
+        if (posterToggle.checked !== desiredEnabled || settingsChanged) {
+          window.dispatchEvent(new CustomEvent('kollection:restore-poster-settings', {
+            detail: {
+              enabled: desiredEnabled,
+              settings: snapshot.posterSettings && typeof snapshot.posterSettings === 'object'
+                ? JSON.parse(JSON.stringify(snapshot.posterSettings))
+                : null,
+            },
+          }));
+          return;
+        }
+      }
       const desiredCustom = snapshot.aiSetupMode === 'custom';
       if (desiredCustom && !$('#customTab')?.classList.contains('active')) {
         clickOnce($('#customTab'));
