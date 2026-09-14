@@ -46,6 +46,8 @@
     aiNeededCatalogs: [],
     aiChunks: [],
     aiInstalls: [],
+    posterOverlaysEnabled: false,
+    posterSettings: null,
 
     collectionPack: null,
     selectedCollectionGroupIds: [],
@@ -82,6 +84,22 @@
     state.previewCollections = null;
     state.finalCollections = null;
     if (state.step === 4 && state.collectionPack) renderCustomize();
+  });
+
+  window.addEventListener('kollection:restore-poster-settings', event => {
+    const detail = event?.detail || {};
+    const helper = window.KollectionPosterSettings;
+    const nextEnabled = Boolean(detail.enabled);
+    const nextSettings = helper
+      ? helper.normalize(detail.settings || state.posterSettings || helper.readLocal() || {})
+      : (detail.settings || state.posterSettings || null);
+    const changed = nextEnabled !== state.posterOverlaysEnabled ||
+      JSON.stringify(nextSettings || null) !== JSON.stringify(state.posterSettings || null);
+    if (!changed) return;
+    state.posterOverlaysEnabled = nextEnabled;
+    state.posterSettings = nextSettings;
+    state.backup = null;
+    if (state.step === 2) renderAi();
   });
 
   function esc(value) {
@@ -645,6 +663,12 @@
   function prepareAiConfig(baseConfig, catalogs, index) {
     const config = jsonClone(state.aiCustomConfig || baseConfig || {});
     config.catalogs = catalogs;
+    if (state.posterOverlaysEnabled && window.KollectionPosterSettings) {
+      state.posterSettings = window.KollectionPosterSettings.normalize(
+        state.posterSettings || window.KollectionPosterSettings.readLocal() || {}
+      );
+      window.KollectionPosterSettings.applyToAioConfig(config, state.posterSettings);
+    }
     if (!config.apiKeys) config.apiKeys = {};
     if (state.mdblistKey) config.apiKeys.mdblist = state.mdblistKey;
     else if (!('mdblist' in config.apiKeys)) config.apiKeys.mdblist = '';
@@ -1154,6 +1178,13 @@
       `<option value="__self_host__" ${selectedHostMode === '__self_host__' ? 'selected' : ''}>Self-Host Instance</option>`,
     ].join('');
     const customMdblist = state.aiCustomConfig?.apiKeys?.mdblist || '';
+    const posterHelper = window.KollectionPosterSettings;
+    const posterSettings = posterHelper
+      ? posterHelper.normalize(state.posterSettings || posterHelper.readLocal() || {})
+      : { source: 'smart', tags: ['trend', 'genre', 'rating'], ratingSource: 'average' };
+    const posterSummary = posterHelper
+      ? posterHelper.label(posterSettings)
+      : 'Smart Overlay Posters · Trend, Genre, Rating';
     host.innerHTML = panel('STEP 3 · AIOMETADATA', 'Prepare AIOMetadata for The Kollection',
       'Use the built-in catalog setup or bring your own AIOMetadata JSON export, then choose where your AIOMetadata configuration should be hosted.',
       `<div class="card">
@@ -1192,6 +1223,17 @@
           <input id="aiSelfHostUrl" type="url" inputmode="url" value="${esc(state.aiSelfHostUrl || (selfHostSelected ? currentHost : ''))}" placeholder="https://your-aiometadata.example.com/" autocomplete="url">
           <small>Paste the base URL for your AIOMetadata instance. The Kollection will use this host when creating the configuration.</small>
         </div>
+        <div class="callout" style="margin-top:18px">
+          <label class="toggle-row" for="posterOverlaysEnabled">
+            <input id="posterOverlaysEnabled" type="checkbox" ${state.posterOverlaysEnabled ? 'checked' : ''}>
+            <span>
+              <b>Use Kollection poster overlays in every AIOMetadata catalog</b>
+              <small>Applies the same poster system to Home rows and catalogs opened inside collection folders. Current Posters settings: ${esc(posterSummary)}.</small>
+            </span>
+          </label>
+          <input id="posterSettingsJson" type="hidden" value="${esc(JSON.stringify(posterSettings))}">
+          <div class="inline" style="margin-top:10px"><a class="ghost small" href="/posters" target="_blank" rel="noopener">Configure Posters</a></div>
+        </div>
         ${custom ? `<div class="callout">The uploaded file supplies your AIOMetadata preferences and matching catalog definitions. Any required The Kollection catalog missing from your file falls back to the built-in catalog definition.</div>` : ''}
         <div class="actions"><button class="ghost" id="backBtn">Back</button><button class="btn" id="nextBtn">Continue to Bingecat</button></div>
       </div>`);
@@ -1200,6 +1242,17 @@
     $('#customTab').onclick = () => { state.aiSetupMode = 'custom'; state.backup = null; renderAi(); };
     $('#mdblist').oninput = e => { state.mdblistKey = e.target.value.trim(); state.backup = null; };
     $('#tmdb').oninput = e => { state.tmdbKey = e.target.value.trim(); state.backup = null; };
+    $('#posterOverlaysEnabled').onchange = e => {
+      state.posterOverlaysEnabled = e.target.checked;
+      if (window.KollectionPosterSettings) {
+        state.posterSettings = window.KollectionPosterSettings.normalize(
+          state.posterSettings || window.KollectionPosterSettings.readLocal() || {}
+        );
+        const hidden = $('#posterSettingsJson');
+        if (hidden) hidden.value = JSON.stringify(state.posterSettings);
+      }
+      state.backup = null;
+    };
     $$('.key-visibility-toggle').forEach(button => {
       button.onclick = () => {
         const input = document.getElementById(button.dataset.target);
@@ -1244,6 +1297,12 @@
     $('#nextBtn').onclick = () => {
       state.mdblistKey = $('#mdblist').value.trim();
       state.tmdbKey = $('#tmdb').value.trim();
+      state.posterOverlaysEnabled = Boolean($('#posterOverlaysEnabled')?.checked);
+      if (state.posterOverlaysEnabled && window.KollectionPosterSettings) {
+        state.posterSettings = window.KollectionPosterSettings.normalize(
+          state.posterSettings || window.KollectionPosterSettings.readLocal() || {}
+        );
+      }
       const hostChoice = $('#aiHost').value;
       if (!hostChoice) return alert('Choose an AIOMetadata host to continue.', 'error');
       if (hostChoice === '__self_host__') {
@@ -1564,6 +1623,8 @@
       aiNeededCatalogs: [],
       aiChunks: [],
       aiInstalls: [],
+      posterOverlaysEnabled: false,
+      posterSettings: null,
       collectionPack: null,
       selectedCollectionGroupIds: [],
       collectionSelectionInitialized: false,
