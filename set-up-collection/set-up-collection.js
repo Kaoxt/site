@@ -1042,13 +1042,16 @@
               ${setups.map(item => {
                 const profile = item?.nuvioProfileName || 'Nuvio profile';
                 const updated = formatSetupDate(item?.updatedAt);
-                return `<button class="existing-setup-choice" type="button" data-saved-id="${esc(item?.id || '')}">
+                return `<div class="existing-setup-choice" data-saved-row="${esc(item?.id || '')}">
                   <span class="existing-setup-copy">
-                    <strong>${esc(item?.name || 'My Kollection')}</strong>
+                    <strong data-saved-name>${esc(item?.name || 'My Kollection')}</strong>
                     <small>${esc(profile)}${updated ? ` · Updated ${esc(updated)}` : ''}</small>
                   </span>
-                  <span class="existing-setup-action">Update</span>
-                </button>`;
+                  <span class="existing-setup-actions">
+                    <button class="existing-setup-action secondary" type="button" data-rename-saved-id="${esc(item?.id || '')}" data-saved-name-value="${esc(item?.name || 'My Kollection')}">Rename</button>
+                    <button class="existing-setup-action" type="button" data-saved-id="${esc(item?.id || '')}">Update</button>
+                  </span>
+                </div>`;
               }).join('')}
             </div>
           ` : `
@@ -1065,6 +1068,54 @@
 
       $('#existingSetupBackBtn').onclick = renderWelcome;
       $('#existingSetupStartBtn')?.addEventListener('click', () => setStep(1));
+      Array.from(document.querySelectorAll('[data-rename-saved-id]')).forEach(button => {
+        button.onclick = async (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+
+          const id = String(button.dataset.renameSavedId || '').trim();
+          const currentName = String(button.dataset.savedNameValue || '').trim() || 'My Kollection';
+          if (!id) return;
+
+          const proposed = window.prompt('Rename this setup:', currentName);
+          if (proposed == null) return;
+
+          const nextName = String(proposed).trim().replace(/\s+/g, ' ').slice(0, 120);
+          if (!nextName || nextName === currentName) return;
+
+          button.disabled = true;
+          const originalText = button.textContent;
+          button.textContent = 'Renaming…';
+
+          try {
+            const response = await fetch(`/api/account/collections/${encodeURIComponent(id)}`, {
+              method: 'PATCH',
+              credentials: 'same-origin',
+              cache: 'no-store',
+              headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+              },
+              body: JSON.stringify({ name: nextName }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data?.error || `Could not rename setup (HTTP ${response.status}).`);
+
+            const savedName = String(data?.collection?.name || nextName);
+            button.dataset.savedNameValue = savedName;
+            const row = document.querySelector(`[data-saved-row="${CSS.escape(id)}"]`);
+            const label = row?.querySelector('[data-saved-name]');
+            if (label) label.textContent = savedName;
+            alert('Setup renamed.', 'success');
+          } catch (error) {
+            alert(error?.message || 'Could not rename this setup.', 'error');
+          } finally {
+            button.disabled = false;
+            button.textContent = originalText;
+          }
+        };
+      });
+
       Array.from(document.querySelectorAll('[data-saved-id]')).forEach(button => {
         button.onclick = () => {
           const id = String(button.dataset.savedId || '').trim();
