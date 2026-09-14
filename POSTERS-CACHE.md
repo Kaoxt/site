@@ -17,7 +17,15 @@ MDBList ratings start alongside TMDB artwork metadata and trends, using the know
 
 Finished image bytes return before R2 and edge writes finish. `waitUntil` keeps those writes running; the canonical render lease is released only after its R2 write completes. Same-worker callers share the completed bytes during persistence, so an IMDb or TMDB request in that interval does not trigger another render. A storage failure retains the normal retry cooldown. The redundant pre-lease R2 read is removed, while the post-lease check still closes cache races.
 
-Renderer `v2-bp-layout-22` renders directly on the delivered 500×750 canvas instead of building a 780×1170 canvas and shrinking it afterward. The approved overlay measurements are scaled from the existing design grid, so tag/genre/rating proportions stay consistent while Sharp processes substantially fewer pixels. Dynamic colors still use a materialized 64×64 sample, and color analysis is skipped when there is no trend badge. The renderer Worker hashes incoming render requests across two named container instances, matching the configured `max_instances: 2`, while `/health` stays pinned to one instance. The renderer deploy workflow runs image tests before deploying.
+Renderer `v2-bp-layout-24` renders directly on the delivered 500×750 canvas instead of building a 780×1170 canvas and shrinking it afterward. The approved overlay measurements are scaled from the existing design grid, so tag/genre/rating proportions stay consistent while Sharp processes substantially fewer pixels. Dynamic colors still use a materialized 64×64 sample, and color analysis is skipped when there is no trend badge. The renderer Worker hashes incoming render requests across two named container instances, matching the configured `max_instances: 2`, while `/health` stays pinned to one instance. The renderer deploy workflow runs image tests before deploying.
+
+## Shared source artwork
+
+TMDB poster bytes now have their own cache, separate from rendered overlays. The renderer asks a Workers-side R2 binding for the selected `w342` TMDB poster before decoding it. A miss is fetched once from TMDB and written under a source-only key that does not include ratings, trend tags, genre, quality, language, color, or any other overlay choice. Different overlay variants can therefore reuse the same source bytes.
+
+The persistent source-art retention window is **30 days since source access**. Accesses refresh the retention timestamp, with persistent touches coalesced to at most once every 12 hours so popular artwork can stay cached indefinitely without rewriting the object for every request. A daily scheduled cleanup removes expired objects under the source-art prefix. Each renderer container also keeps a bounded in-memory LRU (96 images / 24 MB) so repeated variants can skip even the R2 read while the container remains warm.
+
+Custom upstream-addon artwork still follows its existing direct-fetch path rather than being persisted into the shared TMDB source cache. This avoids mixing private or provider-specific artwork URLs into the shared store.
 
 ## Trend labels
 
@@ -42,8 +50,8 @@ Quality Tags can optionally use AIOStreams without exposing its credentials in g
 
 Daily/hourly rendering safeguards are unchanged. A bounded local queue absorbs bursts; identical variants share work locally and through a short D1 lease. New rendering has a 25-second abort deadline, with shorter individual upstream timeouts. The D1 lease table is created automatically on the existing `DB` binding.
 
-Responses expose `X-Kollection-Delivery`, `X-Kollection-Cache`, `X-Kollection-Persistent-Cache`, `X-Kollection-Stale`, `X-Kollection-Generated-At`, and `X-Kollection-Fresh-Until`. `Server-Timing: poster` measures origin-handler time, not Nuvio's complete loading time. Cold responses also report `lease`, `metadata`, `ratings`, `trend`, `quality` (when enabled), `admission`, and `renderer` durations. Parallel stages overlap, so their durations must not be added together. A CDN hit can replay those origin diagnostics; check `CF-Cache-Status` and measure client wall time separately.
+Responses expose `X-Kollection-Delivery`, `X-Kollection-Cache`, `X-Kollection-Persistent-Cache`, `X-Kollection-Stale`, `X-Kollection-Generated-At`, `X-Kollection-Fresh-Until`, `X-Kollection-Source-Cache`, `X-Kollection-Source-Cache-Version`, `X-Kollection-Source-Cache-Key`, and `X-Kollection-Source-Retention-Until` on freshly rendered posters. `Server-Timing: poster` measures origin-handler time, not Nuvio's complete loading time. Cold responses also report `lease`, `metadata`, `ratings`, `trend`, `quality` (when enabled), `admission`, and `renderer` durations. Parallel stages overlap, so their durations must not be added together. A CDN hit can replay those origin diagnostics; check `CF-Cache-Status` and measure client wall time separately.
 
 ## Tests
 
-Run `node --test tests/poster-cache.test.mjs` with Node 24. The suite uses an in-memory SQLite adapter for real lease/budget SQL and deterministic R2, edge-cache, and upstream mocks. It performs no external requests and does not spend production lookups or renders.
+Run `node --test tests/poster-cache.test.mjs` with Node 24 for the delivery pipeline. In `poster-renderer-v2`, run `npm test` for image/source-cache tests. The renderer suite verifies sliding 30-day source retention, in-memory source reuse, and that trend/genre/rating/quality overlays remain visible when cached artwork is used. Tests use deterministic mocks and do not spend production lookups or renders.

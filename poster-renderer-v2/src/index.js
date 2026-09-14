@@ -1,9 +1,14 @@
 import { Container, getContainer } from '@cloudflare/containers';
+import { pruneExpiredSourceArt, sourceCacheOutbound } from './source-cache-outbound.js';
 
 export class PosterRenderer extends Container {
   defaultPort = 8080;
   sleepAfter = '30m';
 }
+
+PosterRenderer.outboundByHost = {
+  'source-cache.internal': sourceCacheOutbound,
+};
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -47,7 +52,11 @@ export default {
     }
 
     const shard = url.pathname === '/health' ? 0 : renderShard(request);
-    const instance = getContainer(env.POSTER_RENDERER, `primary-v22-${shard}`);
+    const instance = getContainer(env.POSTER_RENDERER, `primary-v24-${shard}`);
     return instance.fetch(request);
+  },
+
+  async scheduled(_controller, env, context) {
+    context.waitUntil(pruneExpiredSourceArt(env).catch(() => {}));
   },
 };
