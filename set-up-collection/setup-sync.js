@@ -227,6 +227,15 @@
       loadSavedMeta();
     });
 
+    window.addEventListener('kollection:setup-auto-saved', event => {
+      const detail = event?.detail || {};
+      savedId = String(detail.id || idFromUrl() || savedId || '');
+      lastSyncedAt = String(detail.syncedAt || new Date().toISOString());
+      loadedDraftStep = Math.max(0, Number(detail.draftStep) || 7);
+      wasComplete = loadedDraftStep >= 7;
+      renderLastSynced(true);
+    });
+
     // history.replaceState is used when the first Save creates an ID, so the
     // status observer is the reliable signal to refresh the button at that point.
     setTimeout(() => {
@@ -235,6 +244,13 @@
       maybeFinalizeCompletedSetup();
     }, 200);
   }
+
+  window.KollectionSetupSync = Object.freeze({
+    getSecrets() {
+      captureSecrets();
+      return { ...secrets };
+    },
+  });
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();
