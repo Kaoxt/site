@@ -82,7 +82,7 @@ test('existing setup uses a Configure modal for Smart Overlay Poster options', a
   const source = await readFile(new URL('../set-up-collection/folder-editor.js', import.meta.url), 'utf8');
   assert.match(source, /editingSavedSetup\(\)/);
   assert.match(source, /id="configureSmartOverlayBtn"/);
-  assert.match(source, /id="smartOverlayModalRoot"/);
+  assert.match(source, /root\.id = 'smartOverlayModalRoot'/);
   assert.match(source, /role="dialog"/);
   assert.match(source, />Configure<\/button>/);
   assert.match(source, />Save changes<\/button>/);
