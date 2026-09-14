@@ -1252,3 +1252,44 @@ body.light .existing-setup-choice:hover {
     padding-inline: 12px;
   }
 }
+
+
+/* Rename option for existing setups */
+.existing-setup-actions{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.existing-setup-action{
+  border:0;
+  font:inherit;
+  cursor:pointer;
+}
+
+.existing-setup-action.secondary{
+  background:transparent;
+  border:1px solid var(--line-soft);
+}
+
+.existing-setup-action:disabled{
+  opacity:.55;
+  cursor:wait;
+}
+
+@media(max-width:600px){
+  .existing-setup-choice{
+    align-items:flex-start;
+  }
+
+  .existing-setup-actions{
+    flex-direction:column;
+    align-items:stretch;
+    min-width:92px;
+  }
+
+  .existing-setup-action{
+    width:100%;
+  }
+}
