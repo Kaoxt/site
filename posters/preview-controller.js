@@ -78,6 +78,7 @@
   const selectedProvider = () => document.getElementById('artworkProvider')?.value || 'tmdb';
   const selectedRatingSource = () => document.getElementById('ratingSource')?.value || 'average';
   const selectedTags = () => [...document.querySelectorAll('.tag-option input[type="checkbox"]:checked')].map((input) => input.value);
+  const selectedTrendDetails = () => [...document.querySelectorAll('[data-trend-detail]:checked')].map((input) => input.value);
   const selectedOverlayLanguage = () => document.getElementById('postersLanguage')?.value || 'en';
 
   function localizeTrend(value, index, language) {
@@ -94,11 +95,25 @@
   }
 
   function sampleFor(index) {
-    return samples[index] || [
-      { trend:'#1 Today', rating:'6.8', genre:'Drama', age:'PG-13', quality:'4K' },
-      { trend:'#2 Today', rating:'5.2', genre:'Comedy', age:'PG-13', quality:'4K' },
-      { trend:'#1 Today', rating:'7.4', genre:'Drama', age:'TV-14', quality:'4K' },
+    const base = samples[index] || [
+      { type:'movie', id:'27205', trend:'#1 Today', release:'New', rating:'8.8', genre:'Sci-Fi', age:'PG-13', quality:'4K · DV', audio:'Atmos', director:'Christopher Nolan Film' },
+      { type:'movie', id:'155', trend:'#2 Today', release:'In Cinema', rating:'9.0', genre:'Action', age:'PG-13', quality:'4K · HDR', audio:'Atmos', director:'Christopher Nolan Film', cast:'Christian Bale' },
+      { type:'tv', id:'1399', trend:'#1 Today', release:'Returning', rating:'9.2', genre:'Drama', age:'TV-MA', quality:'4K · DV', audio:'Atmos', studio:'HBO Original' },
     ][index] || {};
+    const id = String(base.id || '');
+    if (id === '27205' || id === '155') return { ...base, director: base.director || 'Christopher Nolan Film' };
+    if (id === '1399') return { ...base, studio: base.studio || 'HBO Original', release: base.release || 'Returning' };
+    return base;
+  }
+
+  function trendPreviewText(sample, index, language) {
+    const selected = new Set(selectedTrendDetails());
+    if (selected.has('studio') && sample.studio) return sample.studio;
+    if (selected.has('director') && sample.director) return sample.director;
+    if (selected.has('cast') && sample.cast) return sample.cast;
+    if (selected.has('rank')) return localizeTrend(sample.trend, index, language);
+    if (selected.has('release') && sample.release) return sample.release;
+    return '';
   }
 
   function ensureClientLayer(posterMock) {
@@ -133,9 +148,9 @@
       top.classList.toggle('split-layout', qualityOn);
       top.classList.toggle('center-layout', !qualityOn);
 
-      trend.textContent = localizeTrend(sample.trend, index, language);
-      trend.hidden = !tags.has('trend');
-      trend.style.display = tags.has('trend') ? '' : 'none';
+      trend.textContent = trendPreviewText(sample, index, language);
+      trend.hidden = !tags.has('trend') || !trend.textContent;
+      trend.style.display = tags.has('trend') && trend.textContent ? '' : 'none';
 
       quality.textContent = sample.quality || '4K';
       quality.hidden = !qualityOn;
@@ -233,9 +248,9 @@
     } catch {}
     if (samples.length < 3) {
       samples = [
-        { type:'movie', id:'27205', trend:'#1 Today', rating:'6.8', genre:'Drama', age:'PG-13', quality:'4K' },
-        { type:'movie', id:'155', trend:'#2 Today', rating:'8.5', genre:'Crime', age:'PG-13', quality:'4K' },
-        { type:'tv', id:'1399', trend:'#1 Today', rating:'9.2', genre:'Drama', age:'TV-MA', quality:'4K' },
+        { type:'movie', id:'27205', trend:'#1 Today', release:'New', rating:'8.8', genre:'Sci-Fi', age:'PG-13', quality:'4K · DV', audio:'Atmos', director:'Christopher Nolan Film' },
+        { type:'movie', id:'155', trend:'#2 Today', release:'In Cinema', rating:'9.0', genre:'Action', age:'PG-13', quality:'4K · HDR', audio:'Atmos', director:'Christopher Nolan Film', cast:'Christian Bale' },
+        { type:'tv', id:'1399', trend:'#1 Today', release:'Returning', rating:'9.2', genre:'Drama', age:'TV-MA', quality:'4K · DV', audio:'Atmos', studio:'HBO Original' },
       ];
     }
   }
@@ -259,7 +274,7 @@
     const target = event.target;
     if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
     const isBaseChange = target.matches('input[name="posterSource"], #artworkProvider');
-    const isOverlayChange = target.matches('.tag-option input[type="checkbox"], #ratingSource, #postersLanguage');
+    const isOverlayChange = target.matches('.tag-option input[type="checkbox"], [data-trend-detail], #ratingSource, #postersLanguage');
     if (!isBaseChange && !isOverlayChange) return;
     syncUiState();
     if (!started) return;
