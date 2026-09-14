@@ -35,8 +35,8 @@ export async function dynamicAccent(imageBuffer, inputOptions) {
     const sample = await sharp(thumbnail.data, { raw: { width: thumbnail.info.width, height: thumbnail.info.height, channels: thumbnail.info.channels } }).stats();
     let { r, g, b } = sample.dominant;
     const max = Math.max(r, g, b, 1), min = Math.min(r, g, b);
-    if (max - min < 22) { r *= 0.72; g *= 0.72; b *= 0.72; }
-    else { const target = 150, scale = max > target ? target / max : 1; r *= scale; g *= scale; b *= scale; }
+    if (max - min < 22) { r *= 0.62; g *= 0.62; b *= 0.62; }
+    else { const target = 112, scale = max > target ? target / max : 1; r *= scale; g *= scale; b *= scale; }
     return rgbToHex(r, g, b);
   } catch { return '#2f2d33'; }
 }
