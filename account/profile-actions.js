@@ -292,6 +292,7 @@
           availability.classList.remove('account-profile-setup-unavailable', 'account-profile-setup-checking');
           availability.classList.add('account-profile-setup-available');
         }
+        if (row) row.dataset.collectionEligibility = 'eligible';
         row?.classList.remove('account-profile-ineligible');
         row?.querySelector('[data-clear-profile-collection]')?.remove();
         status.textContent = 'Old collection cleared. This profile is now available for Set Up Collection.';
