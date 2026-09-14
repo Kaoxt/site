@@ -450,6 +450,7 @@
       ]);
       if (!result) throw new Error('Profile availability could not be checked.');
       row.dataset.collectionEligibility = result.eligible ? 'eligible' : 'ineligible';
+      row.dataset.collectionEligibilityState = String(result.state || 'unknown');
 
       if (availability) {
         availability.classList.remove('account-profile-setup-checking');
@@ -475,15 +476,27 @@
       }
 
       row.classList.toggle('account-profile-ineligible', !result.eligible);
+      window.dispatchEvent(new CustomEvent('kollection:profile-eligibility-resolved', {
+        detail: {
+          profileId: id,
+          state: result.state || 'unknown',
+          eligible: Boolean(result.eligible),
+          hasKollection: Boolean(result.hasKollection),
+        },
+      }));
       return result;
     } catch (error) {
       row.dataset.collectionEligibility = 'unknown';
+      row.dataset.collectionEligibilityState = 'unknown';
       if (availability) {
         availability.textContent = 'Set Up Collection availability could not be verified';
         availability.classList.remove('account-profile-setup-checking', 'account-profile-setup-available');
         availability.classList.add('account-profile-setup-unavailable');
       }
       row.classList.add('account-profile-ineligible');
+      window.dispatchEvent(new CustomEvent('kollection:profile-eligibility-resolved', {
+        detail: { profileId: id, state: 'unknown', eligible: false, hasKollection: false },
+      }));
       return { eligible: false, state: 'unknown', message: error?.message || 'Could not verify this profile.' };
     }
   }
