@@ -414,10 +414,28 @@
     };
   }
 
+  function getProfileSyncClientId() {
+    const key = 'kollection-nuvio-sync-client-id';
+    try {
+      const stored = localStorage.getItem(key);
+      if (stored && /^[A-Za-z0-9_-]{16,96}$/.test(stored)) return stored;
+      const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      let suffix = '';
+      const bytes = crypto.getRandomValues(new Uint8Array(32));
+      for (const byte of bytes) suffix += alphabet[byte % alphabet.length];
+      const value = `kollection-web-${suffix}`;
+      localStorage.setItem(key, value);
+      return value;
+    } catch {
+      return `kollection-web-${Date.now()}-${Math.random().toString(36).slice(2,18)}`;
+    }
+  }
+
   async function pushProfiles(profiles) {
     await rpc('sync_push_profiles', {
       p_client_max_profiles: 6,
       p_profiles: profiles.map(profileSyncPayload),
+      p_origin_client_id: getProfileSyncClientId(),
     });
   }
 
@@ -439,13 +457,28 @@
     };
     await pushProfiles([...(state.profiles || []), profile]);
     state.profiles = await getProfiles();
-    const created = state.profiles.find(p => p.id === nextId) || profile;
+    const created =
+      state.profiles.find(p => !used.has(p.id) && p.name === profile.name) ||
+      state.profiles.find(p => p.id === nextId) ||
+      state.profiles.find(p => !used.has(p.id));
+    if (!created) throw new Error('Nuvio created the profile, but The Kollection could not identify it after syncing.');
+
     state.profileId = created.id;
     state.profileName = created.name;
     state.addonProfileId = created.usesPrimaryAddons ? 1 : created.id;
     state.profileCreateOpen = false;
     state.profileEligibility = null;
     state.backup = null;
+
+    try {
+      localStorage.setItem('kollection-nuvio-pending-profile', JSON.stringify({
+        userId: String(state.userId || ''),
+        profileId: created.id,
+        profileName: created.name,
+        createdAt: Date.now(),
+      }));
+    } catch {}
+
     return created;
   }
 
