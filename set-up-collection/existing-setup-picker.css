@@ -5,7 +5,9 @@
 .existing-setup-modal-head{min-height:74px;padding:20px 26px;border-bottom:1px solid rgba(255,255,255,.09);display:flex;align-items:center;justify-content:space-between;gap:18px}
 .existing-setup-modal-head h3{margin:2px 0 0;font-size:22px;letter-spacing:-.025em}
 .existing-setup-kicker{display:block;color:#818cff;font-size:11px;font-weight:800;letter-spacing:.13em}
-.existing-setup-close{position:relative;z-index:3;flex:0 0 48px;width:48px;height:48px;min-width:48px;min-height:48px;padding:0;border:1px solid rgba(255,255,255,.10);border-radius:50%;background:rgba(255,255,255,.025);color:#a8a8af;cursor:pointer;display:grid;place-items:center;font:400 30px/1 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.existing-setup-close{position:relative;z-index:3;flex:0 0 48px;width:48px;height:48px;min-width:48px;min-height:48px;padding:0;border:1px solid rgba(255,255,255,.10);border-radius:50%;background:rgba(255,255,255,.025);color:#a8a8af;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent;appearance:none;-webkit-appearance:none}
+.existing-setup-close svg{display:block;width:20px;height:20px;pointer-events:none;overflow:visible}
+.existing-setup-close svg path{fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
 .existing-setup-close:hover,.existing-setup-close:active{color:#fff;background:rgba(255,255,255,.06)}
 .existing-setup-modal-body{padding:26px}
 .existing-setup-copy{margin:0 0 20px;color:#9b9ba3;line-height:1.55}
