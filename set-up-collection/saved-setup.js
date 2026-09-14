@@ -144,7 +144,7 @@
     const secrets = window.KollectionSetupSync?.getSecrets?.() || undefined;
     const payload = {
       name: savedName,
-      draftStep: 6,
+      draftStep: savedId ? Math.max(6, targetStep) : 6,
       nuvioProfileId: profileId,
       nuvioProfileName: profileName,
       config: serializableConfig(),
