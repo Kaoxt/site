@@ -226,6 +226,7 @@
     if (!apiKey) throw new Error('Add your MDBList API key before copying the manifest URL.');
     const source = document.querySelector('input[name="posterSource"]:checked')?.value || 'smart';
     const tags = [...document.querySelectorAll('.tag-option input[type="checkbox"]:checked')].map((input) => input.value);
+    const trendDetails = [...document.querySelectorAll('[data-trend-detail]:checked')].map((input) => input.value);
     const config = {
       v: 1,
       apiKey,
@@ -233,6 +234,7 @@
       defaults: getDefaultCatalogs(),
       source,
       tags,
+      trendDetails,
       ratingSource: document.getElementById('ratingSource')?.value || 'average',
       language: language?.value || 'en',
       sort: document.querySelector('input[name="postersListSort"]:checked')?.value || 'shuffle',
