@@ -1915,6 +1915,7 @@
   function renderReview() {
     const bc = bingecatDisplayCatalogs();
     const selectedPack = selectedCollectionPack();
+    const currentSetupName = window.KollectionSavedSetup?.getName?.() || '';
     const selectedFolders = selectedPack.reduce((n, group) => n + (group.folders || []).length, 0);
     const bcNeeded = shouldInstallBingecat(selectedPack);
     const existingCount = state.existingCollections?.length || 0;
@@ -1922,6 +1923,11 @@
     host.innerHTML = panel('STEP 6 · REVIEW', 'Your collection is ready to add to Nuvio',
       'Nothing has been added to Nuvio yet. The backup below contains the profile’s current collections and add-on list before setup.',
       `<div class="card">
+        <div class="field setup-name-field">
+          <label for="reviewSetupName">Setup name</label>
+          <input id="reviewSetupName" type="text" maxlength="120" autocomplete="off" value="${esc(currentSetupName)}" placeholder="Give this setup a name">
+          <small>Rename this saved setup here. Existing saved setups update automatically when you leave the field.</small>
+        </div>
         <div class="summary">
           <div class="summary-item"><span class="icon">N</span><div><b>${esc(state.profileName)}</b><span>Nuvio profile ${state.profileId}; add-ons target profile ${state.addonProfileId || state.profileId}.</span></div></div>
           <div class="summary-item"><span class="icon">A</span><div><b>${state.aiNeededCatalogs.length} AIOMetadata catalogs</b><span>${state.aiSetupMode === 'custom' ? `Using ${esc(state.aiCustomFileName)} as the configuration base. ` : ''}Planned across ${state.aiChunks.length} configuration${state.aiChunks.length === 1 ? '' : 's'} using your selected AIOMetadata host.</span></div></div>
@@ -1935,6 +1941,26 @@
       </div>`);
     $('#backBtn').onclick = () => setStep(4);
     $('#backupBtn').onclick = () => downloadJson(`nuvio-backup-profile-${state.profileId}-${new Date().toISOString().slice(0,10)}.json`, state.backup);
+    const reviewName = $('#reviewSetupName');
+    reviewName?.addEventListener('input', event => {
+      window.KollectionSavedSetup?.setName?.(event.target.value);
+    });
+    reviewName?.addEventListener('change', async event => {
+      const nextName = String(event.target.value || '').trim().replace(/\s+/g, ' ');
+      if (!nextName) {
+        alert('Enter a setup name.', 'error');
+        event.target.focus();
+        return;
+      }
+      try {
+        const savedName = window.KollectionSavedSetup?.getId?.()
+          ? await window.KollectionSavedSetup.rename(nextName)
+          : window.KollectionSavedSetup?.setName?.(nextName);
+        if (savedName) event.target.value = savedName;
+      } catch (e) {
+        alert(e.message || 'Could not rename this setup.', 'error');
+      }
+    });
     $('#nextBtn').onclick = () => setStep(6);
   }
 
@@ -1959,6 +1985,17 @@
     };
     $('#setupName')?.addEventListener('input', event => {
       window.KollectionSavedSetup?.setName?.(event.target.value);
+    });
+    $('#setupName')?.addEventListener('change', async event => {
+      const nextName = String(event.target.value || '').trim().replace(/\s+/g, ' ');
+      if (!nextName) return;
+      if (!window.KollectionSavedSetup?.getId?.()) return;
+      try {
+        const savedName = await window.KollectionSavedSetup.rename(nextName);
+        if (savedName) event.target.value = savedName;
+      } catch (e) {
+        alert(e.message || 'Could not rename this setup.', 'error');
+      }
     });
     $('#installBtn').onclick = async () => {
       const nameInput = $('#setupName');
