@@ -1223,16 +1223,26 @@
           <input id="aiSelfHostUrl" type="url" inputmode="url" value="${esc(state.aiSelfHostUrl || (selfHostSelected ? currentHost : ''))}" placeholder="https://your-aiometadata.example.com/" autocomplete="url">
           <small>Paste the base URL for your AIOMetadata instance. The Kollection will use this host when creating the configuration.</small>
         </div>
-        <div class="callout" style="margin-top:18px">
-          <label class="toggle-row" for="posterOverlaysEnabled">
+        <div class="smart-overlay-option" style="margin-top:18px">
+          <div class="smart-overlay-heading">
+            <div>
+              <span class="badge">Optional</span>
+              <h3>Smart Overlay Posters</h3>
+              <p>Turn this on if you want The Kollection to use Smart Overlay Posters throughout your Nuvio collection.</p>
+            </div>
+          </div>
+          <label class="toggle-row smart-overlay-toggle" for="posterOverlaysEnabled">
             <input id="posterOverlaysEnabled" type="checkbox" ${state.posterOverlaysEnabled ? 'checked' : ''}>
             <span>
-              <b>Use Kollection poster overlays in every AIOMetadata catalog</b>
-              <small>Applies the same poster system to Home rows and catalogs opened inside collection folders. Current Posters settings: ${esc(posterSummary)}.</small>
+              <b>Enable Smart Overlay Posters for this collection</b>
+              <small>Off by default. When enabled, Home rows, collection folders, and AIOMetadata library/meta posters all use your Kollection poster settings.</small>
             </span>
           </label>
           <input id="posterSettingsJson" type="hidden" value="${esc(JSON.stringify(posterSettings))}">
-          <div class="inline" style="margin-top:10px"><a class="ghost small" href="/posters" target="_blank" rel="noopener">Configure Posters</a></div>
+          <div id="smartOverlaySettings" class="smart-overlay-settings" ${state.posterOverlaysEnabled ? '' : 'hidden'}>
+            <div><span>Current setup</span><b>${esc(posterSummary)}</b></div>
+            <a class="ghost small" href="/posters" target="_blank" rel="noopener">Customize Smart Overlay Posters</a>
+          </div>
         </div>
         ${custom ? `<div class="callout">The uploaded file supplies your AIOMetadata preferences and matching catalog definitions. Any required The Kollection catalog missing from your file falls back to the built-in catalog definition.</div>` : ''}
         <div class="actions"><button class="ghost" id="backBtn">Back</button><button class="btn" id="nextBtn">Continue to Bingecat</button></div>
@@ -1251,6 +1261,8 @@
         const hidden = $('#posterSettingsJson');
         if (hidden) hidden.value = JSON.stringify(state.posterSettings);
       }
+      const settingsPanel = $('#smartOverlaySettings');
+      if (settingsPanel) settingsPanel.hidden = !state.posterOverlaysEnabled;
       state.backup = null;
     };
     $$('.key-visibility-toggle').forEach(button => {
@@ -1518,6 +1530,7 @@
         <div class="summary">
           <div class="summary-item"><span class="icon">N</span><div><b>${esc(state.profileName)}</b><span>Nuvio profile ${state.profileId}; add-ons target profile ${state.addonProfileId || state.profileId}.</span></div></div>
           <div class="summary-item"><span class="icon">A</span><div><b>${state.aiNeededCatalogs.length} AIOMetadata catalogs</b><span>${state.aiSetupMode === 'custom' ? `Using ${esc(state.aiCustomFileName)} as the configuration base. ` : ''}Planned across ${state.aiChunks.length} configuration${state.aiChunks.length === 1 ? '' : 's'} using your selected AIOMetadata host.</span></div></div>
+          <div class="summary-item"><span class="icon">P</span><div><b>Smart Overlay Posters · ${state.posterOverlaysEnabled ? 'Enabled' : 'Off'}</b><span>${state.posterOverlaysEnabled ? `Your collection will use Smart Overlay Posters across Home rows, folders, and AIOMetadata library/meta posters. ${esc(window.KollectionPosterSettings?.label(state.posterSettings || window.KollectionPosterSettings?.readLocal?.() || {}) || 'Poster settings selected.')}` : 'Standard AIOMetadata poster behavior will be used. You can enable Smart Overlay Posters during setup later.'}</span></div></div>
           <div class="summary-item"><span class="icon">B</span><div><b>${state.bingecatSkipped ? 'Bingecat skipped' : (bcNeeded ? `Bingecat · ${bc.length} recommendation catalogs` : 'Bingecat not needed')}</b><span>${state.bingecatSkipped ? 'For You Bingecat placeholders will be removed.' : (bcNeeded ? `Your personal add-on ID ${esc(state.bingecatAddonId)} will replace the creator-specific For You references.` : 'None of the selected sections use Bingecat, so its add-on will not be installed.')}</span></div></div>
           <div class="summary-item"><span class="icon">K</span><div><b>The Kollection</b><span>${selectedPack.length} of ${state.collectionPack?.length || 0} sections selected · ${selectedFolders} folders included. This profile goes from ${existingCount} to ${previewCount} groups after the ID-aware merge.</span></div></div>
         </div>
@@ -1534,7 +1547,7 @@
     const selectedPack = selectedCollectionPack();
     const bcNeeded = shouldInstallBingecat(selectedPack);
     host.innerHTML = panel('STEP 7 · SET UP', 'Ready to set up The Kollection',
-      `Set Up Collection will generate the required AIOMetadata configuration${state.aiChunks.length === 1 ? '' : 's'}, install ${bcNeeded ? 'AIOMetadata and your personal Bingecat manifest' : 'AIOMetadata'}, rewrite the collection sources, and add ${selectedPack.length} selected section${selectedPack.length === 1 ? '' : 's'} to Nuvio.`,
+      `Set Up Collection will generate the required AIOMetadata configuration${state.aiChunks.length === 1 ? '' : 's'}, install ${bcNeeded ? 'AIOMetadata and your personal Bingecat manifest' : 'AIOMetadata'}, ${state.posterOverlaysEnabled ? 'apply Smart Overlay Posters to the collection, ' : ''}rewrite the collection sources, and add ${selectedPack.length} selected section${selectedPack.length === 1 ? '' : 's'} to Nuvio.`,
       `<div class="card">
         <div class="callout good"><strong>Provision-first flow:</strong> if AIOMetadata configuration fails before Nuvio add-ons are installed, your Nuvio collection is left unchanged.</div>
         <div class="actions"><button class="ghost" id="backBtn">Back</button><button class="btn" id="installBtn">Set Up The Kollection</button></div>
