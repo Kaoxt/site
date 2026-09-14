@@ -1,5 +1,6 @@
 import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
 import { acquirePosterLease, cachedPosterJson, delay, singleFlight } from '../../_lib/poster-cache.js';
+import { chooseTrendDisplay, needsCredits, normalizeTrendDetails, spotlightLabels } from '../../_lib/poster-trend-details.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
@@ -265,6 +266,7 @@ function posterVariant(url, preview, env) {
     ratingSource: normalizeRatingSource(url.searchParams.get('ratingSource')),
     language: normalizeOverlayLanguage(url.searchParams.get('language')),
     overlayColor: url.searchParams.get('overlayColor') || 'dynamic',
+    trendDetails: normalizeTrendDetails(url.searchParams.get('trendDetails')),
     sourceUrl: normalizeSourceUrl(url.searchParams.get('sourceUrl')),
     overlayOnly: url.searchParams.get('overlayOnly') === '1',
     qualitySource: tags.includes('quality') && aiostreamsQualityConfig(env) ? 'aiostreams-1' : 'none',
@@ -569,13 +571,19 @@ function qualityCacheSeconds(details) {
   return recent ? 86400 : 30 * 86400;
 }
 
-function qualityFromAiostreamsResults(results) {
-  let hd = false;
+function qualityTokensFromAiostreamsResults(results) {
+  const seen = new Set();
   for (const result of Array.isArray(results) ? results.slice(0, 5) : []) {
     const parsed = result?.parsedFile || {};
     const resolution = String(parsed.resolution || '').toLowerCase();
+    const visualTags = (Array.isArray(parsed.visualTags) ? parsed.visualTags : []).map(value => String(value).toUpperCase());
+    const audioTags = (Array.isArray(parsed.audioTags) ? parsed.audioTags : []).map(value => String(value).toUpperCase());
+    const quality = String(parsed.quality || '').toUpperCase();
     const searchable = [
       resolution,
+      quality,
+      ...visualTags,
+      ...audioTags,
       result?.name,
       result?.title,
       result?.description,
@@ -583,10 +591,49 @@ function qualityFromAiostreamsResults(results) {
       result?.behaviorHints?.bingeGroup,
     ].filter(Boolean).join(' ').toUpperCase();
 
-    if (/\b(2160P|4K|UHD)\b/.test(searchable)) return '4K';
-    if (/\b1080P\b/.test(searchable)) hd = true;
+    if (/\b(2160P|4K|UHD)\b/.test(searchable)) seen.add('4K');
+    else if (/\b1080P\b/.test(searchable)) seen.add('HD');
+
+    if (/\b(DOLBY[ ._-]?VISION|DOVI|DV)\b/.test(searchable)) seen.add('DV');
+    else if (/HDR10\+/.test(searchable)) seen.add('HDR10+');
+    else if (/\bHDR10\b|\bHDR\b/.test(searchable)) seen.add('HDR');
+
+    if (/\bREMUX\b/.test(searchable)) seen.add('REMUX');
+    else if (/\bWEB[ ._-]?DL\b/.test(searchable)) seen.add('WEB-DL');
+
+    if (/\bATMOS\b/.test(searchable)) seen.add('ATMOS');
+    else if (/\bDTS[: ._-]?X\b|\bDTSX\b/.test(searchable)) seen.add('DTS:X');
   }
-  return hd ? 'HD' : '';
+
+  const tokens = [];
+  for (const item of ['4K', 'HD']) if (seen.has(item)) { tokens.push(item); break; }
+  for (const item of ['REMUX', 'WEB-DL']) if (seen.has(item)) { tokens.push(item); break; }
+  for (const item of ['DV', 'HDR10+', 'HDR']) if (seen.has(item)) { tokens.push(item); break; }
+  for (const item of ['ATMOS', 'DTS:X']) if (seen.has(item)) { tokens.push(item); break; }
+  return tokens;
+}
+
+function qualityDisplay(tokens) {
+  const values = Array.isArray(tokens) ? tokens : [];
+  const resolution = values.find(value => value === '4K' || value === 'HD') || '';
+  const visual = values.find(value => ['DV', 'HDR10+', 'HDR'].includes(value)) || '';
+  const audio = values.find(value => ['ATMOS', 'DTS:X'].includes(value)) || '';
+  const source = values.find(value => ['REMUX', 'WEB-DL'].includes(value)) || '';
+  return {
+    value: [resolution, visual].filter(Boolean).join(' · ') || source,
+    audio: audio === 'ATMOS' ? 'Atmos' : audio,
+    sourceLabel: source,
+    tokens: values,
+  };
+}
+
+function parseCachedQuality(value) {
+  try {
+    const parsed = JSON.parse(String(value || ''));
+    if (Array.isArray(parsed)) return parsed.map(String);
+  } catch {}
+  const legacy = String(value || '').trim();
+  return legacy ? [legacy] : [];
 }
 
 async function resolveQuality(details, type, env, context) {
@@ -602,7 +649,7 @@ async function resolveQuality(details, type, env, context) {
   try {
     await ensureRatingTables(env.DB);
     const cached = await readCachedRating(env.DB, provider, imdbId, maxAgeSeconds);
-    if (cached) return { value: cached.value, source: 'aiostreams', status: 'cache-hit' };
+    if (cached) return { ...qualityDisplay(parseCachedQuality(cached.value)), source: 'aiostreams', status: 'cache-hit' };
   } catch {
     return { value: '', source: 'aiostreams', status: 'quality-cache-error' };
   }
@@ -635,9 +682,10 @@ async function resolveQuality(details, type, env, context) {
     return { value: '', source: 'aiostreams', status: 'aiostreams-provider-error' };
   }
 
-  const value = qualityFromAiostreamsResults(results);
-  try { await writeCachedRating(env.DB, provider, imdbId, value, value); } catch {}
-  return { value, source: 'aiostreams', status: results.length ? 'upstream' : 'upstream-empty' };
+  const tokens = qualityTokensFromAiostreamsResults(results);
+  const display = qualityDisplay(tokens);
+  try { await writeCachedRating(env.DB, provider, imdbId, JSON.stringify(tokens), display.value); } catch {}
+  return { ...display, source: 'aiostreams', status: results.length ? 'upstream' : 'upstream-empty' };
 }
 
 function cacheRequestFor(request, env) {
@@ -651,6 +699,7 @@ function cacheRequestFor(request, env) {
   const ratingSource = normalizeRatingSource(incoming.searchParams.get('ratingSource'));
   const language = normalizeOverlayLanguage(incoming.searchParams.get('language'));
   const overlayColor = incoming.searchParams.get('overlayColor') || 'dynamic';
+  const trendDetails = normalizeTrendDetails(incoming.searchParams.get('trendDetails'));
   const sourceUrl = normalizeSourceUrl(incoming.searchParams.get('sourceUrl'));
   const overlayOnly = incoming.searchParams.get('overlayOnly') === '1';
 
@@ -661,6 +710,7 @@ function cacheRequestFor(request, env) {
   cacheUrl.searchParams.set('ratingSource', ratingSource);
   cacheUrl.searchParams.set('language', language);
   cacheUrl.searchParams.set('overlayColor', overlayColor);
+  cacheUrl.searchParams.set('trendDetails', trendDetails.join(','));
   if (sourceUrl) cacheUrl.searchParams.set('sourceUrl', sourceUrl);
   if (overlayOnly) cacheUrl.searchParams.set('overlayOnly', '1');
   cacheUrl.searchParams.set('__kollection_renderer', CACHE_VERSION);
@@ -720,7 +770,10 @@ async function renderPoster(context, state, id) {
   const { request, env } = context;
   const { url, type, preview, tags, sourceUrl, overlayOnly, overlayLanguage } = state;
 
-  const append = type === 'movie' ? 'images,release_dates,external_ids' : 'images,content_ratings,external_ids';
+  const trendDetails = normalizeTrendDetails(url.searchParams.get('trendDetails'));
+  const appendParts = type === 'movie' ? ['images', 'release_dates', 'external_ids'] : ['images', 'content_ratings', 'external_ids'];
+  if (tags.has('trend') && needsCredits(trendDetails)) appendParts.push('credits');
+  const append = appendParts.join(',');
   const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
   const detailsPromise = measured(context, 'metadata', () => tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null&language=en-US`, env.TMDB_API_KEY, context));
   // MDBList's TMDB endpoint needs only the ID. Start it alongside TMDB, while
@@ -732,7 +785,7 @@ async function renderPoster(context, state, id) {
     tags.has('rating')
       ? measured(context, 'ratings', async () => resolveRating(await ratingDetails, type, requestedRatingSource, env, context))
       : Promise.resolve({ value: '', label: '', source: requestedRatingSource, status: 'disabled' }),
-    tags.has('trend')
+    tags.has('trend') && trendDetails.includes('rank')
       ? measured(context, 'trend', () => trendLabel(type, id, env.TMDB_API_KEY, overlayLanguage, context))
       : Promise.resolve(''),
     tags.has('quality')
@@ -746,9 +799,18 @@ async function renderPoster(context, state, id) {
   const logo = chooseLogo(details, smartTextless);
   if (!artwork.path && !sourceUrl) throw posterError('artwork-missing');
 
-  const resolvedTrend = tags.has('trend')
-    ? trendRank || releaseStatusLabel(details, type, String(env.POSTERS_RELEASE_REGION || 'US').toUpperCase(), overlayLanguage)
+  const releaseTrend = tags.has('trend') && trendDetails.includes('release')
+    ? releaseStatusLabel(details, type, String(env.POSTERS_RELEASE_REGION || 'US').toUpperCase(), overlayLanguage)
     : '';
+  const trendChoice = tags.has('trend')
+    ? chooseTrendDisplay({
+        trendDetails,
+        rank: trendRank,
+        release: releaseTrend,
+        spotlights: spotlightLabels(details),
+      })
+    : { label: '', source: 'none' };
+  const resolvedTrend = trendChoice.label;
   if (!['ok', 'upstream', 'cache-hit', 'missing', 'disabled', 'not-configured'].includes(rating.status)) {
     // A ratings-provider outage must not replace a good cached overlay with one
     // missing its rating for the entire cache lifetime.
@@ -772,6 +834,7 @@ async function renderPoster(context, state, id) {
     age: tags.has('age') ? certification(details, type) : '',
     trend: resolvedTrend,
     quality: quality.value,
+    audio: quality.audio || '',
     smartLayout,
     overlayColor: url.searchParams.get('overlayColor') || 'dynamic',
   };
@@ -814,6 +877,8 @@ async function renderPoster(context, state, id) {
     headers.set('x-kollection-rating-status', rating.status);
     headers.set('x-kollection-quality-source', quality.source);
     headers.set('x-kollection-quality-status', quality.status);
+    headers.set('x-kollection-quality-tokens', Array.isArray(quality.tokens) ? quality.tokens.join(',') : '');
+    headers.set('x-kollection-trend-source', trendChoice.source);
     headers.set('x-kollection-artwork-source', artwork.source);
     headers.set('x-kollection-logo-source', logo.source);
     headers.set('x-kollection-tmdb-id', id);
