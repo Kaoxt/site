@@ -69,6 +69,111 @@
     installCompleted: false,
   };
 
+  const SETUP_ROUTE_NAMES = ['overview', 'nuvio', 'aiometadata', 'bingecat', 'customize', 'review', 'install', 'complete'];
+  const SETUP_ROUTE_BASE = '/set-up-collection';
+  const SETUP_SESSION_KEY = 'kollection-setup-wizard:v1';
+  const SETUP_SESSION_MAX_AGE = 12 * 60 * 60 * 1000;
+  const setupQuery = new URLSearchParams(window.location.search);
+  const setupHasSavedId = setupQuery.has('saved');
+
+  function routeStepFromLocation() {
+    const path = window.location.pathname.replace(/\/+$/, '');
+    if (path === SETUP_ROUTE_BASE || path === SETUP_ROUTE_BASE + '.html') return 0;
+    const match = path.match(/^\/set-up-collection\/([^/]+)$/);
+    if (!match) return 0;
+    const index = SETUP_ROUTE_NAMES.indexOf(String(match[1] || '').toLowerCase());
+    return index >= 0 ? index : 0;
+  }
+
+  function setupRouteUrl(step) {
+    const index = Math.max(0, Math.min(SETUP_ROUTE_NAMES.length - 1, Number(step) || 0));
+    const url = new URL(window.location.href);
+    url.pathname = `${SETUP_ROUTE_BASE}/${SETUP_ROUTE_NAMES[index]}`;
+    return url;
+  }
+
+  function persistWizardSession() {
+    try {
+      const payload = {
+        savedAt: Date.now(),
+        step: state.step,
+        profileId: state.profileId,
+        profileName: state.profileName,
+        addonProfileId: state.addonProfileId,
+        addons: state.addons,
+        existingCollections: state.existingCollections,
+        mdblistKey: state.mdblistKey,
+        tmdbKey: state.tmdbKey,
+        aiHostPreference: state.aiHostPreference,
+        aiHostMode: state.aiHostMode,
+        aiSelfHostUrl: state.aiSelfHostUrl,
+        aiSetupMode: state.aiSetupMode,
+        aiCustomFileName: state.aiCustomFileName,
+        aiCustomConfig: state.aiCustomConfig,
+        aiCustomCatalogLibrary: state.aiCustomCatalogLibrary,
+        aiBaseConfig: state.aiBaseConfig,
+        aiCatalogLibrary: state.aiCatalogLibrary,
+        aiNeededCatalogs: state.aiNeededCatalogs,
+        aiChunks: state.aiChunks,
+        aiInstalls: state.aiInstalls,
+        posterOverlaysEnabled: state.posterOverlaysEnabled,
+        posterSettings: state.posterSettings,
+        collectionPack: state.collectionPack,
+        selectedCollectionGroupIds: state.selectedCollectionGroupIds,
+        selectedCollectionFolderIds: state.selectedCollectionFolderIds,
+        collectionSelectionInitialized: state.collectionSelectionInitialized,
+        bingecatManifestUrl: state.bingecatManifestUrl,
+        bingecatManifest: state.bingecatManifest,
+        bingecatAddonId: state.bingecatAddonId,
+        bingecatCatalogs: state.bingecatCatalogs,
+        bingecatSkipped: state.bingecatSkipped,
+        backup: state.backup,
+        previewCollections: state.previewCollections,
+        finalCollections: state.finalCollections,
+        installStarted: state.installStarted,
+        installCompleted: state.installCompleted,
+      };
+      sessionStorage.setItem(SETUP_SESSION_KEY, JSON.stringify(payload));
+    } catch {}
+  }
+
+  function restoreWizardSession() {
+    if (setupHasSavedId) return false;
+    try {
+      const raw = sessionStorage.getItem(SETUP_SESSION_KEY);
+      if (!raw) return false;
+      const payload = JSON.parse(raw);
+      if (!payload || Date.now() - Number(payload.savedAt || 0) > SETUP_SESSION_MAX_AGE) {
+        sessionStorage.removeItem(SETUP_SESSION_KEY);
+        return false;
+      }
+      const copy = { ...payload };
+      delete copy.savedAt;
+      delete copy.step;
+      Object.assign(state, copy);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function syncSetupRoute(step, mode = 'push') {
+    const url = setupRouteUrl(step);
+    const current = new URL(window.location.href);
+    if (current.pathname === url.pathname && current.search === url.search) return;
+    const method = mode === 'replace' ? 'replaceState' : 'pushState';
+    history[method]({ kollectionSetupStep: step }, '', url);
+  }
+
+  restoreWizardSession();
+  if (!setupHasSavedId) state.step = routeStepFromLocation();
+
+  window.KollectionSetupRoute = Object.freeze({
+    getStep: routeStepFromLocation,
+    getName: () => SETUP_ROUTE_NAMES[routeStepFromLocation()] || SETUP_ROUTE_NAMES[0],
+    urlForStep: (step) => setupRouteUrl(step).toString(),
+  });
+
   const nav = $('#stepNav');
   const host = $('#panelHost');
   const alertHost = $('#alertHost');
@@ -161,9 +266,11 @@
     $('#mobileProgressBar').style.width = `${((state.step + 1) / steps.length) * 100}%`;
   }
 
-  function setStep(step) {
+  function setStep(step, options = {}) {
     state.step = Math.max(0, Math.min(steps.length - 1, step));
     clearAlert();
+    persistWizardSession();
+    if (!options.fromPopState) syncSetupRoute(state.step, options.replaceRoute ? 'replace' : 'push');
     renderNav();
     render();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1121,6 +1228,7 @@
           const id = String(button.dataset.savedId || '').trim();
           if (!id) return;
           const next = new URL(window.location.href);
+          next.pathname = '/set-up-collection/customize';
           next.search = '';
           next.searchParams.set('saved', id);
           next.searchParams.set('update', '1');
@@ -2278,7 +2386,8 @@
       installStarted: false,
       installCompleted: false,
     });
-    setStep(0);
+    try { sessionStorage.removeItem(SETUP_SESSION_KEY); } catch {}
+    setStep(0, { replaceRoute: true });
   };
 
   window.addEventListener('kollection:nuvio-signed-out', () => {
@@ -2306,12 +2415,28 @@
     syncSetupToolbarActions();
   });
 
+  window.addEventListener('popstate', () => {
+    const nextStep = routeStepFromLocation();
+    if (nextStep === state.step) return;
+    state.step = nextStep;
+    clearAlert();
+    persistWizardSession();
+    render();
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  });
+
+  window.addEventListener('beforeunload', persistWizardSession);
+  document.addEventListener('change', () => setTimeout(persistWizardSession, 0), true);
+  document.addEventListener('input', () => setTimeout(persistWizardSession, 120), true);
+
   async function initialize() {
+    if (!setupHasSavedId) syncSetupRoute(state.step, 'replace');
     render();
     const restored = await restoreNuvioSession();
     if (restored && state.step === 0) renderWelcome();
     else if (restored && state.step === 1) renderNuvio();
     syncSetupToolbarActions();
+    persistWizardSession();
   }
 
   initialize();
