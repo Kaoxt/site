@@ -29,7 +29,7 @@
   const status = panel.querySelector('#posterPatternStatus');
 
   const selectedSource = () => document.querySelector('input[name="posterSource"]:checked')?.value || 'smart';
-  const selectedTags = () => [...document.querySelectorAll('.tag-option input[type="checkbox"]:checked')].map((input) => input.value);
+  const selectedTags = () => [...document.querySelectorAll('#tagOptions .tag-option > input[type="checkbox"]:checked')].map((input) => input.value);
   const selectedTrendDetails = () => [...document.querySelectorAll('[data-trend-detail]:checked')].map((input) => input.value);
   const ratingSource = () => document.getElementById('ratingSource')?.value || 'average';
 
