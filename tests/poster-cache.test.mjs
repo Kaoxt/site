@@ -187,6 +187,7 @@ test('rating outage cannot replace a good overlay with missing ratings', async (
   h.db.sqlite.exec('DELETE FROM poster_rating_cache'); h.ratingStatus = 503;
   assert.deepEqual(await (await h.request()).arrayBuffer(), old); await h.flush();
   assert.equal(h.count.render, 1); assert.equal(h.count.fallback, 0);
+  assert.equal(h.db.used(), 1);
 });
 
 test('20 identical cold requests share one render, rating lookup, and budget reservation', async () => {
