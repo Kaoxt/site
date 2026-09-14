@@ -59,8 +59,13 @@
     ['studio', 'Notable Studios', 'A24 Film, Pixar Film, Studio Ghibli'],
     ['director', 'Notable Directors', 'Christopher Nolan Film, Denis Villeneuve Film'],
     ['cast', 'Notable Cast', 'Leonardo DiCaprio, Zendaya, Florence Pugh'],
+    ['inCinema', 'In Cinema', 'Movies currently in their theatrical window'],
     ['rank', 'Daily Rank', '#1 Today, #8 Today'],
-    ['release', 'Release Status', 'New, In Cinema, Returning, Limited Series'],
+    ['newMovie', 'New Movie', 'Recently released movies'],
+    ['comingSoon', 'Coming Soon', 'Upcoming movie or series releases'],
+    ['newSeries', 'New Series', 'Recently premiered TV series'],
+    ['returningSeries', 'Returning Series', 'Ongoing or returning TV series'],
+    ['limitedSeries', 'Limited Series', 'Miniseries and limited TV events'],
   ];
   const trendCard = trendInput?.closest('.tag-option');
   const trendDetailsRow = document.createElement('div');
@@ -68,7 +73,7 @@
   trendDetailsRow.innerHTML = `
     <div class="trend-details-heading">
       <div><strong>Trend Tag Details</strong><small>Choose what can appear in the top Trend Tag area.</small></div>
-      <small class="trend-priority-note">Priority: Studio → Director → Cast → Rank → Release</small>
+      <small class="trend-priority-note">Priority: Studio → Director → Cast → In Cinema → Rank → New Movie → Coming Soon → New Series → Returning → Limited</small>
     </div>
     <div class="trend-detail-grid">
       ${trendDetailOptions.map(([value, label, example]) => `
@@ -97,7 +102,7 @@
       const tags = tagInputs.filter((input) => input.checked).map((input) => input.value);
       const trendDetails = trendDetailInputs.filter((input) => input.checked).map((input) => input.value);
       localStorage.setItem(SETTINGS_KEY, JSON.stringify({
-        version: 3,
+        version: 4,
         source,
         tags,
         trendDetails,
@@ -123,6 +128,9 @@
 
     if (Array.isArray(saved.trendDetails)) {
       const trendSet = new Set(saved.trendDetails.map(String));
+      if (trendSet.has('release')) {
+        ['inCinema','newMovie','comingSoon','newSeries','returningSeries','limitedSeries'].forEach(value => trendSet.add(value));
+      }
       trendDetailInputs.forEach((input) => { input.checked = trendSet.has(input.value); });
     }
 
@@ -301,7 +309,7 @@
     const source = selectedSource();
     const tags = selectedTags().join(',');
     const trendDetails = selectedTrendDetails().join(',');
-    return `https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?v=22&source=${encodeURIComponent(source)}&tags=${encodeURIComponent(tags)}&ratingSource=${encodeURIComponent(selectedRatingSource())}&trendDetails=${encodeURIComponent(trendDetails)}`;
+    return `https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?v=23&source=${encodeURIComponent(source)}&tags=${encodeURIComponent(tags)}&ratingSource=${encodeURIComponent(selectedRatingSource())}&trendDetails=${encodeURIComponent(trendDetails)}`;
   };
 
   const buildOutput = () => {
@@ -325,7 +333,7 @@
       config.customPosterUrlPattern = posterPattern();
 
       config.kollectionPosters = {
-        version: 3,
+        version: 4,
         usageMode: usageMode || 'setup',
         posterSource: source,
         ratingSource: ratingProvider,
