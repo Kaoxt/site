@@ -1,6 +1,7 @@
 import http from 'node:http';
 import sharp from 'sharp';
 import { pathToFileURL } from 'node:url';
+import { loadTmdbPosterSource, SOURCE_CACHE_VERSION } from './source-loader.js';
 
 const PORT = Number(process.env.PORT || 8080);
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w342';
@@ -75,10 +76,16 @@ export async function renderPoster(body){
  const{posterPath,sourceUrl,logoPath='',title='',smartLayout=false,overlayOnly=false,rating='',ratingLabel='',genre='',trend='',age='',quality='',overlayColor='dynamic'}=body||{};
  const posterUrl=sourceUrl||(posterPath?`${TMDB_IMAGE_BASE}${posterPath}`:'');if(!posterUrl)throw new Error('posterPath or sourceUrl is required');
  const logoPromise=smartLayout&&!overlayOnly&&logoPath?smartLogoImage(logoPath):Promise.resolve(null);
- const res=await fetch(posterUrl,{headers:{accept:'image/*'},signal:AbortSignal.timeout(4000)});if(!res.ok)throw new Error(`Source image fetch failed: ${res.status}`);
+ let source;
+ if(!sourceUrl&&posterPath){
+  source=await loadTmdbPosterSource(posterPath);
+ }else{
+  const res=await fetch(posterUrl,{headers:{accept:'image/*'},signal:AbortSignal.timeout(4000)});if(!res.ok)throw new Error(`Source image fetch failed: ${res.status}`);
+  source={input:Buffer.from(await res.arrayBuffer()),status:'BYPASS',key:'',retentionUntil:0};
+ }
  // Keep the intermediate canvas as pixels; PNG encoding followed immediately
  // by PNG decoding adds CPU work without improving the final WebP image.
- const input=Buffer.from(await res.arrayBuffer()),resized=await sharp(input).resize(POSTER_WIDTH,POSTER_HEIGHT,{fit:'cover'}).raw().toBuffer({resolveWithObject:true}),composites=[];
+ const input=source.input,resized=await sharp(input).resize(POSTER_WIDTH,POSTER_HEIGHT,{fit:'cover'}).raw().toBuffer({resolveWithObject:true}),composites=[];
  const canvasOptions={raw:{width:resized.info.width,height:resized.info.height,channels:resized.info.channels}};
  const resolvedRatingLabel=ratingLabel||(rating?`★ ${rating}`:'');
  const dynamicFill=overlayColor==='dynamic'&&trend?await dynamicAccent(resized.data,canvasOptions):overlayColor;
