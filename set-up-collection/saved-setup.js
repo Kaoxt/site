@@ -2,11 +2,13 @@
   'use strict';
 
   const params = new URLSearchParams(window.location.search);
-  let savedId = params.get('saved') || '';
+  const sourceSavedId = params.get('saved') || '';
+  const cloneSavedSetup = params.get('clone') === '1';
+  let savedId = cloneSavedSetup ? '' : sourceSavedId;
   const targetProfileId = Number(params.get('targetProfile')) || null;
   let savedName = '';
   let targetStep = 0;
-  let restoring = Boolean(savedId);
+  let restoring = Boolean(sourceSavedId);
   let snapshot = {
     profileId: null,
     profileName: '',
@@ -168,6 +170,9 @@
         const next = new URL(window.location.href);
         next.searchParams.set('saved', savedId);
         next.searchParams.set('edit', '1');
+        next.searchParams.delete('clone');
+        next.searchParams.delete('switch');
+        next.searchParams.delete('targetProfile');
         history.replaceState(null, '', next);
       }
     }
@@ -222,6 +227,9 @@
         const next = new URL(window.location.href);
         next.searchParams.set('saved', savedId);
         next.searchParams.set('edit', '1');
+        next.searchParams.delete('clone');
+        next.searchParams.delete('switch');
+        next.searchParams.delete('targetProfile');
         history.replaceState(null, '', next);
       }
     }
@@ -417,16 +425,18 @@
   }
 
   async function loadSaved() {
-    if (!savedId) return;
+    if (!sourceSavedId) return;
     setStatus('Loading saved setup…');
     try {
-      const data = await readJson(await fetch(`/api/account/collections/${encodeURIComponent(savedId)}`, {
+      const data = await readJson(await fetch(`/api/account/collections/${encodeURIComponent(sourceSavedId)}`, {
         credentials: 'same-origin',
         cache: 'no-store',
       }));
       const item = data.collection;
       savedName = item?.name || 'My Kollection';
-      targetStep = Math.max(0, Math.min(7, Number(item?.draftStep) || 0));
+      targetStep = cloneSavedSetup
+        ? Math.max(0, Math.min(6, Number(item?.draftStep) || 0))
+        : Math.max(0, Math.min(7, Number(item?.draftStep) || 0));
       snapshot = {
         ...snapshot,
         ...(item?.config && typeof item.config === 'object' ? item.config : {}),
