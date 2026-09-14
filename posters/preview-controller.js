@@ -60,6 +60,7 @@
     .client-preview-top.split-layout .client-preview-quality{right:10px}
     .client-preview-tag{display:inline-flex;align-items:center;justify-content:center;height:29px;min-height:29px;padding:0 11px;border-radius:0 0 6px 6px;background:rgba(18,18,20,.78);color:#fff;font-family:Inter,"Segoe UI",Arial,sans-serif;font-size:clamp(11px,1.65vw,16px);font-weight:700;line-height:1;letter-spacing:-.015em;white-space:nowrap;text-shadow:0 2px 6px rgba(0,0,0,.72);backdrop-filter:blur(4px);box-sizing:border-box}
     .client-preview-quality{font-size:clamp(10px,1.45vw,14px);min-width:42px}
+    .client-preview-audio{position:absolute;right:10px;top:35px;padding:4px 8px;border:1px solid rgba(255,255,255,.12);border-radius:7px;background:rgba(17,18,22,.74);color:#f4f4f6;font-size:clamp(8px,1.15vw,11px);font-weight:700;line-height:1;text-shadow:0 1px 3px rgba(0,0,0,.6)}
     .client-preview-age{position:absolute;left:50%;top:58%;transform:translate(-50%,-50%);padding:5px 8px;border-radius:7px;background:rgba(15,16,20,.66);color:#fff;font-size:clamp(8px,1.25vw,12px);font-weight:750;text-shadow:0 2px 5px rgba(0,0,0,.8)}
     .client-preview-bottom{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);width:calc(100% - 16px);color:#dedee2;text-align:center;font-size:clamp(15px,2.25vw,23px);font-weight:700;line-height:1.05;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 2px rgba(0,0,0,.95),0 0 8px rgba(0,0,0,.95),0 0 16px rgba(0,0,0,.7)}
 
@@ -121,7 +122,7 @@
     if (layer) return layer;
     layer = document.createElement('div');
     layer.className = 'client-preview-layer';
-    layer.innerHTML = `<div class="client-preview-top"><span class="client-preview-tag client-preview-trend"></span><span class="client-preview-tag client-preview-quality"></span></div><span class="client-preview-age"></span><div class="client-preview-bottom"></div>`;
+    layer.innerHTML = `<div class="client-preview-top"><span class="client-preview-tag client-preview-trend"></span><span class="client-preview-tag client-preview-quality"></span></div><span class="client-preview-audio"></span><span class="client-preview-age"></span><div class="client-preview-bottom"></div>`;
     posterMock.appendChild(layer);
     return layer;
   }
@@ -141,6 +142,7 @@
       const top = layer.querySelector('.client-preview-top');
       const trend = layer.querySelector('.client-preview-trend');
       const quality = layer.querySelector('.client-preview-quality');
+      const audio = layer.querySelector('.client-preview-audio');
       const age = layer.querySelector('.client-preview-age');
       const bottom = layer.querySelector('.client-preview-bottom');
 
@@ -155,6 +157,9 @@
       quality.textContent = sample.quality || '4K';
       quality.hidden = !qualityOn;
       quality.style.display = qualityOn ? '' : 'none';
+      audio.textContent = sample.audio || '';
+      audio.hidden = !qualityOn || !audio.textContent;
+      audio.style.display = qualityOn && audio.textContent ? '' : 'none';
 
       age.textContent = sample.age || (sample.type === 'tv' ? 'TV-14' : 'PG-13');
       age.hidden = !tags.has('age');
