@@ -78,8 +78,8 @@ function harness(overrides = {}) {
   const bucket = new Bucket(), edge = new EdgeCache(), db = new D1();
   const env = { IMAGES: bucket, DB: db, TMDB_API_KEY: 'test-tmdb-secret', MDBLIST_API_KEY: 'test-mdb-secret', POSTERS_RENDERER_AUTH_TOKEN: 'test-render-secret', ...overrides };
   const jobs = [];
-  const count = { find: 0, details: 0, trend: 0, ratings: 0, render: 0, fallback: 0 };
-  const h = { bucket, edge, db, env, jobs, count, payloads: [], renderStatus: 200, ratingStatus: 200 };
+  const count = { find: 0, details: 0, trend: 0, ratings: 0, quality: 0, render: 0, fallback: 0 };
+  const h = { bucket, edge, db, env, jobs, count, payloads: [], qualityAuth: [], qualityResolution: '2160p', renderStatus: 200, ratingStatus: 200 };
   globalThis.caches = { default: edge };
   globalThis.fetch = async (input, options = {}) => {
     const url = new URL(typeof input === 'string' ? input : input.url);
@@ -102,6 +102,17 @@ function harness(overrides = {}) {
       await pause(5);
       return h.ratingStatus === 200 ? Response.json({ score_average: 86, score: 85, ratings: [{ source: 'imdb', value: 8.8 }] })
         : new Response('unavailable', { status: h.ratingStatus });
+    }
+    if (url.hostname === 'aiostreams.example') {
+      count.quality++;
+      h.qualityAuth.push(options.headers?.authorization || options.headers?.Authorization || '');
+      return Response.json({
+        success: true,
+        data: {
+          results: [{ parsedFile: { resolution: h.qualityResolution } }],
+          errors: {},
+        },
+      });
     }
     if (url.hostname === 'poster-renderer.kollection.tv') {
       count.render++;
@@ -197,6 +208,37 @@ test('20 identical cold requests share one render, rating lookup, and budget res
   assert.equal(h.count.render, 1); assert.equal(h.count.find, 1); assert.equal(h.count.ratings, 1);
   assert.equal(h.db.used(), 1); assert.equal(h.count.fallback, 0);
   assert.ok(bodies.every(body => Buffer.from(body).equals(Buffer.from(bodies[0]))));
+});
+
+test('quality tag uses real cached AIOStreams resolution only when enabled', async () => {
+  const h = harness({
+    POSTERS_AIOSTREAMS_URL: 'https://aiostreams.example',
+    POSTERS_AIOSTREAMS_AUTH: 'dXNlcjpwYXNz',
+  });
+
+  await (await h.request('27205')).arrayBuffer();
+  await h.flush();
+  assert.equal(h.count.quality, 0);
+
+  const first = h.context('27205');
+  const firstUrl = new URL(first.request.url);
+  firstUrl.searchParams.set('tags', 'genre,rating,quality');
+  first.request = new Request(firstUrl);
+  await (await onRequest(first)).arrayBuffer();
+  await h.flush();
+  assert.equal(h.count.quality, 1);
+  assert.equal(h.payloads.at(-1).quality, '4K');
+  assert.equal(h.qualityAuth.at(-1), 'Basic dXNlcjpwYXNz');
+
+  const second = h.context('27205');
+  const secondUrl = new URL(second.request.url);
+  secondUrl.searchParams.set('tags', 'genre,rating,quality');
+  secondUrl.searchParams.set('overlayColor', '#222222');
+  second.request = new Request(secondUrl);
+  await (await onRequest(second)).arrayBuffer();
+  await h.flush();
+  assert.equal(h.count.quality, 1);
+  assert.equal(h.payloads.at(-1).quality, '4K');
 });
 
 test('different overlay variants reuse metadata but keep separate rendered outputs', async () => {
