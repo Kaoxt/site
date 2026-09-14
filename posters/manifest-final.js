@@ -225,7 +225,7 @@
     const apiKey = String(readConnections().mdblistApiKey || '').trim();
     if (!apiKey) throw new Error('Add your MDBList API key before copying the manifest URL.');
     const source = document.querySelector('input[name="posterSource"]:checked')?.value || 'smart';
-    const tags = [...document.querySelectorAll('.tag-option input[type="checkbox"]:checked')].map((input) => input.value);
+    const tags = [...document.querySelectorAll('#tagOptions .tag-option > input[type="checkbox"]:checked')].map((input) => input.value);
     const trendDetails = [...document.querySelectorAll('[data-trend-detail]:checked')].map((input) => input.value);
     const config = {
       v: 1,
