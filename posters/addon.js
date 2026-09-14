@@ -17,7 +17,7 @@
       <input id="posterPatternOutput" class="manifest-output" type="text" aria-label="Your Kollection poster URL pattern" readonly />
       <button id="copyPosterPatternBtn" class="poster-url-copy" type="button">Copy</button>
     </div>
-    <p class="poster-url-instructions"><strong>How to use:</strong> In AIOmetadata, go to <strong>Art Providers</strong> → scroll to <strong>URL Patterns</strong> → paste this URL into the <strong>Poster URL Pattern</strong> field.</p>
+    <p class="poster-url-instructions"><strong>How to use:</strong> In AIOmetadata, go to <strong>Art Providers</strong> → scroll to <strong>URL Patterns</strong> → paste this URL into the <strong>Poster URL Pattern</strong> field only. Keep your existing providers for backdrops, title logos, and episode thumbnails.</p>
     <span id="posterPatternStatus" class="manifest-status" role="status" aria-live="polite"></span>`;
 
   const dividerAfterTags = tagOptions.nextElementSibling;
@@ -36,7 +36,7 @@
     const tags = selectedTags();
     if (!tags.includes('quality') && !tags.includes('trend')) tags.push('trend');
     const params = new URLSearchParams({
-      v: '19',
+      v: '20',
       source: selectedSource(),
       tags: [...new Set(tags)].sort().join(','),
       ratingSource: ratingSource(),

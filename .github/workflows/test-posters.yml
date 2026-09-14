@@ -1,0 +1,29 @@
+name: Test poster delivery
+
+on:
+  push:
+    paths:
+      - 'functions/api/posters-v2/**'
+      - 'functions/_lib/poster-*.js'
+      - 'tests/poster-cache.test.mjs'
+      - '.github/workflows/test-posters.yml'
+  pull_request:
+    paths:
+      - 'functions/api/posters-v2/**'
+      - 'functions/_lib/poster-*.js'
+      - 'tests/poster-cache.test.mjs'
+      - '.github/workflows/test-posters.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --test tests/poster-cache.test.mjs

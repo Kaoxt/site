@@ -1,3 +1,5 @@
+import { delay } from './poster-cache.js';
+
 const DEFAULT_MAX_DAILY_RENDERS = 500;
 const DEFAULT_MAX_CLIENT_HOURLY_RENDERS = 60;
 const DEFAULT_MAX_CONCURRENT_RENDERS = 4;
@@ -5,7 +7,9 @@ const DEFAULT_CONSERVE_AT_PERCENT = 95;
 const DEFAULT_HARD_STOP_AT_PERCENT = 98;
 
 let activeRenders = 0;
-let schemaReady = false;
+let queuedRenders = 0;
+let conservationMode = false;
+const schemaReady = new WeakMap();
 
 function intEnv(env, key, fallback, min = 1, max = 1000000) {
   const raw = Number.parseInt(String(env?.[key] ?? ''), 10);
@@ -47,8 +51,8 @@ async function hashClient(request) {
 }
 
 async function ensureSchema(db) {
-  if (schemaReady) return;
-  await db.batch([
+  if (schemaReady.has(db)) return schemaReady.get(db);
+  const setup = db.batch([
     db.prepare(`CREATE TABLE IF NOT EXISTS poster_usage_daily (
       day TEXT PRIMARY KEY,
       renders INTEGER NOT NULL DEFAULT 0,
@@ -61,8 +65,12 @@ async function ensureSchema(db) {
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (hour, client_hash)
     )`),
-  ]);
-  schemaReady = true;
+  ]).catch(error => {
+    schemaReady.delete(db);
+    throw error;
+  });
+  schemaReady.set(db, setup);
+  return setup;
 }
 
 async function reserveDbBudget(env, request) {
@@ -148,51 +156,51 @@ async function reserveDbBudget(env, request) {
   };
 }
 
-export async function acquirePosterRenderSlot(env, request) {
+export async function acquirePosterRenderSlot(env, request, { signal, waitMs = 5000 } = {}) {
   if (!enabled(env)) {
     return { allowed: false, reason: 'rendering-disabled', release() {} };
   }
 
   const maxConcurrent = intEnv(env, 'POSTERS_MAX_CONCURRENT_RENDERS', DEFAULT_MAX_CONCURRENT_RENDERS, 1, 100);
-
+  if (queuedRenders >= 64) return { allowed: false, reason: 'render-queue-full', release() {} };
+  // A short bounded queue handles catalog bursts instead of immediately dropping
+  // overlays. Reserve capacity BEFORE awaiting D1, and charge only admitted work.
+  const deadline = Date.now() + Math.min(5000, Math.max(0, waitMs));
+  queuedRenders += 1;
+  try {
+    while (activeRenders >= (conservationMode ? 1 : maxConcurrent)) {
+      if (Date.now() >= deadline) return { allowed: false, reason: 'render-queue-timeout', release() {} };
+      await delay(Math.min(50, Math.max(1, deadline - Date.now())), signal);
+    }
+    if (signal?.aborted) throw signal.reason;
+  } finally {
+    queuedRenders -= 1;
+  }
+  activeRenders += 1;
+  let released = false;
+  const release = () => {
+    if (released) return;
+    released = true;
+    activeRenders = Math.max(0, activeRenders - 1);
+  };
   let budget;
   try {
     budget = await reserveDbBudget(env, request);
   } catch (error) {
-    if (failOpen(env)) {
-      budget = { allowed: true, reason: 'budget-error-fail-open', conservationMode: false };
-    } else {
-      return { allowed: false, reason: 'budget-error', error: error?.message || String(error), release() {} };
-    }
+    if (failOpen(env)) budget = { allowed: true, reason: 'budget-error-fail-open', conservationMode: false };
+    else budget = { allowed: false, reason: 'budget-error' };
   }
-
-  if (!budget.allowed) {
-    return { ...budget, release() {} };
+  if (!budget.allowed || signal?.aborted) {
+    release();
+    return { ...budget, allowed: false, reason: signal?.aborted ? 'render-timeout' : budget.reason, release() {} };
   }
-
-  const effectiveMaxConcurrent = budget.conservationMode ? 1 : maxConcurrent;
-  if (activeRenders >= effectiveMaxConcurrent) {
-    return {
-      allowed: false,
-      reason: budget.conservationMode ? 'conservation-concurrency-limit' : 'concurrency-limit',
-      conservationMode: Boolean(budget.conservationMode),
-      maxConcurrent: effectiveMaxConcurrent,
-      release() {},
-    };
-  }
-
-  activeRenders += 1;
-  let released = false;
+  conservationMode = Boolean(budget.conservationMode);
   return {
     ...budget,
     allowed: true,
     activeRenders,
-    maxConcurrent: effectiveMaxConcurrent,
-    release() {
-      if (released) return;
-      released = true;
-      activeRenders = Math.max(0, activeRenders - 1);
-    },
+    maxConcurrent: conservationMode ? 1 : maxConcurrent,
+    release,
   };
 }
 

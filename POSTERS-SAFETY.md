@@ -32,7 +32,7 @@ This deliberately leaves headroom instead of trying to run to 100%.
 - 95% conservation threshold: new renders are still allowed, but effective render concurrency is reduced to 1.
 - 98% hard-stop threshold: no new overlay render is attempted; the original TMDB poster is returned uncached.
 - Emergency switch: no new overlay render is attempted; the original TMDB poster is returned uncached.
-- Per-client hourly limit: HTTP 429 is returned.
+- Per-client hourly limit: existing overlays still serve; a genuinely uncached title uses the uncached original-art fallback.
 - Cached posters are served normally and do not consume the render budget.
 
 ## Admin status
@@ -48,3 +48,11 @@ The endpoint reports whether rendering is enabled, today's reserved render count
 Keep `POSTERS_SAFETY_FAIL_OPEN=0`. Start with the defaults while testing the new Sharp/Container renderer. Raise `POSTERS_MAX_DAILY_RENDERS` only after measuring actual render time and Cloudflare usage.
 
 These controls limit application-level render work. They are not a substitute for Cloudflare account-level billing alerts or platform spending controls.
+
+## Cache-first delivery
+
+See [POSTERS-CACHE.md](POSTERS-CACHE.md) for the cache hierarchy, freshness windows, and tests. Cached overlays are checked before credentials, ID lookups, and render budgets. A saved trend overlay may be served for up to 48 hours beyond its freshness deadline while a background update is attempted; failed refreshes do not overwrite it with a plain poster.
+
+Catalog bursts wait up to five seconds for a local rendering slot (maximum 64 queued requests). Rejected queue requests no longer consume a render reservation. Conservation mode reduces admission to one concurrent render; already admitted work may finish.
+
+The existing `DB` binding also gets a small `poster_render_leases` table automatically. A 60-second owner-checked lease coalesces rendering of the same poster variant across Workers; failures impose a 30-second retry cooldown. No new Cloudflare service or secrets are required. These changes do not raise daily or hourly budgets.

@@ -1,8 +1,12 @@
 import { acquirePosterRenderSlot } from '../../_lib/poster-safety.js';
+import { acquirePosterLease, cachedPosterJson, delay, singleFlight } from '../../_lib/poster-cache.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
 const CACHE_VERSION = 'production-cache-19';
+// Delivery changes must not invalidate finished artwork in R2.
+const DELIVERY_VERSION = 'cache-first-1';
+const STALE_TREND_SECONDS = 172800;
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
 const DEFAULT_MDBLIST_CACHE_DAYS = 30;
@@ -46,17 +50,27 @@ function localizeGenre(name, language) {
   return GENRE_TRANSLATIONS[language]?.[name] || name;
 }
 
-async function tmdbFetch(path, key) {
-  const joiner = path.includes('?') ? '&' : '?';
-  const res = await fetch(`${TMDB_API}${path}${joiner}api_key=${encodeURIComponent(key)}`, { headers: { accept: 'application/json' } });
-  if (!res.ok) throw new Error(`TMDB ${res.status}`);
-  return res.json();
+async function tmdbFetch(path, key, context) {
+  const loader = async () => {
+    const joiner = path.includes('?') ? '&' : '?';
+    const res = await fetch(`${TMDB_API}${path}${joiner}api_key=${encodeURIComponent(key)}`, {
+      headers: { accept: 'application/json' },
+      signal: context?.signal ? AbortSignal.any([context.signal, AbortSignal.timeout(4000)]) : AbortSignal.timeout(4000),
+    });
+    if (!res.ok) throw new Error(`TMDB ${res.status}`);
+    return res.json();
+  };
+  if (!context) return loader();
+  const trending = path.startsWith('/trending/');
+  const ttl = path.startsWith('/find/') ? 30 * 86400 : trending ? 1800 : 86400;
+  // Including the day prevents yesterday's cached trend list being used as today's.
+  return cachedPosterJson(context, `tmdb:${path}${trending ? ':' + todayUtc() : ''}`, ttl, loader);
 }
 
-async function resolveTmdbId(type, rawId, key) {
+async function resolveTmdbId(type, rawId, key, context) {
   if (/^\d+$/.test(rawId)) return rawId;
   if (!/^tt\d+$/i.test(rawId)) return null;
-  const found = await tmdbFetch(`/find/${encodeURIComponent(rawId)}?external_source=imdb_id`, key);
+  const found = await tmdbFetch(`/find/${encodeURIComponent(rawId)}?external_source=imdb_id`, key, context);
   const list = type === 'tv' ? found.tv_results : found.movie_results;
   return list?.[0]?.id ? String(list[0].id) : null;
 }
@@ -81,8 +95,8 @@ function theatricalLabel(details, type, region = 'US', now = new Date()) {
   return daysSince <= 45 && !homeReleased ? 'In Cinema' : '';
 }
 
-async function trendLabel(type, id, key, language = 'en') {
-  const data = await tmdbFetch(`/trending/${type}/day?language=en-US&page=1`, key);
+async function trendLabel(type, id, key, language = 'en', context) {
+  const data = await tmdbFetch(`/trending/${type}/day?language=en-US&page=1`, key, context);
   const index = (data.results || []).findIndex((item) => String(item.id) === String(id));
   return index >= 0 ? `#${index + 1} ${TODAY_LABELS[language] || TODAY_LABELS.en}` : '';
 }
@@ -216,7 +230,7 @@ function todayUtc() {
   return new Date().toISOString().slice(0, 10);
 }
 
-async function readPersistentPoster(env, key, tags) {
+async function readPersistentPoster(env, key) {
   const bucket = posterCacheBucket(env);
   if (!bucket) return null;
 
@@ -224,19 +238,13 @@ async function readPersistentPoster(env, key, tags) {
     const object = await bucket.get(key);
     if (!object) return null;
 
-    const tagSet = tags instanceof Set ? tags : new Set(tags || []);
-    if (tagSet.has('trend')) {
-      const storedDay = String(object.customMetadata?.trendDay || '');
-      if (storedDay !== todayUtc()) return null;
-    }
-
     return object;
   } catch {
     return null;
   }
 }
 
-async function writePersistentPoster(env, key, bytes, cacheControl, tags) {
+async function writePersistentPoster(env, key, bytes, cacheControl, tags, metadata = {}) {
   const bucket = posterCacheBucket(env);
   if (!bucket) return false;
 
@@ -250,6 +258,8 @@ async function writePersistentPoster(env, key, bytes, cacheControl, tags) {
       customMetadata: {
         rendererVersion: CACHE_VERSION,
         trendDay: tagSet.has('trend') ? todayUtc() : '',
+        generatedAt: String(Date.now()),
+        ...metadata,
       },
     });
     return true;
@@ -271,8 +281,10 @@ function tmdbFallback(details, reason) {
   return { ...fallback, requestedSource: 'imdb' };
 }
 
+const ratingSchemas = new WeakMap();
 async function ensureRatingTables(db) {
-  await db.batch([
+  if (ratingSchemas.has(db)) return ratingSchemas.get(db);
+  const setup = db.batch([
     db.prepare(`CREATE TABLE IF NOT EXISTS poster_rating_cache (
       provider TEXT NOT NULL,
       item_id TEXT NOT NULL,
@@ -287,7 +299,9 @@ async function ensureRatingTables(db) {
       lookups INTEGER NOT NULL DEFAULT 0,
       PRIMARY KEY (day, provider)
     )`),
-  ]);
+  ]).catch(error => { ratingSchemas.delete(db); throw error; });
+  ratingSchemas.set(db, setup);
+  return setup;
 }
 
 async function readCachedRating(db, provider, itemId, maxAgeSeconds) {
@@ -385,40 +399,50 @@ function formatMdblistRating(record, source, status = 'cache-hit') {
   return { value: formatted, label: formatted, source, status };
 }
 
-async function mdblistRating(details, type, source, env) {
+async function mdblistRating(details, type, source, env, context) {
   if (!env.MDBLIST_API_KEY) {
-    if (source === 'imdb') return imdbRating(details, env);
+    if (source === 'imdb') return imdbRating(details, env, context);
     return { value: '', label: '', source, status: 'not-configured' };
   }
   if (!env.DB) return { value: '', label: '', source, status: 'rating-cache-unavailable' };
+  const result = await singleFlight(env, `mdblist:${type}:${details.id}`,
+    () => loadMdblistRecord(details, type, env, context));
+  return result.record ? formatMdblistRating(result.record, source, result.status)
+    : { value: '', label: '', source, status: result.status };
+}
+
+async function loadMdblistRecord(details, type, env, context) {
   const itemId = `${type}:${details.id}`;
   const cacheDays = positiveInt(env.MDBLIST_RATING_CACHE_DAYS, DEFAULT_MDBLIST_CACHE_DAYS, 1, 365);
   const configuredLimit = Number.parseInt(String(env.MDBLIST_MAX_LOOKUPS_PER_DAY || ''), 10);
   try {
     await ensureRatingTables(env.DB);
     const cached = await readMdblistRecord(env.DB, itemId, cacheDays * 86400);
-    if (cached) return formatMdblistRating(cached, source);
+    if (cached) return { record: cached, status: 'cache-hit' };
     if (Number.isFinite(configuredLimit) && configuredLimit > 0) {
       const reserved = await reserveProviderLookup(env.DB, 'mdblist', configuredLimit);
-      if (!reserved) return { value: '', label: '', source, status: 'mdblist-daily-limit' };
+      if (!reserved) return { status: 'mdblist-daily-limit' };
     }
   } catch {
-    return { value: '', label: '', source, status: 'rating-cache-error' };
+    return { status: 'rating-cache-error' };
   }
   const mediaType = type === 'tv' ? 'show' : 'movie';
   let response;
   try {
-    response = await fetch(`https://api.mdblist.com/tmdb/${mediaType}/${encodeURIComponent(details.id)}?apikey=${encodeURIComponent(env.MDBLIST_API_KEY)}`, { headers: { accept: 'application/json' } });
+    response = await fetch(`https://api.mdblist.com/tmdb/${mediaType}/${encodeURIComponent(details.id)}?apikey=${encodeURIComponent(env.MDBLIST_API_KEY)}`, {
+      headers: { accept: 'application/json' },
+      signal: context?.signal ? AbortSignal.any([context.signal, AbortSignal.timeout(4000)]) : AbortSignal.timeout(4000),
+    });
   } catch {
-    return { value: '', label: '', source, status: 'mdblist-network-error' };
+    return { status: 'mdblist-network-error' };
   }
-  if (!response.ok) return { value: '', label: '', source, status: `mdblist-${response.status}` };
+  if (!response.ok) return { status: `mdblist-${response.status}` };
   const record = await response.json();
   try { await writeMdblistRecord(env.DB, itemId, record); } catch {}
-  return formatMdblistRating(record, source, 'upstream');
+  return { record, status: 'upstream' };
 }
 
-async function imdbRating(details, env) {
+async function imdbRating(details, env, context) {
   const imdbId = details.external_ids?.imdb_id || '';
   if (!imdbId) return { value: '', label: '', source: 'imdb', status: 'missing-id' };
   if (!env.OMDB_API_KEY) return { value: '', label: '', source: 'imdb', status: 'not-configured' };
@@ -434,7 +458,10 @@ async function imdbRating(details, env) {
   } catch {
     return tmdbFallback(details, 'rating-cache-error');
   }
-  const response = await fetch(`https://www.omdbapi.com/?apikey=${encodeURIComponent(env.OMDB_API_KEY)}&i=${encodeURIComponent(imdbId)}`, { headers: { accept: 'application/json' } });
+  const response = await fetch(`https://www.omdbapi.com/?apikey=${encodeURIComponent(env.OMDB_API_KEY)}&i=${encodeURIComponent(imdbId)}`, {
+    headers: { accept: 'application/json' },
+    signal: context?.signal ? AbortSignal.any([context.signal, AbortSignal.timeout(4000)]) : AbortSignal.timeout(4000),
+  });
   if (!response.ok) return tmdbFallback(details, `omdb-${response.status}`);
   const data = await response.json();
   const value = Number.parseFloat(data?.imdbRating);
@@ -445,10 +472,10 @@ async function imdbRating(details, env) {
   return { value: formatted, label, source: 'imdb', status: 'upstream' };
 }
 
-async function resolveRating(details, type, requestedSource, env) {
+async function resolveRating(details, type, requestedSource, env, context) {
   const source = normalizeRatingSource(requestedSource);
   if (source === 'tmdb') return tmdbRating(details, source);
-  if (MDBLIST_RATING_SOURCES.has(source)) return mdblistRating(details, type, source, env);
+  if (MDBLIST_RATING_SOURCES.has(source)) return mdblistRating(details, type, source, env, context);
   return { value: '', label: '', source, status: 'unsupported' };
 }
 
@@ -474,6 +501,7 @@ function cacheRequestFor(request) {
   if (sourceUrl) cacheUrl.searchParams.set('sourceUrl', sourceUrl);
   if (overlayOnly) cacheUrl.searchParams.set('overlayOnly', '1');
   cacheUrl.searchParams.set('__kollection_renderer', CACHE_VERSION);
+  cacheUrl.searchParams.set('__kollection_delivery', DELIVERY_VERSION);
   cacheUrl.searchParams.set('__kollection_scope', preview ? 'preview' : 'production');
 
   if (preview) {
@@ -481,26 +509,32 @@ function cacheRequestFor(request) {
     cacheUrl.searchParams.set('previewVersion', incoming.searchParams.get('previewVersion') || 'default');
   }
 
-  return new Request(cacheUrl.toString(), request);
+  // HEAD and GET share image storage; client cookies and headers don't fragment it.
+  return new Request(cacheUrl.toString());
 }
 
 
-async function originalPosterFallback(type, id, env, reason, details = null) {
+async function originalPosterFallback(context, state, reason) {
+  const { env } = context;
   try {
-    const metadata = details || await tmdbFetch('/' + type + '/' + id, env.TMDB_API_KEY);
-    if (metadata.poster_path) {
-      const artwork = await fetch('https://image.tmdb.org/t/p/w500' + metadata.poster_path, {
-        headers: { accept: 'image/avif,image/webp,image/jpeg,image/*' },
+    const id = state.idHint || await resolveTmdbId(state.type, state.rawId, env.TMDB_API_KEY, context);
+    const metadata = id ? await tmdbFetch('/' + state.type + '/' + id, env.TMDB_API_KEY, context) : null;
+    const source = state.sourceUrl || (metadata?.poster_path ? 'https://image.tmdb.org/t/p/w500' + metadata.poster_path : '');
+    if (source) {
+      const artwork = await fetch(source, {
+        headers: { accept: 'image/webp,image/jpeg,image/*' },
+        signal: AbortSignal.timeout(4000),
       });
-      if (artwork.ok && artwork.body) {
-        const cacheControl = 'public, max-age=300, s-maxage=1800, stale-while-revalidate=3600';
+      if (artwork.ok && artwork.body && artwork.headers.get('content-type')?.startsWith('image/')) {
         return new Response(artwork.body, {
           status: 200,
           headers: {
             'content-type': artwork.headers.get('content-type') || 'image/jpeg',
             'access-control-allow-origin': '*',
-            'cache-control': cacheControl,
-            'cdn-cache-control': cacheControl,
+            // Never store a temporary plain poster as a successful overlay.
+            'cache-control': 'no-store',
+            'cdn-cache-control': 'no-store',
+            'retry-after': '30',
             'x-kollection-poster-fallback': reason,
           },
         });
@@ -510,82 +544,37 @@ async function originalPosterFallback(type, id, env, reason, details = null) {
   return json({ error: 'Poster artwork is temporarily unavailable.', reason }, 503);
 }
 
-export async function onRequest(context) {
+async function renderPoster(context, state, id, persistentKey) {
   const { request, env } = context;
-  const url = new URL(request.url);
-  const parts = url.pathname.split('/').filter(Boolean);
-  const type = parts[2] === 'tv' || parts[2] === 'series' ? 'tv' : 'movie';
-  const rawId = String(parts[3] || '').replace(/\.webp$/i, '');
-  if (!rawId) return json({ error: 'Expected /api/posters-v2/movie/27205.webp' }, 400);
-  if (!env.TMDB_API_KEY) return json({ error: 'TMDB_API_KEY is not configured.' }, 503);
-  if (!env.POSTERS_RENDERER_AUTH_TOKEN) return json({ error: 'POSTERS_RENDERER_AUTH_TOKEN is not configured.' }, 503);
-
-  const preview = url.searchParams.get('preview') === '1';
-  const cache = caches.default;
-  const cacheRequest = cacheRequestFor(request);
-  const cached = await cache.match(cacheRequest);
-  if (cached) {
-    const headers = new Headers(cached.headers);
-    headers.set('x-kollection-cache', 'HIT');
-    headers.set('x-kollection-cache-scope', preview ? 'preview' : 'production');
-    headers.set('x-kollection-persistent-cache', 'BYPASS');
-    return new Response(cached.body, { status: cached.status, headers });
-  }
-
-  const id = await resolveTmdbId(type, rawId, env.TMDB_API_KEY);
-  if (!id) return json({ error: 'Could not resolve TMDB/IMDb id.' }, 404);
-
-  const requestedTags = new Set(normalizeTags(url.searchParams.get('tags')));
-  const sourceUrl = normalizeSourceUrl(url.searchParams.get('sourceUrl'));
-  const overlayOnly = sourceUrl && url.searchParams.get('overlayOnly') === '1';
-  const overlayLanguage = normalizeOverlayLanguage(url.searchParams.get('language'));
-  const persistentKey = await persistentPosterKey(type, id, url, preview);
-  const persistent = await readPersistentPoster(env, persistentKey, requestedTags);
-  if (persistent) {
-    const headers = new Headers();
-    persistent.writeHttpMetadata(headers);
-    headers.set('content-type', 'image/webp');
-    headers.set('access-control-allow-origin', '*');
-    const cacheControl = posterCacheControl(preview, requestedTags, requestedTags.has('trend'));
-    headers.set('cdn-cache-control', cacheControl);
-    headers.set('cache-control', cacheControl);
-    headers.set('etag', persistent.httpEtag);
-    headers.set('x-kollection-cache', 'MISS');
-    headers.set('x-kollection-persistent-cache', 'HIT');
-    headers.set('x-kollection-cache-scope', preview ? 'preview' : 'production');
-    headers.set('x-kollection-render-version', CACHE_VERSION);
-    headers.set('x-kollection-overlay-language', overlayLanguage);
-
-    const response = new Response(persistent.body, { status: 200, headers });
-    context.waitUntil(cache.put(cacheRequest, response.clone()));
-    return response;
-  }
-
-  const slot = await acquirePosterRenderSlot(env, request);
-  if (!slot.allowed) return originalPosterFallback(type, id, env, slot.reason);
+  const { url, type, preview, tags, sourceUrl, overlayOnly, overlayLanguage } = state;
+  const slot = await acquirePosterRenderSlot(env, request, { signal: context.signal });
+  if (!slot.allowed) throw posterError(slot.reason);
 
   try {
     const append = type === 'movie' ? 'images,release_dates,external_ids' : 'images,content_ratings,external_ids';
-    const details = await tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null&language=en-US`, env.TMDB_API_KEY);
-    if (!details.poster_path && !sourceUrl) return json({ error: 'TMDB has no poster for this title.' }, 404);
-
-    const tags = requestedTags;
+    const details = await tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null&language=en-US`, env.TMDB_API_KEY, context);
+    if (!details.poster_path && !sourceUrl) throw posterError('artwork-missing');
     const smartLayout = url.searchParams.get('source') === 'smart';
     const artwork = sourceUrl ? { path: '', source: 'upstream-addon' } : choosePoster(details, smartLayout);
     const smartTextless = !overlayOnly && smartLayout && artwork.source === 'smart-textless';
     const logo = chooseLogo(details, smartTextless);
-    if (!artwork.path && !sourceUrl) return json({ error: 'TMDB has no poster artwork for this title.' }, 404);
+    if (!artwork.path && !sourceUrl) throw posterError('artwork-missing');
 
     const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
     const [rating, resolvedTrend] = await Promise.all([
       tags.has('rating')
-        ? resolveRating(details, type, requestedRatingSource, env)
+        ? resolveRating(details, type, requestedRatingSource, env, context)
         : Promise.resolve({ value: '', label: '', source: requestedRatingSource, status: 'disabled' }),
       tags.has('trend')
         ? Promise.resolve(theatricalLabel(details, type, String(env.POSTERS_RELEASE_REGION || 'US').toUpperCase()))
-            .then((label) => label || trendLabel(type, id, env.TMDB_API_KEY, overlayLanguage))
+            .then((label) => label || trendLabel(type, id, env.TMDB_API_KEY, overlayLanguage, context))
         : Promise.resolve(''),
     ]);
+    if (!['ok', 'upstream', 'cache-hit', 'missing', 'disabled', 'not-configured'].includes(rating.status)) {
+      // A ratings-provider outage must not replace a good cached overlay with one
+      // missing its rating for the entire cache lifetime.
+      throw posterError('rating-unavailable');
+    }
     const payload = {
       posterPath: artwork.path,
       sourceUrl,
@@ -607,14 +596,18 @@ export async function onRequest(context) {
       method: 'POST',
       headers: { 'content-type': 'application/json', accept: 'image/webp', 'x-kollection-render-key': String(env.POSTERS_RENDERER_AUTH_TOKEN) },
       body: JSON.stringify(payload),
+      signal: AbortSignal.any([context.signal, AbortSignal.timeout(10000)]),
     });
     if (!rendered.ok) {
-      const message = await rendered.text().catch(() => '');
-      const safeMessage = message.replace(/[^a-z0-9._-]+/gi, '-').replace(/^-+|-+$/g, '').slice(0, 140);
-      return originalPosterFallback(type, id, env, 'renderer-' + rendered.status + (safeMessage ? '-' + safeMessage : ''), details);
+      await rendered.body?.cancel();
+      throw posterError('renderer-' + rendered.status);
     }
 
     const output = await rendered.arrayBuffer();
+    const signature = new Uint8Array(output, 0, Math.min(12, output.byteLength));
+    if (String.fromCharCode(...signature.slice(0, 4)) !== 'RIFF' || String.fromCharCode(...signature.slice(8, 12)) !== 'WEBP') {
+      throw posterError('renderer-invalid-image');
+    }
     const cacheControl = posterCacheControl(preview, tags, Boolean(payload.trend));
     const headers = new Headers(rendered.headers);
     headers.set('content-type', 'image/webp');
@@ -632,16 +625,273 @@ export async function onRequest(context) {
     headers.set('x-kollection-logo-source', logo.source);
     headers.set('x-kollection-tmdb-id', id);
     headers.set('x-kollection-overlay-language', overlayLanguage);
-
-    const response = new Response(output, { status: 200, headers });
-    context.waitUntil(Promise.all([
-      cache.put(cacheRequest, response.clone()),
-      writePersistentPoster(env, persistentKey, output.slice(0), cacheControl, tags),
-    ]));
-    return response;
-  } catch (error) {
-    return originalPosterFallback(type, id, env, 'render-error');
+    headers.set('x-kollection-generated-at', String(Date.now()));
+    headers.set('x-kollection-fresh-until', String(freshUntil(Date.now(), state)));
+    const result = { body: output, headers: [...headers], status: 200 };
+    // Finish the shared-storage write before releasing the cross-Worker lease.
+    result.persisted = await saveResult(context, state, persistentKey, result);
+    return result;
   } finally {
     slot.release();
   }
+}
+
+function posterError(code) {
+  return Object.assign(new Error(code), { code });
+}
+
+function freshUntil(generatedAt, state, trendDay = '') {
+  const ttl = state.preview ? (state.tags.size === 0 ? 3600 : state.tags.has('trend') ? 300 : 600)
+    : state.tags.has('trend') ? 21600 : 604800;
+  let expires = generatedAt + ttl * 1000;
+  if (state.tags.has('trend')) {
+    const day = /^\d{4}-\d{2}-\d{2}$/.test(trendDay) ? trendDay : new Date(generatedAt).toISOString().slice(0, 10);
+    expires = Math.min(expires, Date.parse(day + 'T00:00:00Z') + 86400000);
+  }
+  return expires;
+}
+
+function staleSeconds(state) {
+  return state.preview ? 3600 : state.tags.has('trend') ? STALE_TREND_SECONDS : 30 * 86400;
+}
+
+function usable(response, state) {
+  const expires = Number(response?.headers.get('x-kollection-fresh-until'));
+  return response?.ok && expires > 0 && Date.now() < expires + staleSeconds(state) * 1000;
+}
+
+function isFresh(response) {
+  return Number(response?.headers.get('x-kollection-fresh-until')) > Date.now();
+}
+
+function fromResult(result) {
+  return new Response(result.body, { status: result.status, headers: result.headers });
+}
+
+async function toResult(response) {
+  return { body: await response.arrayBuffer(), status: response.status, headers: [...response.headers] };
+}
+
+function persistentResponse(object, state) {
+  if (!object) return null;
+  const metadata = object.customMetadata || {};
+  const uploaded = object.uploaded ? new Date(object.uploaded).getTime() : 0;
+  const generated = Number(metadata.generatedAt) || uploaded || Date.parse((metadata.trendDay || '1970-01-01') + 'T00:00:00Z');
+  if (!Number.isFinite(generated)) return null;
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set('content-type', 'image/webp');
+  if (object.httpEtag) headers.set('etag', object.httpEtag);
+  headers.set('x-kollection-generated-at', String(generated));
+  headers.set('x-kollection-fresh-until', String(Number(metadata.freshUntil) || freshUntil(generated, state, metadata.trendDay)));
+  headers.set('x-kollection-render-version', CACHE_VERSION);
+  headers.set('x-kollection-cache', 'MISS');
+  headers.set('x-kollection-persistent-cache', 'HIT');
+  headers.set('x-kollection-overlay-language', state.overlayLanguage);
+  if (metadata.tmdbId) headers.set('x-kollection-tmdb-id', metadata.tmdbId);
+  if (metadata.renderer) headers.set('x-kollection-renderer', metadata.renderer);
+  if (metadata.ratingStatus) headers.set('x-kollection-rating-status', metadata.ratingStatus);
+  return new Response(object.body, { headers });
+}
+
+async function loadSaved(context, state, key) {
+  const response = persistentResponse(await readPersistentPoster(context.env, key), state);
+  if (usable(response, state)) return response;
+  await response?.body?.cancel();
+  return null;
+}
+
+async function saveResult(context, state, key, result) {
+  const headers = new Headers(result.headers);
+  return writePersistentPoster(context.env, key, result.body, headers.get('cache-control') || posterCacheControl(state.preview, state.tags), state.tags, {
+    generatedAt: headers.get('x-kollection-generated-at') || String(Date.now()),
+    freshUntil: headers.get('x-kollection-fresh-until') || '',
+    tmdbId: headers.get('x-kollection-tmdb-id') || state.idHint || '',
+    renderer: headers.get('x-kollection-renderer') || '',
+    ratingStatus: headers.get('x-kollection-rating-status') || '',
+    // Copying an alias must preserve the original date, not make old tags fresh.
+    trendDay: state.tags.has('trend') ? new Date(Number(headers.get('x-kollection-generated-at'))).toISOString().slice(0, 10) : '',
+  });
+}
+
+async function putEdge(state, response) {
+  const headers = new Headers(response.headers);
+  const expiry = Number(headers.get('x-kollection-fresh-until'));
+  const retention = Math.max(1, Math.floor((expiry - Date.now()) / 1000) + staleSeconds(state));
+  // Cache API ignores stale-while-revalidate: retain the body longer internally
+  // and enforce freshness ourselves. These headers are never sent to clients.
+  headers.set('cache-control', `public, max-age=${retention}`);
+  headers.delete('cdn-cache-control');
+  headers.delete('age');
+  await caches.default.put(state.cacheRequest, new Response(response.body, { headers }));
+}
+
+function deliveryResponse(response, state) {
+  const headers = new Headers(response.headers);
+  const remaining = Math.max(0, Math.floor((Number(headers.get('x-kollection-fresh-until')) - Date.now()) / 1000));
+  const stale = remaining === 0;
+  const browserAge = stale ? 15 : Math.min(remaining, state.preview ? 60 : state.tags.has('trend') ? 21600 : 86400);
+  const cacheControl = stale
+    ? 'public, max-age=15, s-maxage=15, stale-while-revalidate=30'
+    : `public, max-age=${browserAge}, s-maxage=${remaining}, stale-while-revalidate=60`;
+  headers.set('cache-control', cacheControl);
+  headers.set('cdn-cache-control', cacheControl);
+  headers.set('access-control-allow-origin', '*');
+  headers.set('x-kollection-stale', stale ? '1' : '0');
+  headers.set('x-kollection-cache-scope', state.preview ? 'preview' : 'production');
+  headers.delete('age');
+  return new Response(response.body, { status: response.status, headers });
+}
+
+async function renderUnderLease(context, state, id, key, background) {
+  const alreadySaved = await loadSaved(context, state, key);
+  if (isFresh(alreadySaved)) return toResult(alreadySaved);
+  await alreadySaved?.body?.cancel();
+  const lease = await acquirePosterLease(context.env, key);
+  if (!lease.acquired) {
+    if (background) return null; // Another request is already refreshing the saved overlay.
+    const deadline = Date.now() + 5000;
+    while (Date.now() < deadline) {
+      await delay(400, context.signal);
+      const ready = await loadSaved(context, state, key);
+      if (isFresh(ready)) return toResult(ready);
+      await ready?.body?.cancel();
+    }
+    throw posterError('render-in-progress');
+  }
+  let success = false;
+  try {
+    // Close the race between the cache read and acquiring the distributed lease.
+    const ready = await loadSaved(context, state, key);
+    if (isFresh(ready)) { success = true; return await toResult(ready); }
+    await ready?.body?.cancel();
+    const result = await renderPoster(context, state, id, key);
+    success = result.persisted !== false;
+    return result;
+  } finally {
+    // Cool down failures so every catalog scroll doesn't retry an unavailable provider.
+    await lease.release(success ? 0 : 30000).catch(() => {});
+  }
+}
+
+async function refreshPoster(context, state, background = false) {
+  return singleFlight(context.env, `poster-request:${state.rawKey}`, async () => {
+    if (!context.env.TMDB_API_KEY || !context.env.POSTERS_RENDERER_AUTH_TOKEN) throw posterError('renderer-not-configured');
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(posterError('render-timeout')), 25000);
+    const workContext = { ...context, signal: controller.signal, waitUntil: promise => context.waitUntil(promise) };
+    try {
+      const id = state.idHint || await resolveTmdbId(state.type, state.rawId, context.env.TMDB_API_KEY, workContext);
+      if (!id) throw posterError('id-not-found');
+      state.idHint = id;
+      const key = await persistentPosterKey(state.type, id, state.url, state.preview);
+      state.canonicalKey = key;
+      const result = await singleFlight(context.env, `poster-render:${key}`,
+        () => renderUnderLease(workContext, state, id, key, background));
+      if (!result) return null;
+      // Save an IMDb-addressed copy too: subsequent R2 hits need zero ID lookups.
+      // The canonical TMDB key still shares work across both supported ID formats.
+      await Promise.allSettled([
+        putEdge(state, fromResult(result)),
+        ...(state.rawKey !== key ? [saveResult(context, state, state.rawKey, result)] : []),
+      ]);
+      return result;
+    } finally {
+      clearTimeout(timer);
+    }
+  });
+}
+
+function serveSaved(context, state, saved, edgeHit = false) {
+  const tmdbId = saved.headers.get('x-kollection-tmdb-id');
+  if (/^\d+$/.test(tmdbId || '')) state.idHint = tmdbId;
+  if (edgeHit) {
+    saved.headers.set('x-kollection-cache', 'HIT');
+    saved.headers.set('x-kollection-persistent-cache', 'BYPASS');
+  }
+  const stale = !isFresh(saved);
+  const bodyForCache = edgeHit ? null : saved.clone();
+  const alias = !edgeHit && state.canonicalKey && state.canonicalKey !== state.rawKey ? saved.clone() : null;
+  context.waitUntil((async () => {
+    // Write the old edge entry first, so it can never overwrite a completed refresh.
+    if (bodyForCache) await putEdge(state, bodyForCache).catch(() => {});
+    if (alias) await saveResult(context, state, state.rawKey, await toResult(alias)).catch(() => {});
+    if (stale) await refreshPoster(context, state, true);
+  })().catch(() => { /* Keep the last successful overlay on refresh failure. */ }));
+  return deliveryResponse(saved, state);
+}
+
+async function handlePoster(context) {
+  const { request, env } = context;
+  if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: {
+    'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, HEAD, OPTIONS',
+  } });
+  if (!['GET', 'HEAD'].includes(request.method)) return json({ error: 'Method not allowed.' }, 405);
+  const url = new URL(request.url);
+  const parts = url.pathname.split('/').filter(Boolean);
+  const type = ['tv', 'series'].includes(parts[2]) ? 'tv' : parts[2] === 'movie' ? 'movie' : '';
+  const rawId = String(parts[3] || '').replace(/\.(webp|jpe?g)$/i, '').toLowerCase();
+  if (!type || parts.length !== 4 || !/^(tt\d{5,12}|[1-9]\d{0,11})$/.test(rawId)) {
+    return json({ error: 'Expected /api/posters-v2/{movie|series}/{tmdb_id|imdb_id}.webp' }, 400);
+  }
+  const sourceUrl = normalizeSourceUrl(url.searchParams.get('sourceUrl'));
+  const state = {
+    url, type, rawId, sourceUrl,
+    preview: url.searchParams.get('preview') === '1',
+    tags: new Set(normalizeTags(url.searchParams.get('tags'))),
+    overlayOnly: Boolean(sourceUrl && url.searchParams.get('overlayOnly') === '1'),
+    overlayLanguage: normalizeOverlayLanguage(url.searchParams.get('language')),
+    cacheRequest: cacheRequestFor(request),
+    idHint: /^\d+$/.test(rawId) ? rawId : '',
+  };
+  try {
+    const edge = await caches.default.match(state.cacheRequest);
+    if (usable(edge, state)) {
+      state.rawKey = await persistentPosterKey(type, rawId, url, state.preview);
+      return serveSaved(context, state, new Response(edge.body, { headers: edge.headers }), true);
+    }
+    await edge?.body?.cancel();
+  } catch { /* Fall through to persistent storage if edge caching is unavailable. */ }
+
+  state.rawKey = await persistentPosterKey(type, rawId, url, state.preview);
+  // This check deliberately happens BEFORE credentials, TMDB, MDBList, or the renderer.
+  const saved = await loadSaved(context, state, state.rawKey);
+  if (saved) return serveSaved(context, state, saved);
+  try {
+    // Reuse pre-upgrade TMDB-keyed images too; metadata caching makes the one-time
+    // IMDb alias migration cheap, and its stale poster can be returned immediately.
+    if (!state.idHint && env.TMDB_API_KEY) {
+      state.idHint = await resolveTmdbId(type, rawId, env.TMDB_API_KEY, context);
+      if (state.idHint) {
+        state.canonicalKey = await persistentPosterKey(type, state.idHint, url, state.preview);
+        const legacy = await loadSaved(context, state, state.canonicalKey);
+        if (legacy) return serveSaved(context, state, legacy);
+      }
+    }
+    const result = await refreshPoster(context, state);
+    if (result) return deliveryResponse(fromResult(result), state);
+    throw posterError('render-in-progress');
+  } catch (error) {
+    // An overlapping refresh might have completed, or a canonical legacy poster
+    // might still be usable. Always prefer that overlay to a plain-art fallback.
+    for (const key of new Set([state.rawKey, state.canonicalKey].filter(Boolean))) {
+      const lastGood = await loadSaved(context, state, key);
+      if (lastGood) return deliveryResponse(lastGood, state);
+    }
+    if (!env.TMDB_API_KEY) return json({ error: 'Poster service is temporarily unavailable.' }, 503);
+    return originalPosterFallback(context, state, error.code || 'render-error');
+  }
+}
+
+export async function onRequest(context) {
+  const started = Date.now();
+  let response;
+  try { response = await handlePoster(context); }
+  catch { response = json({ error: 'Poster service is temporarily unavailable.' }, 503); }
+  const headers = new Headers(response.headers);
+  headers.set('access-control-allow-origin', '*');
+  headers.set('x-kollection-delivery', DELIVERY_VERSION);
+  headers.set('server-timing', `poster;dur=${Date.now() - started};desc="Poster handler"`);
+  if (context.request.method === 'HEAD') await response.body?.cancel();
+  return new Response(context.request.method === 'HEAD' ? null : response.body, { status: response.status, headers });
 }
