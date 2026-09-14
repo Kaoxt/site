@@ -1156,3 +1156,99 @@ body.light .profile-clear-collection-btn{
   display:block;
   margin-top:2px;
 }
+
+
+/* Existing setup picker */
+.existing-setup-loading,
+.existing-setup-empty {
+  min-height: 120px;
+  display: grid;
+  place-content: center;
+  gap: 6px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.existing-setup-empty strong {
+  color: var(--text);
+  font-size: 16px;
+}
+
+.existing-setup-list {
+  display: grid;
+  gap: 10px;
+}
+
+.existing-setup-choice {
+  width: 100%;
+  min-height: 72px;
+  padding: 14px 16px;
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  background: rgba(255,255,255,.025);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.existing-setup-choice:hover {
+  background: rgba(255,255,255,.055);
+  border-color: rgba(125,132,255,.34);
+}
+
+.existing-setup-copy {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.existing-setup-copy strong {
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.existing-setup-copy small {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.existing-setup-action {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.07);
+  border: 1px solid var(--line-soft);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+body.light .existing-setup-choice {
+  background: rgba(0,0,0,.018);
+}
+
+body.light .existing-setup-choice:hover {
+  background: rgba(0,0,0,.045);
+}
+
+@media (max-width: 600px) {
+  .existing-setup-choice {
+    min-height: 68px;
+    padding: 13px 14px;
+  }
+
+  .existing-setup-action {
+    min-height: 34px;
+    padding-inline: 12px;
+  }
+}
