@@ -304,7 +304,7 @@
     const folders = group.folders || [];
 
     host.querySelectorAll('.folder-edit-card-wrap').forEach((wrap, index) => {
-      if (wrap.querySelector(':scope > .folder-source-edit')) return;
+      if (wrap.querySelector('.folder-source-edit')) return;
       const fk = wrap.dataset.orderKey || '';
       const folder = folders.find(item => collectionFolderKey(item) === fk) || folders[index];
       if (!folder) return;
@@ -319,7 +319,13 @@
         event.stopPropagation();
         openModal(group, folder, gk, actualKey);
       };
-      wrap.appendChild(edit);
+      let actions = wrap.querySelector('.folder-card-actions');
+      if (!actions) {
+        actions = document.createElement('div');
+        actions.className = 'folder-card-actions';
+        wrap.appendChild(actions);
+      }
+      actions.appendChild(edit);
       if (state.collectionFolderSourceOverrides?.[keyFor(gk, actualKey)]) wrap.classList.add('has-custom-source');
     });
   }
