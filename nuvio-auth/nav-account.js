@@ -267,7 +267,7 @@
           <span class="nuvio-mobile-login-status" data-nuvio-mobile-status aria-live="polite"></span>
           <div class="nuvio-mobile-bottom-row signed-out">
             <div class="nuvio-mobile-socials">
-              ${socialLink(GITHUB_URL, 'GitHub', githubIcon())}
+              ${socialLink(FAQ_URL, 'FAQ', faqIcon(), false, false)}
               ${socialLink(COFFEE_URL, 'Buy me a coffee', coffeeIcon())}
             </div>
           </div>
