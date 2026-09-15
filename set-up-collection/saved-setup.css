@@ -90,9 +90,9 @@ html[data-theme="light"] .save-setup-status[data-kind="info"]{color:#4d57b8}
 
   .setup-toolbar-actions .ghost.small{
     width:auto;
-    min-width:118px;
+    min-width:108px;
     min-height:42px;
-    padding:0 16px;
+    padding:0 14px;
     font-size:12.5px;
   }
 }
@@ -121,7 +121,7 @@ html[data-theme="light"] .save-setup-status[data-kind="info"]{color:#4d57b8}
   }
 
   .setup-toolbar-actions .ghost.small{
-    min-width:112px;
+    min-width:104px;
     width:auto;
   }
 }
@@ -152,7 +152,7 @@ html[data-theme="light"] .save-setup-status[data-kind="info"]{color:#4d57b8}
   .setup-toolbar>.setup-toolbar-actions{
     grid-template-columns:1fr;
     grid-template-rows:auto auto auto;
-    width:min(220px,100%);
+    width:min(190px,100%);
     align-self:flex-start;
   }
   .setup-toolbar-actions .save-setup-status{
