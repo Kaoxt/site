@@ -11,10 +11,27 @@
     return makeKey(folder);
   }
 
+  function isForYouFolder(folder) {
+    return String(folder?.title || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ') === 'for you';
+  }
+
+  function bingecatReady(state) {
+    return !state?.bingecatSkipped &&
+      Boolean(state?.bingecatManifestUrl) &&
+      Boolean(state?.bingecatManifest?.id || state?.bingecatAddonId);
+  }
+
+  function folderAvailable(state, folder) {
+    return !isForYouFolder(folder) || bingecatReady(state);
+  }
+
   function selectedFolderKeys(state, group, groupKey, makeFolderKey) {
     state.selectedCollectionFolderIds ||= {};
     const key = groupKey(group);
-    const all = [...new Set((group?.folders || []).map(folder => folderKey(folder, makeFolderKey)).filter(Boolean))];
+    const all = [...new Set((group?.folders || [])
+      .filter(folder => folderAvailable(state, folder))
+      .map(folder => folderKey(folder, makeFolderKey))
+      .filter(Boolean))];
     const existing = state.selectedCollectionFolderIds[key];
     const groupIsSelected = (state.selectedCollectionGroupIds || []).includes(key);
 
@@ -493,6 +510,7 @@
       for (const group of groups) {
         const key = collectionGroupKey(group);
         state.selectedCollectionFolderIds[key] = (group.folders || [])
+          .filter(folder => folderAvailable(state, folder))
           .map(folder => folderKey(folder, collectionFolderKey))
           .filter(Boolean);
       }
@@ -563,15 +581,16 @@
         <div class="folder-edit-grid">
           ${folders.map((folder, index) => {
             const key = folderKey(folder, collectionFolderKey);
-            const on = selected.has(key);
-            return `<div class="folder-edit-card-wrap" data-order-key="${esc(key)}">
-              <button class="folder-edit-card ${on ? 'selected' : 'removed'}" type="button" data-folder-key="${esc(key)}" aria-pressed="${on ? 'true' : 'false'}">
+            const available = folderAvailable(state, folder);
+            const on = available && selected.has(key);
+            return `<div class="folder-edit-card-wrap ${available ? '' : 'bingecat-unavailable'}" data-order-key="${esc(key)}">
+              <button class="folder-edit-card ${on ? 'selected' : 'removed'}" type="button" data-folder-key="${esc(key)}" data-folder-available="${available ? 'true' : 'false'}" aria-pressed="${on ? 'true' : 'false'}" ${available ? '' : 'disabled'}>
                 <span class="folder-edit-image">
                   ${cardImage(group, folder, esc)}
                   <span class="folder-edit-shade" aria-hidden="true"></span>
                   <span class="folder-edit-state" aria-hidden="true">${on ? '✓' : '×'}</span>
                 </span>
-                <span class="folder-edit-meta"><b>${esc(folder.title || 'Untitled folder')}</b><small>${on ? 'Included' : 'Removed'}</small></span>
+                <span class="folder-edit-meta"><b>${esc(folder.title || 'Untitled folder')}</b><small>${available ? (on ? 'Included' : 'Removed') : 'Bingecat not set up'}</small></span>
               </button>
               ${sortMode === 'custom' ? `<div class="folder-card-order">
                 <button type="button" class="folder-order-button" data-direction="up" aria-label="Move ${esc(folder.title || 'folder')} up" ${index === 0 ? 'disabled' : ''}>↑</button>
@@ -598,20 +617,22 @@
 
     const refreshCards = (set) => {
       $('#folderEditCount').textContent = `${set.size} of ${total} folders selected`;
-      $$('.folder-edit-card').forEach(card => {
-        const on = set.has(card.dataset.folderKey || '');
+      $('.folder-edit-card').forEach(card => {
+        const available = card.dataset.folderAvailable !== 'false';
+        const on = available && set.has(card.dataset.folderKey || '');
         card.classList.toggle('selected', on);
         card.classList.toggle('removed', !on);
         card.setAttribute('aria-pressed', String(on));
         const stateMark = card.querySelector('.folder-edit-state');
         const status = card.querySelector('.folder-edit-meta small');
         if (stateMark) stateMark.textContent = on ? '✓' : '×';
-        if (status) status.textContent = on ? 'Included' : 'Removed';
+        if (status) status.textContent = available ? (on ? 'Included' : 'Removed') : 'Bingecat not set up';
       });
     };
 
-    $$('.folder-edit-card').forEach(card => {
+    $('.folder-edit-card').forEach(card => {
       card.onclick = () => {
+        if (card.dataset.folderAvailable === 'false') return;
         const set = selectedFolderKeys(state, group, collectionGroupKey, collectionFolderKey);
         const key = card.dataset.folderKey || '';
         if (set.has(key)) set.delete(key); else set.add(key);
@@ -651,7 +672,10 @@
     });
 
     $('#selectAllFolders').onclick = () => {
-      const set = new Set(folders.map(folder => folderKey(folder, collectionFolderKey)).filter(Boolean));
+      const set = new Set(folders
+        .filter(folder => folderAvailable(state, folder))
+        .map(folder => folderKey(folder, collectionFolderKey))
+        .filter(Boolean));
       writeSelection(set);
       refreshCards(set);
     };
