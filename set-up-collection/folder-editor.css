@@ -405,3 +405,28 @@ body.light .smart-overlay-modal-button.primary{background:#181a20;color:#fff;bor
   .smart-overlay-modal-advanced{align-items:stretch;flex-direction:column}
   .smart-overlay-modal-advanced .ghost{width:100%}
 }
+
+
+/* Folder card utility actions and Bingecat availability */
+.folder-card-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  min-height:34px;
+  padding:0 2px;
+}
+.folder-edit-card[disabled]{
+  cursor:not-allowed;
+}
+.folder-edit-card-wrap.bingecat-unavailable .folder-edit-card{
+  opacity:.42;
+  filter:saturate(.45);
+}
+.folder-edit-card-wrap.bingecat-unavailable .folder-edit-card:hover{
+  transform:none;
+  border-color:rgba(255,255,255,.09);
+}
+body.light .folder-edit-card-wrap.bingecat-unavailable .folder-edit-card{
+  opacity:.5;
+}
