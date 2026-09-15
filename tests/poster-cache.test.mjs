@@ -156,6 +156,23 @@ function harness(overrides = {}) {
   return h;
 }
 
+test('repaired renderer recovers old URLs without inheriting pre-repair cooldowns', async () => {
+  const h = harness();
+  await h.seed('27205');
+  const key = h.bucket.posters()[0][0];
+  h.bucket.objects.delete(key); h.edge.clear();
+  const legacy = await acquirePosterLease(h.env, key);
+  await legacy.release(3600000);
+  const response = await h.request('27205');
+  assert.equal(response.headers.get('x-kollection-poster-fallback'), null);
+  await response.arrayBuffer(); await h.flush();
+  assert.equal(h.count.render, 2);
+  assert.equal(h.db.used(), 2, 'recovery still reserves normal render quota');
+  assert.equal(h.bucket.posters()[0][0], key, 'finished artwork keeps the existing R2 key');
+  await h.request('27205'); await h.flush();
+  assert.equal(h.count.render, 2, 'subsequent request reuses the recovered overlay');
+});
+
 test('cold MDBList lookup starts before TMDB details finish', { timeout: 2000 }, async () => {
   const h = harness();
   const detailsStarted = deferred(), ratingsStarted = deferred(), finishDetails = deferred();

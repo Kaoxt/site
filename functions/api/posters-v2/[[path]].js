@@ -6,7 +6,10 @@ const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
 const CACHE_VERSION = 'production-cache-19';
 // Delivery changes must not invalidate finished artwork in R2.
-const DELIVERY_VERSION = 'cold-pipeline-3';
+const DELIVERY_VERSION = 'cold-pipeline-4';
+// The repaired outbound renderer must not inherit pre-repair failure cooldowns.
+// Version only coordination keys: finished R2 artwork and quota stay shared.
+const RENDER_LEASE_VERSION = 'source-cache-repair-1';
 const STALE_TREND_SECONDS = 172800;
 const DEFAULT_OMDB_CACHE_DAYS = 30;
 const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
@@ -1014,7 +1017,7 @@ function deliveryResponse(response, state) {
 async function renderUnderLease(context, state, id, key, background) {
   // The request already checked storage. Check again after taking the lease to
   // close the race, without a third serial R2 read on every cold request.
-  const lease = await measured(context, 'lease', () => acquirePosterLease(context.env, key));
+  const lease = await measured(context, 'lease', () => acquirePosterLease(context.env, `${RENDER_LEASE_VERSION}:${key}`));
   if (!lease.acquired) {
     if (background) return null; // Another request is already refreshing the saved overlay.
     const deadline = Date.now() + 5000;
