@@ -173,6 +173,25 @@ test('repaired renderer recovers old URLs without inheriting pre-repair cooldown
   assert.equal(h.count.render, 2, 'subsequent request reuses the recovered overlay');
 });
 
+test('a textless primary poster also receives the centered title logo', async () => {
+  const h = harness();
+  h.detailsOverride = { images: { posters: [{file_path:'/poster.jpg',iso_639_1:null}], logos:[{file_path:'/title.png',iso_639_1:'en'}] } };
+  const response = await h.request('27205');
+  await response.arrayBuffer(); await h.flush();
+  assert.equal(h.payloads[0].logoPath, '/title.png');
+  assert.equal(h.payloads[0].title, 'Test title');
+  assert.equal(response.headers.get('x-kollection-artwork-source'), 'smart-textless');
+});
+
+test('artwork with baked-in titles never receives a duplicate logo', async () => {
+  const h = harness();
+  h.detailsOverride = {images:{posters:[{file_path:'/poster.jpg',iso_639_1:'en'}],logos:[{file_path:'/title.png',iso_639_1:'en'}]}};
+  const response = await h.request('27205');
+  await response.arrayBuffer(); await h.flush();
+  assert.equal(h.payloads[0].title, '');
+  assert.equal(h.payloads[0].logoPath, '');
+});
+
 test('cold MDBList lookup starts before TMDB details finish', { timeout: 2000 }, async () => {
   const h = harness();
   const detailsStarted = deferred(), ratingsStarted = deferred(), finishDetails = deferred();

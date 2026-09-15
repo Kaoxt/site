@@ -186,7 +186,7 @@ function choosePoster(details, smartLayout) {
 
   const candidates = Array.isArray(details.images?.posters) ? details.images.posters : [];
   const textless = candidates
-    .filter((poster) => poster?.file_path && !poster.iso_639_1 && poster.file_path !== original)
+    .filter((poster) => poster?.file_path && !poster.iso_639_1)
     .sort((a, b) => {
       const votes = Number(b.vote_count || 0) - Number(a.vote_count || 0);
       if (votes !== 0) return votes;
@@ -267,6 +267,7 @@ function posterVariant(url, preview, env) {
   const tags = normalizeTags(url.searchParams.get('tags'));
   return {
     version: CACHE_VERSION,
+    ...(url.searchParams.get('source') === 'smart' ? { titleLayout: 'centered-title-1' } : {}),
     // Keep visual revisions isolated without invalidating unrelated poster
     // variants. v=21 is the BetterPosters-polish layout.
     layoutVersion: String(url.searchParams.get('v') || '20').slice(0, 24),
@@ -725,6 +726,7 @@ function cacheRequestFor(request, env) {
   if (sourceUrl) cacheUrl.searchParams.set('sourceUrl', sourceUrl);
   if (overlayOnly) cacheUrl.searchParams.set('overlayOnly', '1');
   cacheUrl.searchParams.set('__kollection_renderer', CACHE_VERSION);
+  if (source === 'smart') cacheUrl.searchParams.set('__kollection_title_layout', 'centered-title-1');
   cacheUrl.searchParams.set('__kollection_delivery', DELIVERY_VERSION);
   cacheUrl.searchParams.set('__kollection_scope', preview ? 'preview' : 'production');
   if (tags.includes('quality')) {
