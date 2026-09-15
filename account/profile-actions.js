@@ -166,12 +166,14 @@
       ]);
     } catch {}
 
-    const profileSetups = completedSetupsForProfile(id, setups);
     const allCompletedSetups = (setups || [])
       .filter((item) => Number(item?.draftStep || 0) >= 7)
       .sort((a, b) => (Date.parse(b?.updatedAt || '') || 0) - (Date.parse(a?.updatedAt || '') || 0));
     const activeSetup = activeSetupForProfile(id, setups, eligibility?.collections || []);
-    const showSetupPicker = eligibility?.state === 'kollection';
+    // Empty profiles are eligible for Set Up Collection too. Let them start by
+    // applying any completed setup saved on this Nuvio account, even when that
+    // setup was originally created for a different profile.
+    const showSetupPicker = Boolean(eligibility?.eligible);
     const setupOptions = allCompletedSetups.length
       ? [
           ...(!activeSetup ? ['<option value="" selected>Choose a saved setup</option>'] : []),
@@ -191,14 +193,14 @@
         <button class="account-modal-x" type="button" data-modal-close aria-label="Close">×</button>
       </header>
       <div class="account-modal-body">
-        <p class="account-modal-copy">Update this profile name and, when The Kollection is installed, choose which saved setup this profile uses.</p>
+        <p class="account-modal-copy">Update this profile name${showSetupPicker ? ' and choose which saved setup this profile uses' : ''}.</p>
         <label class="account-modal-field"><span>Profile name</span><input id="accountEditProfileName" maxlength="40" value="${esc(name)}" /></label>
         ${showSetupPicker ? `
           <label class="account-modal-field account-profile-setup-field">
             <span>Saved setup</span>
             <select id="accountEditSavedSetup" ${allCompletedSetups.length ? '' : 'disabled'}>${setupOptions}</select>
             <small>${allCompletedSetups.length
-              ? 'Choose a saved setup to switch this profile. The Kollection setup page will open so the selected setup can be safely applied. If the setup belongs to another profile, a profile-specific copy will be created.'
+              ? 'Choose any saved setup on this account. The Kollection setup page will open so it can be safely applied to this profile. If it came from another profile, a profile-specific copy will be created and the original will stay unchanged.'
               : 'No completed saved setups are available yet.'}</small>
           </label>` : ''}
         <p class="account-modal-status" id="accountEditStatus" role="status"></p>
