@@ -388,29 +388,32 @@
   }
 
 
-  async function openClearCollection(profile, row) {
+  async function openClearCollection(profile, row, eligibility = null) {
     const id = profileId(profile);
     const name = profileName(profile);
+    const isKollectionSetup = eligibility?.state === 'kollection' || eligibility?.hasKollection;
     openModal(`
       <header class="account-modal-head">
         <h3>Clear collection from ${esc(name)}?</h3>
         <button class="account-modal-x" type="button" data-modal-close aria-label="Close">×</button>
       </header>
       <div class="account-modal-body">
-        <p class="account-modal-copy">This profile currently has collection data that was not created through The Kollection Set Up Collection wizard. Clear that old collection before using this profile for a Kollection setup.</p>
+        <p class="account-modal-copy">${isKollectionSetup
+          ? 'This profile is currently using a collection created through The Kollection. You can clear it from Nuvio without deleting the saved setup from your Kollection account.'
+          : 'This profile currently has collection data that was not created through The Kollection Set Up Collection wizard. Clear that collection before using this profile for a Kollection setup.'}</p>
         <div class="account-copy-note"><strong>What this clears:</strong> the current Nuvio collection layout on this profile. It does not delete the Nuvio profile, its add-ons or plugins, or your saved Kollection setups.</div>
         <p class="account-modal-status" id="accountClearCollectionStatus" role="status"></p>
       </div>
       <footer class="account-modal-footer">
         <button class="account-modal-button" type="button" data-modal-close>Cancel</button>
-        <button class="account-modal-button danger" type="button" id="accountClearCollectionConfirm">Clear old collection</button>
+        <button class="account-modal-button danger" type="button" id="accountClearCollectionConfirm">Clear Collection</button>
       </footer>`);
 
     const confirm = document.getElementById('accountClearCollectionConfirm');
     const status = document.getElementById('accountClearCollectionStatus');
     confirm?.addEventListener('click', async () => {
       confirm.disabled = true;
-      status.textContent = 'Clearing the old collection…';
+      status.textContent = 'Clearing collection…';
       try {
         const result = await window.KollectionCollectionEligibility?.clear?.(id);
         if (!result?.eligible) throw new Error('The collection could not be cleared from this profile.');
@@ -424,11 +427,11 @@
         if (row) row.dataset.collectionEligibility = 'eligible';
         row?.classList.remove('account-profile-ineligible');
         row?.querySelector('[data-clear-profile-collection]')?.remove();
-        status.textContent = 'Old collection cleared. This profile is now available for Set Up Collection.';
+        status.textContent = 'Collection cleared. This profile is now available for Set Up Collection.';
         window.KollectionSavedCollections?.load?.();
         setTimeout(closeModal, 900);
       } catch (error) {
-        status.textContent = error?.message || 'Could not clear the old collection.';
+        status.textContent = error?.message || 'Could not clear the collection.';
         confirm.disabled = false;
       }
     });
@@ -536,13 +539,13 @@
 
       actions.append(edit, copy);
 
-      if (eligibility?.state === 'blocked') {
+      if (eligibility?.state === 'blocked' || eligibility?.state === 'kollection' || eligibility?.hasKollection) {
         const clearCollection = document.createElement('button');
         clearCollection.type = 'button';
         clearCollection.className = 'account-profile-action warning';
         clearCollection.dataset.clearProfileCollection = 'true';
         clearCollection.textContent = 'Clear Collection';
-        clearCollection.addEventListener('click', () => openClearCollection(profile, row));
+        clearCollection.addEventListener('click', () => openClearCollection(profile, row, eligibility));
         actions.appendChild(clearCollection);
       }
 
