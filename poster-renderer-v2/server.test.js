@@ -3,11 +3,44 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { afterEach, test } from 'node:test';
 import sharp from 'sharp';
-import { dynamicAccent, renderPoster } from './server.js';
+import { dynamicAccent, renderPoster, fitTitleImage, titlePlacement } from './server.js';
 import { resetPosterSourceMemoryForTests, SOURCE_CACHE_VERSION } from './source-loader.js';
 import { sourceCacheOutbound } from './src/source-cache-outbound.js';
 
 const originalFetch = globalThis.fetch;
+test('uneven transparent logo padding cannot shift the visible title', async () => {
+  const logo = await sharp({create:{width:300,height:80,channels:4,background:'#ffffff'}}).png().toBuffer();
+  const padded = await sharp(logo).extend({top:110,bottom:10,left:70,right:10,background:'#00000000'}).png().toBuffer();
+  const fitted = await fitTitleImage(logo);
+  const fittedPadded = await fitTitleImage(padded);
+  assert.equal(fitted.width, fittedPadded.width);
+  assert.equal(fitted.height, fittedPadded.height);
+  assert.deepEqual(titlePlacement(fitted), titlePlacement(fittedPadded));
+  assert.ok(Math.abs(titlePlacement(fitted).left + fitted.width / 2 - 250) <= .5);
+  assert.ok(Math.abs(titlePlacement(fitted).top + fitted.height / 2 - 552) <= 1);
+  assert.deepEqual(fitted.buffer, fittedPadded.buffer);
+});
+
+test('text title and padded logo render centered in the same title zone', async () => {
+  const image = await sharp({create:{width:342,height:513,channels:3,background:'#102030'}}).jpeg().toBuffer();
+  const logo = await sharp({create:{width:300,height:80,channels:4,background:'#ffffff'}})
+    .extend({top:110,bottom:10,left:70,right:10,background:'#00000000'}).png().toBuffer();
+  globalThis.fetch = async url => new Response(String(url).includes('/logo.png') ? logo : image,{headers:{'content-type':'image/png'}});
+  const base = await renderPoster({posterPath:'/title-test.jpg',smartLayout:true});
+  for (const title of [{logoPath:'/logo.png'}, {title:'A Movie Title'}, {title:'A Much Longer Movie Title That Wraps Onto Multiple Lines'}]) {
+    const tagged = await renderPoster({posterPath:'/title-test.jpg',smartLayout:true,...title});
+    const before = await sharp(base).raw().toBuffer({resolveWithObject:true});
+    const after = await sharp(tagged).raw().toBuffer();
+    let minX=500,maxX=0,minY=750,maxY=0;
+    for(let y=440;y<675;y++)for(let x=0;x<500;x++) {
+      const i=(y*500+x)*before.info.channels;
+      if(after[i]>100 && after[i]-before.data[i]>60) {minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);}
+    }
+    assert.ok(maxX>minX);
+    assert.ok(Math.abs((minX+maxX)/2-250)<3, JSON.stringify(title));
+    assert.ok(Math.abs((minY+maxY)/2-552)<3, JSON.stringify(title));
+  }
+});
 test('Worker exports the proxy required for container outbound interception', async () => {
   const entry = await readFile(new URL('./src/index.js', import.meta.url), 'utf8');
   assert.match(entry, /export\s*\{\s*ContainerProxy\s*\}\s*from\s*['"]@cloudflare\/containers['"]/);
