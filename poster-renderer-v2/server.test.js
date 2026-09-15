@@ -3,8 +3,8 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { afterEach, test } from 'node:test';
 import sharp from 'sharp';
-import { dynamicAccent, renderPoster, fitTitleImage, titlePlacement } from './server.js';
-import { resetPosterSourceMemoryForTests, SOURCE_CACHE_VERSION } from './source-loader.js';
+import { dynamicAccent, renderPoster, fitTitleImage, titlePlacement, resetLogoCacheForTests } from './server.js';
+import { loadTmdbPosterSource, resetPosterSourceMemoryForTests, SOURCE_CACHE_VERSION } from './source-loader.js';
 import { sourceCacheOutbound } from './src/source-cache-outbound.js';
 
 const originalFetch = globalThis.fetch;
@@ -82,6 +82,64 @@ test('missing source bucket does not discard successfully fetched artwork', asyn
 afterEach(() => {
   globalThis.fetch = originalFetch;
   resetPosterSourceMemoryForTests();
+  resetLogoCacheForTests();
+});
+
+test('concurrent variants share one cold artwork fetch and retry after failures', async () => {
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls++;
+    await new Promise(resolve => setTimeout(resolve, 10));
+    return new Response('source bytes', { headers: { 'content-type': 'image/jpeg' } });
+  };
+  const sources = await Promise.all(Array.from({ length: 8 }, () => loadTmdbPosterSource('/concurrent.jpg')));
+  assert.equal(calls, 1);
+  assert.ok(sources.every(source => source.input.equals(sources[0].input)));
+
+  globalThis.fetch = async () => { throw new Error('offline'); };
+  await assert.rejects(loadTmdbPosterSource('/retry.jpg'), /offline/);
+  globalThis.fetch = async () => new Response('recovered');
+  assert.equal((await loadTmdbPosterSource('/retry.jpg')).input.toString(), 'recovered');
+});
+
+test('concurrent and later overlays reuse the exact fitted title logo', async () => {
+  const image = await sharp({ create: { width: 342, height: 513, channels: 3, background: '#102030' } }).jpeg().toBuffer();
+  const logo = await sharp({ create: { width: 300, height: 80, channels: 4, background: '#ffffff' } }).png().toBuffer();
+  let logoCalls = 0;
+  globalThis.fetch = async url => {
+    if (String(url).includes('/shared-logo.png')) {
+      logoCalls++;
+      await new Promise(resolve => setTimeout(resolve, 10));
+      return new Response(logo);
+    }
+    return new Response(image, { headers: { 'content-type': 'image/jpeg' } });
+  };
+  const body = { posterPath: '/shared.jpg', smartLayout: true, logoPath: '/shared-logo.png' };
+  const images = await Promise.all(Array.from({ length: 4 }, () => renderPoster(body)));
+  assert.equal(logoCalls, 1);
+  for (const output of images) assert.deepEqual(output, images[0]);
+  await renderPoster({ ...body, genre: 'Drama' });
+  assert.equal(logoCalls, 1);
+  resetLogoCacheForTests();
+  const uncached = await renderPoster(body);
+  assert.equal(logoCalls, 2);
+  assert.ok(uncached.equals(images[0]), 'cached and freshly processed logos must produce identical image bytes');
+});
+
+test('unavailable title logos are retried instead of caching a missing title', async () => {
+  const image = await sharp({ create: { width: 342, height: 513, channels: 3, background: '#102030' } }).jpeg().toBuffer();
+  const logo = await sharp({ create: { width: 300, height: 80, channels: 4, background: '#ffffff' } }).png().toBuffer();
+  let logoCalls = 0;
+  globalThis.fetch = async url => {
+    if (String(url).includes('/retry-logo.png')) return ++logoCalls === 1 ? new Response('', { status: 503 }) : new Response(logo);
+    return new Response(image, { headers: { 'content-type': 'image/jpeg' } });
+  };
+  const body = { posterPath: '/retry-logo-poster.jpg', smartLayout: true, logoPath: '/retry-logo.png', title: 'Fallback' };
+  const fallback = await renderPoster(body);
+  const recovered = await renderPoster(body);
+  await renderPoster(body);
+  assert.equal(logoCalls, 2);
+  assert.ok(!fallback.equals(recovered));
 });
 
 async function fixture() {

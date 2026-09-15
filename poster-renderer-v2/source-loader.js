@@ -9,6 +9,7 @@ const MEMORY_MAX_BYTES = 24 * 1024 * 1024;
 const MAX_BYTES = 8 * 1024 * 1024;
 
 const memory = new Map();
+const pending = new Map();
 let memoryBytes = 0;
 
 function digest(value) {
@@ -109,6 +110,16 @@ export async function loadTmdbPosterSource(posterPath) {
     };
   }
 
+  // Variants of one title can arrive together before the LRU has any bytes.
+  // Share the entire lookup (including fallback) instead of downloading each.
+  if (pending.has(hash)) return pending.get(hash);
+  const work = loadColdSource(path, hash, now);
+  pending.set(hash, work);
+  try { return await work; }
+  finally { if (pending.get(hash) === work) pending.delete(hash); }
+}
+
+async function loadColdSource(path, hash, now) {
   let shared;
   try {
     shared = await readShared(path, hash);
@@ -140,5 +151,6 @@ export async function loadTmdbPosterSource(posterPath) {
 
 export function resetPosterSourceMemoryForTests() {
   memory.clear();
+  pending.clear();
   memoryBytes = 0;
 }

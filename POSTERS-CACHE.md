@@ -21,6 +21,10 @@ Renderer `v2-bp-layout-26` renders directly on the delivered 500×750 canvas ins
 
 ## Shared source artwork
 
+Renderer `v2-bp-layout-28` coalesces simultaneous cold source-art requests within each container, including origin fallback, so overlay variants share one download. Successful centered title logos are cached after trimming and fitting for 24 hours, with an LRU limit of 64 logos / 8 MB per container; concurrent requests share the same logo work and failed lookups remain retryable. Original logo resolution, title placement, output dimensions, WebP quality, and finished-poster cache keys are unchanged.
+
+Compositing now feeds the WebP encoder directly, removing a redundant full-canvas raw-buffer export and reload. A local fixture comparison produced byte-identical output for plain, centered-logo, title-text, and quality-tag variants. A 20-variant fixture batch reduced logo downloads from 20 to 1 and renderer elapsed time from 3035 ms to 2580 ms (about 15%). This is a local renderer measurement, not an end-to-end Nuvio latency guarantee; first-time provider lookups and container startup still apply.
+
 TMDB poster bytes now have their own cache, separate from rendered overlays. The renderer asks a Workers-side R2 binding for the selected `w342` TMDB poster before decoding it. A miss is fetched once from TMDB and written under a source-only key that does not include ratings, trend tags, genre, quality, language, color, or any other overlay choice. Different overlay variants can therefore reuse the same source bytes.
 
 The persistent source-art retention window is **30 days since source access**. Accesses refresh the retention timestamp, with persistent touches coalesced to at most once every 12 hours so popular artwork can stay cached indefinitely without rewriting the object for every request. A daily scheduled cleanup removes expired objects under the source-art prefix. Each renderer container also keeps a bounded in-memory LRU (96 images / 24 MB) so repeated variants can skip even the R2 read while the container remains warm.
