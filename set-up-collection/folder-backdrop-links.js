@@ -42,11 +42,14 @@
       const wrap = card.closest('.folder-edit-card-wrap');
       if (!wrap || wrap.querySelector('.folder-backdrop-action')) return;
       const target = folderTarget(card);
-      const meta = card.querySelector('.folder-edit-meta');
-      if (!meta) return;
+      const row = wrap.querySelector('.folder-card-actions') || document.createElement('div');
+      if (!row.parentElement) {
+        row.className = 'folder-card-actions';
+        wrap.appendChild(row);
+      }
 
-      const row = document.createElement('div');
-      row.className = 'folder-backdrop-action';
+      const backdropAction = document.createElement('div');
+      backdropAction.className = 'folder-backdrop-action';
 
       const link = document.createElement('a');
       link.className = 'folder-backdrop-button';
@@ -60,8 +63,8 @@
       badge.textContent = hasSavedBackdrop(target) ? 'Custom' : 'Default';
       badge.dataset.state = hasSavedBackdrop(target) ? 'custom' : 'default';
 
-      row.append(badge, link);
-      meta.appendChild(row);
+      backdropAction.append(badge, link);
+      row.appendChild(backdropAction);
     });
   }
 
