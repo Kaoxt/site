@@ -100,7 +100,7 @@ export async function loadTmdbPosterSource(posterPath) {
   const hash = digest(`${SOURCE_CACHE_VERSION}|${path}`);
   const warm = getMemory(hash, now);
   if (warm) {
-    touchShared(path, hash, warm, now);
+    if (warm.status !== 'ORIGIN_FALLBACK') touchShared(path, hash, warm, now);
     return {
       ...warm,
       key: hash,
@@ -109,7 +109,30 @@ export async function loadTmdbPosterSource(posterPath) {
     };
   }
 
-  const shared = await readShared(path, hash);
+  let shared;
+  try {
+    shared = await readShared(path, hash);
+  } catch {
+    // The shared cache accelerates artwork delivery; it must not disable overlays.
+    const response = await fetch(`https://image.tmdb.org/t/p/w342${path}`, {
+      headers: { accept: 'image/webp,image/jpeg,image/*' },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!response.ok) throw new Error(`TMDB source failed: ${response.status}`);
+    if (Number(response.headers.get('content-length') || 0) > MAX_BYTES) throw new Error('Source image is too large');
+    const input = Buffer.from(await response.arrayBuffer());
+    if (!input.length || input.length > MAX_BYTES) throw new Error('Source image is too large');
+    if (!response.headers.get('content-type')?.startsWith('image/')) throw new Error('Invalid source image');
+    shared = {
+      input,
+      contentType: response.headers.get('content-type'),
+      status: 'ORIGIN_FALLBACK',
+      fetchedAt: now,
+      persistedAccessAt: 0,
+      // Retry shared storage soon, while avoiding an origin fetch per render.
+      retentionUntil: now + 60000,
+    };
+  }
   const entry = { ...shared };
   setMemory(hash, entry);
   return { ...entry, key: hash };

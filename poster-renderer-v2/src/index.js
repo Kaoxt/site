@@ -1,4 +1,5 @@
 import { Container, getContainer } from '@cloudflare/containers';
+export { ContainerProxy } from '@cloudflare/containers';
 import { pruneExpiredSourceArt, sourceCacheOutbound } from './source-cache-outbound.js';
 
 export class PosterRenderer extends Container {

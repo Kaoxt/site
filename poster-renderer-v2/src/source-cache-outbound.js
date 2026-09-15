@@ -40,7 +40,7 @@ function sourceResponse(bytes, contentType, metadata, cacheStatus) {
   });
 }
 
-export async function sourceCacheOutbound(request, env, context) {
+export async function sourceCacheOutbound(request, env) {
   if (request.method !== 'GET') return new Response(null, { status: 405 });
 
   const hash = objectHash(request);
@@ -66,18 +66,19 @@ export async function sourceCacheOutbound(request, env, context) {
           retentionUntil: now + RETENTION_MS,
         };
         if (now - accessedAt >= TOUCH_INTERVAL_MS) {
-          context.waitUntil(env.SOURCE_ART.put(key, bytes, {
+          // OutboundHandlerContext has no waitUntil. Finish persistence here.
+          await env.SOURCE_ART.put(key, bytes, {
             httpMetadata: { contentType: object.httpMetadata?.contentType || 'application/octet-stream' },
             customMetadata: {
               fetchedAt: String(nextMetadata.fetchedAt),
               lastAccessedAt: String(now),
               retentionUntil: String(nextMetadata.retentionUntil),
             },
-          }).catch(() => {}));
+          }).catch(() => {});
         }
         return sourceResponse(bytes, object.httpMetadata?.contentType || 'application/octet-stream', nextMetadata, 'R2_HIT');
       }
-      context.waitUntil(env.SOURCE_ART.delete(key).catch(() => {}));
+      await env.SOURCE_ART.delete(key).catch(() => {});
     }
   } catch {
     // R2 is an acceleration layer; continue to TMDB if it is temporarily unavailable.
@@ -100,14 +101,14 @@ export async function sourceCacheOutbound(request, env, context) {
     lastAccessedAt: now,
     retentionUntil: now + RETENTION_MS,
   };
-  context.waitUntil(env.SOURCE_ART.put(key, bytes, {
+  try { await env.SOURCE_ART.put(key, bytes, {
     httpMetadata: { contentType },
     customMetadata: {
       fetchedAt: String(now),
       lastAccessedAt: String(now),
       retentionUntil: String(metadata.retentionUntil),
     },
-  }).catch(() => {}));
+  }); } catch { /* Source persistence must not prevent overlay rendering. */ }
 
   return sourceResponse(bytes, contentType, metadata, 'MISS');
 }

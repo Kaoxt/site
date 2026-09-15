@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 import { afterEach, test } from 'node:test';
 import sharp from 'sharp';
 import { dynamicAccent, renderPoster } from './server.js';
@@ -7,6 +8,44 @@ import { resetPosterSourceMemoryForTests, SOURCE_CACHE_VERSION } from './source-
 import { sourceCacheOutbound } from './src/source-cache-outbound.js';
 
 const originalFetch = globalThis.fetch;
+test('Worker exports the proxy required for container outbound interception', async () => {
+  const entry = await readFile(new URL('./src/index.js', import.meta.url), 'utf8');
+  assert.match(entry, /export\s*\{\s*ContainerProxy\s*\}\s*from\s*['"]@cloudflare\/containers['"]/);
+});
+
+test('source cache failure still produces a poster with visible overlays', async () => {
+  const image = await sharp({ create: { width: 342, height: 513, channels: 3, background: '#346890' } }).jpeg().toBuffer();
+  const calls = [];
+  globalThis.fetch = async url => {
+    calls.push(url);
+    if (new URL(url).hostname === 'source-cache.internal') throw new Error('proxy unavailable');
+    assert.equal(url, 'https://image.tmdb.org/t/p/w342/fallback.jpg');
+    return new Response(image, { headers: { 'content-type': 'image/jpeg' } });
+  };
+  const plain = await renderPoster({ posterPath: '/fallback.jpg' });
+  assert.equal(plain.kollectionSourceCache, 'ORIGIN_FALLBACK');
+  const tagged = await renderPoster({ posterPath: '/fallback.jpg', trend: '#3 Today', genre: 'Drama', rating: '8.4' });
+  assert.equal(calls.length, 2, 'short memory cache reuses fallback artwork');
+  assert.equal((await sharp(tagged).metadata()).format, 'webp');
+  for (const region of [{ left: 110, top: 0, width: 280, height: 65 }, { left: 20, top: 650, width: 460, height: 62 }]) {
+    const before = await sharp(plain).extract(region).raw().toBuffer();
+    const after = await sharp(tagged).extract(region).raw().toBuffer();
+    const changed = after.reduce((n, value, i) => n + (Math.abs(value - before[i]) > 15 ? 1 : 0), 0);
+    assert.ok(changed > 300, 'fallback artwork must retain visible overlays');
+  }
+});
+
+test('missing source bucket does not discard successfully fetched artwork', async () => {
+  const image = Buffer.from('source bytes');
+  globalThis.fetch = async () => new Response(image, { headers: { 'content-type': 'image/jpeg' } });
+  const path = '/missing-bucket.jpg';
+  const hash = createHash('sha256').update(`${SOURCE_CACHE_VERSION}|${path}`).digest('hex');
+  const response = await sourceCacheOutbound(new Request(`http://source-cache.internal/v1/${hash}.bin`, {
+    headers: { 'x-tmdb-poster-path': path },
+  }), {}, { containerId: 'test', className: 'PosterRenderer' });
+  assert.equal(response.status, 200);
+  assert.deepEqual(Buffer.from(await response.arrayBuffer()), image);
+});
 afterEach(() => {
   globalThis.fetch = originalFetch;
   resetPosterSourceMemoryForTests();
@@ -135,15 +174,14 @@ test('shared source art persists with a sliding 30-day retention window', async 
   const request = () => new Request(`http://source-cache.internal/v1/${hash}.bin`, {
     headers: { 'x-tmdb-poster-path': path },
   });
-  const jobs = [];
-  const context = { waitUntil(promise) { jobs.push(Promise.resolve(promise)); } };
+  // Match Cloudflare's real OutboundHandlerContext: no waitUntil method.
+  const context = { containerId: 'test', className: 'PosterRenderer' };
   const env = { SOURCE_ART: bucket };
 
   const first = await sourceCacheOutbound(request(), env, context);
   assert.equal(first.status, 200);
   assert.equal(first.headers.get('x-source-cache'), 'MISS');
   assert.deepEqual(Buffer.from(await first.arrayBuffer()), image);
-  await Promise.all(jobs.splice(0));
   assert.equal(originFetches, 1);
 
   const key = `poster-source/${SOURCE_CACHE_VERSION}/${hash}.bin`;
@@ -155,7 +193,6 @@ test('shared source art persists with a sliding 30-day retention window', async 
   const second = await sourceCacheOutbound(request(), env, context);
   assert.equal(second.headers.get('x-source-cache'), 'R2_HIT');
   await second.arrayBuffer();
-  await Promise.all(jobs.splice(0));
 
   const refreshed = bucket.objects.get(key);
   assert.ok(Number(refreshed.customMetadata.retentionUntil) > Date.now() + 29 * 24 * 60 * 60 * 1000);
