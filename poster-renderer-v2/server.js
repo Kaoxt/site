@@ -8,6 +8,23 @@ const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w342';
 const TMDB_LOGO_BASE = 'https://image.tmdb.org/t/p/original';
 const POSTER_WIDTH = 500;
 const POSTER_HEIGHT = 750;
+const logoCache = new Map();
+const logoFlights = new Map();
+const LOGO_CACHE_MAX_BYTES = 8 * 1024 * 1024;
+const LOGO_CACHE_MAX_ENTRIES = 64;
+const LOGO_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+let logoCacheBytes = 0;
+
+function deleteLogo(key) {
+ const entry=logoCache.get(key);
+ if(!entry)return;
+ logoCache.delete(key);
+ logoCacheBytes-=entry.image.buffer.length;
+}
+
+export function resetLogoCacheForTests() {
+ logoCache.clear();logoFlights.clear();logoCacheBytes=0;
+}
 // Layout measurements below are expressed in the original 780px design grid
 // and scaled once at render time. This preserves the approved overlay geometry
 // while avoiding a 780x1170 intermediate canvas followed by a second resize.
@@ -133,10 +150,32 @@ export function titlePlacement(image) {
 }
 async function smartLogoImage(logoPath){
  if(!logoPath)return null;
+ const cached=logoCache.get(logoPath);
+ if(cached&&cached.expiresAt>Date.now()){
+  logoCache.delete(logoPath);logoCache.set(logoPath,cached);
+  return cached.image;
+ }
+ deleteLogo(logoPath);
+ if(logoFlights.has(logoPath))return logoFlights.get(logoPath);
+ const work=loadLogoImage(logoPath);
+ logoFlights.set(logoPath,work);
+ try{return await work;}
+ finally{if(logoFlights.get(logoPath)===work)logoFlights.delete(logoPath);}
+}
+
+async function loadLogoImage(logoPath){
  try{
   const response=await fetch(`${TMDB_LOGO_BASE}${logoPath}`,{headers:{accept:'image/*'},signal:AbortSignal.timeout(3000)});
   if(!response.ok)return null;
-  return await fitTitleImage(Buffer.from(await response.arrayBuffer()));
+  const image=await fitTitleImage(Buffer.from(await response.arrayBuffer()));
+  // Keep the exact original artwork and approved trim/placement. Cache the
+  // fitted result so another overlay variant skips both download and processing.
+  if(image.buffer.length<=LOGO_CACHE_MAX_BYTES){
+   logoCache.set(logoPath,{image,expiresAt:Date.now()+LOGO_CACHE_TTL_MS});
+   logoCacheBytes+=image.buffer.length;
+   while(logoCache.size>LOGO_CACHE_MAX_ENTRIES||logoCacheBytes>LOGO_CACHE_MAX_BYTES)deleteLogo(logoCache.keys().next().value);
+  }
+  return image;
  }catch{return null;}
 }
 function smartBottomBackdrop(){const height=px(275);return Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${POSTER_WIDTH}" height="${height}"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="0.42" stop-color="#000" stop-opacity="0.04"/><stop offset="0.72" stop-color="#000" stop-opacity="0.20"/><stop offset="1" stop-color="#000" stop-opacity="0.54"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/></svg>`);}
@@ -171,14 +210,12 @@ export async function renderPoster(body){
   composites.push({input:smartBottomBackdrop(),top:POSTER_HEIGHT-px(275),left:0});
   const info=await smartBottomInfo(genre,resolvedRatingLabel);if(info)composites.push({input:info,top:SMART_BOTTOM_INFO_TOP,left:px(30)});
  }
- const composed=await sharp(resized.data,canvasOptions).composite(composites).raw().toBuffer({resolveWithObject:true});
- const output=await sharp(composed.data,{raw:{width:composed.info.width,height:composed.info.height,channels:composed.info.channels}}).webp({quality:80,effort:3,smartSubsample:true}).toBuffer();
+ const output=await sharp(resized.data,canvasOptions).composite(composites).webp({quality:80,effort:3,smartSubsample:true}).toBuffer();
  output.kollectionSourceCache=source.status;
  output.kollectionSourceCacheKey=source.key;
  output.kollectionSourceRetentionUntil=source.retentionUntil;
  return output;
 }
 
-const server=http.createServer(async(req,res)=>{try{if(req.method==='GET'&&req.url==='/health'){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return res.end(JSON.stringify({ok:true,renderer:'kollection-posters-v2-bp-layout-27'}));}if(req.method!=='POST'||req.url!=='/render'){res.writeHead(404,{'content-type':'application/json'});return res.end(JSON.stringify({error:'Not found'}));}const body=await readJson(req),started=Date.now(),output=await renderPoster(body);res.writeHead(200,{'content-type':'image/webp','content-length':String(output.length),'cache-control':'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800','x-kollection-renderer':'v2-bp-layout-27','x-kollection-render-ms':String(Date.now()-started),'x-kollection-source-cache':String(output.kollectionSourceCache||'BYPASS'),'x-kollection-source-cache-version':SOURCE_CACHE_VERSION,'x-kollection-source-cache-key':String(output.kollectionSourceCacheKey||'').slice(0,16),'x-kollection-source-retention-until':String(output.kollectionSourceRetentionUntil||0)});res.end(output);}catch(error){res.writeHead(400,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:error?.message||'Render failed'}));}});
+const server=http.createServer(async(req,res)=>{try{if(req.method==='GET'&&req.url==='/health'){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return res.end(JSON.stringify({ok:true,renderer:'kollection-posters-v2-bp-layout-28'}));}if(req.method!=='POST'||req.url!=='/render'){res.writeHead(404,{'content-type':'application/json'});return res.end(JSON.stringify({error:'Not found'}));}const body=await readJson(req),started=Date.now(),output=await renderPoster(body);res.writeHead(200,{'content-type':'image/webp','content-length':String(output.length),'cache-control':'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800','x-kollection-renderer':'v2-bp-layout-28','x-kollection-render-ms':String(Date.now()-started),'x-kollection-source-cache':String(output.kollectionSourceCache||'BYPASS'),'x-kollection-source-cache-version':SOURCE_CACHE_VERSION,'x-kollection-source-cache-key':String(output.kollectionSourceCacheKey||'').slice(0,16),'x-kollection-source-retention-until':String(output.kollectionSourceRetentionUntil||0)});res.end(output);}catch(error){res.writeHead(400,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:error?.message||'Render failed'}));}});
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)server.listen(PORT,'0.0.0.0',()=>console.log(`Kollection Posters v2 renderer listening on ${PORT}`));
-
