@@ -25,7 +25,10 @@ test('text title and padded logo render centered in the same title zone', async 
   const image = await sharp({create:{width:342,height:513,channels:3,background:'#102030'}}).jpeg().toBuffer();
   const logo = await sharp({create:{width:300,height:80,channels:4,background:'#ffffff'}})
     .extend({top:110,bottom:10,left:70,right:10,background:'#00000000'}).png().toBuffer();
-  globalThis.fetch = async url => new Response(String(url).includes('/logo.png') ? logo : image,{headers:{'content-type':'image/png'}});
+  globalThis.fetch = async (url, options = {}) => {
+    const kind = options.headers?.['x-tmdb-asset-type'];
+    return new Response(kind === 'logo' ? logo : image, { headers: { 'content-type': 'image/png' } });
+  };
   const base = await renderPoster({posterPath:'/title-test.jpg',smartLayout:true});
   for (const title of [{logoPath:'/logo.png'}, {title:'A Movie Title'}, {title:'A Much Longer Movie Title That Wraps Onto Multiple Lines'}]) {
     const tagged = await renderPoster({posterPath:'/title-test.jpg',smartLayout:true,...title});
@@ -106,11 +109,11 @@ test('concurrent and later overlays reuse the exact fitted title logo', async ()
   const image = await sharp({ create: { width: 342, height: 513, channels: 3, background: '#102030' } }).jpeg().toBuffer();
   const logo = await sharp({ create: { width: 300, height: 80, channels: 4, background: '#ffffff' } }).png().toBuffer();
   let logoCalls = 0;
-  globalThis.fetch = async url => {
-    if (String(url).includes('/shared-logo.png')) {
+  globalThis.fetch = async (url, options = {}) => {
+    if (options.headers?.['x-tmdb-asset-type'] === 'logo') {
       logoCalls++;
       await new Promise(resolve => setTimeout(resolve, 10));
-      return new Response(logo);
+      return new Response(logo, { headers: { 'content-type': 'image/png' } });
     }
     return new Response(image, { headers: { 'content-type': 'image/jpeg' } });
   };
@@ -121,24 +124,42 @@ test('concurrent and later overlays reuse the exact fitted title logo', async ()
   await renderPoster({ ...body, genre: 'Drama' });
   assert.equal(logoCalls, 1);
   resetLogoCacheForTests();
+  const memoryBacked = await renderPoster(body);
+  assert.equal(logoCalls, 1, 'fitted-logo eviction still reuses shared source memory');
+  resetLogoCacheForTests();
+  resetPosterSourceMemoryForTests();
   const uncached = await renderPoster(body);
   assert.equal(logoCalls, 2);
+  assert.ok(memoryBacked.equals(images[0]));
   assert.ok(uncached.equals(images[0]), 'cached and freshly processed logos must produce identical image bytes');
 });
 
 test('unavailable title logos are retried instead of caching a missing title', async () => {
   const image = await sharp({ create: { width: 342, height: 513, channels: 3, background: '#102030' } }).jpeg().toBuffer();
   const logo = await sharp({ create: { width: 300, height: 80, channels: 4, background: '#ffffff' } }).png().toBuffer();
-  let logoCalls = 0;
-  globalThis.fetch = async url => {
-    if (String(url).includes('/retry-logo.png')) return ++logoCalls === 1 ? new Response('', { status: 503 }) : new Response(logo);
+  let sharedLogoCalls = 0;
+  let directLogoCalls = 0;
+  globalThis.fetch = async (url, options = {}) => {
+    if (options.headers?.['x-tmdb-asset-type'] === 'logo') {
+      sharedLogoCalls++;
+      return sharedLogoCalls === 1
+        ? new Response('', { status: 503 })
+        : new Response(logo, { headers: { 'content-type': 'image/png' } });
+    }
+    if (String(url).includes('image.tmdb.org/t/p/w500/retry-logo.png')) {
+      directLogoCalls++;
+      return directLogoCalls === 1
+        ? new Response('', { status: 503 })
+        : new Response(logo, { headers: { 'content-type': 'image/png' } });
+    }
     return new Response(image, { headers: { 'content-type': 'image/jpeg' } });
   };
   const body = { posterPath: '/retry-logo-poster.jpg', smartLayout: true, logoPath: '/retry-logo.png', title: 'Fallback' };
   const fallback = await renderPoster(body);
   const recovered = await renderPoster(body);
   await renderPoster(body);
-  assert.equal(logoCalls, 2);
+  assert.equal(sharedLogoCalls, 2);
+  assert.equal(directLogoCalls, 1);
   assert.ok(!fallback.equals(recovered));
 });
 
