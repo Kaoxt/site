@@ -1,4 +1,4 @@
-export const TOKEN_VERSION = 'k2';
+export const TOKEN_VERSION = 'k3';
 export const POSTER_VISUAL_VERSION = '25';
 export const ALLOWED_TAGS = ['trend', 'quality', 'genre', 'rating', 'age'];
 export const RATING_SOURCES = ['average', 'score', 'imdb', 'letterboxd', 'mal', 'rogerebert', 'tomatometer', 'popcornmeter', 'tmdb'];
@@ -37,7 +37,7 @@ export function encodePosterConfig(value) {
 }
 
 export function decodePosterConfig(token) {
-  const match = String(token || '').toLowerCase().match(/^(k[12])([st])([0-9a-v])([0-8])([0-9a-z]{2})$/);
+  const match = String(token || '').toLowerCase().match(/^(k[123])([st])([0-9a-v])([0-8])([0-9a-z]{2})$/);
   if (!match) return null;
   const tagMask = parseInt(match[3], 36);
   const ratingIndex = parseInt(match[4], 36);
