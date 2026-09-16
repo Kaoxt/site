@@ -840,6 +840,13 @@ function cacheRequestFor(request, env) {
   cacheUrl.searchParams.set('trendDetails', trendDetails.join(','));
   if (sourceUrl) cacheUrl.searchParams.set('sourceUrl', sourceUrl);
   if (overlayOnly) cacheUrl.searchParams.set('overlayOnly', '1');
+  if (provider === 'btttr') {
+    cacheUrl.searchParams.set('bpQuality', incoming.searchParams.get('bpQuality') === '1' ? '1' : '0');
+    cacheUrl.searchParams.set('bpGenre', incoming.searchParams.get('bpGenre') === '0' ? '0' : '1');
+    cacheUrl.searchParams.set('bpRating', incoming.searchParams.get('bpRating') === '0' ? '0' : '1');
+    cacheUrl.searchParams.set('bpAge', incoming.searchParams.get('bpAge') === '1' ? '1' : '0');
+    cacheUrl.searchParams.set('bpRatingSource', String(incoming.searchParams.get('bpRatingSource') || 'average').toLowerCase());
+  }
   cacheUrl.searchParams.set('__kollection_renderer', CACHE_VERSION);
   if (source === 'smart') cacheUrl.searchParams.set('__kollection_title_layout', 'centered-title-1');
   cacheUrl.searchParams.set('__kollection_delivery', DELIVERY_VERSION);
