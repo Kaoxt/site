@@ -632,7 +632,7 @@ test('D1 lease is exclusive, expires, and an old owner cannot release its replac
   const last = await acquirePosterLease(h.env, 'same-variant'); assert.equal(last.acquired, true); await last.release();
 });
 
-test('render budget remains enforced and cold plain-art fallback is never cached', async () => {
+test('render budget remains enforced and plain fallback stays out of the overlay cache', async () => {
   const h = harness({ POSTERS_MAX_DAILY_RENDERS: '1' }); await h.seed('27205');
   const blocked = await h.request('603'); await blocked.arrayBuffer(); await h.flush();
   assert.equal(blocked.headers.get('x-kollection-poster-fallback'), 'hard-stop-budget');
@@ -646,7 +646,9 @@ test('invalid renderer output is not stored as a WebP overlay', async () => {
   const h = harness(); h.invalidImage = true;
   const response = await h.request(); await response.arrayBuffer(); await h.flush();
   assert.equal(response.headers.get('x-kollection-poster-fallback'), 'renderer-invalid-image');
-  assert.equal(response.headers.get('cache-control'), 'no-store'); assert.equal(h.bucket.posters().length, 0);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+  assert.ok(!h.bucket.posters().some(([key]) => key.startsWith('poster-cache/production/')));
+  assert.ok(h.bucket.posters().some(([key]) => key.startsWith('poster-cache/plain-v1/')));
 });
 
 test('HEAD preserves the cached GET body and invalid IDs never reach upstream', async () => {
@@ -794,4 +796,21 @@ test('prefixed AIOMetadata folder IDs resolve to the same TMDB poster', async ()
   assert.equal(tvdb.count.find, 1);
   assert.equal(tvdb.count.render, 1);
   assert.equal(tvdbResponse.headers.get('x-kollection-tmdb-id'), '27205');
+});
+
+
+test('plain fallback artwork is persisted separately and reused without another image-host fetch', async () => {
+  const h = harness({ POSTERS_RENDERING_ENABLED: '0' });
+  const first = await h.request('27205');
+  await first.arrayBuffer();
+  await h.flush();
+  assert.equal(first.headers.get('x-kollection-poster-fallback'), 'rendering-disabled');
+  assert.equal(first.headers.get('x-kollection-plain-cache'), 'MISS');
+  assert.equal(h.count.fallback, 1);
+  assert.ok(h.bucket.posters().some(([key]) => key.startsWith('poster-cache/plain-v1/')));
+  const second = await h.request('27205');
+  await second.arrayBuffer();
+  await h.flush();
+  assert.equal(second.headers.get('x-kollection-plain-cache'), 'HIT');
+  assert.equal(h.count.fallback, 1);
 });
