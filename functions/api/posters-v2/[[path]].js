@@ -934,20 +934,52 @@ async function renderPoster(context, state, id) {
 
   const trendDetails = normalizeTrendDetails(url.searchParams.get('trendDetails'));
   const artworkProvider = url.searchParams.get('provider') === 'btttr' ? 'btttr' : 'tmdb';
-  const appendParts = type === 'movie' ? ['images', 'release_dates', 'external_ids'] : ['images', 'content_ratings', 'external_ids'];
-  if (tags.has('trend') && needsCredits(trendDetails)) appendParts.push('credits');
+  const needsTrendCredits = tags.has('trend') && needsCredits(trendDetails);
+  const appendParts = artworkProvider === 'btttr'
+    ? ['external_ids']
+    : (type === 'movie' ? ['images', 'release_dates', 'external_ids'] : ['images', 'content_ratings', 'external_ids']);
+  if (artworkProvider === 'btttr' && type === 'movie' && tags.has('trend') && trendDetails.includes('inCinema')) {
+    appendParts.push('release_dates');
+  }
+  if (needsTrendCredits) appendParts.push('credits');
   const append = appendParts.join(',');
   const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
   const rendererBase = String(env.POSTERS_V2_RENDERER_URL || DEFAULT_RENDERER_URL).replace(/\/$/, '');
   const rendererShard = String(Number(id) % 4);
   const detailsPromise = measured(context, 'metadata', () => tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null&language=en-US`, env.TMDB_API_KEY, context));
   const sourceWarmPromise = detailsPromise.then(async details => {
-    if (sourceUrl || artworkProvider === 'btttr') return;
+    if (sourceUrl) return;
     const smartLayout = url.searchParams.get('source') === 'smart';
-    const artwork = choosePoster(details, smartLayout);
-    const smartTextless = !overlayOnly && smartLayout && artwork.source === 'smart-textless';
-    const logo = chooseLogo(details, smartTextless);
-    if (!artwork.path && !logo.path) return;
+    let warmBody = null;
+    if (artworkProvider === 'btttr') {
+      const btttrUrl = betterPostersBaseUrl(details, overlayLanguage, {
+        quality: url.searchParams.get('bpQuality') === '1',
+        genre: url.searchParams.get('bpGenre') !== '0',
+        rating: url.searchParams.get('bpRating') !== '0',
+        age: url.searchParams.get('bpAge') === '1',
+        ratingSource: url.searchParams.get('bpRatingSource') || 'average',
+      });
+      if (btttrUrl) {
+        warmBody = {
+          sourceUrl: btttrUrl,
+          smartLayout: false,
+          overlayOnly: true,
+        };
+      }
+    } else {
+      const artwork = choosePoster(details, smartLayout);
+      const smartTextless = !overlayOnly && smartLayout && artwork.source === 'smart-textless';
+      const logo = chooseLogo(details, smartTextless);
+      if (artwork.path || logo.path) {
+        warmBody = {
+          posterPath: artwork.path,
+          logoPath: overlayOnly ? '' : logo.path,
+          smartLayout,
+          overlayOnly: Boolean(overlayOnly),
+        };
+      }
+    }
+    if (!warmBody) return;
     try {
       const warmed = await fetch(`${rendererBase}/warm`, {
         method: 'POST',
@@ -956,12 +988,7 @@ async function renderPoster(context, state, id) {
           'x-kollection-render-key': String(env.POSTERS_RENDERER_AUTH_TOKEN),
           'x-kollection-render-shard': rendererShard,
         },
-        body: JSON.stringify({
-          posterPath: artwork.path,
-          logoPath: overlayOnly ? '' : logo.path,
-          smartLayout,
-          overlayOnly: Boolean(overlayOnly),
-        }),
+        body: JSON.stringify(warmBody),
         signal: AbortSignal.any([context.signal, AbortSignal.timeout(5000)]),
       });
       await warmed.body?.cancel();
