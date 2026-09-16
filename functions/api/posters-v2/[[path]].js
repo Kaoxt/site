@@ -1064,6 +1064,7 @@ async function renderPoster(context, state, id) {
   // identical poster.
   if (artworkProvider === 'btttr' && effectiveOverlayOnly && renderSourceUrl &&
       tags.size === 1 && tags.has('trend') && !resolvedTrend) {
+    state.betterPostersWarmAbort?.();
     const generatedAt = Date.now();
     const cacheControl = posterCacheControl(preview, tags, trendChoice.source);
     const headers = new Headers({
@@ -1358,6 +1359,8 @@ async function refreshPoster(context, state, background = false) {
         if (earlySourceUrl) {
           const rendererBase = String(context.env.POSTERS_V2_RENDERER_URL || DEFAULT_RENDERER_URL).replace(/\/$/, '');
           const rendererShard = String(Number(rawImdbId.slice(2)) % 4);
+          const warmController = new AbortController();
+          state.betterPostersWarmAbort = () => warmController.abort();
           state.betterPostersWarm = fetch(`${rendererBase}/warm`, {
             method: 'POST',
             headers: {
@@ -1366,7 +1369,7 @@ async function refreshPoster(context, state, background = false) {
               'x-kollection-render-shard': rendererShard,
             },
             body: JSON.stringify({ sourceUrl: earlySourceUrl, smartLayout: false, overlayOnly: true }),
-            signal: AbortSignal.any([workContext.signal, AbortSignal.timeout(5000)]),
+            signal: AbortSignal.any([workContext.signal, warmController.signal, AbortSignal.timeout(5000)]),
           }).then(response => response.body?.cancel()).catch(() => {});
           context.waitUntil(state.betterPostersWarm);
         }
