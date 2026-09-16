@@ -822,7 +822,8 @@ async function renderPoster(context, state, id) {
       });
       await warmed.body?.cancel();
     } catch {}
-  });
+  }).catch(() => {});
+  context.waitUntil(sourceWarmPromise);
   // MDBList's TMDB endpoint needs only the ID. Start it alongside TMDB, while
   // sources that actually need title details still wait for those details.
   const ratingDetails = env.MDBLIST_API_KEY && MDBLIST_RATING_SOURCES.has(requestedRatingSource)
@@ -892,7 +893,6 @@ async function renderPoster(context, state, id) {
   if (!slot.allowed) throw posterError(slot.reason);
 
   try {
-    await sourceWarmPromise.catch(() => {});
     const rendered = await measured(context, 'renderer', () => fetch(`${rendererBase}/render`, {
       method: 'POST',
       headers: {
