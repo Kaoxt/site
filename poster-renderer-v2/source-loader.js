@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 
 export const SOURCE_CACHE_VERSION = 'tmdb-source-art-v1';
 export const LOGO_SOURCE_CACHE_VERSION = 'tmdb-logo-art-v1';
+export const BTTTR_SOURCE_CACHE_VERSION = 'btttr-source-art-v1';
 const SOURCE_CACHE_HOST = 'source-cache.internal';
 const SOURCE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 const SOURCE_TOUCH_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -52,6 +53,18 @@ function validPosterPath(value) {
   return /^\/[A-Za-z0-9._/-]{1,500}$/.test(path) ? path : '';
 }
 
+function validBtttrUrl(value) {
+  try {
+    const url = new URL(String(value || ''));
+    if (url.protocol !== 'https:' || url.hostname !== 'btttr.cc' || url.username || url.password) return '';
+    if (!/^\/poster(?:-[a-z]+)?\/imdb\/poster-default\/tt\d{5,12}\.jpg$/i.test(url.pathname)) return '';
+    if (url.toString().length > 1800) return '';
+    return url.toString();
+  } catch {
+    return '';
+  }
+}
+
 function numberHeader(response, name) {
   const value = Number(response.headers.get(name) || 0);
   return Number.isFinite(value) ? value : 0;
@@ -59,6 +72,42 @@ function numberHeader(response, name) {
 
 function cacheUrl(hash) {
   return `http://${SOURCE_CACHE_HOST}/v1/${hash}.bin`;
+}
+
+async function readBtttrShared(sourceUrl, hash) {
+  const response = await fetch(cacheUrl(hash), {
+    headers: {
+      accept: 'image/*',
+      'x-tmdb-asset-type': 'btttr',
+      'x-btttr-source-url': sourceUrl,
+    },
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!response.ok) throw new Error(`Shared Better Posters source cache failed: ${response.status}`);
+  const input = Buffer.from(await response.arrayBuffer());
+  if (!input.length || input.length > MAX_BYTES) throw new Error('Source image is too large');
+  return {
+    input,
+    contentType: response.headers.get('content-type') || 'application/octet-stream',
+    status: response.headers.get('x-source-cache') || 'R2_HIT',
+    fetchedAt: numberHeader(response, 'x-source-fetched-at') || Date.now(),
+    persistedAccessAt: numberHeader(response, 'x-source-last-accessed-at') || Date.now(),
+    retentionUntil: numberHeader(response, 'x-source-retention-until') || Date.now() + SOURCE_RETENTION_MS,
+  };
+}
+
+function touchBtttrShared(sourceUrl, hash, entry, now) {
+  if (now - Number(entry.persistedAccessAt || 0) < SOURCE_TOUCH_INTERVAL_MS) return;
+  entry.persistedAccessAt = now;
+  entry.retentionUntil = now + SOURCE_RETENTION_MS;
+  void fetch(cacheUrl(hash), {
+    headers: {
+      accept: 'image/*',
+      'x-tmdb-asset-type': 'btttr',
+      'x-btttr-source-url': sourceUrl,
+    },
+    signal: AbortSignal.timeout(5000),
+  }).then(response => response.body?.cancel()).catch(() => {});
 }
 
 async function readShared(path, hash, kind = 'poster') {
@@ -134,6 +183,55 @@ export function loadTmdbLogoSource(logoPath) {
     base: 'https://image.tmdb.org/t/p/w500',
     requiredLabel: 'logoPath',
   });
+}
+
+export async function loadBtttrPosterSource(sourceUrlValue) {
+  const sourceUrl = validBtttrUrl(sourceUrlValue);
+  if (!sourceUrl) throw new Error('Valid btttr.cc sourceUrl is required');
+  const now = Date.now();
+  const hash = digest(`${BTTTR_SOURCE_CACHE_VERSION}|${sourceUrl}`);
+  const warm = getMemory(hash, now);
+  if (warm) {
+    if (warm.status !== 'ORIGIN_FALLBACK') touchBtttrShared(sourceUrl, hash, warm, now);
+    return {
+      ...warm,
+      key: hash,
+      retentionUntil: now + SOURCE_RETENTION_MS,
+      status: 'MEMORY_HIT',
+    };
+  }
+
+  if (pending.has(hash)) return pending.get(hash);
+  const work = (async () => {
+    let shared;
+    try {
+      shared = await readBtttrShared(sourceUrl, hash);
+    } catch {
+      const response = await fetch(sourceUrl, {
+        headers: { accept: 'image/webp,image/jpeg,image/*' },
+        signal: AbortSignal.timeout(4000),
+      });
+      if (!response.ok) throw new Error(`Better Posters source failed: ${response.status}`);
+      if (Number(response.headers.get('content-length') || 0) > MAX_BYTES) throw new Error('Source image is too large');
+      const input = Buffer.from(await response.arrayBuffer());
+      if (!input.length || input.length > MAX_BYTES) throw new Error('Source image is too large');
+      if (!response.headers.get('content-type')?.startsWith('image/')) throw new Error('Invalid source image');
+      shared = {
+        input,
+        contentType: response.headers.get('content-type'),
+        status: 'ORIGIN_FALLBACK',
+        fetchedAt: now,
+        persistedAccessAt: 0,
+        retentionUntil: now + 60000,
+      };
+    }
+    const entry = { ...shared };
+    setMemory(hash, entry);
+    return { ...entry, key: hash };
+  })();
+  pending.set(hash, work);
+  try { return await work; }
+  finally { if (pending.get(hash) === work) pending.delete(hash); }
 }
 
 async function loadColdSource(path, hash, now, { kind = 'poster', base = 'https://image.tmdb.org/t/p/w342' } = {}) {
