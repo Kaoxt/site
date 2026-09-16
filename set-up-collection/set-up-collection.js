@@ -51,8 +51,8 @@
     aiChunks: [],
     aiInstalls: [],
     posterBridgeInstalls: [],
-    posterOverlaysEnabled: false,
-    posterSettings: null,
+    betterPostersEnabled: false,
+    betterPostersSettings: null,
 
     collectionPack: null,
     selectedCollectionGroupIds: [],
@@ -138,8 +138,8 @@
         aiChunks: state.aiChunks,
         aiInstalls: state.aiInstalls,
         posterBridgeInstalls: state.posterBridgeInstalls,
-        posterOverlaysEnabled: state.posterOverlaysEnabled,
-        posterSettings: state.posterSettings,
+        betterPostersEnabled: state.betterPostersEnabled,
+        betterPostersSettings: state.betterPostersSettings,
         collectionPack: state.collectionPack,
         selectedCollectionGroupIds: state.selectedCollectionGroupIds,
         selectedCollectionFolderIds: state.selectedCollectionFolderIds,
@@ -227,18 +227,18 @@
     if (state.step === 4 && state.collectionPack) renderCustomize();
   });
 
-  window.addEventListener('kollection:restore-poster-settings', event => {
+  window.addEventListener('kollection:restore-better-posters-settings', event => {
     const detail = event?.detail || {};
-    const helper = window.KollectionPosterSettings;
+    const helper = window.KollectionBetterPostersSettings;
     const nextEnabled = Boolean(detail.enabled);
     const nextSettings = helper
-      ? helper.normalize(detail.settings || state.posterSettings || helper.readLocal() || {})
-      : (detail.settings || state.posterSettings || null);
-    const changed = nextEnabled !== state.posterOverlaysEnabled ||
-      JSON.stringify(nextSettings || null) !== JSON.stringify(state.posterSettings || null);
+      ? helper.normalize(detail.settings || state.betterPostersSettings || helper.readLocal() || {})
+      : (detail.settings || state.betterPostersSettings || null);
+    const changed = nextEnabled !== state.betterPostersEnabled ||
+      JSON.stringify(nextSettings || null) !== JSON.stringify(state.betterPostersSettings || null);
     if (!changed) return;
-    state.posterOverlaysEnabled = nextEnabled;
-    state.posterSettings = nextSettings;
+    state.betterPostersEnabled = nextEnabled;
+    state.betterPostersSettings = nextSettings;
     state.backup = null;
     if (state.step === 2) renderAi();
   });
@@ -962,11 +962,11 @@
   function prepareAiConfig(baseConfig, catalogs, index) {
     const config = jsonClone(state.aiCustomConfig || baseConfig || {});
     config.catalogs = catalogs;
-    if (state.posterOverlaysEnabled && window.KollectionPosterSettings) {
-      state.posterSettings = window.KollectionPosterSettings.normalize(
-        state.posterSettings || window.KollectionPosterSettings.readLocal() || {}
+    if (state.betterPostersEnabled && window.KollectionBetterPostersSettings) {
+      state.betterPostersSettings = window.KollectionBetterPostersSettings.normalize(
+        state.betterPostersSettings || window.KollectionBetterPostersSettings.readLocal() || {}
       );
-      window.KollectionPosterSettings.applyToAioConfig(config, state.posterSettings);
+      window.KollectionBetterPostersSettings.applyToAioConfig(config, state.betterPostersSettings);
     }
     if (!config.apiKeys) config.apiKeys = {};
     if (state.mdblistKey) config.apiKeys.mdblist = state.mdblistKey;
@@ -1920,137 +1920,124 @@
     refreshSelectedProfileEligibility({ force: true });
   }
 
-  function openSmartOverlayConfigurator() {
-    const posterHelper = window.KollectionPosterSettings;
-    if (!posterHelper) {
-      alert('Poster settings are still loading. Try Configure again in a moment.', 'error');
+  function openBetterPostersConfigurator() {
+    const helper = window.KollectionBetterPostersSettings;
+    if (!helper) {
+      alert('Better Posters settings are still loading. Try Configure again in a moment.', 'error');
       return;
     }
-  
-    const current = posterHelper.normalize(
-      state.posterSettings || posterHelper.readLocal() || {}
+
+    const current = helper.normalize(
+      state.betterPostersSettings || helper.readLocal() || {}
     );
     const ratingSources = [
       ['average', 'Average'],
       ['imdb', 'IMDb'],
-      ['score', 'Score'],
+      ['tmdb', 'TMDB'],
+      ['rottentomatoes', 'Rotten Tomatoes'],
+      ['metacritic', 'Metacritic'],
+      ['trakt', 'Trakt'],
       ['letterboxd', 'Letterboxd'],
-      ['mal', 'MyAnimeList'],
-      ['rogerebert', 'RogerEbert'],
-      ['tomatometer', 'Tomatometer'],
-      ['popcornmeter', 'Popcornmeter'],
-      ['tmdb', 'TMDB Rating'],
+      ['rogerebert', 'Roger Ebert'],
     ];
-    const tagOptions = [
-      ['trend', 'Trend Tags', 'Trending, In Cinema, movie/series lifecycle, directors, studios, and cast'],
-      ['quality', 'Quality Tags', '4K, HD, Dolby Vision, HDR10+, Atmos, and DTS:X when available'],
-      ['genre', 'Genre', 'Genre label at the bottom of the poster'],
-      ['rating', 'Rating', 'Rating badge at the bottom of the poster'],
-      ['age', 'Age Rating', 'PG-13, TV-MA, R, and similar age classifications'],
+    const languageOptions = [
+      ['en', 'English'],
+      ['es', 'Spanish'],
+      ['fr', 'French'],
+      ['de', 'German'],
+      ['pt-BR', 'Portuguese (Brazil)'],
+      ['pt-PT', 'Portuguese (Portugal)'],
+      ['it', 'Italian'],
+      ['nl', 'Dutch'],
+      ['pl', 'Polish'],
+      ['ru', 'Russian'],
+      ['tr', 'Turkish'],
+      ['ar', 'Arabic'],
+      ['ja', 'Japanese'],
+      ['ko', 'Korean'],
+      ['zh', 'Chinese'],
+      ['hi', 'Hindi'],
+      ['sv', 'Swedish'],
+      ['cs', 'Czech'],
     ];
-    const trendDetailOptions = [
-      ['studio', 'Notable Studios', 'A24 Film, Pixar Film, Studio Ghibli'],
-      ['director', 'Notable Directors', 'Christopher Nolan Film, Denis Villeneuve Film'],
-      ['cast', 'Notable Cast', 'Leonardo DiCaprio, Zendaya, Florence Pugh'],
-      ['inCinema', 'In Cinema', 'Movies currently in their theatrical window'],
-      ['rank', 'Daily Rank', '#1 Today, #8 Today'],
-      ['newMovie', 'New Movie', 'Recently released movies'],
-      ['comingSoon', 'Coming Soon', 'Upcoming movie or series releases'],
-      ['newSeries', 'New Series', 'Recently premiered TV series'],
-      ['returningSeries', 'Returning Series', 'Ongoing or returning TV series'],
-      ['limitedSeries', 'Limited Series', 'Miniseries and limited TV events'],
-    ];
-  
+
     document.getElementById('smartOverlayModalRoot')?.remove();
     const root = document.createElement('div');
     root.id = 'smartOverlayModalRoot';
     root.className = 'smart-overlay-modal-root open';
     root.innerHTML = `
-      <div class="smart-overlay-modal-backdrop" data-smart-overlay-close>
-        <section class="smart-overlay-modal" role="dialog" aria-modal="true" aria-labelledby="smartOverlayModalTitle">
+      <div class="smart-overlay-modal-backdrop" data-better-posters-close>
+        <section class="smart-overlay-modal" role="dialog" aria-modal="true" aria-labelledby="betterPostersModalTitle">
           <header class="smart-overlay-modal-head">
             <div>
-              <span class="smart-overlay-modal-kicker">SMART OVERLAY POSTERS</span>
-              <h3 id="smartOverlayModalTitle">Configure poster overlays</h3>
+              <span class="smart-overlay-modal-kicker">BETTER POSTERS</span>
+              <h3 id="betterPostersModalTitle">Configure Better Posters</h3>
             </div>
-            <button class="smart-overlay-modal-x" type="button" aria-label="Close" data-smart-overlay-close></button>
+            <button class="smart-overlay-modal-x" type="button" aria-label="Close" data-better-posters-close></button>
           </header>
           <div class="smart-overlay-modal-body">
-            <p class="smart-overlay-modal-copy">Choose the poster style, tags, rating source, and Trend Tag details for this collection. These settings stay inside your setup instead of sending you to the Posters page.</p>
-  
+            <p class="smart-overlay-modal-copy">These are the controls Better Posters currently exposes for AIOMetadata. The Kollection writes the generated btttr.cc poster URL into your AIOMetadata setup automatically.</p>
+
             <section class="smart-overlay-modal-section">
               <div class="smart-overlay-modal-section-head">
-                <span>POSTER STYLE</span>
-                <strong>Choose your poster style</strong>
-              </div>
-              <div class="smart-overlay-style-grid">
-                <label class="smart-overlay-choice">
-                  <input type="radio" name="setupPosterSource" value="smart" ${current.source === 'smart' ? 'checked' : ''}>
-                  <span><b>Smart Overlay Posters</b><small>Uses the adaptive overlay layout for the selected artwork.</small></span>
-                </label>
-                <label class="smart-overlay-choice">
-                  <input type="radio" name="setupPosterSource" value="tmdb" ${current.source === 'tmdb' ? 'checked' : ''}>
-                  <span><b>Original Posters</b><small>Keeps the original poster composition while adding enabled tags.</small></span>
-                </label>
-              </div>
-              <label class="smart-overlay-provider-field">
-                <span>Artwork provider</span>
-                <select id="setupArtworkProvider" aria-label="Artwork provider">
-                  <option value="tmdb" selected>The Movie Database (TMDB)</option>
-                </select>
-                <small>TMDB is currently the available poster artwork provider.</small>
-              </label>
-            </section>
-  
-            <section class="smart-overlay-modal-section">
-              <div class="smart-overlay-modal-section-head">
-                <span>SMART TAGS</span>
-                <strong>Choose your poster overlays</strong>
+                <span>POSTER OPTIONS</span>
+                <strong>Choose Better Posters overlays</strong>
               </div>
               <div class="smart-overlay-tag-grid">
-                ${tagOptions.map(([value, label, copy]) => `
-                  <label class="smart-overlay-tag-option">
-                    <input type="checkbox" value="${value}" data-setup-poster-tag ${current.tags.includes(value) ? 'checked' : ''}>
-                    <span><b>${label}</b><small>${copy}</small></span>
-                  </label>`).join('')}
+                <label class="smart-overlay-tag-option">
+                  <input type="checkbox" id="betterTrendTags" ${current.trendTags ? 'checked' : ''}>
+                  <span><b>Trend Tags</b><small>Trending, New, IMDb ranking, and other Better Posters trend labels.</small></span>
+                </label>
+                <label class="smart-overlay-tag-option">
+                  <input type="checkbox" id="betterQualityTags" ${current.qualityTags ? 'checked' : ''}>
+                  <span><b>Quality Tags</b><small>4K, Dolby Vision, Atmos, and supported quality badges.</small></span>
+                </label>
+                <label class="smart-overlay-tag-option">
+                  <input type="checkbox" id="betterGenre" ${current.genre ? 'checked' : ''}>
+                  <span><b>Genre</b><small>Genre label at the bottom of the poster.</small></span>
+                </label>
+                <label class="smart-overlay-tag-option">
+                  <input type="checkbox" id="betterRating" ${current.rating ? 'checked' : ''}>
+                  <span><b>Rating</b><small>Rating at the bottom of the poster.</small></span>
+                </label>
+                <label class="smart-overlay-tag-option">
+                  <input type="checkbox" id="betterAgeRating" ${current.ageRating ? 'checked' : ''}>
+                  <span><b>Age Rating</b><small>PG-13, TV-MA, R, and similar classifications.</small></span>
+                </label>
               </div>
+              <div class="callout" style="margin-top:14px"><strong>Trend Tag selection:</strong> Better Posters currently lets us turn Trend Tags on or off, but it does not expose controls for choosing only specific trend labels such as In Cinema, New, or IMDb rank. Better Posters decides which applicable Trend Tag is shown.</div>
             </section>
-  
-            <section id="setupRatingSourceSection" class="smart-overlay-modal-section smart-overlay-detail-section" ${current.tags.includes('rating') ? '' : 'hidden'}>
+
+            <section id="betterRatingSourceSection" class="smart-overlay-modal-section smart-overlay-detail-section" ${current.rating ? '' : 'hidden'}>
               <div class="smart-overlay-detail-copy">
                 <strong>Rating source</strong>
-                <small>Choose which rating Smart Overlay Posters should request.</small>
+                <small>Choose the rating source Better Posters should display.</small>
               </div>
-              <select id="setupRatingSource" aria-label="Rating source">
+              <select id="betterRatingSource" aria-label="Better Posters rating source">
                 ${ratingSources.map(([value, label]) => `<option value="${value}" ${current.ratingSource === value ? 'selected' : ''}>${label}</option>`).join('')}
               </select>
             </section>
-  
-            <section id="setupTrendDetailsSection" class="smart-overlay-modal-section smart-overlay-trend-section" ${current.tags.includes('trend') ? '' : 'hidden'}>
-              <div class="smart-overlay-modal-section-head">
-                <span>TREND TAG DETAILS</span>
-                <strong>Choose what can appear in the Trend Tag area</strong>
-                <small>Priority: Studio → Director → Cast → In Cinema → Rank → New Movie → Coming Soon → New Series → Returning → Limited</small>
+
+            <section class="smart-overlay-modal-section smart-overlay-detail-section">
+              <div class="smart-overlay-detail-copy">
+                <strong>Poster language</strong>
+                <small>Choose the language Better Posters should request.</small>
               </div>
-              <div class="smart-overlay-trend-grid">
-                ${trendDetailOptions.map(([value, label, copy]) => `
-                  <label class="smart-overlay-trend-option">
-                    <input type="checkbox" value="${value}" data-setup-trend-detail ${current.trendDetails.includes(value) ? 'checked' : ''}>
-                    <span><b>${label}</b><small>${copy}</small></span>
-                  </label>`).join('')}
-              </div>
+              <select id="betterPosterLanguage" aria-label="Better Posters language">
+                ${languageOptions.map(([value, label]) => `<option value="${value}" ${current.language === value ? 'selected' : ''}>${label}</option>`).join('')}
+              </select>
             </section>
           </div>
           <footer class="smart-overlay-modal-footer">
-            <button class="smart-overlay-modal-button" type="button" data-smart-overlay-close>Cancel</button>
-            <button class="smart-overlay-modal-button primary" id="saveSmartOverlaySettingsBtn" type="button">Save settings</button>
+            <button class="smart-overlay-modal-button" type="button" data-better-posters-close>Cancel</button>
+            <button class="smart-overlay-modal-button primary" id="saveBetterPostersSettingsBtn" type="button">Save settings</button>
           </footer>
         </section>
       </div>`;
-  
+
     document.body.appendChild(root);
     document.documentElement.classList.add('smart-overlay-modal-open');
-  
+
     const closeModal = () => {
       document.documentElement.classList.remove('smart-overlay-modal-open');
       document.removeEventListener('keydown', onKeyDown);
@@ -2060,53 +2047,48 @@
       if (event.key === 'Escape') closeModal();
     };
     document.addEventListener('keydown', onKeyDown);
-  
-    root.querySelectorAll('[data-smart-overlay-close]').forEach((node) => {
+
+    root.querySelectorAll('[data-better-posters-close]').forEach((node) => {
       node.addEventListener('click', (event) => {
         if (event.currentTarget.classList.contains('smart-overlay-modal-backdrop') && event.target !== event.currentTarget) return;
         closeModal();
       });
     });
-  
-    const ratingTag = root.querySelector('[data-setup-poster-tag][value="rating"]');
-    const trendTag = root.querySelector('[data-setup-poster-tag][value="trend"]');
-    const ratingSection = root.querySelector('#setupRatingSourceSection');
-    const trendSection = root.querySelector('#setupTrendDetailsSection');
+
+    const ratingToggle = root.querySelector('#betterRating');
+    const ratingSection = root.querySelector('#betterRatingSourceSection');
     const syncConditionalSections = () => {
-      if (ratingSection) ratingSection.hidden = !ratingTag?.checked;
-      if (trendSection) trendSection.hidden = !trendTag?.checked;
+      if (ratingSection) ratingSection.hidden = !ratingToggle?.checked;
     };
-    ratingTag?.addEventListener('change', syncConditionalSections);
-    trendTag?.addEventListener('change', syncConditionalSections);
-  
-    root.querySelector('#saveSmartOverlaySettingsBtn')?.addEventListener('click', () => {
-      const source = root.querySelector('input[name="setupPosterSource"]:checked')?.value || 'smart';
-      const tags = [...root.querySelectorAll('[data-setup-poster-tag]:checked')].map((input) => input.value);
-      const trendDetails = [...root.querySelectorAll('[data-setup-trend-detail]:checked')].map((input) => input.value);
-      const ratingSource = root.querySelector('#setupRatingSource')?.value || 'average';
-  
-      state.posterSettings = posterHelper.normalize({
-        source,
-        tags,
-        ratingSource,
-        trendDetails,
-        artworkProvider: 'tmdb',
+    ratingToggle?.addEventListener('change', syncConditionalSections);
+
+    root.querySelector('#saveBetterPostersSettingsBtn')?.addEventListener('click', () => {
+      state.betterPostersSettings = helper.normalize({
+        trendTags: Boolean(root.querySelector('#betterTrendTags')?.checked),
+        qualityTags: Boolean(root.querySelector('#betterQualityTags')?.checked),
+        genre: Boolean(root.querySelector('#betterGenre')?.checked),
+        rating: Boolean(root.querySelector('#betterRating')?.checked),
+        ageRating: Boolean(root.querySelector('#betterAgeRating')?.checked),
+        ratingSource: root.querySelector('#betterRatingSource')?.value || 'average',
+        language: root.querySelector('#betterPosterLanguage')?.value || 'en',
       });
       state.backup = null;
-  
-      const hidden = $('#posterSettingsJson');
-      if (hidden) hidden.value = JSON.stringify(state.posterSettings);
-  
+
+      const hidden = $('#betterPostersSettingsJson');
+      if (hidden) hidden.value = JSON.stringify(state.betterPostersSettings);
+
       try {
-        localStorage.setItem(posterHelper.STORAGE_KEY, JSON.stringify({
-          version: 4,
-          ...state.posterSettings,
+        localStorage.setItem(helper.STORAGE_KEY, JSON.stringify({
+          version: 1,
+          ...state.betterPostersSettings,
         }));
       } catch {}
-  
+
+      const summary = $('#betterPostersSummary');
+      if (summary) summary.textContent = helper.label(state.betterPostersSettings);
       closeModal();
     });
-  
+
     requestAnimationFrame(() => root.querySelector('.smart-overlay-modal-x')?.focus());
   }
 
@@ -2123,13 +2105,13 @@
       `<option value="__self_host__" ${selectedHostMode === '__self_host__' ? 'selected' : ''}>Self-Host Instance</option>`,
     ].join('');
     const customMdblist = state.aiCustomConfig?.apiKeys?.mdblist || '';
-    const posterHelper = window.KollectionPosterSettings;
-    const posterSettings = posterHelper
-      ? posterHelper.normalize(state.posterSettings || posterHelper.readLocal() || {})
-      : { source: 'smart', tags: ['trend', 'genre', 'rating'], ratingSource: 'average' };
-    const posterSummary = posterHelper
-      ? posterHelper.label(posterSettings)
-      : 'Smart Overlay Posters · Trend, Genre, Rating';
+    const betterPostersHelper = window.KollectionBetterPostersSettings;
+    const betterPostersSettings = betterPostersHelper
+      ? betterPostersHelper.normalize(state.betterPostersSettings || betterPostersHelper.readLocal() || {})
+      : { trendTags: true, qualityTags: false, genre: true, rating: true, ageRating: false, ratingSource: 'average', language: 'en' };
+    const betterPostersSummary = betterPostersHelper
+      ? betterPostersHelper.label(betterPostersSettings)
+      : 'Better Posters · Trend Tags, Genre, Rating';
     host.innerHTML = panel('STEP 3 · AIOMETADATA', 'Prepare AIOMetadata for The Kollection',
       'Use the built-in catalog setup or bring your own AIOMetadata JSON export, then choose where your AIOMetadata configuration should be hosted.',
       `<div class="card">
@@ -2172,21 +2154,21 @@
           <div class="smart-overlay-heading">
             <div>
               <span class="badge">Optional</span>
-              <h3>Smart Overlay Posters</h3>
-              <p>Turn this on if you want The Kollection to use Smart Overlay Posters throughout your Nuvio collection.</p>
+              <h3>Better Posters</h3>
+              <p>Automatically configure AIOMetadata to use Better Posters from btttr.cc for supported movie and series posters.</p>
             </div>
           </div>
           <div class="smart-overlay-control-row">
-            <label class="toggle-row smart-overlay-toggle" for="posterOverlaysEnabled">
-              <input id="posterOverlaysEnabled" type="checkbox" ${state.posterOverlaysEnabled ? 'checked' : ''}>
+            <label class="toggle-row smart-overlay-toggle" for="betterPostersEnabled">
+              <input id="betterPostersEnabled" type="checkbox" ${state.betterPostersEnabled ? 'checked' : ''}>
               <span>
-                <b>Enable Smart Overlay Posters for this collection</b>
-                <small>Off by default. When enabled, Home rows, collection folders, and AIOMetadata library/meta posters all use your Kollection poster settings.</small>
+                <b>Use Better Posters with this collection</b>
+                <small id="betterPostersSummary">${state.betterPostersEnabled ? esc(betterPostersSummary) : 'Off by default. Titles where AIOMetadata cannot resolve an IMDb ID keep their normal poster.'}</small>
               </span>
             </label>
-            <button class="ghost small smart-overlay-configure-btn" id="configurePosterOverlaysBtn" type="button">Configure</button>
+            <button class="ghost small smart-overlay-configure-btn" id="configureBetterPostersBtn" type="button">Configure</button>
           </div>
-          <input id="posterSettingsJson" type="hidden" value="${esc(JSON.stringify(posterSettings))}">
+          <input id="betterPostersSettingsJson" type="hidden" value="${esc(JSON.stringify(betterPostersSettings))}">
         </div>
         ${custom ? `<div class="callout">The uploaded file supplies your AIOMetadata preferences and matching catalog definitions. Any required The Kollection catalog missing from your file falls back to the built-in catalog definition.</div>` : ''}
         <div class="actions"><button class="ghost" id="backBtn">Back</button><button class="btn" id="nextBtn">Continue to Bingecat</button></div>
@@ -2196,18 +2178,22 @@
     $('#customTab').onclick = () => { state.aiSetupMode = 'custom'; state.backup = null; renderAi(); };
     $('#mdblist').oninput = e => { state.mdblistKey = e.target.value.trim(); state.backup = null; };
     $('#tmdb').oninput = e => { state.tmdbKey = e.target.value.trim(); state.backup = null; };
-    $('#posterOverlaysEnabled').onchange = e => {
-      state.posterOverlaysEnabled = e.target.checked;
-      if (window.KollectionPosterSettings) {
-        state.posterSettings = window.KollectionPosterSettings.normalize(
-          state.posterSettings || window.KollectionPosterSettings.readLocal() || {}
+    $('#betterPostersEnabled').onchange = e => {
+      state.betterPostersEnabled = e.target.checked;
+      if (window.KollectionBetterPostersSettings) {
+        state.betterPostersSettings = window.KollectionBetterPostersSettings.normalize(
+          state.betterPostersSettings || window.KollectionBetterPostersSettings.readLocal() || {}
         );
-        const hidden = $('#posterSettingsJson');
-        if (hidden) hidden.value = JSON.stringify(state.posterSettings);
+        const hidden = $('#betterPostersSettingsJson');
+        if (hidden) hidden.value = JSON.stringify(state.betterPostersSettings);
+        const summary = $('#betterPostersSummary');
+        if (summary) summary.textContent = state.betterPostersEnabled
+          ? window.KollectionBetterPostersSettings.label(state.betterPostersSettings)
+          : 'Off by default. Titles where AIOMetadata cannot resolve an IMDb ID keep their normal poster.';
       }
       state.backup = null;
     };
-    $('#configurePosterOverlaysBtn').onclick = openSmartOverlayConfigurator;
+    $('#configureBetterPostersBtn').onclick = openBetterPostersConfigurator;
     $$('.key-visibility-toggle').forEach(button => {
       button.onclick = () => {
         const input = document.getElementById(button.dataset.target);
@@ -2252,10 +2238,10 @@
     $('#nextBtn').onclick = () => {
       state.mdblistKey = $('#mdblist').value.trim();
       state.tmdbKey = $('#tmdb').value.trim();
-      state.posterOverlaysEnabled = Boolean($('#posterOverlaysEnabled')?.checked);
-      if (state.posterOverlaysEnabled && window.KollectionPosterSettings) {
-        state.posterSettings = window.KollectionPosterSettings.normalize(
-          state.posterSettings || window.KollectionPosterSettings.readLocal() || {}
+      state.betterPostersEnabled = Boolean($('#betterPostersEnabled')?.checked);
+      if (state.betterPostersEnabled && window.KollectionBetterPostersSettings) {
+        state.betterPostersSettings = window.KollectionBetterPostersSettings.normalize(
+          state.betterPostersSettings || window.KollectionBetterPostersSettings.readLocal() || {}
         );
       }
       const hostChoice = $('#aiHost').value;
@@ -2486,7 +2472,7 @@
         <div class="summary">
           <div class="summary-item"><span class="icon">N</span><div><b>${esc(state.profileName)}</b><span>Nuvio profile ${state.profileId}; add-ons target profile ${state.addonProfileId || state.profileId}.</span></div></div>
           <div class="summary-item"><span class="icon">A</span><div><b>${state.aiNeededCatalogs.length} AIOMetadata catalogs</b><span>${state.aiSetupMode === 'custom' ? `Using ${esc(state.aiCustomFileName)} as the configuration base. ` : ''}Planned across ${state.aiChunks.length} configuration${state.aiChunks.length === 1 ? '' : 's'} using your selected AIOMetadata host.</span></div></div>
-          <div class="summary-item"><span class="icon">P</span><div><b>Smart Overlay Posters · ${state.posterOverlaysEnabled ? 'Enabled' : 'Off'}</b><span>${state.posterOverlaysEnabled ? `Your collection will use Smart Overlay Posters across Home rows, folders, and AIOMetadata library/meta posters. ${esc(window.KollectionPosterSettings?.label(state.posterSettings || window.KollectionPosterSettings?.readLocal?.() || {}) || 'Poster settings selected.')}` : 'Standard AIOMetadata poster behavior will be used. You can enable Smart Overlay Posters during setup later.'}</span></div></div>
+          <div class="summary-item"><span class="icon">P</span><div><b>Better Posters · ${state.betterPostersEnabled ? 'Enabled' : 'Off'}</b><span>${state.betterPostersEnabled ? `Your collection will use Better Posters across Home rows, folders, and AIOMetadata library/meta posters. ${esc(window.KollectionBetterPostersSettings?.label(state.betterPostersSettings || window.KollectionBetterPostersSettings?.readLocal?.() || {}) || 'Poster settings selected.')}` : 'Standard AIOMetadata poster behavior will be used. You can enable Better Posters during setup later.'}</span></div></div>
           <div class="summary-item"><span class="icon">B</span><div><b>${state.bingecatSkipped ? 'Bingecat skipped' : (bcNeeded ? `Bingecat · ${bc.length} recommendation catalogs` : 'Bingecat not needed')}</b><span>${state.bingecatSkipped ? 'For You Bingecat placeholders will be removed.' : (bcNeeded ? `Your personal add-on ID ${esc(state.bingecatAddonId)} will replace the creator-specific For You references.` : 'None of the selected sections use Bingecat, so its add-on will not be installed.')}</span></div></div>
           <div class="summary-item"><span class="icon">K</span><div><b>The Kollection</b><span>${selectedPack.length} of ${state.collectionPack?.length || 0} sections selected · ${selectedFolders} folders included. ${setupUpdatesExisting ? `The previous setup will be replaced with ${previewCount} updated groups.` : `This profile goes from ${existingCount} to ${previewCount} groups after the ID-aware merge.`}</span></div></div>
         </div>
@@ -2525,7 +2511,7 @@
     const existingName = window.KollectionSavedSetup?.getName?.() || '';
     const buttonLabel = state.installCompleted ? 'Finish setup' : 'Set Up The Kollection';
     host.innerHTML = panel('STEP 7 · SET UP', 'Ready to set up The Kollection',
-      `${setupUpdatesExisting ? 'Update Existing will replace the previous Kollection collection and AIOMetadata installation.' : 'Set Up Collection will add the selected collection to Nuvio.'} It will generate the required AIOMetadata configuration${state.aiChunks.length === 1 ? '' : 's'}, install ${bcNeeded ? 'AIOMetadata and your personal Bingecat manifest' : 'AIOMetadata'}, ${state.posterOverlaysEnabled ? 'apply Smart Overlay Posters to the collection, ' : ''}rewrite the collection sources, and sync ${selectedPack.length} selected section${selectedPack.length === 1 ? '' : 's'}.`,
+      `${setupUpdatesExisting ? 'Update Existing will replace the previous Kollection collection and AIOMetadata installation.' : 'Set Up Collection will add the selected collection to Nuvio.'} It will generate the required AIOMetadata configuration${state.aiChunks.length === 1 ? '' : 's'}, install ${bcNeeded ? 'AIOMetadata and your personal Bingecat manifest' : 'AIOMetadata'}, ${state.betterPostersEnabled ? 'apply Better Posters to the collection, ' : ''}rewrite the collection sources, and sync ${selectedPack.length} selected section${selectedPack.length === 1 ? '' : 's'}.`,
       `<div class="card">
         <div class="field setup-name-field">
           <label for="setupName">Setup name</label>
@@ -2687,8 +2673,8 @@
       aiChunks: [],
       aiInstalls: [],
       posterBridgeInstalls: [],
-      posterOverlaysEnabled: false,
-      posterSettings: null,
+      betterPostersEnabled: false,
+      betterPostersSettings: null,
       collectionPack: null,
       selectedCollectionGroupIds: [],
       collectionSelectionInitialized: false,
