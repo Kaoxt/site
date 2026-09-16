@@ -4,7 +4,7 @@ import { chooseTrendDisplay, needsCredits, normalizeTrendDetails, spotlightLabel
 
 const TMDB_API = 'https://api.themoviedb.org/3';
 const DEFAULT_RENDERER_URL = 'https://poster-renderer.kollection.tv';
-const CACHE_VERSION = 'production-cache-19';
+const CACHE_VERSION = 'production-cache-20';
 // Delivery changes must not invalidate finished artwork in R2.
 const DELIVERY_VERSION = 'cold-pipeline-4';
 // The repaired outbound renderer must not inherit pre-repair failure cooldowns.
@@ -1111,6 +1111,8 @@ async function renderPoster(context, state, id) {
     audio: quality.audio || '',
     smartLayout,
     overlayColor: url.searchParams.get('overlayColor') || 'dynamic',
+    betterPostersBadge: artworkProvider === 'btttr' && effectiveOverlayOnly,
+    betterPostersQuality: artworkProvider === 'btttr' && url.searchParams.get('bpQuality') === '1',
   };
 
   // Reserve quota and renderer concurrency only after metadata/rating work has

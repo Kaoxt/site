@@ -177,6 +177,15 @@ async function fixture() {
   globalThis.fetch = async () => new Response(image, { headers: { 'content-type': 'image/jpeg' } });
 }
 
+test('Better Posters hybrid Trend badges keep the compact muted visual spec', async () => {
+  const source = await readFile(new URL('./server.js', import.meta.url), 'utf8');
+  assert.match(source, /BETTER_POSTERS_TOP_HEIGHT\s*=\s*px\(92\)/);
+  assert.match(source, /BETTER_POSTERS_BADGE_FILL\s*=\s*'#2f2d33'/);
+  assert.match(source, /betterPostersTagWidth\(text, min = 132, max = 390\)/);
+  assert.match(source, /qualityReserved\s*\?\s*SAFE_MARGIN/);
+  assert.match(source, /betterPostersBadge/);
+});
+
 test('dynamic accent handles raw canvases and responds to artwork color', async () => {
   const options = { raw: { width: 64, height: 64, channels: 3 } };
   const red = await sharp({ create: { ...options.raw, background: '#c02020' } }).raw().toBuffer();

@@ -73,7 +73,7 @@ export async function onRequest(context) {
 
   const canonical = new URL(publicUrl.origin + `/bp/${configId}/${type}/${encodeURIComponent(rawId)}.webp`);
   const edgeKeyUrl = new URL(canonical);
-  edgeKeyUrl.searchParams.set('__kollection_bp_delivery', '1');
+  edgeKeyUrl.searchParams.set('__kollection_bp_delivery', '2');
   const cacheRequest = new Request(edgeKeyUrl.toString(), { method: 'GET' });
 
   try {
@@ -110,7 +110,7 @@ export async function onRequest(context) {
   }
 
   const inner = new URL(publicUrl.origin + `/api/posters-v2/${type}/${encodeURIComponent(rawId)}.webp`);
-  inner.searchParams.set('v', '26');
+  inner.searchParams.set('v', '27');
   inner.searchParams.set('source', 'tmdb');
   inner.searchParams.set('provider', 'btttr');
   inner.searchParams.set('tags', config.trendDetails.length ? 'trend' : '');

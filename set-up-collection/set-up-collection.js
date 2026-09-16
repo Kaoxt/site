@@ -2018,8 +2018,8 @@
             <section class="smart-overlay-modal-section smart-overlay-trend-section">
               <div class="smart-overlay-modal-section-head">
                 <span>TREND TAG DETAILS</span>
-                <strong>Choose exactly which top tags can appear</strong>
-                <small>All categories selected = native Better Posters Trend Tag and direct btttr.cc loading. A custom subset = only the selected categories are allowed.</small>
+                <strong>Choose which broad Trend categories can appear</strong>
+                <small>These switches stay category-level only. All categories selected = native Better Posters Trend Tag and direct btttr.cc loading. A custom subset = only the selected categories are allowed.</small>
               </div>
               <div class="smart-overlay-trend-grid">
                 ${trendDetailOptions.map(([value, label, copy]) => `

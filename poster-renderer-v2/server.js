@@ -31,6 +31,8 @@ const px = (value) => Math.round(value * POSTER_WIDTH / 780);
 const SAFE_MARGIN = px(22);
 
 const SMART_TOP_HEIGHT = px(100);
+const BETTER_POSTERS_TOP_HEIGHT = px(92);
+const BETTER_POSTERS_BADGE_FILL = '#2f2d33';
 const SMART_BOTTOM_INFO_TOP = px(1050);
 const SMART_AGE_TOP = px(625);
 const SMART_LOGO_ZONE_TOP = px(720);
@@ -55,6 +57,40 @@ export async function dynamicAccent(imageBuffer, inputOptions) {
     else { const target = 112, scale = max > target ? target / max : 1; r *= scale; g *= scale; b *= scale; }
     return rgbToHex(r, g, b);
   } catch { return '#2f2d33'; }
+}
+
+function betterPostersTrendFontSize(text) {
+  const length = String(text || '').length;
+  if (length > 22) return 31;
+  if (length > 17) return 34;
+  if (length > 12) return 38;
+  return 42;
+}
+
+function betterPostersTagWidth(text, min = 132, max = 390) {
+  // Match Better Posters' compact pill proportions: modest side padding and
+  // text-driven growth, rather than the much wider Smart Layout tag formula.
+  return clamp(px(64 + String(text || '').length * 24), px(min), px(max));
+}
+
+async function betterPostersTrendTag(text) {
+  const width = betterPostersTagWidth(text);
+  const height = BETTER_POSTERS_TOP_HEIGHT;
+  const radius = px(8);
+  const fontSize = px(betterPostersTrendFontSize(text));
+  const safeText = esc(text);
+  const opticalY = Math.round(height / 2 + px(1));
+  const svg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><path d="M0 0h${width}v${height-radius}a${radius} ${radius} 0 0 1-${radius} ${radius}H${radius}A${radius} ${radius} 0 0 1 0 ${height-radius}z" fill="${BETTER_POSTERS_BADGE_FILL}" fill-opacity=".94"/><text x="${width/2}" y="${opticalY}" text-anchor="middle" dominant-baseline="middle" font-family="Inter, DejaVu Sans" font-size="${fontSize}" font-weight="700" letter-spacing="-.32" fill="#fff" fill-opacity=".96">${safeText}</text></svg>`);
+  return { buffer: await sharp(svg).png().toBuffer(), width, height };
+}
+
+async function addBetterPostersTrendTag(composites, { trend = '', qualityReserved = false } = {}) {
+  if (!trend) return;
+  const tag = await betterPostersTrendTag(trend);
+  const left = qualityReserved
+    ? SAFE_MARGIN
+    : Math.round((POSTER_WIDTH - tag.width) / 2);
+  composites.push({ input: tag.buffer, top: 0, left });
 }
 
 function smartTagWidth(text, min = 238, max = 590) {
@@ -190,7 +226,7 @@ export async function warmPosterAssets(body){
 }
 
 export async function renderPoster(body){
- const{posterPath,sourceUrl,logoPath='',title='',smartLayout=false,overlayOnly=false,rating='',ratingLabel='',genre='',trend='',age='',quality='',audio='',overlayColor='dynamic'}=body||{};
+ const{posterPath,sourceUrl,logoPath='',title='',smartLayout=false,overlayOnly=false,rating='',ratingLabel='',genre='',trend='',age='',quality='',audio='',overlayColor='dynamic',betterPostersBadge=false,betterPostersQuality=false}=body||{};
  const posterUrl=sourceUrl||(posterPath?`${TMDB_IMAGE_BASE}${posterPath}`:'');if(!posterUrl)throw new Error('posterPath or sourceUrl is required');
  const logoPromise=smartLayout&&!overlayOnly&&logoPath?smartLogoImage(logoPath):Promise.resolve(null);
  let source;
@@ -211,8 +247,12 @@ export async function renderPoster(body){
  // the same, so this only shortens renderer CPU time and does not change layout.
  const topTagsPromise=(async()=>{
   const top=[];
-  const dynamicFill=overlayColor==='dynamic'&&trend?await dynamicAccent(resized.data,canvasOptions):overlayColor;
-  await addSmartTopTags(top,{trend,quality,audio,dynamicFill});
+  if(betterPostersBadge){
+   await addBetterPostersTrendTag(top,{trend,qualityReserved:betterPostersQuality});
+  }else{
+   const dynamicFill=overlayColor==='dynamic'&&trend?await dynamicAccent(resized.data,canvasOptions):overlayColor;
+   await addSmartTopTags(top,{trend,quality,audio,dynamicFill});
+  }
   return top;
  })();
  const agePromise=age?(async()=>{
@@ -246,5 +286,5 @@ export async function renderPoster(body){
  return output;
 }
 
-const server=http.createServer(async(req,res)=>{try{if(req.method==='GET'&&req.url==='/health'){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return res.end(JSON.stringify({ok:true,renderer:'kollection-posters-v2-bp-layout-29'}));}if(req.method==='POST'&&req.url==='/warm'){const body=await readJson(req),started=Date.now(),result=await warmPosterAssets(body);res.writeHead(204,{'cache-control':'no-store','x-kollection-warm-ms':String(Date.now()-started),'x-kollection-warmed-assets':String(result.warmed)});return res.end();}if(req.method!=='POST'||req.url!=='/render'){res.writeHead(404,{'content-type':'application/json'});return res.end(JSON.stringify({error:'Not found'}));}const body=await readJson(req),started=Date.now(),output=await renderPoster(body);res.writeHead(200,{'content-type':'image/webp','content-length':String(output.length),'cache-control':'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800','x-kollection-renderer':'v2-bp-layout-29','x-kollection-render-ms':String(Date.now()-started),'x-kollection-source-cache':String(output.kollectionSourceCache||'BYPASS'),'x-kollection-source-cache-version':SOURCE_CACHE_VERSION,'x-kollection-source-cache-key':String(output.kollectionSourceCacheKey||'').slice(0,16),'x-kollection-source-retention-until':String(output.kollectionSourceRetentionUntil||0)});res.end(output);}catch(error){res.writeHead(400,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:error?.message||'Render failed'}));}});
+const server=http.createServer(async(req,res)=>{try{if(req.method==='GET'&&req.url==='/health'){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return res.end(JSON.stringify({ok:true,renderer:'kollection-posters-v2-bp-layout-30'}));}if(req.method==='POST'&&req.url==='/warm'){const body=await readJson(req),started=Date.now(),result=await warmPosterAssets(body);res.writeHead(204,{'cache-control':'no-store','x-kollection-warm-ms':String(Date.now()-started),'x-kollection-warmed-assets':String(result.warmed)});return res.end();}if(req.method!=='POST'||req.url!=='/render'){res.writeHead(404,{'content-type':'application/json'});return res.end(JSON.stringify({error:'Not found'}));}const body=await readJson(req),started=Date.now(),output=await renderPoster(body);res.writeHead(200,{'content-type':'image/webp','content-length':String(output.length),'cache-control':'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800','x-kollection-renderer':'v2-bp-layout-30','x-kollection-render-ms':String(Date.now()-started),'x-kollection-source-cache':String(output.kollectionSourceCache||'BYPASS'),'x-kollection-source-cache-version':SOURCE_CACHE_VERSION,'x-kollection-source-cache-key':String(output.kollectionSourceCacheKey||'').slice(0,16),'x-kollection-source-retention-until':String(output.kollectionSourceRetentionUntil||0)});res.end(output);}catch(error){res.writeHead(400,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:error?.message||'Render failed'}));}});
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)server.listen(PORT,'0.0.0.0',()=>console.log(`Kollection Posters v2 renderer listening on ${PORT}`));
