@@ -172,7 +172,9 @@ test('poster bridge passthrough mode preserves upstream overlay poster URLs', as
   const source = await readFile(new URL('../functions/api/posters-addon/[[path]].js', import.meta.url), 'utf8');
   assert.match(source, /\[1, 2, 3, 4\]\.includes\(config\.v\)/);
   assert.match(source, /passthroughPosters: config\.passthroughPosters === true/);
-  assert.match(source, /config\.passthroughPosters \? payload : rewritePayload\(payload, config, type\)/);
+  assert.match(source, /prewarmPassthroughPosters/);
+  assert.match(source, /x-kollection-poster-prewarm/);
+  assert.match(source, /context\.waitUntil\(prewarmPassthroughPosters/);
   assert.match(source, /id: `tv\.kollection\.posters\.\$\{token\.slice\(0, 24\)\}`/);
 });
 
@@ -245,6 +247,8 @@ test('hybrid Better Posters delivery route delegates to v2 with btttr base and K
   assert.match(source, /x-kollection-better-posters-direct/);
   assert.match(source, /customTrendSubset/);
   assert.match(source, /x-kollection-better-posters-provisional/);
+  assert.match(source, /x-kollection-poster-prewarm/);
+  assert.match(source, /!prewarmRequest/);
   assert.match(source, /context\.waitUntil/);
 });
 
