@@ -1961,11 +1961,11 @@
       ['cs', 'Czech'],
     ];
     const trendDetailOptions = [
-      ['studio', 'Notable Studios', 'A24 Film, Pixar Film, Studio Ghibli'],
-      ['director', 'Notable Directors', 'Christopher Nolan Film, Denis Villeneuve Film'],
-      ['cast', 'Notable Cast', 'Leonardo DiCaprio, Zendaya, Florence Pugh'],
+      ['studio', 'Studio Tags', 'A24 Movie, Pixar Movie, Studio Ghibli Movie'],
+      ['director', 'Director Tags', 'Nolan Movie, Villeneuve Movie, Spielberg Movie'],
+      ['cast', 'Cast Tags', 'DiCaprio Movie, Zendaya Movie, Pugh Movie'],
       ['inCinema', 'In Cinema', 'Movies currently in their theatrical window'],
-      ['rank', 'Daily Rank', '#1 Today, #8 Today'],
+      ['rank', 'Trending', 'Better Posters-style Trending label'],
       ['newMovie', 'New Movie', 'Recently released movies'],
       ['comingSoon', 'Coming Soon', 'Upcoming movie or series releases'],
       ['newSeries', 'New Series', 'Recently premiered TV series'],
@@ -1988,7 +1988,7 @@
             <button class="smart-overlay-modal-x" type="button" aria-label="Close" data-better-posters-close></button>
           </header>
           <div class="smart-overlay-modal-body">
-            <p class="smart-overlay-modal-copy">Better Posters supplies the base artwork, genre, rating, quality, and age overlays. The Kollection adds only the individually-selected top Trend Tag so you can control exactly which trend labels are allowed.</p>
+            <p class="smart-overlay-modal-copy">Better Posters supplies the artwork, genre, rating, quality, age rating, and its native Trend Tags. If you allow every Trend category, the poster URL goes directly to Better Posters for the fastest loading and exact Better Posters tag wording. If you choose only certain Trend categories, The Kollection filters that top tag while keeping Better Posters as the base poster.</p>
 
             <section class="smart-overlay-modal-section">
               <div class="smart-overlay-modal-section-head">
@@ -2019,7 +2019,7 @@
               <div class="smart-overlay-modal-section-head">
                 <span>TREND TAG DETAILS</span>
                 <strong>Choose exactly which top tags can appear</strong>
-                <small>Better Posters supplies the base poster with its own Trend Tag disabled. The Kollection adds one matching top tag from your allowed list.</small>
+                <small>All categories selected = native Better Posters Trend Tag and direct btttr.cc loading. A custom subset = only the selected categories are allowed.</small>
               </div>
               <div class="smart-overlay-trend-grid">
                 ${trendDetailOptions.map(([value, label, copy]) => `
