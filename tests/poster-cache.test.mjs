@@ -414,6 +414,49 @@ test('legacy TMDB-keyed image is reused and backfilled under its IMDb ID', async
   assert.equal(h.count.find, 1);
 });
 
+test('static director Trend labels keep a week-long client and persistent cache lifetime', async () => {
+  const h = harness();
+  h.detailsOverride = {
+    production_companies: [],
+    credits: { crew: [{ job: 'Director', name: 'Christopher Nolan' }], cast: [] },
+  };
+  const first = await h.request('27205', '&trendDetails=director');
+  assert.equal(first.headers.get('x-kollection-trend-source'), 'director');
+  const firstMaxAge = Number(/max-age=(\d+)/.exec(first.headers.get('cache-control') || '')?.[1] || 0);
+  assert.ok(firstMaxAge > 604700, 'static spotlight poster should stay client-fresh for about seven days');
+  const body = await first.arrayBuffer();
+  await h.flush();
+  assert.equal(h.count.render, 1);
+
+  h.edge.clear();
+  const saved = await h.request('27205', '&trendDetails=director');
+  assert.equal(saved.headers.get('x-kollection-persistent-cache'), 'HIT');
+  assert.equal(saved.headers.get('x-kollection-trend-source'), 'director');
+  assert.deepEqual(await saved.arrayBuffer(), body);
+  await h.flush();
+  assert.equal(h.count.render, 1, 'R2 hit must not rerender a static Nolan-style spotlight');
+});
+
+test('cached R2 posters support ETag revalidation without retransferring image bytes', async () => {
+  const h = harness();
+  await h.seed('27205');
+  h.edge.clear();
+
+  const saved = await h.request('27205');
+  const etag = saved.headers.get('etag');
+  assert.ok(etag);
+  await saved.arrayBuffer();
+  await h.flush();
+
+  const context = h.context('27205');
+  context.request = new Request(context.request.url, { headers: { 'if-none-match': etag } });
+  const response = await onRequest(context);
+  assert.equal(response.status, 304);
+  assert.equal(response.body, null);
+  await h.flush();
+  assert.equal(h.count.render, 1);
+});
+
 test('stale overlay returns immediately and refreshes behind the response', async () => {
   const h = harness(); const old = await h.seed(); h.bucket.expirePosters(); h.edge.clear();
   const began = deferred(), finish = deferred();
