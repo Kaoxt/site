@@ -37,13 +37,13 @@
   function pattern(value) {
     const settings = normalize(value);
     const params = new URLSearchParams({
-      v: '23',
+      v: '24',
       source: settings.source,
       tags: [...new Set(settings.tags)].sort().join(','),
       ratingSource: settings.ratingSource,
       trendDetails: settings.trendDetails.join(','),
       language: '{language_short}',
-      cv: '2',
+      cv: '3',
     });
     return 'https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?' +
       params.toString().replace('%7Blanguage_short%7D', '{language_short}');
