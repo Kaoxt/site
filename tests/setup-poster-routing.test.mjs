@@ -195,7 +195,7 @@ test('Better Posters helper generates the hybrid Kollection delivery pattern', (
   };
   const token = BetterPosters.configId(settings);
   assert.equal(token, encodeBetterPostersConfig(settings));
-  assert.equal(BetterPosters.pattern(settings), `https://kollection.tv/bp/${token}/{type}/{id}.webp`);
+  assert.equal(BetterPosters.pattern(settings), `https://kollection.tv/bp/${token}/{type}/{imdb_id}.webp`);
   assert.deepEqual(decodeBetterPostersConfig(token), BetterPosters.normalize(settings));
 });
 
@@ -215,7 +215,7 @@ test('Better Posters AIOMetadata integration uses the hybrid Better Posters + Ko
   assert.equal(config.posterRatingProvider, 'custom');
   assert.equal(config.usePosterProxy, false);
   assert.equal(config.enableRatingPostersForLibrary, true);
-  assert.match(config.customPosterUrlPattern, /^https:\/\/kollection\.tv\/bp\/b1[0-9a-z]+\/\{type\}\/\{id\}\.webp$/);
+  assert.match(config.customPosterUrlPattern, /^https:\/\/kollection\.tv\/bp\/b1[0-9a-z]+\/\{type\}\/\{imdb_id\}\.webp$/);
   assert.ok(config.catalogs.every(catalog => catalog.enableRatingPosters === true));
   assert.equal(config.kollectionPosters, undefined);
   assert.equal(config.kollectionBetterPosters?.provider, 'btttr.cc');
@@ -241,4 +241,48 @@ test('hybrid Better Posters delivery route delegates to v2 with btttr base and K
   assert.match(source, /bpGenre/);
   assert.match(source, /bpRating/);
   assert.match(source, /bpAge/);
+});
+
+
+test('native Better Posters fast path is used when every Trend category is allowed', () => {
+  const settings = BetterPosters.normalize({
+    genre: true,
+    rating: true,
+    qualityTags: false,
+    ageRating: false,
+    ratingSource: 'average',
+    language: 'en',
+  });
+  assert.equal(
+    BetterPosters.pattern(settings),
+    'https://btttr.cc/poster/imdb/poster-default/{imdb_id}.jpg'
+  );
+});
+
+test('native Better Posters fast path is used when every Trend category is disabled', () => {
+  const settings = BetterPosters.normalize({
+    genre: true,
+    rating: true,
+    qualityTags: false,
+    ageRating: false,
+    ratingSource: 'average',
+    language: 'en',
+    trendDetails: [],
+  });
+  assert.equal(
+    BetterPosters.pattern(settings),
+    'https://btttr.cc/poster/imdb/poster-default/{imdb_id}.jpg?tag=none'
+  );
+});
+
+test('custom Trend subsets use the Kollection filter route', () => {
+  const settings = BetterPosters.normalize({
+    genre: true,
+    rating: true,
+    trendDetails: ['director', 'studio'],
+  });
+  assert.match(
+    BetterPosters.pattern(settings),
+    /^https:\/\/kollection\.tv\/bp\/b1[0-9a-z]+\/\{type\}\/\{imdb_id\}\.webp$/
+  );
 });
