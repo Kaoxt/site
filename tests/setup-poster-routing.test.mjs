@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
+import { decodePosterConfig, encodePosterConfig } from '../functions/_lib/poster-config-token.js';
 
+await import('../posters/config-token.js');
 await import('../set-up-collection/poster-settings.js');
 const Posters = globalThis.KollectionPosterSettings;
 
@@ -11,14 +13,12 @@ test('Kollection poster pattern is valid for AIOMetadata placeholders', () => {
     tags: ['rating', 'trend', 'genre'],
     ratingSource: 'average',
   });
-  assert.match(pattern, /^https:\/\/kollection\.tv\/api\/posters-v2\/\{type\}\/\{id\}\.webp\?/);
-  assert.match(pattern, /v=24/);
-  assert.match(pattern, /cv=4/);
-  assert.match(pattern, /source=smart/);
-  assert.match(pattern, /tags=genre%2Crating%2Ctrend/);
-  assert.match(pattern, /ratingSource=average/);
-  assert.match(pattern, /trendDetails=studio%2Cdirector%2Ccast%2CinCinema%2Crank%2CnewMovie%2CcomingSoon%2CnewSeries%2CreturningSeries%2ClimitedSeries/);
-  assert.match(pattern, /language=\{language_short\}/);
+  assert.equal(Posters.configId({
+    source: 'smart',
+    tags: ['rating', 'trend', 'genre'],
+    ratingSource: 'average',
+  }), 'k1sd0sf');
+  assert.equal(pattern, 'https://kollection.tv/p/k1sd0sf/{language_short}/{type}/{id}.webp');
 });
 
 test('AIOMetadata poster routing is enabled for every catalog and library meta', () => {
@@ -123,4 +123,32 @@ test('catalog provisioning keeps movie and series routes distinct', async () => 
   assert.match(source, /collectAioCatalogRefs/);
   assert.match(source, /catalog\.displayType/);
   assert.match(source, /catalogRoutes\[key\] = route/);
+});
+
+
+test('Smart Poster config token is deterministic, compact, and reversible', () => {
+  const input = {
+    source: 'smart',
+    tags: ['rating', 'genre', 'trend'],
+    ratingSource: 'average',
+    trendDetails: ['studio', 'director', 'cast', 'inCinema', 'rank', 'newMovie', 'comingSoon', 'newSeries', 'returningSeries', 'limitedSeries'],
+  };
+  const token = encodePosterConfig(input);
+  assert.equal(token, 'k1sd0sf');
+  assert.deepEqual(decodePosterConfig(token), {
+    source: 'smart',
+    tags: ['trend', 'genre', 'rating'],
+    ratingSource: 'average',
+    trendDetails: ['studio', 'director', 'cast', 'inCinema', 'rank', 'newMovie', 'comingSoon', 'newSeries', 'returningSeries', 'limitedSeries'],
+    artworkProvider: 'tmdb',
+  });
+  assert.equal(globalThis.KollectionPosterConfigToken.encode(input), token);
+});
+
+test('different poster preferences receive different shared config IDs', () => {
+  const base = { source: 'smart', tags: ['trend', 'genre', 'rating'], ratingSource: 'average' };
+  const withoutGenre = { ...base, tags: ['trend', 'rating'] };
+  const imdb = { ...base, ratingSource: 'imdb' };
+  assert.notEqual(encodePosterConfig(base), encodePosterConfig(withoutGenre));
+  assert.notEqual(encodePosterConfig(base), encodePosterConfig(imdb));
 });
