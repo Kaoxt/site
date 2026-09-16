@@ -721,7 +721,10 @@
       fetchJson(CFG.kaoxtAioCatalogsUrl, { cache: 'no-store' }),
       fetchJson(CFG.kaoxtAioBaseConfigUrl, { cache: 'no-store' }),
     ]);
-    state.collectionPack = parseKaoxtDatabase(dbText);
+    const parsedCollectionPack = parseKaoxtDatabase(dbText);
+    state.collectionPack = window.KollectionArtworkUrls?.normalizeDeep
+      ? window.KollectionArtworkUrls.normalizeDeep(parsedCollectionPack)
+      : parsedCollectionPack;
     state.aiCatalogLibrary = Array.isArray(catalogRaw) ? catalogRaw : (catalogRaw?.catalogs || []);
     state.aiBaseConfig = base && typeof base === 'object' ? base : {};
   }
