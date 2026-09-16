@@ -36,12 +36,12 @@
   function buildPosterPattern() {
     const tags = selectedTags();
     const params = new URLSearchParams({
-      v: '23',
+      v: '24',
       source: selectedSource(),
       tags: [...new Set(tags)].sort().join(','),
       ratingSource: ratingSource(),
       trendDetails: selectedTrendDetails().join(','),
-      cv: '2',
+      cv: '3',
     });
     return `https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?${params}`;
   }
