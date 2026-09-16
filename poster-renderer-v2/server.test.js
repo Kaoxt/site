@@ -49,6 +49,15 @@ test('Worker exports the proxy required for container outbound interception', as
   assert.match(entry, /export\s*\{\s*ContainerProxy\s*\}\s*from\s*['"]@cloudflare\/containers['"]/);
 });
 
+test('renderer distributes burst traffic across four container shards', async () => {
+  const entry = await readFile(new URL('./src/index.js', import.meta.url), 'utf8');
+  const wrangler = await readFile(new URL('./wrangler.jsonc', import.meta.url), 'utf8');
+  assert.match(entry, /requested & 3/);
+  assert.match(entry, /hash & 3/);
+  assert.match(entry, /primary-v27-/);
+  assert.match(wrangler, /"max_instances"\s*:\s*4/);
+});
+
 test('source cache failure still produces a poster with visible overlays', async () => {
   const image = await sharp({ create: { width: 342, height: 513, channels: 3, background: '#346890' } }).jpeg().toBuffer();
   const calls = [];
