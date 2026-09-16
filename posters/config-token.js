@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const TOKEN_VERSION = 'k2';
+  const TOKEN_VERSION = 'k3';
   const ALLOWED_TAGS = ['trend', 'quality', 'genre', 'rating', 'age'];
   const RATING_SOURCES = ['average', 'score', 'imdb', 'letterboxd', 'mal', 'rogerebert', 'tomatometer', 'popcornmeter', 'tmdb'];
   const TREND_DETAILS = ['studio', 'director', 'cast', 'inCinema', 'rank', 'newMovie', 'comingSoon', 'newSeries', 'returningSeries', 'limitedSeries'];
@@ -39,7 +39,7 @@
   }
 
   function decode(token) {
-    const match = String(token || '').toLowerCase().match(/^(k[12])([st])([0-9a-v])([0-8])([0-9a-z]{2})$/);
+    const match = String(token || '').toLowerCase().match(/^(k[123])([st])([0-9a-v])([0-8])([0-9a-z]{2})$/);
     if (!match) return null;
     const tagMask = parseInt(match[3], 36);
     const ratingIndex = parseInt(match[4], 36);
