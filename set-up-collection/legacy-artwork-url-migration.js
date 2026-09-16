@@ -20,7 +20,17 @@
       .replace(/\/images\/Movie%20Collections\//gi, '/images/Franchises/')
       .replace(/\/images\/Movie Collections\//gi, '/images/Franchises/')
       .replace(/\/images\/International%20Cinema\//gi, '/images/World/')
-      .replace(/\/images\/International Cinema\//gi, '/images/World/');
+      .replace(/\/images\/International Cinema\//gi, '/images/World/')
+      .replace(/\/images\/Directors\/Guillermo%20Del%20Toro\//g, '/images/Directors/Guillermo%20del%20Toro/')
+      .replace(/\/images\/Directors\/Guillermo Del Toro\//g, '/images/Directors/Guillermo del Toro/')
+      .replace(/\/images\/Based%20On\/True%20Events\//gi, '/images/Based%20On/True%20Stories/')
+      .replace(/\/images\/Based On\/True Events\//gi, '/images/Based On/True Stories/')
+      .replace(/\/images\/Discover\/Recommended%20For%20You\//gi, '/images/Discover/For%20You/')
+      .replace(/\/images\/Discover\/Recommended For You\//gi, '/images/Discover/For You/')
+      .replace(/\/images\/Actors\/Robert%20Downey%20Jr\//g, '/images/Actors/Robert%20Downey%20Jr./')
+      .replace(/\/images\/Actors\/Robert Downey Jr\//g, '/images/Actors/Robert Downey Jr./')
+      .replace(/\/images\/Franchises\/Jurassic%20Park\//gi, '/images/Franchises/Jurrasic%20Park/')
+      .replace(/\/images\/Franchises\/Jurassic Park\//gi, '/images/Franchises/Jurrasic Park/');
   }
 
   function normalizeDeep(value) {
