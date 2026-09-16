@@ -31,9 +31,9 @@ export function resetLogoCacheForTests() {
 const px = (value) => Math.round(value * POSTER_WIDTH / 780);
 const SAFE_MARGIN = px(22);
 
-const SMART_TOP_HEIGHT = px(78);
-const SMART_BOTTOM_INFO_TOP = px(1075);
-const SMART_AGE_TOP = px(645);
+const SMART_TOP_HEIGHT = px(100);
+const SMART_BOTTOM_INFO_TOP = px(1050);
+const SMART_AGE_TOP = px(625);
 const SMART_LOGO_ZONE_TOP = px(720);
 const SMART_LOGO_ZONE_BOTTOM = px(1002);
 
@@ -62,10 +62,10 @@ function smartTagWidth(text, min = 238, max = 590) {
   // BetterPosters-style labels use generous horizontal padding and a compact
   // height. Longer status text such as "Limited Series" should grow instead
   // of feeling squeezed into the same pill as "#5 Today".
-  return clamp(px(128 + String(text || '').length * 34), px(min), px(max));
+  return clamp(px(142 + String(text || '').length * 38), px(min), px(max));
 }
 
-async function smartTopTag(text, { fill = '#29292d', fillOpacity = 0.94, width, fontSize = 48, textColor = '#ffffff' } = {}) {
+async function smartTopTag(text, { fill = '#29292d', fillOpacity = 0.94, width, fontSize = 60, textColor = '#ffffff' } = {}) {
   const resolvedWidth = width || smartTagWidth(text), safeText = esc(text), radius = px(18), resolvedFontSize = px(fontSize);
   const opticalY = Math.round(SMART_TOP_HEIGHT / 2 + px(2));
   const svg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${resolvedWidth}" height="${SMART_TOP_HEIGHT}" viewBox="0 0 ${resolvedWidth} ${SMART_TOP_HEIGHT}"><path d="M0 0h${resolvedWidth}v${SMART_TOP_HEIGHT-radius}a${radius} ${radius} 0 0 1-${radius} ${radius}H${radius}A${radius} ${radius} 0 0 1 0 ${SMART_TOP_HEIGHT-radius}z" fill="${fill}" fill-opacity="${fillOpacity}"/><text x="${resolvedWidth/2}" y="${opticalY}" text-anchor="middle" dominant-baseline="middle" font-family="Inter, DejaVu Sans" font-size="${resolvedFontSize}" font-weight="700" letter-spacing="-0.45" fill="${textColor}">${safeText}</text></svg>`);
@@ -73,17 +73,17 @@ async function smartTopTag(text, { fill = '#29292d', fillOpacity = 0.94, width, 
 }
 
 async function smartAuxTag(text) {
-  const width = smartTagWidth(text, 112, 220), height = px(56), radius = px(13), safeText = esc(text), fontSize = px(32);
+  const width = smartTagWidth(text, 126, 250), height = px(70), radius = px(16), safeText = esc(text), fontSize = px(40);
   const svg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect x="0" y="0" width="${width}" height="${height}" rx="${radius}" fill="#111216" fill-opacity=".74" stroke="#fff" stroke-opacity=".12"/><text x="${width/2}" y="${height/2 + px(1)}" text-anchor="middle" dominant-baseline="middle" font-family="Inter, DejaVu Sans" font-size="${fontSize}" font-weight="700" letter-spacing="-.25" fill="#f5f5f6">${safeText}</text></svg>`);
   return { buffer: await sharp(svg).png().toBuffer(), width, height };
 }
 
 function smartTrendFontSize(text) {
   const length = String(text || '').length;
-  if (length > 21) return 34;
-  if (length > 16) return 38;
-  if (length > 11) return 43;
-  return 48;
+  if (length > 21) return 42;
+  if (length > 16) return 47;
+  if (length > 11) return 53;
+  return 60;
 }
 
 async function addSmartTopTags(composites, { trend = '', quality = '', audio = '', dynamicFill = '#29292d' } = {}) {
@@ -91,14 +91,14 @@ async function addSmartTopTags(composites, { trend = '', quality = '', audio = '
     const q = await smartTopTag(quality, {
       fill: '#f4f4f5',
       fillOpacity: .96,
-      width: smartTagWidth(quality, 108, 280),
-      fontSize: String(quality).length > 8 ? 32 : 37,
+      width: smartTagWidth(quality, 122, 305),
+      fontSize: String(quality).length > 8 ? 39 : 46,
       textColor: '#111318',
     });
     const qLeft = POSTER_WIDTH - SAFE_MARGIN - q.width;
     if (trend) {
-      const availableWidth = Math.max(px(238), qLeft - SAFE_MARGIN - px(18));
-      const width = Math.min(smartTagWidth(trend, 238, 590), availableWidth);
+      const availableWidth = Math.max(px(250), qLeft - SAFE_MARGIN - px(18));
+      const width = Math.min(smartTagWidth(trend, 250, 620), availableWidth);
       const t = await smartTopTag(trend, {
         fill: dynamicFill,
         width,
@@ -116,7 +116,7 @@ async function addSmartTopTags(composites, { trend = '', quality = '', audio = '
   if (trend) {
     const t = await smartTopTag(trend, {
       fill: dynamicFill,
-      width: smartTagWidth(trend, 238, 590),
+      width: smartTagWidth(trend, 250, 620),
       fontSize: smartTrendFontSize(trend),
     });
     composites.push({ input: t.buffer, top: 0, left: Math.round((POSTER_WIDTH - t.width) / 2) });
@@ -134,8 +134,8 @@ async function smartBottomInfo(genre, ratingLabel) {
   const cleanGenre=String(genre||'').trim().replace(/^Science Fiction$/, 'Sci-Fi').replace(/^Sci-Fi & Fantasy$/, 'Sci-Fi').replace(/^Action & Adventure$/, 'Action'), cleanRating=String(ratingLabel||'').replace(/^★\s*/,'').replace(/^(IMDb|TMDB)\s+/i,'').trim();
   if(!cleanGenre&&!cleanRating)return null;
   const text=cleanGenre&&cleanRating?`${cleanGenre}  ·  ★ ${cleanRating}`:cleanGenre||`★ ${cleanRating}`;
-  const width=px(720),height=px(62);
-  const svg=Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><defs><filter id="shadow" x="-20%" y="-70%" width="140%" height="240%"><feDropShadow dx="0" dy="1" stdDeviation="1.25" flood-color="#000" flood-opacity="0.72"/></filter></defs><text x="${width/2}" y="${height/2}" text-anchor="middle" dominant-baseline="middle" font-family="Inter, DejaVu Sans" font-size="${px(43)}" font-weight="700" letter-spacing="-0.3" fill="#f2f2f4" fill-opacity="0.94" filter="url(#shadow)">${esc(text)}</text></svg>`);
+  const width=px(720),height=px(82);
+  const svg=Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><defs><filter id="shadow" x="-20%" y="-70%" width="140%" height="240%"><feDropShadow dx="0" dy="1" stdDeviation="1.25" flood-color="#000" flood-opacity="0.72"/></filter></defs><text x="${width/2}" y="${height/2}" text-anchor="middle" dominant-baseline="middle" font-family="Inter, DejaVu Sans" font-size="${px(54)}" font-weight="700" letter-spacing="-0.3" fill="#f2f2f4" fill-opacity="0.94" filter="url(#shadow)">${esc(text)}</text></svg>`);
   return sharp(svg).png().toBuffer();
 }
 
@@ -199,15 +199,15 @@ export async function renderPoster(body){
  const resolvedRatingLabel=ratingLabel||(rating?`★ ${rating}`:'');
  const dynamicFill=overlayColor==='dynamic'&&trend?await dynamicAccent(resized.data,canvasOptions):overlayColor;
  if(smartLayout){
-  composites.push({input:smartBottomBackdrop(),top:POSTER_HEIGHT-px(275),left:0});
+  composites.push({input:smartBottomBackdrop(),top:POSTER_HEIGHT-px(300),left:0});
   await addSmartTopTags(composites,{trend,quality,audio,dynamicFill});
-  if(age){const width=smartTagWidth(age,132,205),badge=await originalBadgeImage(age,{width,height:px(64),fill:'#111216',fillOpacity:.50,fontSize:34,radius:8,strokeOpacity:.20});composites.push({input:badge,top:SMART_AGE_TOP,left:Math.round((POSTER_WIDTH-width)/2)});}
+  if(age){const width=smartTagWidth(age,146,230),badge=await originalBadgeImage(age,{width,height:px(82),fill:'#111216',fillOpacity:.50,fontSize:42,radius:10,strokeOpacity:.20});composites.push({input:badge,top:SMART_AGE_TOP,left:Math.round((POSTER_WIDTH-width)/2)});}
   if(!overlayOnly){let logo=await logoPromise;if(!logo&&title){const b=await titleImage(title);if(b)logo=await fitTitleImage(b);}if(logo)composites.push({input:logo.buffer,...titlePlacement(logo)});}
   const info=await smartBottomInfo(genre,resolvedRatingLabel);if(info)composites.push({input:info,top:SMART_BOTTOM_INFO_TOP,left:px(30)});
  }else{
-  if(age){const width=smartTagWidth(age,132,205),badge=await originalBadgeImage(age,{width,height:px(64),fill:'#111216',fillOpacity:.50,fontSize:34,radius:8,strokeOpacity:.20});composites.push({input:badge,top:SMART_AGE_TOP,left:Math.round((POSTER_WIDTH-width)/2)});}
+  if(age){const width=smartTagWidth(age,146,230),badge=await originalBadgeImage(age,{width,height:px(82),fill:'#111216',fillOpacity:.50,fontSize:42,radius:10,strokeOpacity:.20});composites.push({input:badge,top:SMART_AGE_TOP,left:Math.round((POSTER_WIDTH-width)/2)});}
   await addSmartTopTags(composites,{trend,quality,audio,dynamicFill});
-  composites.push({input:smartBottomBackdrop(),top:POSTER_HEIGHT-px(275),left:0});
+  composites.push({input:smartBottomBackdrop(),top:POSTER_HEIGHT-px(300),left:0});
   const info=await smartBottomInfo(genre,resolvedRatingLabel);if(info)composites.push({input:info,top:SMART_BOTTOM_INFO_TOP,left:px(30)});
  }
  const output=await sharp(resized.data,canvasOptions).composite(composites).webp({quality:80,effort:3,smartSubsample:true}).toBuffer();
@@ -217,5 +217,5 @@ export async function renderPoster(body){
  return output;
 }
 
-const server=http.createServer(async(req,res)=>{try{if(req.method==='GET'&&req.url==='/health'){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return res.end(JSON.stringify({ok:true,renderer:'kollection-posters-v2-bp-layout-28'}));}if(req.method!=='POST'||req.url!=='/render'){res.writeHead(404,{'content-type':'application/json'});return res.end(JSON.stringify({error:'Not found'}));}const body=await readJson(req),started=Date.now(),output=await renderPoster(body);res.writeHead(200,{'content-type':'image/webp','content-length':String(output.length),'cache-control':'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800','x-kollection-renderer':'v2-bp-layout-28','x-kollection-render-ms':String(Date.now()-started),'x-kollection-source-cache':String(output.kollectionSourceCache||'BYPASS'),'x-kollection-source-cache-version':SOURCE_CACHE_VERSION,'x-kollection-source-cache-key':String(output.kollectionSourceCacheKey||'').slice(0,16),'x-kollection-source-retention-until':String(output.kollectionSourceRetentionUntil||0)});res.end(output);}catch(error){res.writeHead(400,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:error?.message||'Render failed'}));}});
+const server=http.createServer(async(req,res)=>{try{if(req.method==='GET'&&req.url==='/health'){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return res.end(JSON.stringify({ok:true,renderer:'kollection-posters-v2-bp-layout-29'}));}if(req.method!=='POST'||req.url!=='/render'){res.writeHead(404,{'content-type':'application/json'});return res.end(JSON.stringify({error:'Not found'}));}const body=await readJson(req),started=Date.now(),output=await renderPoster(body);res.writeHead(200,{'content-type':'image/webp','content-length':String(output.length),'cache-control':'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800','x-kollection-renderer':'v2-bp-layout-29','x-kollection-render-ms':String(Date.now()-started),'x-kollection-source-cache':String(output.kollectionSourceCache||'BYPASS'),'x-kollection-source-cache-version':SOURCE_CACHE_VERSION,'x-kollection-source-cache-key':String(output.kollectionSourceCacheKey||'').slice(0,16),'x-kollection-source-retention-until':String(output.kollectionSourceRetentionUntil||0)});res.end(output);}catch(error){res.writeHead(400,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:error?.message||'Render failed'}));}});
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)server.listen(PORT,'0.0.0.0',()=>console.log(`Kollection Posters v2 renderer listening on ${PORT}`));
