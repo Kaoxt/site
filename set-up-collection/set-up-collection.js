@@ -683,9 +683,13 @@
   }
 
   async function pushCollections(collections) {
+    const rawCollections = Array.isArray(collections) ? collections : [];
+    const normalizedCollections = window.KollectionArtworkUrls?.normalizeDeep
+      ? window.KollectionArtworkUrls.normalizeDeep(rawCollections)
+      : rawCollections;
     return rpc('sync_push_collections', {
       p_profile_id: state.profileId,
-      p_collections_json: Array.isArray(collections) ? collections : [],
+      p_collections_json: normalizedCollections,
     });
   }
 
