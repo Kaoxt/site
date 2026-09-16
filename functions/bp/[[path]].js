@@ -73,7 +73,7 @@ export async function onRequest(context) {
 
   const canonical = new URL(publicUrl.origin + `/bp/${configId}/${type}/${encodeURIComponent(rawId)}.webp`);
   const edgeKeyUrl = new URL(canonical);
-  edgeKeyUrl.searchParams.set('__kollection_bp_delivery', '2');
+  edgeKeyUrl.searchParams.set('__kollection_bp_delivery', '3');
   const cacheRequest = new Request(edgeKeyUrl.toString(), { method: 'GET' });
 
   try {
@@ -145,37 +145,10 @@ export async function onRequest(context) {
     return delivered;
   };
 
-  const customTrendSubset = config.trendDetails.length > 0 &&
-    config.trendDetails.length < BETTER_POSTERS_TREND_DETAILS.length;
-
-  // Never make Nuvio wait on a cold custom-subset decision when AIOMetadata has
-  // already supplied an IMDb ID. Better Posters can display the complete base
-  // poster immediately; Kollection resolves/renders the allowed Trend Tag in
-  // parallel and saves the final response under this same /bp/ cache key.
-  const prewarmRequest = request.headers.get('x-kollection-poster-prewarm') === '1';
-  if (request.method === 'GET' && !prewarmRequest && customTrendSubset && /^tt\d{5,12}$/i.test(rawId)) {
-    context.waitUntil((async () => {
-      const filtered = await buildFiltered();
-      await filtered.body?.cancel();
-    })().catch(() => {}));
-
-    const location = nativeBetterPostersUrl(config, rawId, false);
-    return new Response(null, {
-      status: 302,
-      headers: {
-        location,
-        // The provisional /bp/ response must never stick. The btttr.cc image it
-        // points at remains independently cacheable and therefore displays fast.
-        'cache-control': 'private, no-store',
-        'cdn-cache-control': 'no-store',
-        'access-control-allow-origin': '*',
-        'x-kollection-better-posters-config': configId,
-        'x-kollection-better-posters-cache': 'MISS',
-        'x-kollection-better-posters-provisional': '1',
-        'content-location': canonical.pathname,
-      },
-    });
-  }
+  // Custom Trend subsets must return the completed filtered poster on the
+  // first request. Nuvio keeps the first image it receives for a poster URL, so
+  // a temporary Better Posters tag=none redirect makes the Trend badge appear
+  // permanently missing even after the filtered image finishes in background.
 
   const delivered = await buildFiltered();
   if (request.method === 'HEAD') {

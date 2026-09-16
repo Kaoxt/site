@@ -224,7 +224,7 @@ test('Better Posters AIOMetadata integration uses the hybrid Better Posters + Ko
   assert.equal(config.kollectionBetterPosters?.hybridTrendLayer, 'kollection');
 });
 
-test('Better Posters hybrid exposes individual Trend Tag choices', () => {
+test('Better Posters hybrid exposes broad Trend category choices', () => {
   const normalized = BetterPosters.normalize({ trendDetails: ['rank', 'inCinema'] });
   assert.deepEqual(normalized.trendDetails, ['inCinema', 'rank']);
   const none = BetterPosters.normalize({ trendDetails: [] });
@@ -245,11 +245,9 @@ test('hybrid Better Posters delivery route delegates to v2 with btttr base and K
   assert.match(source, /bpAge/);
   assert.match(source, /BETTER_POSTERS_TREND_DETAILS/);
   assert.match(source, /x-kollection-better-posters-direct/);
-  assert.match(source, /customTrendSubset/);
-  assert.match(source, /x-kollection-better-posters-provisional/);
-  assert.match(source, /x-kollection-poster-prewarm/);
-  assert.match(source, /!prewarmRequest/);
-  assert.match(source, /context\.waitUntil/);
+  assert.doesNotMatch(source, /x-kollection-better-posters-provisional/);
+  assert.doesNotMatch(source, /customTrendSubset/);
+  assert.match(source, /const delivered = await buildFiltered\(\)/);
 });
 
 
