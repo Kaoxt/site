@@ -42,7 +42,7 @@ test('AIOMetadata poster routing is enabled for every catalog and library meta',
   assert.equal(config.posterRatingProvider, 'custom');
   assert.equal(config.usePosterProxy, false);
   assert.equal(config.enableRatingPostersForLibrary, true);
-  assert.ok(config.customPosterUrlPattern.includes('kollection.tv/api/posters-v2'));
+  assert.match(config.customPosterUrlPattern, /^https:\/\/kollection\.tv\/p\/k1[0-9a-z]+\/\{language_short\}\/\{type\}\/\{id\}\.webp$/);
   assert.ok(config.catalogs.every(catalog => catalog.enableRatingPosters === true));
   assert.equal(config.catalogs.find(catalog => catalog.id === 'folder-only').showInHome, false);
 });
@@ -151,4 +151,15 @@ test('different poster preferences receive different shared config IDs', () => {
   const imdb = { ...base, ratingSource: 'imdb' };
   assert.notEqual(encodePosterConfig(base), encodePosterConfig(withoutGenre));
   assert.notEqual(encodePosterConfig(base), encodePosterConfig(imdb));
+});
+
+
+test('token poster route is importable and wired to the v2 engine', async () => {
+  const route = await import('../functions/p/[[path]].js');
+  assert.equal(typeof route.onRequest, 'function');
+  const source = await readFile(new URL('../functions/p/[[path]].js', import.meta.url), 'utf8');
+  assert.match(source, /decodePosterConfig/);
+  assert.match(source, /handlePosterV2/);
+  assert.match(source, /caches\.default\.match/);
+  assert.match(source, /caches\.default\.put/);
 });
