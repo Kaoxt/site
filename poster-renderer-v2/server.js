@@ -204,18 +204,37 @@ export async function renderPoster(body){
  const input=source.input,resized=await sharp(input).resize(POSTER_WIDTH,POSTER_HEIGHT,{fit:'cover'}).raw().toBuffer({resolveWithObject:true}),composites=[];
  const canvasOptions={raw:{width:resized.info.width,height:resized.info.height,channels:resized.info.channels}};
  const resolvedRatingLabel=ratingLabel||(rating?`★ ${rating}`:'');
- const dynamicFill=overlayColor==='dynamic'&&trend?await dynamicAccent(resized.data,canvasOptions):overlayColor;
+ // Build independent overlay assets in parallel. Composite order stays exactly
+ // the same, so this only shortens renderer CPU time and does not change layout.
+ const topTagsPromise=(async()=>{
+  const top=[];
+  const dynamicFill=overlayColor==='dynamic'&&trend?await dynamicAccent(resized.data,canvasOptions):overlayColor;
+  await addSmartTopTags(top,{trend,quality,audio,dynamicFill});
+  return top;
+ })();
+ const agePromise=age?(async()=>{
+  const width=smartTagWidth(age,146,230);
+  const badge=await originalBadgeImage(age,{width,height:px(82),fill:'#111216',fillOpacity:.50,fontSize:42,radius:10,strokeOpacity:.20});
+  return {input:badge,top:SMART_AGE_TOP,left:Math.round((POSTER_WIDTH-width)/2)};
+ })():Promise.resolve(null);
+ const infoPromise=smartBottomInfo(genre,resolvedRatingLabel);
+ const finalLogoPromise=smartLayout&&!overlayOnly?(async()=>{
+  let logo=await logoPromise;
+  if(!logo&&title){const b=await titleImage(title);if(b)logo=await fitTitleImage(b);}
+  return logo;
+ })():Promise.resolve(null);
+ const[topTags,ageComposite,logo,info]=await Promise.all([topTagsPromise,agePromise,finalLogoPromise,infoPromise]);
  if(smartLayout){
   composites.push({input:smartBottomBackdrop(),top:POSTER_HEIGHT-px(300),left:0});
-  await addSmartTopTags(composites,{trend,quality,audio,dynamicFill});
-  if(age){const width=smartTagWidth(age,146,230),badge=await originalBadgeImage(age,{width,height:px(82),fill:'#111216',fillOpacity:.50,fontSize:42,radius:10,strokeOpacity:.20});composites.push({input:badge,top:SMART_AGE_TOP,left:Math.round((POSTER_WIDTH-width)/2)});}
-  if(!overlayOnly){let logo=await logoPromise;if(!logo&&title){const b=await titleImage(title);if(b)logo=await fitTitleImage(b);}if(logo)composites.push({input:logo.buffer,...titlePlacement(logo)});}
-  const info=await smartBottomInfo(genre,resolvedRatingLabel);if(info)composites.push({input:info,top:SMART_BOTTOM_INFO_TOP,left:px(30)});
+  composites.push(...topTags);
+  if(ageComposite)composites.push(ageComposite);
+  if(logo)composites.push({input:logo.buffer,...titlePlacement(logo)});
+  if(info)composites.push({input:info,top:SMART_BOTTOM_INFO_TOP,left:px(30)});
  }else{
-  if(age){const width=smartTagWidth(age,146,230),badge=await originalBadgeImage(age,{width,height:px(82),fill:'#111216',fillOpacity:.50,fontSize:42,radius:10,strokeOpacity:.20});composites.push({input:badge,top:SMART_AGE_TOP,left:Math.round((POSTER_WIDTH-width)/2)});}
-  await addSmartTopTags(composites,{trend,quality,audio,dynamicFill});
+  if(ageComposite)composites.push(ageComposite);
+  composites.push(...topTags);
   composites.push({input:smartBottomBackdrop(),top:POSTER_HEIGHT-px(300),left:0});
-  const info=await smartBottomInfo(genre,resolvedRatingLabel);if(info)composites.push({input:info,top:SMART_BOTTOM_INFO_TOP,left:px(30)});
+  if(info)composites.push({input:info,top:SMART_BOTTOM_INFO_TOP,left:px(30)});
  }
  const output=await sharp(resized.data,canvasOptions).composite(composites).webp({quality:80,effort:3,smartSubsample:true}).toBuffer();
  output.kollectionSourceCache=source.status;
