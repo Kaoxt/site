@@ -231,7 +231,7 @@
       nextImg.className = 'poster-service-image';
       nextImg.alt = currentImg.alt || 'Poster preview artwork';
       nextImg.decoding = 'async';
-      const params = new URLSearchParams({ v: '23', source, provider, tags: 'none', preview: '1', previewVersion: `client-base-5-${source}-${provider}` });
+      const params = new URLSearchParams({ v: '24', source, provider, tags: 'none', preview: '1', previewVersion: `client-base-6-${source}-${provider}` });
       nextImg.addEventListener('load', () => {
         if (generation !== requestGeneration) return resolve();
         currentImg.replaceWith(nextImg);
