@@ -198,6 +198,19 @@ function certification(details, type) {
   return details.content_ratings?.results?.find((x) => x.iso_3166_1 === 'US')?.rating || '';
 }
 
+function betterPostersBaseUrl(details, language = 'en') {
+  const imdbId = String(details?.external_ids?.imdb_id || '').trim();
+  if (!/^tt\d{5,12}$/i.test(imdbId)) return '';
+  const langMap = { es: 'es', fr: 'fr', de: 'de', it: 'it', pt: 'pt-BR', ja: 'ja', ko: 'ko' };
+  const params = new URLSearchParams({ tag: 'none' });
+  const lang = langMap[String(language || '').toLowerCase()];
+  if (lang) params.set('lang', lang);
+  // BetterPosters' poster-n variant disables genre/rating/quality/age artwork.
+  // tag=none disables its Trend tag, leaving only btttr.cc's chosen base poster
+  // for Kollection to decorate with our own overlay system.
+  return `https://btttr.cc/poster-n/imdb/poster-default/${encodeURIComponent(imdbId)}.jpg?${params}`;
+}
+
 function choosePoster(details, smartLayout) {
   const original = details.poster_path || '';
   if (!smartLayout) return { path: original, source: 'tmdb-original' };
@@ -882,6 +895,7 @@ async function renderPoster(context, state, id) {
   const { url, type, preview, tags, sourceUrl, overlayOnly, overlayLanguage } = state;
 
   const trendDetails = normalizeTrendDetails(url.searchParams.get('trendDetails'));
+  const artworkProvider = url.searchParams.get('provider') === 'btttr' ? 'btttr' : 'tmdb';
   const appendParts = type === 'movie' ? ['images', 'release_dates', 'external_ids'] : ['images', 'content_ratings', 'external_ids'];
   if (tags.has('trend') && needsCredits(trendDetails)) appendParts.push('credits');
   const append = appendParts.join(',');
@@ -890,7 +904,7 @@ async function renderPoster(context, state, id) {
   const rendererShard = String(Number(id) % 4);
   const detailsPromise = measured(context, 'metadata', () => tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null&language=en-US`, env.TMDB_API_KEY, context));
   const sourceWarmPromise = detailsPromise.then(async details => {
-    if (sourceUrl) return;
+    if (sourceUrl || artworkProvider === 'btttr') return;
     const smartLayout = url.searchParams.get('source') === 'smart';
     const artwork = choosePoster(details, smartLayout);
     const smartTextless = !overlayOnly && smartLayout && artwork.source === 'smart-textless';
@@ -932,12 +946,19 @@ async function renderPoster(context, state, id) {
       ? measured(context, 'quality', async () => resolveQuality(await detailsPromise, type, env, context))
       : Promise.resolve({ value: '', source: 'aiostreams', status: 'disabled' }),
   ]);
-  if (!details.poster_path && !sourceUrl) throw posterError('artwork-missing');
   const smartLayout = url.searchParams.get('source') === 'smart';
-  const artwork = sourceUrl ? { path: '', source: 'upstream-addon' } : choosePoster(details, smartLayout);
-  const smartTextless = !overlayOnly && smartLayout && artwork.source === 'smart-textless';
+  const betterPostersUrl = !sourceUrl && artworkProvider === 'btttr'
+    ? betterPostersBaseUrl(details, overlayLanguage)
+    : '';
+  const renderSourceUrl = sourceUrl || betterPostersUrl;
+  const usingBetterPostersArt = Boolean(betterPostersUrl);
+  const artwork = renderSourceUrl
+    ? { path: '', source: usingBetterPostersArt ? 'betterposters-btttr' : 'upstream-addon' }
+    : choosePoster(details, smartLayout);
+  const effectiveOverlayOnly = Boolean(overlayOnly || usingBetterPostersArt);
+  const smartTextless = !effectiveOverlayOnly && smartLayout && artwork.source === 'smart-textless';
   const logo = chooseLogo(details, smartTextless);
-  if (!artwork.path && !sourceUrl) throw posterError('artwork-missing');
+  if (!artwork.path && !renderSourceUrl) throw posterError('artwork-missing');
 
   const lifecycle = tags.has('trend')
     ? releaseLifecycleLabels(details, type, String(env.POSTERS_RELEASE_REGION || 'US').toUpperCase(), overlayLanguage)
@@ -964,9 +985,9 @@ async function renderPoster(context, state, id) {
 
   const payload = {
     posterPath: artwork.path,
-    sourceUrl,
-    overlayOnly: Boolean(overlayOnly),
-    logoPath: overlayOnly ? '' : logo.path,
+    sourceUrl: renderSourceUrl,
+    overlayOnly: effectiveOverlayOnly,
+    logoPath: effectiveOverlayOnly ? '' : logo.path,
     title: smartTextless ? String(details.title || details.name || '').slice(0, 80) : '',
     rating: rating.value,
     ratingLabel: rating.label,
