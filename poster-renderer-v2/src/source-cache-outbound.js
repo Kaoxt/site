@@ -1,6 +1,9 @@
 const SOURCE_VERSION = 'tmdb-source-art-v1';
+const LOGO_SOURCE_VERSION = 'tmdb-logo-art-v1';
 const SOURCE_PREFIX = `poster-source/${SOURCE_VERSION}/`;
+const LOGO_SOURCE_PREFIX = `poster-source/${LOGO_SOURCE_VERSION}/`;
 const TMDB_POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
+const TMDB_LOGO_BASE = 'https://image.tmdb.org/t/p/w500';
 const RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 const TOUCH_INTERVAL_MS = 12 * 60 * 60 * 1000;
 const MAX_BYTES = 8 * 1024 * 1024;
@@ -10,9 +13,17 @@ function objectHash(request) {
   return match?.[1] || '';
 }
 
-function posterPath(request) {
-  const path = String(request.headers.get('x-tmdb-poster-path') || '').trim();
-  return /^\/[A-Za-z0-9._/-]{1,500}$/.test(path) ? path : '';
+function assetRequest(request) {
+  const kind = request.headers.get('x-tmdb-asset-type') === 'logo' ? 'logo' : 'poster';
+  const path = String(
+    kind === 'logo'
+      ? request.headers.get('x-tmdb-logo-path')
+      : request.headers.get('x-tmdb-poster-path')
+  || '').trim();
+  if (!/^\/[A-Za-z0-9._/-]{1,500}$/.test(path)) return null;
+  return kind === 'logo'
+    ? { kind, path, version: LOGO_SOURCE_VERSION, prefix: LOGO_SOURCE_PREFIX, base: TMDB_LOGO_BASE }
+    : { kind, path, version: SOURCE_VERSION, prefix: SOURCE_PREFIX, base: TMDB_POSTER_BASE };
 }
 
 async function digest(value) {
@@ -35,7 +46,7 @@ function sourceResponse(bytes, contentType, metadata, cacheStatus) {
       'x-source-fetched-at': String(metadata.fetchedAt || ''),
       'x-source-last-accessed-at': String(metadata.lastAccessedAt || ''),
       'x-source-retention-until': String(metadata.retentionUntil || ''),
-      'x-source-cache-version': SOURCE_VERSION,
+      'x-source-cache-version': metadata.version || SOURCE_VERSION,
     },
   });
 }
@@ -44,13 +55,13 @@ export async function sourceCacheOutbound(request, env) {
   if (request.method !== 'GET') return new Response(null, { status: 405 });
 
   const hash = objectHash(request);
-  const path = posterPath(request);
-  if (!hash || !path) return new Response(null, { status: 400 });
+  const asset = assetRequest(request);
+  if (!hash || !asset) return new Response(null, { status: 400 });
 
-  const expected = await digest(`${SOURCE_VERSION}|${path}`);
+  const expected = await digest(`${asset.version}|${asset.path}`);
   if (expected !== hash) return new Response(null, { status: 400 });
 
-  const key = `${SOURCE_PREFIX}${hash}.bin`;
+  const key = `${asset.prefix}${hash}.bin`;
   const now = Date.now();
 
   try {
@@ -76,7 +87,7 @@ export async function sourceCacheOutbound(request, env) {
             },
           }).catch(() => {});
         }
-        return sourceResponse(bytes, object.httpMetadata?.contentType || 'application/octet-stream', nextMetadata, 'R2_HIT');
+        return sourceResponse(bytes, object.httpMetadata?.contentType || 'application/octet-stream', { ...nextMetadata, version: asset.version }, 'R2_HIT');
       }
       await env.SOURCE_ART.delete(key).catch(() => {});
     }
@@ -84,7 +95,7 @@ export async function sourceCacheOutbound(request, env) {
     // R2 is an acceleration layer; continue to TMDB if it is temporarily unavailable.
   }
 
-  const origin = await fetch(TMDB_POSTER_BASE + path, {
+  const origin = await fetch(asset.base + asset.path, {
     headers: { accept: 'image/webp,image/jpeg,image/*' },
     signal: AbortSignal.timeout(4000),
   });
@@ -100,6 +111,7 @@ export async function sourceCacheOutbound(request, env) {
     fetchedAt: now,
     lastAccessedAt: now,
     retentionUntil: now + RETENTION_MS,
+    version: asset.version,
   };
   try { await env.SOURCE_ART.put(key, bytes, {
     httpMetadata: { contentType },
@@ -110,15 +122,15 @@ export async function sourceCacheOutbound(request, env) {
     },
   }); } catch { /* Source persistence must not prevent overlay rendering. */ }
 
-  return sourceResponse(bytes, contentType, metadata, 'MISS');
+  return sourceResponse(bytes, contentType, { ...metadata, version: asset.version }, 'MISS');
 }
 
-export async function pruneExpiredSourceArt(env, now = Date.now(), maxPages = 50) {
+async function prunePrefix(env, prefix, now, maxPages) {
   let cursor;
   let pages = 0;
   do {
     const page = await env.SOURCE_ART.list({
-      prefix: SOURCE_PREFIX,
+      prefix,
       cursor,
       limit: 1000,
       include: ['customMetadata'],
@@ -130,4 +142,9 @@ export async function pruneExpiredSourceArt(env, now = Date.now(), maxPages = 50
     cursor = page.truncated ? page.cursor : undefined;
     pages++;
   } while (cursor && pages < maxPages);
+}
+
+export async function pruneExpiredSourceArt(env, now = Date.now(), maxPages = 50) {
+  await prunePrefix(env, SOURCE_PREFIX, now, maxPages);
+  await prunePrefix(env, LOGO_SOURCE_PREFIX, now, maxPages);
 }
