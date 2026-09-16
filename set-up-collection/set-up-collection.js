@@ -856,13 +856,18 @@
   function synthesizeCatalog(id, typeHint) {
     const raw = String(typeHint || 'movie').toLowerCase();
     const type = ['series', 'tv', 'show'].includes(raw) ? 'series' : raw === 'all' ? 'all' : 'movie';
+    const prefix = String(id || '').split('.')[0].toLowerCase();
+    const knownSources = new Set([
+      'mdblist', 'streaming', 'flixpatrol', 'tmdb', 'tvdb', 'trakt',
+      'simkl', 'mal', 'anilist', 'letterboxd', 'movielens', 'publicmetadb',
+    ]);
     return {
       id,
       type,
       name: id,
       enabled: true,
       showInHome: false,
-      source: String(id).startsWith('mdblist.') ? 'mdblist' : 'custom',
+      source: knownSources.has(prefix) ? prefix : 'custom',
       sort: 'default',
       order: 'asc',
       cacheTTL: 86400,
