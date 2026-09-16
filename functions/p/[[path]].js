@@ -88,6 +88,7 @@ export async function onRequest(context) {
   const inner = new URL(publicUrl.origin + `/api/posters-v2/${type}/${encodeURIComponent(rawId)}.webp`);
   inner.searchParams.set('v', POSTER_VISUAL_VERSION);
   inner.searchParams.set('source', settings.source);
+  inner.searchParams.set('provider', settings.artworkProvider || 'tmdb');
   inner.searchParams.set('tags', settings.tags.join(','));
   inner.searchParams.set('ratingSource', settings.ratingSource);
   inner.searchParams.set('trendDetails', settings.trendDetails.join(','));
