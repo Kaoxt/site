@@ -142,7 +142,7 @@ test('Smart Poster config token is deterministic, compact, and reversible', () =
     tags: ['trend', 'genre', 'rating'],
     ratingSource: 'average',
     trendDetails: ['studio', 'director', 'cast', 'inCinema', 'rank', 'newMovie', 'comingSoon', 'newSeries', 'returningSeries', 'limitedSeries'],
-    artworkProvider: 'btttr',
+    artworkProvider: 'tmdb',
   });
   assert.equal(globalThis.KollectionPosterConfigToken.encode(input), token);
 });
@@ -176,7 +176,7 @@ test('poster bridge passthrough mode preserves upstream overlay poster URLs', as
 });
 
 
-test('legacy k1 tokens remain TMDB-backed while k2 uses BetterPosters artwork', () => {
+test('k1 and k2 tokens both use the reliable TMDB artwork path', () => {
   assert.equal(decodePosterConfig('k1sd0sf')?.artworkProvider, 'tmdb');
-  assert.equal(decodePosterConfig('k2sd0sf')?.artworkProvider, 'btttr');
+  assert.equal(decodePosterConfig('k2sd0sf')?.artworkProvider, 'tmdb');
 });
