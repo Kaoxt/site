@@ -1,7 +1,7 @@
 import http from 'node:http';
 import sharp from 'sharp';
 import { pathToFileURL } from 'node:url';
-import { loadTmdbLogoSource, loadTmdbPosterSource, SOURCE_CACHE_VERSION } from './source-loader.js';
+import { loadBtttrPosterSource, loadTmdbLogoSource, loadTmdbPosterSource, SOURCE_CACHE_VERSION } from './source-loader.js';
 
 const PORT = Number(process.env.PORT || 8080);
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w342';
@@ -180,9 +180,10 @@ function smartBottomBackdrop(){const height=px(275);return Buffer.from(`<svg xml
 async function readJson(req){const chunks=[];for await(const chunk of req)chunks.push(chunk);const raw=Buffer.concat(chunks).toString('utf8');return raw?JSON.parse(raw):{};}
 
 export async function warmPosterAssets(body){
- const{posterPath,logoPath='',smartLayout=false,overlayOnly=false}=body||{};
+ const{posterPath,sourceUrl='',logoPath='',smartLayout=false,overlayOnly=false}=body||{};
  const jobs=[];
  if(posterPath)jobs.push(loadTmdbPosterSource(posterPath));
+ if(sourceUrl&&String(sourceUrl).startsWith('https://btttr.cc/'))jobs.push(loadBtttrPosterSource(sourceUrl));
  if(smartLayout&&!overlayOnly&&logoPath)jobs.push(smartLogoImage(logoPath));
  await Promise.allSettled(jobs);
  return {warmed:jobs.length};
@@ -195,6 +196,8 @@ export async function renderPoster(body){
  let source;
  if(!sourceUrl&&posterPath){
   source=await loadTmdbPosterSource(posterPath);
+ }else if(sourceUrl&&String(sourceUrl).startsWith('https://btttr.cc/')){
+  source=await loadBtttrPosterSource(sourceUrl);
  }else{
   const res=await fetch(posterUrl,{headers:{accept:'image/*'},signal:AbortSignal.timeout(4000)});if(!res.ok)throw new Error(`Source image fetch failed: ${res.status}`);
   source={input:Buffer.from(await res.arrayBuffer()),status:'BYPASS',key:'',retentionUntil:0};
