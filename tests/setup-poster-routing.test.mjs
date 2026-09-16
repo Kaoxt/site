@@ -17,8 +17,8 @@ test('Kollection poster pattern is valid for AIOMetadata placeholders', () => {
     source: 'smart',
     tags: ['rating', 'trend', 'genre'],
     ratingSource: 'average',
-  }), 'k2sd0sf');
-  assert.equal(pattern, 'https://kollection.tv/p/k2sd0sf/{language_short}/{type}/{id}.webp');
+  }), 'k3sd0sf');
+  assert.equal(pattern, 'https://kollection.tv/p/k3sd0sf/{language_short}/{type}/{id}.webp');
 });
 
 test('AIOMetadata poster routing is enabled for every catalog and library meta', () => {
@@ -42,7 +42,7 @@ test('AIOMetadata poster routing is enabled for every catalog and library meta',
   assert.equal(config.posterRatingProvider, 'custom');
   assert.equal(config.usePosterProxy, false);
   assert.equal(config.enableRatingPostersForLibrary, true);
-  assert.match(config.customPosterUrlPattern, /^https:\/\/kollection\.tv\/p\/k2[0-9a-z]+\/\{language_short\}\/\{type\}\/\{id\}\.webp$/);
+  assert.match(config.customPosterUrlPattern, /^https:\/\/kollection\.tv\/p\/k3[0-9a-z]+\/\{language_short\}\/\{type\}\/\{id\}\.webp$/);
   assert.ok(config.catalogs.every(catalog => catalog.enableRatingPosters === true));
   assert.equal(config.catalogs.find(catalog => catalog.id === 'folder-only').showInHome, false);
 });
@@ -136,7 +136,7 @@ test('Smart Poster config token is deterministic, compact, and reversible', () =
     trendDetails: ['studio', 'director', 'cast', 'inCinema', 'rank', 'newMovie', 'comingSoon', 'newSeries', 'returningSeries', 'limitedSeries'],
   };
   const token = encodePosterConfig(input);
-  assert.equal(token, 'k2sd0sf');
+  assert.equal(token, 'k3sd0sf');
   assert.deepEqual(decodePosterConfig(token), {
     source: 'smart',
     tags: ['trend', 'genre', 'rating'],
@@ -178,5 +178,5 @@ test('poster bridge passthrough mode preserves upstream overlay poster URLs', as
 
 test('k1 and k2 tokens both use the reliable TMDB artwork path', () => {
   assert.equal(decodePosterConfig('k1sd0sf')?.artworkProvider, 'tmdb');
-  assert.equal(decodePosterConfig('k2sd0sf')?.artworkProvider, 'tmdb');
+  assert.equal(decodePosterConfig('k3sd0sf')?.artworkProvider, 'tmdb');
 });
