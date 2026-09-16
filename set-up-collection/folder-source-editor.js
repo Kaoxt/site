@@ -72,10 +72,20 @@
     let url = String(value || '').trim();
     if (!url) return '';
 
-    // Canonical Robert Downey Jr. artwork folder includes the period after "Jr.".
+    // Canonicalize known artwork folder aliases/mismatches so saved setups also heal on load.
     url = url
+      .replace('/images/International%20Cinema/', '/images/World/')
+      .replace('/images/International Cinema/', '/images/World/')
+      .replace('/images/Directors/Guillermo%20Del%20Toro/', '/images/Directors/Guillermo%20del%20Toro/')
+      .replace('/images/Directors/Guillermo Del Toro/', '/images/Directors/Guillermo del Toro/')
+      .replace('/images/Based%20On/True%20Events/', '/images/Based%20On/True%20Stories/')
+      .replace('/images/Based On/True Events/', '/images/Based On/True Stories/')
+      .replace('/images/Discover/Recommended%20For%20You/', '/images/Discover/For%20You/')
+      .replace('/images/Discover/Recommended For You/', '/images/Discover/For You/')
       .replace('/images/Actors/Robert%20Downey%20Jr/', '/images/Actors/Robert%20Downey%20Jr./')
       .replace('/images/Actors/Robert Downey Jr/', '/images/Actors/Robert Downey Jr./')
+      .replace('/images/Franchises/Jurassic%20Park/', '/images/Franchises/Jurrasic%20Park/')
+      .replace('/images/Franchises/Jurassic Park/', '/images/Franchises/Jurrasic Park/')
       .replace('/Actors/Robert%20Downey%20Jr/', '/Actors/Robert%20Downey%20Jr./')
       .replace('/Actors/Robert Downey Jr/', '/Actors/Robert Downey Jr./');
 
