@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const TOKEN_VERSION = 'k1';
+  const TOKEN_VERSION = 'k2';
   const ALLOWED_TAGS = ['trend', 'quality', 'genre', 'rating', 'age'];
   const RATING_SOURCES = ['average', 'score', 'imdb', 'letterboxd', 'mal', 'rogerebert', 'tomatometer', 'popcornmeter', 'tmdb'];
   const TREND_DETAILS = ['studio', 'director', 'cast', 'inCinema', 'rank', 'newMovie', 'comingSoon', 'newSeries', 'returningSeries', 'limitedSeries'];
@@ -17,7 +17,7 @@
     const requestedTrend = new Set(Array.isArray(input.trendDetails) ? input.trendDetails.map(String) : TREND_DETAILS);
     if (requestedTrend.has('release')) LEGACY_RELEASE_DETAILS.forEach(type => requestedTrend.add(type));
     const trendDetails = TREND_DETAILS.filter(type => requestedTrend.has(type));
-    return { source, tags, ratingSource, trendDetails, artworkProvider: 'tmdb' };
+    return { source, tags, ratingSource, trendDetails, artworkProvider: 'btttr' };
   }
 
   function bitMask(values, allowed) {
@@ -39,18 +39,20 @@
   }
 
   function decode(token) {
-    const match = String(token || '').toLowerCase().match(/^k1([st])([0-9a-v])([0-8])([0-9a-z]{2})$/);
+    const match = String(token || '').toLowerCase().match(/^(k[12])([st])([0-9a-v])([0-8])([0-9a-z]{2})$/);
     if (!match) return null;
-    const tagMask = parseInt(match[2], 36);
-    const ratingIndex = parseInt(match[3], 36);
-    const trendMask = parseInt(match[4], 36);
+    const tagMask = parseInt(match[3], 36);
+    const ratingIndex = parseInt(match[4], 36);
+    const trendMask = parseInt(match[5], 36);
     if (tagMask > 31 || ratingIndex >= RATING_SOURCES.length || trendMask > 1023) return null;
-    return normalize({
-      source: match[1] === 't' ? 'tmdb' : 'smart',
+    const settings = normalize({
+      source: match[2] === 't' ? 'tmdb' : 'smart',
       tags: valuesFromMask(tagMask, ALLOWED_TAGS),
       ratingSource: RATING_SOURCES[ratingIndex],
       trendDetails: valuesFromMask(trendMask, TREND_DETAILS),
     });
+    settings.artworkProvider = match[1] === 'k1' ? 'tmdb' : 'btttr';
+    return settings;
   }
 
   function pattern(value) {
