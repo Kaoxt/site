@@ -839,6 +839,27 @@ test('hybrid Better Posters uses btttr base overlays and Kollection trend only',
   assert.equal(payload.trend, 'Trending');
 });
 
+test('custom Better Posters subset bypasses renderer when no selected Trend Tag matches', async () => {
+  const h = harness();
+  h.detailsOverride = {
+    production_companies: [{ name: 'Universal Pictures' }],
+  };
+  const context = h.context('27205');
+  context.request = new Request(
+    'https://kollection.tv/api/posters-v2/movie/27205.webp?v=26&source=tmdb&provider=btttr&tags=trend&trendDetails=studio&overlayOnly=1&bpQuality=0&bpGenre=1&bpRating=1&bpAge=0&bpRatingSource=average'
+  );
+  const response = await onRequest(context);
+  await response.arrayBuffer();
+  await h.flush();
+
+  assert.equal(response.status, 302);
+  assert.match(response.headers.get('location') || '', /^https:\/\/btttr\.cc\/poster\/imdb\/poster-default\/tt1375666\.jpg\?/);
+  assert.match(response.headers.get('location') || '', /tag=none/);
+  assert.equal(response.headers.get('x-kollection-better-posters-bypass'), '1');
+  assert.equal(response.headers.get('x-kollection-trend-label'), 'none');
+  assert.equal(h.count.render, 0);
+});
+
 test('Better Posters native options participate in the persistent cache variant', async () => {
   const h = harness();
   const firstContext = h.context('27205');
