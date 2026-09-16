@@ -774,3 +774,24 @@ test('source warming is separate from render-budget accounting', async () => {
   assert.equal(h.count.render, 1);
   assert.equal(h.db.used(), 1);
 });
+
+
+test('prefixed AIOMetadata folder IDs resolve to the same TMDB poster', async () => {
+  const tmdb = harness();
+  const tmdbResponse = await tmdb.request('tmdb:27205');
+  await tmdbResponse.arrayBuffer();
+  await tmdb.flush();
+  assert.equal(tmdbResponse.status, 200);
+  assert.equal(tmdb.count.find, 0);
+  assert.equal(tmdb.count.render, 1);
+  assert.equal(tmdbResponse.headers.get('x-kollection-tmdb-id'), '27205');
+
+  const tvdb = harness();
+  const tvdbResponse = await tvdb.request('tvdb:27205');
+  await tvdbResponse.arrayBuffer();
+  await tvdb.flush();
+  assert.equal(tvdbResponse.status, 200);
+  assert.equal(tvdb.count.find, 1);
+  assert.equal(tvdb.count.render, 1);
+  assert.equal(tvdbResponse.headers.get('x-kollection-tmdb-id'), '27205');
+});
