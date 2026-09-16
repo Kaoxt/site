@@ -102,7 +102,7 @@
       const tags = tagInputs.filter((input) => input.checked).map((input) => input.value);
       const trendDetails = trendDetailInputs.filter((input) => input.checked).map((input) => input.value);
       localStorage.setItem(SETTINGS_KEY, JSON.stringify({
-        version: 4,
+        version: 5,
         source,
         tags,
         trendDetails,
@@ -305,12 +305,15 @@
     return config.artProviders.series;
   };
 
-  const posterPattern = () => {
-    const source = selectedSource();
-    const tags = selectedTags().join(',');
-    const trendDetails = selectedTrendDetails().join(',');
-    return `https://kollection.tv/api/posters-v2/{type}/{id}.webp?v=24&source=${encodeURIComponent(source)}&tags=${encodeURIComponent(tags)}&ratingSource=${encodeURIComponent(selectedRatingSource())}&trendDetails=${encodeURIComponent(trendDetails)}&cv=4`;
-  };
+  const currentPosterSettings = () => ({
+    source: selectedSource(),
+    tags: selectedTags(),
+    ratingSource: selectedRatingSource(),
+    trendDetails: selectedTrendDetails(),
+  });
+
+  const posterConfigId = () => globalThis.KollectionPosterConfigToken.encode(currentPosterSettings());
+  const posterPattern = () => globalThis.KollectionPosterConfigToken.pattern(currentPosterSettings());
 
   const buildOutput = () => {
     const source = selectedSource();
@@ -337,13 +340,15 @@
       }
 
       config.kollectionPosters = {
-        version: 4,
+        version: 5,
+        configId: posterConfigId(),
         usageMode: usageMode || 'setup',
+        configId: posterConfigId(),
         posterSource: source,
         ratingSource: ratingProvider,
         trendDetails,
         smartTags: { enabled: true, tags, trendDetails, fixedPlacement: true },
-        renderer: 'https://kollection.tv/api/posters-v2/{type}/{id}.webp'
+        renderer: posterPattern()
       };
 
       if (normalized.wrapper) {
