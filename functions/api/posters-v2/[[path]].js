@@ -372,6 +372,54 @@ async function writePersistentPoster(env, key, bytes, cacheControl, tags, metada
   }
 }
 
+async function plainArtworkKey(state) {
+  const identity = state.sourceUrl
+    ? `source:${state.sourceUrl}`
+    : `${state.type}:${state.rawId}`;
+  return `poster-cache/plain-v1/${state.type}/${await sha256Hex(identity)}`;
+}
+
+async function readPlainArtwork(env, key) {
+  const bucket = posterCacheBucket(env);
+  if (!bucket) return null;
+  try {
+    const object = await bucket.get(key);
+    if (!object) return null;
+    const headers = new Headers();
+    object.writeHttpMetadata(headers);
+    headers.set('content-type', headers.get('content-type') || 'image/jpeg');
+    headers.set('x-kollection-plain-cache', 'HIT');
+    headers.set('x-kollection-plain-generated-at', String(object.customMetadata?.generatedAt || ''));
+    return new Response(object.body, { status: 200, headers });
+  } catch {
+    return null;
+  }
+}
+
+async function writePlainArtwork(env, key, response) {
+  const bucket = posterCacheBucket(env);
+  if (!bucket) return false;
+  try {
+    const bytes = await response.arrayBuffer();
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    await bucket.put(key, bytes, {
+      httpMetadata: {
+        contentType,
+        // Internal source-art copy: keep it durable so repeated plain fallbacks
+        // never have to go back to TMDB/upstream image hosts.
+        cacheControl: 'public, max-age=2592000',
+      },
+      customMetadata: {
+        generatedAt: String(Date.now()),
+        sourceCacheVersion: 'plain-v1',
+      },
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function tmdbRating(details, source, status = 'ok') {
   const value = Number(details.vote_average);
   if (!Number.isFinite(value) || value <= 0) return { value: '', label: '', source, status: 'missing' };
@@ -769,25 +817,52 @@ function cacheRequestFor(request, env) {
 async function originalPosterFallback(context, state, reason) {
   const { env } = context;
   try {
-    const id = state.idHint || await resolveTmdbId(state.type, state.rawId, env.TMDB_API_KEY, context);
-    const metadata = id ? await tmdbFetch('/' + state.type + '/' + id, env.TMDB_API_KEY, context) : null;
-    const source = state.sourceUrl || (metadata?.poster_path ? 'https://image.tmdb.org/t/p/w500' + metadata.poster_path : '');
+    // Plain artwork has its own cache namespace, separate from successful
+    // overlays. This makes repeated fallback/original loads fast without ever
+    // allowing a plain image to poison the overlay cache.
+    const plainKey = await plainArtworkKey(state);
+    const saved = await readPlainArtwork(env, plainKey);
+    if (saved) {
+      const headers = new Headers(saved.headers);
+      headers.set('access-control-allow-origin', '*');
+      headers.set('cache-control', 'no-store');
+      headers.set('cdn-cache-control', 'no-store');
+      headers.set('retry-after', '30');
+      headers.set('x-kollection-poster-fallback', reason);
+      return new Response(saved.body, { status: 200, headers });
+    }
+
+    // If AIOmetadata already supplied an original poster URL, do not resolve an
+    // ID or fetch TMDB metadata first. That extra serial work made plain posters
+    // noticeably slower than overlays.
+    let source = state.sourceUrl;
+    if (!source) {
+      const id = state.idHint || await resolveTmdbId(state.type, state.rawId, env.TMDB_API_KEY, context);
+      const metadata = id ? await tmdbFetch('/' + state.type + '/' + id, env.TMDB_API_KEY, context) : null;
+      source = metadata?.poster_path ? 'https://image.tmdb.org/t/p/w500' + metadata.poster_path : '';
+    }
+
     if (source) {
       const artwork = await fetch(source, {
         headers: { accept: 'image/webp,image/jpeg,image/*' },
         signal: AbortSignal.timeout(4000),
       });
       if (artwork.ok && artwork.body && artwork.headers.get('content-type')?.startsWith('image/')) {
+        const storageCopy = artwork.clone();
+        context.waitUntil(writePlainArtwork(env, plainKey, storageCopy).catch(() => {}));
         return new Response(artwork.body, {
           status: 200,
           headers: {
             'content-type': artwork.headers.get('content-type') || 'image/jpeg',
             'access-control-allow-origin': '*',
-            // Never store a temporary plain poster as a successful overlay.
+            // The public overlay URL remains uncacheable while it is serving a
+            // temporary plain fallback. Only the separate internal plain cache
+            // persists it, so a later successful overlay can replace it instantly.
             'cache-control': 'no-store',
             'cdn-cache-control': 'no-store',
             'retry-after': '30',
             'x-kollection-poster-fallback': reason,
+            'x-kollection-plain-cache': 'MISS',
           },
         });
       }
