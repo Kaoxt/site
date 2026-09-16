@@ -68,11 +68,25 @@
     return { ...base, metadata: { listId: String(id), listName: override.name || folderTitle || catalogId, itemCount: 0, url: override.url || `https://www.themoviedb.org/collection/${id}` } };
   }
 
+  function normalizeArtworkUrl(value) {
+    let url = String(value || '').trim();
+    if (!url) return '';
+
+    // Canonical Robert Downey Jr. artwork folder includes the period after "Jr.".
+    url = url
+      .replace('/images/Actors/Robert%20Downey%20Jr/', '/images/Actors/Robert%20Downey%20Jr./')
+      .replace('/images/Actors/Robert Downey Jr/', '/images/Actors/Robert Downey Jr./')
+      .replace('/Actors/Robert%20Downey%20Jr/', '/Actors/Robert%20Downey%20Jr./')
+      .replace('/Actors/Robert Downey Jr/', '/Actors/Robert Downey Jr./');
+
+    return url;
+  }
+
   function artworkFrom(folder) {
     return {
-      coverImageUrl: String(folder?.coverImageUrl || ''),
-      titleLogoUrl: String(folder?.titleLogoUrl || ''),
-      heroBackdropUrl: String(folder?.heroBackdropUrl || ''),
+      coverImageUrl: normalizeArtworkUrl(folder?.coverImageUrl),
+      titleLogoUrl: normalizeArtworkUrl(folder?.titleLogoUrl),
+      heroBackdropUrl: normalizeArtworkUrl(folder?.heroBackdropUrl),
       coverEmoji: String(folder?.coverEmoji || ''),
     };
   }
@@ -131,9 +145,9 @@
 
         const art = override?.artwork && typeof override.artwork === 'object' ? override.artwork : defaults.artwork;
         if (art) {
-          folder.coverImageUrl = String(art.coverImageUrl ?? '');
-          folder.titleLogoUrl = String(art.titleLogoUrl ?? '');
-          folder.heroBackdropUrl = String(art.heroBackdropUrl ?? '');
+          folder.coverImageUrl = normalizeArtworkUrl(art.coverImageUrl);
+          folder.titleLogoUrl = normalizeArtworkUrl(art.titleLogoUrl);
+          folder.heroBackdropUrl = normalizeArtworkUrl(art.heroBackdropUrl);
           folder.coverEmoji = String(art.coverEmoji ?? '');
         }
       }
