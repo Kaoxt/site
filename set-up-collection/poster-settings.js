@@ -63,7 +63,7 @@
     const settings = normalize(value);
     config.posterRatingProvider = 'custom';
     config.customPosterUrlPattern = pattern(settings);
-    config.usePosterProxy = true;
+    config.usePosterProxy = false;
     config.enableRatingPostersForLibrary = true;
     config.catalogs = (config.catalogs || []).map(catalog => ({
       ...catalog,
