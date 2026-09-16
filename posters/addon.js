@@ -17,7 +17,7 @@
       <input id="posterPatternOutput" class="manifest-output" type="text" aria-label="Your Kollection poster URL pattern" readonly />
       <button id="copyPosterPatternBtn" class="poster-url-copy" type="button">Copy</button>
     </div>
-    <p class="poster-url-instructions"><strong>How to use:</strong> In AIOmetadata, go to <strong>Art Providers</strong> → scroll to <strong>URL Patterns</strong> → paste this URL into the <strong>Poster URL Pattern</strong> field only. Keep your existing providers for backdrops, title logos, and episode thumbnails.</p>
+    <p class="poster-url-instructions"><strong>How to use in AIOmetadata:</strong> In <strong>Art Providers</strong>, set <strong>Rating Poster Provider</strong> to <strong>Custom Art URLs</strong>, turn on <strong>Proxy Rating & Custom Art</strong>, then paste this URL into <strong>URL Patterns → Poster URL Pattern</strong>. In <strong>Catalogs</strong>, enable <strong>Rating Posters</strong> for every catalog you want overlaid, and enable rating posters for Library if you want library/meta posters too. Keep your existing backdrop, title-logo, and episode-thumbnail providers.</p>
     <span id="posterPatternStatus" class="manifest-status" role="status" aria-live="polite"></span>`;
 
   const dividerAfterTags = tagOptions.nextElementSibling;
@@ -41,6 +41,7 @@
       tags: [...new Set(tags)].sort().join(','),
       ratingSource: ratingSource(),
       trendDetails: selectedTrendDetails().join(','),
+      cv: '2',
     });
     return `https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?${params}`;
   }
