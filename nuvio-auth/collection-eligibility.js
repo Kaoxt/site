@@ -19,6 +19,39 @@
 
   const mergeKey = (value) => String(value || '').trim().replace(/-community$/i, '');
 
+  function normalizeArtworkString(value) {
+    if (typeof value !== 'string' || !value) return value;
+    const normalizedHost = value.replace(/https?:\/\/(?:www\.)?(?:kao-xt|ka-oxt)\.com(?:\/images)?(?=\/|$)([^\s"'<>]*)/gi, (match, tail) => {
+      const suffix = String(tail || '');
+      return `https://kollection.tv/images${suffix.startsWith('/') ? suffix : `/${suffix}`}`;
+    });
+    return normalizedHost
+      .replace(/\/images\/Movie%20Collections\//gi, '/images/Franchises/')
+      .replace(/\/images\/Movie Collections\//gi, '/images/Franchises/')
+      .replace(/\/images\/International%20Cinema\//gi, '/images/World/')
+      .replace(/\/images\/International Cinema\//gi, '/images/World/')
+      .replace(/\/images\/Directors\/Guillermo%20Del%20Toro\//g, '/images/Directors/Guillermo%20del%20Toro/')
+      .replace(/\/images\/Directors\/Guillermo Del Toro\//g, '/images/Directors/Guillermo del Toro/')
+      .replace(/\/images\/Based%20On\/True%20Events\//gi, '/images/Based%20On/True%20Stories/')
+      .replace(/\/images\/Based On\/True Events\//gi, '/images/Based On/True Stories/')
+      .replace(/\/images\/Discover\/Recommended%20For%20You\//gi, '/images/Discover/For%20You/')
+      .replace(/\/images\/Discover\/Recommended For You\//gi, '/images/Discover/For You/')
+      .replace(/\/images\/Networks\/Syfy\//gi, '/images/Networks/SYFY/')
+      .replace(/\/images\/Actors\/Robert%20Downey%20Jr\//g, '/images/Actors/Robert%20Downey%20Jr./')
+      .replace(/\/images\/Actors\/Robert Downey Jr\//g, '/images/Actors/Robert Downey Jr./')
+      .replace(/\/images\/Franchises\/Jurassic%20Park\//gi, '/images/Franchises/Jurrasic%20Park/')
+      .replace(/\/images\/Franchises\/Jurassic Park\//gi, '/images/Franchises/Jurrasic Park/');
+  }
+
+  function normalizeArtworkDeep(value) {
+    if (typeof value === 'string') return normalizeArtworkString(value);
+    if (Array.isArray(value)) return value.map(normalizeArtworkDeep);
+    if (!value || typeof value !== 'object') return value;
+    const copy = {};
+    for (const [key, item] of Object.entries(value)) copy[key] = normalizeArtworkDeep(item);
+    return copy;
+  }
+
   function parseCollections(value) {
     if (Array.isArray(value)) return value;
     if (typeof value === 'string') {
@@ -141,15 +174,31 @@
     }
 
     const eligible = externalCount === 0;
+    let finalCollections = collections;
+
+    // If this is entirely a Kollection-owned collection, repair any legacy
+    // artwork URLs in Nuvio itself. This keeps stale Nuvio clients and old
+    // saved collection payloads from leaving broken artwork paths behind.
+    if (eligible && kollectionCount > 0) {
+      const normalizedCollections = normalizeArtworkDeep(collections);
+      if (JSON.stringify(normalizedCollections) !== JSON.stringify(collections)) {
+        await rpc('sync_push_collections', {
+          p_profile_id: id,
+          p_collections_json: normalizedCollections,
+        }, accessToken);
+        finalCollections = normalizedCollections;
+      }
+    }
+
     const result = {
       profileId: id,
       state: eligible ? 'kollection' : 'blocked',
       eligible,
-      existingCount: collections.length,
+      existingCount: finalCollections.length,
       kollectionCount,
       externalCount,
       hasKollection: kollectionCount > 0,
-      collections,
+      collections: finalCollections,
       message: eligible
         ? 'This profile already contains a collection created by The Kollection setup.'
         : 'This profile already contains a collection that was not created by The Kollection setup.',
