@@ -1,4 +1,4 @@
-name: Sync Kollection Runtime
+name: Sync Kollection AIO Runtime
 
 on:
   push:
@@ -18,51 +18,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download current runtime assets
+      # IMPORTANT:
+      # runtime/database.kaoxt.js is owned by The Kollection and is the
+      # production source of truth for collection groups, folders and artwork.
+      # Do not download or overwrite it from ImKaptain/Kaptain-Collection.
+      - name: Download current AIO runtime assets
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p runtime
 
-          curl -fL --retry 3 --retry-delay 2             'https://raw.githubusercontent.com/ImKaptain/Kaptain-Collection/main/collections/database.kaoxt.js'             -o runtime/database.kaoxt.js
+          curl -fL --retry 3 --retry-delay 2 \
+            'https://raw.githubusercontent.com/ImKaptain/Kaptain-Collection/main/collections/kaoxt-aio-catalogs.json' \
+            -o runtime/kaoxt-aio-catalogs.json
 
-          curl -fL --retry 3 --retry-delay 2             'https://raw.githubusercontent.com/ImKaptain/Kaptain-Collection/main/collections/kaoxt-aio-catalogs.json'             -o runtime/kaoxt-aio-catalogs.json
-
-          curl -fL --retry 3 --retry-delay 2             'https://raw.githubusercontent.com/ImKaptain/Kaptain-Collection/main/collections/kaoxt-aio-base-config.json'             -o runtime/kaoxt-aio-base-config.json
-
-      - name: Canonicalize artwork URLs
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          from pathlib import Path
-          path = Path('runtime/database.kaoxt.js')
-          text = path.read_text(encoding='utf-8')
-          replacements = [
-              ('https://kao-xt.com/images/', 'https://kollection.tv/images/'),
-              ('https://ka-oxt.com/images/', 'https://kollection.tv/images/'),
-              ('https://kao-xt.com/', 'https://kollection.tv/images/'),
-              ('https://ka-oxt.com/', 'https://kollection.tv/images/'),
-              ('/images/Movie%20Collections/', '/images/Franchises/'),
-              ('/images/Movie Collections/', '/images/Franchises/'),
-              ('/images/International%20Cinema/', '/images/World/'),
-              ('/images/International Cinema/', '/images/World/'),
-              ('/images/Directors/Guillermo%20Del%20Toro/', '/images/Directors/Guillermo%20del%20Toro/'),
-              ('/images/Directors/Guillermo Del Toro/', '/images/Directors/Guillermo del Toro/'),
-              ('/images/Based%20On/True%20Events/', '/images/Based%20On/True%20Stories/'),
-              ('/images/Based On/True Events/', '/images/Based On/True Stories/'),
-              ('/images/Discover/Recommended%20For%20You/', '/images/Discover/For%20You/'),
-              ('/images/Discover/Recommended For You/', '/images/Discover/For You/'),
-              ('/images/Networks/Syfy/', '/images/Networks/SYFY/'),
-              ('/images/Actors/Robert%20Downey%20Jr/', '/images/Actors/Robert%20Downey%20Jr./'),
-              ('/images/Actors/Robert Downey Jr/', '/images/Actors/Robert Downey Jr./'),
-              ('/images/Franchises/Jurassic%20Park/', '/images/Franchises/Jurrasic%20Park/'),
-              ('/images/Franchises/Jurassic Park/', '/images/Franchises/Jurrasic Park/'),
-          ]
-          for old, new in replacements:
-              text = text.replace(old, new)
-          path.write_text(text, encoding='utf-8')
-          PY
+          curl -fL --retry 3 --retry-delay 2 \
+            'https://raw.githubusercontent.com/ImKaptain/Kaptain-Collection/main/collections/kaoxt-aio-base-config.json' \
+            -o runtime/kaoxt-aio-base-config.json
 
       - name: Validate runtime assets
         shell: bash
@@ -75,18 +47,21 @@ jobs:
           python -m json.tool runtime/kaoxt-aio-catalogs.json >/dev/null
           python -m json.tool runtime/kaoxt-aio-base-config.json >/dev/null
 
-      - name: Commit runtime assets
+      - name: Commit AIO runtime assets
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add runtime/database.kaoxt.js runtime/kaoxt-aio-catalogs.json runtime/kaoxt-aio-base-config.json
+
+          # Only the AIO helper assets are allowed to be refreshed from upstream.
+          # The Kollection database intentionally remains untouched.
+          git add runtime/kaoxt-aio-catalogs.json runtime/kaoxt-aio-base-config.json
 
           if git diff --cached --quiet; then
-            echo 'Runtime assets are already current.'
+            echo 'AIO runtime assets are already current.'
             exit 0
           fi
 
-          git commit -m 'Sync Kollection runtime assets'
+          git commit -m 'Sync Kollection AIO runtime assets'
           git push
