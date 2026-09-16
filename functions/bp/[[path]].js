@@ -1,5 +1,5 @@
 import { onRequest as handlePosterV2 } from '../api/posters-v2/[[path]].js';
-import { decodeBetterPostersConfig } from '../_lib/better-posters-config-token.js';
+import { BETTER_POSTERS_TREND_DETAILS, decodeBetterPostersConfig } from '../_lib/better-posters-config-token.js';
 
 function jsonError(message, status = 400) {
   return new Response(JSON.stringify({ error: message }), {
@@ -13,6 +13,30 @@ function typeValue(raw) {
   if (value === 'movie') return 'movie';
   if (value === 'series' || value === 'tv') return 'series';
   return '';
+}
+
+function nativeBetterPostersUrl(config, imdbId, trendEnabled) {
+  let suffix = '';
+  if (!config.genre && config.rating) suffix = 'r';
+  else if (config.genre && !config.rating) suffix = 'g';
+  else if (!config.genre && !config.rating) suffix = 'n';
+  if (config.qualityTags) suffix += 'q';
+  if (config.ageRating) suffix += 'a';
+  const posterPath = suffix ? `poster-${suffix}` : 'poster';
+
+  const params = new URLSearchParams();
+  if (!trendEnabled) params.set('tag', 'none');
+  if (config.language !== 'en') params.set('lang', config.language);
+  const ratingCodes = {
+    imdb: 'IM', tmdb: 'TM', rottentomatoes: 'RT', metacritic: 'MC',
+    trakt: 'TR', letterboxd: 'LB', rogerebert: 'RE',
+  };
+  const ratingCode = config.rating ? ratingCodes[config.ratingSource] : '';
+  if (ratingCode) params.set('rs', ratingCode);
+
+  const base = `https://btttr.cc/${posterPath}/imdb/poster-default/${encodeURIComponent(imdbId)}.jpg`;
+  const query = params.toString();
+  return query ? `${base}?${query}` : base;
 }
 
 export async function onRequest(context) {
@@ -64,6 +88,26 @@ export async function onRequest(context) {
       return new Response(hit.body, { status: hit.status, statusText: hit.statusText, headers });
     }
   } catch {}
+
+  const allTrendDetails = config.trendDetails.length === BETTER_POSTERS_TREND_DETAILS.length;
+  const noTrendDetails = config.trendDetails.length === 0;
+  if (/^tt\d{5,12}$/i.test(rawId) && (allTrendDetails || noTrendDetails)) {
+    const location = nativeBetterPostersUrl(config, rawId, allTrendDetails);
+    const headers = new Headers({
+      location,
+      'cache-control': 'public, max-age=604800, s-maxage=604800',
+      'access-control-allow-origin': '*',
+      'x-kollection-better-posters-config': configId,
+      'x-kollection-better-posters-cache': 'MISS',
+      'x-kollection-better-posters-direct': '1',
+      'content-location': canonical.pathname,
+    });
+    const direct = new Response(null, { status: 302, headers });
+    if (request.method === 'GET') {
+      context.waitUntil(caches.default.put(cacheRequest, direct.clone()).catch(() => {}));
+    }
+    return direct;
+  }
 
   const inner = new URL(publicUrl.origin + `/api/posters-v2/${type}/${encodeURIComponent(rawId)}.webp`);
   inner.searchParams.set('v', '26');
