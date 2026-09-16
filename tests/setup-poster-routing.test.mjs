@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import { decodePosterConfig, encodePosterConfig } from '../functions/_lib/poster-config-token.js';
+import { decodeBetterPostersConfig, encodeBetterPostersConfig } from '../functions/_lib/better-posters-config-token.js';
 
 await import('../posters/config-token.js');
 await import('../set-up-collection/poster-settings.js');
@@ -91,10 +92,13 @@ test('existing saved setups use a Configure modal for Better Posters', async () 
   assert.match(source, />Save changes<\/button>/);
   assert.match(source, /id="betterPostersEnabled"/);
   assert.match(source, /id="betterPostersSettingsJson"/);
-  for (const option of ['trendTags', 'qualityTags', 'genre', 'rating', 'ageRating']) {
+  for (const option of ['qualityTags', 'genre', 'rating', 'ageRating']) {
     assert.ok(source.includes("['" + option + "',"), 'missing Better Posters option ' + option);
   }
-  assert.match(source, /Trend Tags are one switch/);
+  for (const detail of ['studio', 'director', 'cast', 'inCinema', 'rank', 'newMovie', 'comingSoon', 'newSeries', 'returningSeries', 'limitedSeries']) {
+    assert.ok(source.includes("['" + detail + "',"), 'missing Trend Tag detail ' + detail);
+  }
+  assert.match(source, /data-better-trend-detail/);
   assert.match(source, /state\.betterPostersEnabled = nextEnabled/);
   assert.match(source, /state\.betterPostersSettings = nextSettings/);
 });
@@ -179,18 +183,23 @@ test('k1 and k2 tokens both use the reliable TMDB artwork path', () => {
 });
 
 
-test('Better Posters helper generates the official btttr.cc AIOMetadata pattern', () => {
-  assert.equal(
-    BetterPosters.pattern({ trendTags: true, genre: true, rating: true, qualityTags: false, ageRating: false, ratingSource: 'average', language: 'en' }),
-    'https://btttr.cc/poster/imdb/poster-default/{imdb_id}.jpg'
-  );
-  assert.equal(
-    BetterPosters.pattern({ trendTags: false, genre: false, rating: true, qualityTags: true, ageRating: true, ratingSource: 'imdb', language: 'fr' }),
-    'https://btttr.cc/poster-rqa/imdb/poster-default/{imdb_id}.jpg?tag=none&lang=fr&rs=IM'
-  );
+test('Better Posters helper generates the hybrid Kollection delivery pattern', () => {
+  const settings = {
+    genre: true,
+    rating: true,
+    qualityTags: false,
+    ageRating: false,
+    ratingSource: 'average',
+    language: 'en',
+    trendDetails: ['inCinema', 'rank', 'newMovie'],
+  };
+  const token = BetterPosters.configId(settings);
+  assert.equal(token, encodeBetterPostersConfig(settings));
+  assert.equal(BetterPosters.pattern(settings), `https://kollection.tv/bp/${token}/{type}/{id}.webp`);
+  assert.deepEqual(decodeBetterPostersConfig(token), BetterPosters.normalize(settings));
 });
 
-test('Better Posters AIOMetadata integration enables the custom poster pattern without the Kollection renderer', () => {
+test('Better Posters AIOMetadata integration uses the hybrid Better Posters + Kollection trend route', () => {
   const config = {
     posterRatingProvider: 'none',
     customPosterUrlPattern: '',
@@ -198,18 +207,38 @@ test('Better Posters AIOMetadata integration enables the custom poster pattern w
     catalogs: [{ id: 'home', enableRatingPosters: false }],
     kollectionPosters: { enabled: true },
   };
-  BetterPosters.applyToAioConfig(config, { trendTags: true, genre: true, rating: true });
+  BetterPosters.applyToAioConfig(config, {
+    genre: true,
+    rating: true,
+    trendDetails: ['inCinema', 'rank'],
+  });
   assert.equal(config.posterRatingProvider, 'custom');
   assert.equal(config.usePosterProxy, false);
   assert.equal(config.enableRatingPostersForLibrary, true);
-  assert.match(config.customPosterUrlPattern, /^https:\/\/btttr\.cc\//);
+  assert.match(config.customPosterUrlPattern, /^https:\/\/kollection\.tv\/bp\/b1[0-9a-z]+\/\{type\}\/\{id\}\.webp$/);
   assert.ok(config.catalogs.every(catalog => catalog.enableRatingPosters === true));
   assert.equal(config.kollectionPosters, undefined);
   assert.equal(config.kollectionBetterPosters?.provider, 'btttr.cc');
+  assert.equal(config.kollectionBetterPosters?.hybridTrendLayer, 'kollection');
 });
 
-test('Better Posters Trend Tags are exposed as one native on/off option', () => {
-  const source = BetterPosters.pattern({ trendTags: false });
-  assert.match(source, /[?&]tag=none(?:&|$)/);
-  assert.equal(BetterPosters.normalize({ trendTags: true }).trendTags, true);
+test('Better Posters hybrid exposes individual Trend Tag choices', () => {
+  const normalized = BetterPosters.normalize({ trendDetails: ['rank', 'inCinema'] });
+  assert.deepEqual(normalized.trendDetails, ['inCinema', 'rank']);
+  const none = BetterPosters.normalize({ trendDetails: [] });
+  assert.deepEqual(none.trendDetails, []);
+});
+
+
+test('hybrid Better Posters delivery route delegates to v2 with btttr base and Kollection trend-only overlays', async () => {
+  const source = await readFile(new URL('../functions/bp/[[path]].js', import.meta.url), 'utf8');
+  assert.match(source, /decodeBetterPostersConfig/);
+  assert.match(source, /provider', 'btttr'/);
+  assert.match(source, /tags', config\.trendDetails\.length \? 'trend' : ''/);
+  assert.match(source, /trendDetails', config\.trendDetails\.join/);
+  assert.match(source, /overlayOnly', '1'/);
+  assert.match(source, /bpQuality/);
+  assert.match(source, /bpGenre/);
+  assert.match(source, /bpRating/);
+  assert.match(source, /bpAge/);
 });
