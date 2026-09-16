@@ -814,3 +814,18 @@ test('plain fallback artwork is persisted separately and reused without another 
   assert.equal(second.headers.get('x-kollection-plain-cache'), 'HIT');
   assert.equal(h.count.fallback, 1);
 });
+
+
+test('BetterPosters base artwork is used without double overlays and falls back by IMDb ID', async () => {
+  const h = harness();
+  const response = await h.request('27205', '&provider=btttr');
+  await response.arrayBuffer();
+  await h.flush();
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('x-kollection-artwork-source'), 'betterposters-btttr');
+  assert.match(h.payloads.at(-1).sourceUrl, /^https:\/\/btttr\.cc\/poster-n\/imdb\/poster-default\/tt1375666\.jpg\?tag=none$/);
+  assert.equal(h.payloads.at(-1).overlayOnly, true);
+  assert.equal(h.payloads.at(-1).logoPath, '');
+  assert.equal(h.payloads.at(-1).title, '');
+});
