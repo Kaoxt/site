@@ -24,8 +24,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Discover/Trending/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Discover/Trending/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Discover/Trending/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Discover/Trending/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -41,7 +41,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Discover/Trending/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Discover/Trending/backdrop.webp"
       },
       {
         "id": "folder-a1e97b25",
@@ -64,8 +64,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Discover/Popular/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Discover/Popular/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Discover/Popular/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Discover/Popular/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -79,7 +79,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Discover/Popular/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Discover/Popular/backdrop.webp"
       },
       {
         "id": "6bb2f5f4-5935-49f9-b8e8-1b5b80799816",
@@ -102,8 +102,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Discover/Premieres/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Discover/Premieres/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Discover/Premieres/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Discover/Premieres/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -119,7 +119,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Discover/Premieres/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Discover/Premieres/backdrop.webp"
       },
       {
         "id": "a463fa8f-1e2d-41f5-b87f-a48d4918d383",
@@ -142,8 +142,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Discover/Top%20Rated/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Discover/Top%20Rated/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Discover/Top%20Rated/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Discover/Top%20Rated/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -159,7 +159,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Discover/Top%20Rated/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Discover/Top%20Rated/backdrop.webp"
       },
       {
         "id": "b72a9b5a-0f62-439f-87e3-75af3a0169ad",
@@ -210,8 +210,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Discover/Recommended%20For%20You/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Discover/Recommended%20For%20You/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Discover/For%20You/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Discover/For%20You/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -245,7 +245,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Discover/Recommended%20For%20You/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Discover/For%20You/backdrop.webp"
       }
     ],
     "pinToTop": true,
@@ -327,8 +327,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Streaming%20Platforms/Netflix/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Streaming%20Platforms/Netflix/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Netflix/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Netflix/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -386,7 +386,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Streaming%20Platforms/Netflix/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Streaming%20Platforms/Netflix/backdrop.webp"
       },
       {
         "id": "ec757c37-b024-482c-8293-16cc1e719157",
@@ -437,8 +437,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Streaming%20Platforms/Apple%20TV/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Streaming%20Platforms/Apple%20TV/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Apple%20TV/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Apple%20TV/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -478,7 +478,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Streaming%20Platforms/Apple%20TV/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Streaming%20Platforms/Apple%20TV/backdrop.webp"
       },
       {
         "id": "ba3da3e1-e137-4055-a693-71b0bb81927e",
@@ -550,8 +550,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Streaming%20Platforms/HBO%20Max/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Streaming%20Platforms/HBO%20Max/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/HBO%20Max/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/HBO%20Max/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -609,7 +609,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Streaming%20Platforms/HBO%20Max/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Streaming%20Platforms/HBO%20Max/backdrop.webp"
       },
       {
         "id": "cf0c5bb3-e7e0-4ff1-9163-2172c0c7d0bd",
@@ -695,8 +695,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Streaming%20Platforms/Disney%2B/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Streaming%20Platforms/Disney%2B/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Disney%2B/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Disney%2B/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -766,7 +766,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Streaming%20Platforms/Disney%2B/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Streaming%20Platforms/Disney%2B/backdrop.webp"
       },
       {
         "id": "c3adccbd-8b19-401e-ade1-a0403e1eb5ab",
@@ -817,8 +817,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Streaming%20Platforms/Prime/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Streaming%20Platforms/Prime/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Prime/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Prime/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -858,7 +858,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Streaming%20Platforms/Prime/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Streaming%20Platforms/Prime/backdrop.webp"
       },
       {
         "id": "0b5fbc0e-d515-45a9-b573-abb8665996d4",
@@ -923,8 +923,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Streaming%20Platforms/Paramount%2B/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Streaming%20Platforms/Paramount%2B/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Paramount%2B/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Paramount%2B/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -976,7 +976,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Streaming%20Platforms/Paramount%2B/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Streaming%20Platforms/Paramount%2B/backdrop.webp"
       },
       {
         "id": "186836af-9401-4ca4-a017-5ef34d0e8015",
@@ -1034,8 +1034,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Streaming%20Platforms/Peacock/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Streaming%20Platforms/Peacock/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Peacock/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Peacock/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -1081,7 +1081,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Streaming%20Platforms/Peacock/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Streaming%20Platforms/Peacock/backdrop.webp"
       },
       {
         "id": "3341753d-fd60-4c9f-8b2c-ea27f493139f",
@@ -1132,8 +1132,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Streaming%20Platforms/Hulu/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Streaming%20Platforms/Hulu/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Hulu/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Hulu/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -1173,7 +1173,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Streaming%20Platforms/Hulu/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Streaming%20Platforms/Hulu/backdrop.webp"
       },
       {
         "id": "6d5be2e5-b910-4150-ad97-f5b36f8df586",
@@ -1217,8 +1217,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Streaming%20Platforms/Shudder/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Streaming%20Platforms/Shudder/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Shudder/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Shudder/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -1252,7 +1252,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Streaming%20Platforms/Shudder/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Streaming%20Platforms/Shudder/backdrop.webp"
       },
       {
         "id": "ba64903d-1e52-4b10-b07d-c396aa5a8bc4",
@@ -1289,8 +1289,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Streaming%20Platforms/Discovery%2B/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Streaming%20Platforms/Discovery%2B/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Discovery%2B/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Discovery%2B/cover.webp",
         "catalogSources": [
           {
             "type": "all",
@@ -1318,7 +1318,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Streaming%20Platforms/Discovery%2B/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Streaming%20Platforms/Discovery%2B/backdrop.webp"
       },
       {
         "id": "822787c4-b3a6-48c4-9bcd-589d7f02f896",
@@ -1369,8 +1369,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Streaming%20Platforms/Crunchyroll/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Streaming%20Platforms/Crunchyroll/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Crunchyroll/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Crunchyroll/cover.webp",
         "catalogSources": [
           {
             "type": "all",
@@ -1410,7 +1410,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Streaming%20Platforms/Crunchyroll/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Streaming%20Platforms/Crunchyroll/backdrop.webp"
       },
       {
         "id": "a3f50f3f-2b5d-4b76-bab4-7a685c7a1c86",
@@ -1454,8 +1454,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Streaming%20Platforms/MUBI/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Streaming%20Platforms/MUBI/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/MUBI/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/MUBI/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -1489,7 +1489,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Streaming%20Platforms/MUBI/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Streaming%20Platforms/MUBI/backdrop.webp"
       }
     ],
     "pinToTop": true,
@@ -1529,8 +1529,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Genres/Action/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Genres/Action/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Action/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Action/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -1552,7 +1552,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Genres/Action/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Action/backdrop.webp"
       },
       {
         "id": "60b0411b-7925-4b34-a453-3685dbb3d8c5",
@@ -1582,8 +1582,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Genres/Sci-Fi/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Genres/Sci-Fi/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Sci-Fi/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Sci-Fi/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -1605,7 +1605,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Genres/Sci-Fi/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Sci-Fi/backdrop.webp"
       },
       {
         "id": "5cc2f782-663c-4e2b-9188-f274bcb2b7b0",
@@ -1635,8 +1635,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Genres/Fantasy/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Genres/Fantasy/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Fantasy/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Fantasy/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -1658,7 +1658,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Genres/Fantasy/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Fantasy/backdrop.webp"
       },
       {
         "id": "f953a671-ace5-450d-9c70-6e91a735864f",
@@ -1688,8 +1688,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Genres/Thriller/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Genres/Thriller/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Thriller/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Thriller/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -1711,7 +1711,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Genres/Thriller/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Thriller/backdrop.webp"
       },
       {
         "id": "33467c13-23cc-4f78-92dd-3932598adc33",
@@ -1832,8 +1832,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Genres/Horror/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Genres/Horror/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Horror/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Horror/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -1933,7 +1933,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Genres/Horror/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Horror/backdrop.webp"
       },
       {
         "id": "19975918-d59a-426d-852a-fa30c2236ec1",
@@ -1977,8 +1977,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Genres/Drama/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Genres/Drama/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Drama/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Drama/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -2012,7 +2012,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Genres/Drama/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Drama/backdrop.webp"
       },
       {
         "id": "3ea8222f-9173-43ec-b60d-ef9085d669c7",
@@ -2126,8 +2126,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Genres/Animation/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Genres/Animation/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Animation/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Animation/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -2221,7 +2221,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Genres/Animation/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Animation/backdrop.webp"
       },
       {
         "id": "1c8f20af-b2fe-4afa-8511-88c0c605a686",
@@ -2251,8 +2251,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Genres/Comedy/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Genres/Comedy/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Comedy/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Comedy/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -2274,7 +2274,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Genres/Comedy/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Comedy/backdrop.webp"
       },
       {
         "id": "d958627f-4128-4706-a96d-615b77214996",
@@ -2332,8 +2332,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Genres/Documentary/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Genres/Documentary/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Documentary/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Documentary/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -2379,7 +2379,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Genres/Documentary/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Documentary/backdrop.webp"
       },
       {
         "id": "eacfc1c3-282c-4c49-8e07-03c5e7c16558",
@@ -2409,8 +2409,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Genres/Mystery/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Genres/Mystery/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Mystery/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Mystery/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -2432,7 +2432,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Genres/Mystery/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Mystery/backdrop.webp"
       },
       {
         "id": "b7d6db14-bf9b-46c2-9b61-ac9d87b220a4",
@@ -2462,8 +2462,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Genres/Romance/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Genres/Romance/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Romance/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Romance/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -2485,7 +2485,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Genres/Romance/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Romance/backdrop.webp"
       },
       {
         "id": "c84ef744-e269-4853-9c05-0d10aee204da",
@@ -2536,8 +2536,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Genres/War/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Genres/War/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/War/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/War/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -2577,7 +2577,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Genres/War/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/War/backdrop.webp"
       },
       {
         "id": "f1cffe09-e89e-4dd0-8be9-cabec87c8a32",
@@ -2600,8 +2600,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Genres/Western/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Genres/Western/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Western/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Western/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -2617,7 +2617,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Genres/Western/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Western/backdrop.webp"
       },
       {
         "id": "190240d4-244b-41bd-a6f1-fb7599702b9b",
@@ -2647,8 +2647,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Genres/Anime/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Genres/Anime/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Anime/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Anime/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -2670,7 +2670,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Genres/Anime/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Anime/backdrop.webp"
       }
     ],
     "pinToTop": true,
@@ -2703,8 +2703,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Studios/Marvel/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Studios/Marvel/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/Marvel/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/Marvel/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -2720,7 +2720,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Studios/Marvel/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/Marvel/backdrop.webp"
       },
       {
         "id": "folder-6b38658a",
@@ -2743,8 +2743,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Studios/DC/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Studios/DC/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/DC/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/DC/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -2760,7 +2760,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Studios/DC/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/DC/backdrop.webp"
       },
       {
         "id": "folder-9a87647e",
@@ -2783,8 +2783,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Studios/Disney/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Studios/Disney/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/Disney/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/Disney/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -2800,7 +2800,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Studios/Disney/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/Disney/backdrop.webp"
       },
       {
         "id": "folder-77e07c3e",
@@ -2823,8 +2823,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Studios/Sony%20Pictures/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Studios/Sony%20Pictures/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/Sony%20Pictures/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/Sony%20Pictures/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -2840,7 +2840,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Studios/Sony%20Pictures/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/Sony%20Pictures/backdrop.webp"
       },
       {
         "id": "folder-b761b955",
@@ -2863,8 +2863,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Studios/Warner%20Brothers/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Studios/Warner%20Brothers/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/Warner%20Brothers/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/Warner%20Brothers/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -2880,7 +2880,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Studios/Warner%20Brothers/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/Warner%20Brothers/backdrop.webp"
       },
       {
         "id": "folder-3d7824cd",
@@ -2896,8 +2896,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Studios/Universal/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Studios/Universal/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/Universal/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/Universal/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -2907,7 +2907,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Studios/Universal/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/Universal/backdrop.webp"
       },
       {
         "id": "folder-484b9c00",
@@ -2923,8 +2923,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Studios/Paramount/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Studios/Paramount/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/Paramount/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/Paramount/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -2934,7 +2934,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Studios/Paramount/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/Paramount/backdrop.webp"
       },
       {
         "id": "folder-55bdfdbd",
@@ -2950,8 +2950,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Studios/20th%20Century/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Studios/20th%20Century/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/20th%20Century/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/20th%20Century/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -2961,7 +2961,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Studios/20th%20Century/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/20th%20Century/backdrop.webp"
       },
       {
         "id": "folder-a650bdfa",
@@ -2984,8 +2984,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Studios/A24/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Studios/A24/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/A24/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/A24/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3001,7 +3001,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Studios/A24/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/A24/backdrop.webp"
       },
       {
         "id": "0aafb59e-5e2d-4c9e-b4d6-f6b0401200e1",
@@ -3017,8 +3017,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Studios/Blumhouse/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Studios/Blumhouse/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/Blumhouse/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/Blumhouse/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3028,7 +3028,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Studios/Blumhouse/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/Blumhouse/backdrop.webp"
       },
       {
         "id": "folder-6a0e51aa",
@@ -3044,8 +3044,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Studios/MGM/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Studios/MGM/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/MGM/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/MGM/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3055,7 +3055,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Studios/MGM/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/MGM/backdrop.webp"
       },
       {
         "id": "folder-c6afa09b",
@@ -3071,8 +3071,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Studios/Pixar/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Studios/Pixar/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/Pixar/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/Pixar/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3082,7 +3082,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Studios/Pixar/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/Pixar/backdrop.webp"
       },
       {
         "id": "folder-bbb946bc",
@@ -3098,8 +3098,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Studios/Illumination/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Studios/Illumination/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/Illumination/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/Illumination/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3109,7 +3109,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Studios/Illumination/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/Illumination/backdrop.webp"
       },
       {
         "id": "folder-fa1c7df1",
@@ -3132,8 +3132,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Studios/DreamWorks/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Studios/DreamWorks/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/DreamWorks/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/DreamWorks/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3148,7 +3148,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Studios/DreamWorks/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/DreamWorks/backdrop.webp"
       }
     ],
     "pinToTop": true,
@@ -3174,8 +3174,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/The%20Lord%20of%20the%20Rings/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/The%20Lord%20of%20the%20Rings/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/The%20Lord%20of%20the%20Rings/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/The%20Lord%20of%20the%20Rings/cover.webp",
         "catalogSources": [
           {
             "type": "all",
@@ -3185,7 +3185,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/The%20Lord%20of%20the%20Rings/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/The%20Lord%20of%20the%20Rings/backdrop.webp"
       },
       {
         "id": "170e92cc-e50a-4cdf-875c-22744a9df4a9",
@@ -3201,8 +3201,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/Dune/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/Dune/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Dune/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Dune/cover.webp",
         "catalogSources": [
           {
             "type": "all",
@@ -3212,7 +3212,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/Dune/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Dune/backdrop.webp"
       },
       {
         "id": "b0543d15-2352-4844-8149-da49211e09c9",
@@ -3235,8 +3235,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/Star%20Wars/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/Star%20Wars/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Star%20Wars/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Star%20Wars/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3252,7 +3252,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/Star%20Wars/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Star%20Wars/backdrop.webp"
       },
       {
         "id": "4293724e-6854-4e66-9b98-2bce408d8888",
@@ -3268,8 +3268,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/The%20Matrix/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/The%20Matrix/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/The%20Matrix/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/The%20Matrix/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3279,7 +3279,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/The%20Matrix/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/The%20Matrix/backdrop.webp"
       },
       {
         "id": "b6866160-3a6e-4040-b54d-bc1bacbe0046",
@@ -3295,8 +3295,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/Jurassic%20Park/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/Jurassic%20Park/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Jurrasic%20Park/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Jurrasic%20Park/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3306,7 +3306,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/Jurassic%20Park/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Jurrasic%20Park/backdrop.webp"
       },
       {
         "id": "c72f4077-8c3c-4e64-888d-44632ab464bd",
@@ -3336,8 +3336,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/Spider-Man/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/Spider-Man/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Spider-Man/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Spider-Man/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3358,7 +3358,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/Spider-Man/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Spider-Man/backdrop.webp"
       },
       {
         "id": "0dcc130d-cd40-4ab5-8c48-4f72c6ae5aa0",
@@ -3381,8 +3381,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/Batman/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/Batman/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Batman/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Batman/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3398,7 +3398,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/Batman/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Batman/backdrop.webp"
       },
       {
         "id": "7709dc92-3ed6-45ac-9e83-94be83e80673",
@@ -3414,8 +3414,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/Pirates%20of%20the%20Caribbean/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/Pirates%20of%20the%20Caribbean/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Pirates%20of%20the%20Caribbean/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Pirates%20of%20the%20Caribbean/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3425,7 +3425,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/Pirates%20of%20the%20Caribbean/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Pirates%20of%20the%20Caribbean/backdrop.webp"
       },
       {
         "id": "09a54334-4676-4fa4-954e-2f5dcb66959d",
@@ -3441,8 +3441,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/Avatar/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/Avatar/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Avatar/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Avatar/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3452,7 +3452,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/Avatar/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Avatar/backdrop.webp"
       },
       {
         "id": "0884cd83-5abf-44d5-8088-33c7ee77c535",
@@ -3468,8 +3468,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/007/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/007/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/007/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/007/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3479,7 +3479,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/007/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/007/backdrop.webp"
       },
       {
         "id": "005990b2-3b3c-46dc-a905-4af466742f13",
@@ -3495,8 +3495,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/Mission%20Impossible/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/Mission%20Impossible/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Mission%20Impossible/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Mission%20Impossible/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3506,7 +3506,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/Mission%20Impossible/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Mission%20Impossible/backdrop.webp"
       },
       {
         "id": "e16c9366-dfbe-4b5b-b7fc-39e1d2c56f21",
@@ -3529,8 +3529,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/Transformers/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/Transformers/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Transformers/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Transformers/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3546,7 +3546,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/Transformers/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Transformers/backdrop.webp"
       },
       {
         "id": "acf7232a-4cfd-4df7-be91-0b064cea9c94",
@@ -3569,8 +3569,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/TMNT/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/TMNT/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/TMNT/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/TMNT/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3586,7 +3586,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/TMNT/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/TMNT/backdrop.webp"
       },
       {
         "id": "2aefac91-f3ff-4632-98e1-b2a9fecebeee",
@@ -3602,8 +3602,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/Harry%20Potter/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/Harry%20Potter/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Harry%20Potter/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Harry%20Potter/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3613,7 +3613,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/Harry%20Potter/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Harry%20Potter/backdrop.webp"
       },
       {
         "id": "881bfb03-811d-457c-87a9-3c68dcee422c",
@@ -3629,8 +3629,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/Indiana%20Jones/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/Indiana%20Jones/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Indiana%20Jones/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Indiana%20Jones/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3640,7 +3640,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/Indiana%20Jones/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Indiana%20Jones/backdrop.webp"
       },
       {
         "id": "5c39d59f-d4c7-4cec-8ff3-0bf81e6beac9",
@@ -3656,8 +3656,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/Back%20to%20the%20Future/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/Back%20to%20the%20Future/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Back%20to%20the%20Future/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Back%20to%20the%20Future/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3667,7 +3667,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/Back%20to%20the%20Future/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Back%20to%20the%20Future/backdrop.webp"
       },
       {
         "id": "7e438f78-0d3a-487c-93fc-311bf05e1ca6",
@@ -3683,8 +3683,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/Fast%20and%20the%20Furious/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/Fast%20and%20the%20Furious/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Fast%20and%20the%20Furious/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Fast%20and%20the%20Furious/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3694,7 +3694,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/Fast%20and%20the%20Furious/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Fast%20and%20the%20Furious/backdrop.webp"
       },
       {
         "id": "3f705b48-ff3a-42aa-b943-aeadb991660b",
@@ -3710,8 +3710,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/The%20Conjuring/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/The%20Conjuring/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/The%20Conjuring/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/The%20Conjuring/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3721,7 +3721,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/The%20Conjuring/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/The%20Conjuring/backdrop.webp"
       },
       {
         "id": "84e503b0-10a6-47bc-835e-45ee0ce11e21",
@@ -3737,8 +3737,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/Saw/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/Saw/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Saw/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Saw/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3748,7 +3748,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/Saw/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Saw/backdrop.webp"
       },
       {
         "id": "0d9b7676-3d0b-4782-9e49-451f1a84d924",
@@ -3764,8 +3764,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/Halloween/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/Halloween/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Halloween/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Halloween/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3775,7 +3775,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/Halloween/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Halloween/backdrop.webp"
       },
       {
         "id": "0c87e131-1dfe-47c6-8386-7b91fc1f59ed",
@@ -3791,8 +3791,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/Friday%20the%2013th/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/Friday%20the%2013th/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Friday%20the%2013th/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Friday%20the%2013th/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3802,7 +3802,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/Friday%20the%2013th/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Friday%20the%2013th/backdrop.webp"
       },
       {
         "id": "347bdfa8-9898-41f0-a8f5-fa7cf4c2729c",
@@ -3818,8 +3818,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/Scream/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/Scream/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Scream/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Scream/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3829,7 +3829,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/Scream/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Scream/backdrop.webp"
       },
       {
         "id": "820cb30a-5aae-4202-8e14-7ee93876cefd",
@@ -3845,8 +3845,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Franchises/Child's%20Play/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Franchises/Child's%20Play/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Child's%20Play/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Child's%20Play/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3856,7 +3856,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Franchises/Child's%20Play/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Child's%20Play/backdrop.webp"
       }
     ],
     "pinToTop": true,
@@ -3889,8 +3889,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Decades/2020s/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Decades/2020s/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Decades/2020s/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Decades/2020s/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3906,7 +3906,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Decades/2020s/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Decades/2020s/backdrop.webp"
       },
       {
         "id": "73fdc058-db97-438f-be2f-29f2f397a17a",
@@ -3929,8 +3929,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Decades/2010s/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Decades/2010s/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Decades/2010s/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Decades/2010s/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3946,7 +3946,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Decades/2010s/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Decades/2010s/backdrop.webp"
       },
       {
         "id": "b4ab8977-726b-4d5c-b0b3-599e5f49da9a",
@@ -3969,8 +3969,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Decades/2000s/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Decades/2000s/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Decades/2000s/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Decades/2000s/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -3986,7 +3986,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Decades/2000s/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Decades/2000s/backdrop.webp"
       },
       {
         "id": "737f1d8b-07b0-45c4-bfe2-361689d5e246",
@@ -4009,8 +4009,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Decades/1990s/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Decades/1990s/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Decades/1990s/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Decades/1990s/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4026,7 +4026,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Decades/1990s/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Decades/1990s/backdrop.webp"
       },
       {
         "id": "29dd3993-05cd-4dc2-bdaa-afc5550a47f0",
@@ -4049,8 +4049,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Decades/1980s/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Decades/1980s/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Decades/1980s/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Decades/1980s/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4066,7 +4066,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Decades/1980s/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Decades/1980s/backdrop.webp"
       },
       {
         "id": "0371a3cc-f2be-4a9b-a05e-bb78f41188fb",
@@ -4089,8 +4089,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Decades/1970s/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Decades/1970s/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Decades/1970s/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Decades/1970s/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4106,7 +4106,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kao-xt.com/Decades/1970s/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Decades/1970s/backdrop.webp"
       },
       {
         "id": "folder-a9e597c7",
@@ -4129,8 +4129,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Decades/1960s/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Decades/1960s/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Decades/1960s/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Decades/1960s/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4146,7 +4146,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Decades/1960s/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Decades/1960s/backdrop.webp"
       }
     ],
     "pinToTop": true,
@@ -4172,8 +4172,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Leonardo%20DiCaprio/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Leonardo%20DiCaprio/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Leonardo%20DiCaprio/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Leonardo%20DiCaprio/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4183,7 +4183,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Leonardo%20DiCaprio/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Leonardo%20DiCaprio/backdrop.webp"
       },
       {
         "id": "da36623e-de51-4b28-a545-9791189b36e4",
@@ -4199,8 +4199,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Ryan%20Gosling/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Ryan%20Gosling/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Ryan%20Gosling/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Ryan%20Gosling/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4210,7 +4210,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Ryan%20Gosling/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Ryan%20Gosling/backdrop.webp"
       },
       {
         "id": "a0af08f2-fc36-4203-980b-719c8501c8c8",
@@ -4226,8 +4226,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Margot%20Robbie/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Margot%20Robbie/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Margot%20Robbie/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Margot%20Robbie/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4237,7 +4237,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Margot%20Robbie/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Margot%20Robbie/backdrop.webp"
       },
       {
         "id": "8d40b54d-9b5e-47d8-a5cc-46d6c26bb970",
@@ -4253,8 +4253,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Timothee%20Chalamet/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Timothee%20Chalamet/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Timothee%20Chalamet/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Timothee%20Chalamet/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4264,7 +4264,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Timothee%20Chalamet/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Timothee%20Chalamet/backdrop.webp"
       },
       {
         "id": "d5b1b282-b4b7-4e10-a3bd-93f14479e984",
@@ -4280,8 +4280,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Keanu%20Reeves/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Keanu%20Reeves/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Keanu%20Reeves/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Keanu%20Reeves/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4291,7 +4291,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Keanu%20Reeves/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Keanu%20Reeves/backdrop.webp"
       },
       {
         "id": "folder-2f392682",
@@ -4307,8 +4307,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Jake%20Gyllenhaal/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Jake%20Gyllenhaal/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Jake%20Gyllenhaal/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Jake%20Gyllenhaal/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4318,7 +4318,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Jake%20Gyllenhaal/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Jake%20Gyllenhaal/backdrop.webp"
       },
       {
         "id": "folder-c819a951",
@@ -4334,8 +4334,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Zendaya/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Zendaya/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Zendaya/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Zendaya/cover.webp",
         "catalogSources": [
           {
             "type": "all",
@@ -4345,7 +4345,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Zendaya/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Zendaya/backdrop.webp"
       },
       {
         "id": "folder-04ca2636",
@@ -4361,8 +4361,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Matt%20Damon/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Matt%20Damon/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Matt%20Damon/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Matt%20Damon/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4372,7 +4372,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Matt%20Damon/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Matt%20Damon/backdrop.webp"
       },
       {
         "id": "folder-9cdc32e1",
@@ -4388,8 +4388,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Morgan%20Freeman/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Morgan%20Freeman/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Morgan%20Freeman/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Morgan%20Freeman/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4399,7 +4399,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Morgan%20Freeman/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Morgan%20Freeman/backdrop.webp"
       },
       {
         "id": "folder-4937964a",
@@ -4415,8 +4415,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Robert%20Downey%20Jr/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Robert%20Downey%20Jr/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Robert%20Downey%20Jr./logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Robert%20Downey%20Jr./cover.webp",
         "catalogSources": [
           {
             "type": "all",
@@ -4426,7 +4426,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Robert%20Downey%20Jr/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Robert%20Downey%20Jr./backdrop.webp"
       },
       {
         "id": "folder-dc9115b4",
@@ -4442,8 +4442,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Daniel%20Day-Lewis/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Daniel%20Day-Lewis/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Daniel%20Day-Lewis/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Daniel%20Day-Lewis/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4453,7 +4453,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Daniel%20Day-Lewis/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Daniel%20Day-Lewis/backdrop.webp"
       },
       {
         "id": "folder-595d9dc3",
@@ -4469,8 +4469,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Robert%20De%20Niro/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Robert%20De%20Niro/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Robert%20De%20Niro/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Robert%20De%20Niro/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4480,7 +4480,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Robert%20De%20Niro/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Robert%20De%20Niro/backdrop.webp"
       },
       {
         "id": "folder-51f990eb",
@@ -4496,8 +4496,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Cate%20Blanchett/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Cate%20Blanchett/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Cate%20Blanchett/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Cate%20Blanchett/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4507,7 +4507,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Cate%20Blanchett/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Cate%20Blanchett/backdrop.webp"
       },
       {
         "id": "folder-5dcc3e3d",
@@ -4523,8 +4523,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Cillian%20Murphy/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Cillian%20Murphy/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Cillian%20Murphy/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Cillian%20Murphy/cover.webp",
         "catalogSources": [
           {
             "type": "all",
@@ -4534,7 +4534,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Cillian%20Murphy/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Cillian%20Murphy/backdrop.webp"
       },
       {
         "id": "folder-aacc93cd",
@@ -4550,8 +4550,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Natalie%20Portman/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Natalie%20Portman/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Natalie%20Portman/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Natalie%20Portman/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4561,7 +4561,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Natalie%20Portman/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Natalie%20Portman/backdrop.webp"
       },
       {
         "id": "folder-87aed621",
@@ -4577,8 +4577,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Brad%20Pitt/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Brad%20Pitt/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Brad%20Pitt/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Brad%20Pitt/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4588,7 +4588,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Brad%20Pitt/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Brad%20Pitt/backdrop.webp"
       },
       {
         "id": "folder-650674bb",
@@ -4604,8 +4604,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Tom%20Hanks/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Tom%20Hanks/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Tom%20Hanks/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Tom%20Hanks/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4615,7 +4615,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Tom%20Hanks/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Tom%20Hanks/backdrop.webp"
       },
       {
         "id": "folder-6113c0cf",
@@ -4631,8 +4631,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Anthony%20Hopkins/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Anthony%20Hopkins/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Anthony%20Hopkins/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Anthony%20Hopkins/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4642,7 +4642,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Anthony%20Hopkins/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Anthony%20Hopkins/backdrop.webp"
       },
       {
         "id": "folder-016a8e11",
@@ -4658,8 +4658,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Denzel%20Washington/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Denzel%20Washington/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Denzel%20Washington/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Denzel%20Washington/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4669,7 +4669,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Denzel%20Washington/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Denzel%20Washington/backdrop.webp"
       },
       {
         "id": "folder-5f328239",
@@ -4685,8 +4685,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Meryl%20Streep/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Meryl%20Streep/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Meryl%20Streep/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Meryl%20Streep/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4696,7 +4696,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Meryl%20Streep/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Meryl%20Streep/backdrop.webp"
       },
       {
         "id": "folder-61eb8b1c",
@@ -4712,8 +4712,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Tom%20Cruise/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Tom%20Cruise/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Tom%20Cruise/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Tom%20Cruise/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4723,7 +4723,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Tom%20Cruise/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Tom%20Cruise/backdrop.webp"
       },
       {
         "id": "folder-b5cd830e",
@@ -4739,8 +4739,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Scarlett%20Johansson/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Scarlett%20Johansson/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Scarlett%20Johansson/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Scarlett%20Johansson/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4750,7 +4750,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Scarlett%20Johansson/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Scarlett%20Johansson/backdrop.webp"
       },
       {
         "id": "folder-c197ad79",
@@ -4766,8 +4766,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Liam%20Neeson/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Liam%20Neeson/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Liam%20Neeson/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Liam%20Neeson/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4777,7 +4777,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Liam%20Neeson/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Liam%20Neeson/backdrop.webp"
       },
       {
         "id": "folder-bd477e4c",
@@ -4793,8 +4793,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Christian%20Bale/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Christian%20Bale/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Christian%20Bale/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Christian%20Bale/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4804,7 +4804,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Christian%20Bale/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Christian%20Bale/backdrop.webp"
       },
       {
         "id": "folder-29b6bff8",
@@ -4820,8 +4820,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Sydney%20Sweeney/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Sydney%20Sweeney/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Sydney%20Sweeney/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Sydney%20Sweeney/cover.webp",
         "catalogSources": [
           {
             "type": "all",
@@ -4831,7 +4831,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Sydney%20Sweeney/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Sydney%20Sweeney/backdrop.webp"
       },
       {
         "id": "folder-61f0b7d0",
@@ -4847,8 +4847,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Dwayne%20Johnson/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Dwayne%20Johnson/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Dwayne%20Johnson/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Dwayne%20Johnson/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4858,7 +4858,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Dwayne%20Johnson/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Dwayne%20Johnson/backdrop.webp"
       },
       {
         "id": "folder-99f79b1b",
@@ -4874,8 +4874,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Jack%20Nicholson/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Jack%20Nicholson/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Jack%20Nicholson/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Jack%20Nicholson/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4885,7 +4885,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Jack%20Nicholson/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Jack%20Nicholson/backdrop.webp"
       },
       {
         "id": "folder-199b6774",
@@ -4901,8 +4901,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Jenna%20Ortega/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Jenna%20Ortega/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Jenna%20Ortega/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Jenna%20Ortega/cover.webp",
         "catalogSources": [
           {
             "type": "all",
@@ -4912,7 +4912,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Jenna%20Ortega/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Jenna%20Ortega/backdrop.webp"
       },
       {
         "id": "folder-b7b20d13",
@@ -4928,8 +4928,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Jim%20Carrey/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Jim%20Carrey/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Jim%20Carrey/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Jim%20Carrey/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4939,7 +4939,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Jim%20Carrey/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Jim%20Carrey/backdrop.webp"
       },
       {
         "id": "folder-54e064f9",
@@ -4955,8 +4955,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Robin%20Williams/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Robin%20Williams/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Robin%20Williams/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Robin%20Williams/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4966,7 +4966,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Robin%20Williams/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Robin%20Williams/backdrop.webp"
       },
       {
         "id": "folder-e81a2d69",
@@ -4982,8 +4982,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Adam%20Sandler/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Adam%20Sandler/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Adam%20Sandler/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Adam%20Sandler/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4993,7 +4993,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Adam%20Sandler/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Adam%20Sandler/backdrop.webp"
       },
       {
         "id": "folder-57d61d4d",
@@ -5009,8 +5009,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Harrison%20Ford/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Harrison%20Ford/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Harrison%20Ford/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Harrison%20Ford/cover.webp",
         "catalogSources": [
           {
             "type": "all",
@@ -5020,7 +5020,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Harrison%20Ford/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Harrison%20Ford/backdrop.webp"
       },
       {
         "id": "folder-143d00ec",
@@ -5036,8 +5036,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Jennifer%20Lawrence/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Jennifer%20Lawrence/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Jennifer%20Lawrence/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Jennifer%20Lawrence/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5047,7 +5047,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Jennifer%20Lawrence/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Jennifer%20Lawrence/backdrop.webp"
       },
       {
         "id": "folder-1e9f37cb",
@@ -5063,8 +5063,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Nicolas%20Cage/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Nicolas%20Cage/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Nicolas%20Cage/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Nicolas%20Cage/cover.webp",
         "catalogSources": [
           {
             "type": "all",
@@ -5074,7 +5074,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Nicolas%20Cage/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Nicolas%20Cage/backdrop.webp"
       },
       {
         "id": "folder-95a7efe9",
@@ -5090,8 +5090,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Florence%20Pugh/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Florence%20Pugh/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Florence%20Pugh/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Florence%20Pugh/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5101,7 +5101,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Florence%20Pugh/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Florence%20Pugh/backdrop.webp"
       },
       {
         "id": "folder-8041ee1e",
@@ -5117,8 +5117,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Daniel%20Craig/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Daniel%20Craig/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Daniel%20Craig/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Daniel%20Craig/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5128,7 +5128,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Daniel%20Craig/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Daniel%20Craig/backdrop.webp"
       },
       {
         "id": "folder-4bc59ade",
@@ -5144,8 +5144,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Matthew%20McConaughey/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Matthew%20McConaughey/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Matthew%20McConaughey/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Matthew%20McConaughey/cover.webp",
         "catalogSources": [
           {
             "type": "all",
@@ -5155,7 +5155,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Matthew%20McConaughey/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Matthew%20McConaughey/backdrop.webp"
       },
       {
         "id": "folder-d6b94629",
@@ -5171,8 +5171,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Ben%20Stiller/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Ben%20Stiller/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Ben%20Stiller/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Ben%20Stiller/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5182,7 +5182,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Ben%20Stiller/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Ben%20Stiller/backdrop.webp"
       },
       {
         "id": "folder-f3f66dc8",
@@ -5198,8 +5198,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Nicole%20Kidman/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Nicole%20Kidman/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Nicole%20Kidman/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Nicole%20Kidman/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5209,7 +5209,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Nicole%20Kidman/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Nicole%20Kidman/backdrop.webp"
       },
       {
         "id": "folder-b94a87e2",
@@ -5225,8 +5225,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Actors/Ryan%20Reynolds/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Actors/Ryan%20Reynolds/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Ryan%20Reynolds/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Ryan%20Reynolds/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5236,7 +5236,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Actors/Ryan%20Reynolds/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Ryan%20Reynolds/backdrop.webp"
       }
     ],
     "pinToTop": true,
@@ -5325,8 +5325,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Awards/Oscars/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Awards/Oscars/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Awards/Oscars/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Awards/Oscars/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5390,7 +5390,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Awards/Oscars/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Awards/Oscars/backdrop.webp"
       },
       {
         "id": "folder-fe9b9b4b",
@@ -5455,8 +5455,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Awards/Golden%20Globes/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Awards/Golden%20Globes/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Awards/Golden%20Globes/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Awards/Golden%20Globes/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5508,7 +5508,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Awards/Golden%20Globes/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Awards/Golden%20Globes/backdrop.webp"
       },
       {
         "id": "folder-23b0a7b7",
@@ -5524,8 +5524,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Awards/Cannes%20Film%20Festival/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Awards/Cannes%20Film%20Festival/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Awards/Cannes%20Film%20Festival/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Awards/Cannes%20Film%20Festival/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5535,7 +5535,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Awards/Cannes%20Film%20Festival/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Awards/Cannes%20Film%20Festival/backdrop.webp"
       },
       {
         "id": "folder-34750510",
@@ -5551,8 +5551,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Awards/Venice%20Film%20Festival/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Awards/Venice%20Film%20Festival/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Awards/Venice%20Film%20Festival/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Awards/Venice%20Film%20Festival/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5562,7 +5562,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Awards/Venice%20Film%20Festival/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Awards/Venice%20Film%20Festival/backdrop.webp"
       },
       {
         "id": "folder-3315de0e",
@@ -5578,8 +5578,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Awards/BAFTA/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Awards/BAFTA/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Awards/BAFTA/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Awards/BAFTA/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5589,7 +5589,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Awards/BAFTA/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Awards/BAFTA/backdrop.webp"
       }
     ],
     "pinToTop": true,
@@ -5615,8 +5615,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Directors/Christopher%20Nolan/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Directors/Christopher%20Nolan/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Directors/Christopher%20Nolan/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Directors/Christopher%20Nolan/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5626,7 +5626,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Directors/Christopher%20Nolan/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Directors/Christopher%20Nolan/backdrop.webp"
       },
       {
         "id": "folder-48123f0e",
@@ -5642,8 +5642,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Directors/Denis%20Villeneuve/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Directors/Denis%20Villeneuve/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Directors/Denis%20Villeneuve/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Directors/Denis%20Villeneuve/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5653,7 +5653,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Directors/Denis%20Villeneuve/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Directors/Denis%20Villeneuve/backdrop.webp"
       },
       {
         "id": "folder-bfbe1e61",
@@ -5669,8 +5669,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Directors/Steven%20Spielberg/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Directors/Steven%20Spielberg/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Directors/Steven%20Spielberg/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Directors/Steven%20Spielberg/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5680,7 +5680,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Directors/Steven%20Spielberg/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Directors/Steven%20Spielberg/backdrop.webp"
       },
       {
         "id": "folder-b2fc478a",
@@ -5696,8 +5696,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Directors/James%20Cameron/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Directors/James%20Cameron/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Directors/James%20Cameron/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Directors/James%20Cameron/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5707,7 +5707,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Directors/James%20Cameron/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Directors/James%20Cameron/backdrop.webp"
       },
       {
         "id": "folder-97737281",
@@ -5723,8 +5723,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Directors/Ryan%20Coogler/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Directors/Ryan%20Coogler/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Directors/Ryan%20Coogler/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Directors/Ryan%20Coogler/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5734,7 +5734,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Directors/Ryan%20Coogler/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Directors/Ryan%20Coogler/backdrop.webp"
       },
       {
         "id": "folder-4a8b6b37",
@@ -5750,8 +5750,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Directors/Martin%20Scorsese/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Directors/Martin%20Scorsese/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Directors/Martin%20Scorsese/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Directors/Martin%20Scorsese/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5761,7 +5761,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Directors/Martin%20Scorsese/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Directors/Martin%20Scorsese/backdrop.webp"
       },
       {
         "id": "folder-98f0447b",
@@ -5777,8 +5777,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Directors/Quentin%20Tarantino/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Directors/Quentin%20Tarantino/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Directors/Quentin%20Tarantino/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Directors/Quentin%20Tarantino/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5788,7 +5788,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Directors/Quentin%20Tarantino/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Directors/Quentin%20Tarantino/backdrop.webp"
       },
       {
         "id": "folder-22d62268",
@@ -5804,8 +5804,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Directors/Ridley%20Scott/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Directors/Ridley%20Scott/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Directors/Ridley%20Scott/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Directors/Ridley%20Scott/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5815,7 +5815,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Directors/Ridley%20Scott/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Directors/Ridley%20Scott/backdrop.webp"
       },
       {
         "id": "folder-eb4d297f",
@@ -5831,8 +5831,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Directors/Paul%20Thomas%20Anderson/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Directors/Paul%20Thomas%20Anderson/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Directors/Paul%20Thomas%20Anderson/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Directors/Paul%20Thomas%20Anderson/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5842,7 +5842,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Directors/Paul%20Thomas%20Anderson/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Directors/Paul%20Thomas%20Anderson/backdrop.webp"
       },
       {
         "id": "folder-26abfb9e",
@@ -5858,8 +5858,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Directors/Wes%20Anderson/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Directors/Wes%20Anderson/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Directors/Wes%20Anderson/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Directors/Wes%20Anderson/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5869,7 +5869,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Directors/Wes%20Anderson/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Directors/Wes%20Anderson/backdrop.webp"
       },
       {
         "id": "folder-04ddaf5b",
@@ -5885,8 +5885,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Directors/Guillermo%20Del%20Toro/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Directors/Guillermo%20Del%20Toro/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Directors/Guillermo%20del%20Toro/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Directors/Guillermo%20del%20Toro/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5896,7 +5896,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Directors/Guillermo%20Del%20Toro/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Directors/Guillermo%20del%20Toro/backdrop.webp"
       },
       {
         "id": "folder-8c39f57b",
@@ -5912,8 +5912,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kao-xt.com/Directors/David%20Fincher/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Directors/David%20Fincher/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Directors/David%20Fincher/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Directors/David%20Fincher/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5923,7 +5923,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Directors/David%20Fincher/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Directors/David%20Fincher/backdrop.webp"
       }
     ],
     "pinToTop": true,
@@ -5949,8 +5949,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Based%20On/True%20Events/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Based%20On/True%20Events/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Based%20On/True%20Stories/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Based%20On/True%20Stories/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -5960,7 +5960,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Based%20On/True%20Events/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Based%20On/True%20Stories/backdrop.webp"
       },
       {
         "id": "folder-77392d45",
@@ -5983,8 +5983,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Based%20On/Comics/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Based%20On/Comics/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Based%20On/Comics/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Based%20On/Comics/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6000,7 +6000,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Based%20On/Comics/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Based%20On/Comics/backdrop.webp"
       },
       {
         "id": "folder-bef63ba0",
@@ -6016,8 +6016,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Based%20On/Video%20Games/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Based%20On/Video%20Games/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Based%20On/Video%20Games/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Based%20On/Video%20Games/cover.webp",
         "catalogSources": [
           {
             "type": "all",
@@ -6027,7 +6027,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Based%20On/Video%20Games/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Based%20On/Video%20Games/backdrop.webp"
       },
       {
         "id": "folder-00d98709",
@@ -6050,8 +6050,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Based%20On/Books/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Based%20On/Books/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Based%20On/Books/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Based%20On/Books/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6067,7 +6067,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Based%20On/Books/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Based%20On/Books/backdrop.webp"
       },
       {
         "id": "folder-f1278291",
@@ -6083,8 +6083,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Based%20On/Biographies/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Based%20On/Biographies/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Based%20On/Biographies/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Based%20On/Biographies/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6094,7 +6094,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Based%20On/Biographies/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Based%20On/Biographies/backdrop.webp"
       }
     ],
     "pinToTop": true,
@@ -6134,8 +6134,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Holiday%20Specials/Christmas/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Holiday%20Specials/Christmas/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Holiday%20Specials/Christmas/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Holiday%20Specials/Christmas/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6157,7 +6157,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Holiday%20Specials/Christmas/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Holiday%20Specials/Christmas/backdrop.webp"
       },
       {
         "id": "folder-240e6a88",
@@ -6173,8 +6173,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Holiday%20Specials/Thanksgiving/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Holiday%20Specials/Thanksgiving/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Holiday%20Specials/Thanksgiving/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Holiday%20Specials/Thanksgiving/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6184,7 +6184,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Holiday%20Specials/Thanksgiving/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Holiday%20Specials/Thanksgiving/backdrop.webp"
       },
       {
         "id": "folder-856bcd07",
@@ -6200,8 +6200,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Holiday%20Specials/Halloween/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Holiday%20Specials/Halloween/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Holiday%20Specials/Halloween/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Holiday%20Specials/Halloween/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6211,7 +6211,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Holiday%20Specials/Halloween/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Holiday%20Specials/Halloween/backdrop.webp"
       },
       {
         "id": "folder-92251736",
@@ -6227,8 +6227,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Holiday%20Specials/Valentine's/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Holiday%20Specials/Valentine's/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Holiday%20Specials/Valentine's/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Holiday%20Specials/Valentine's/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6238,7 +6238,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Holiday%20Specials/Valentine's/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Holiday%20Specials/Valentine's/backdrop.webp"
       },
       {
         "id": "folder-d2fcd6c2",
@@ -6254,8 +6254,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Holiday%20Specials/St%20Patrick's/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Holiday%20Specials/St%20Patrick's/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Holiday%20Specials/St%20Patrick's/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Holiday%20Specials/St%20Patrick's/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6265,7 +6265,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Holiday%20Specials/St%20Patrick's/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Holiday%20Specials/St%20Patrick's/backdrop.webp"
       }
     ],
     "pinToTop": true,
@@ -6298,8 +6298,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Anime/Popular/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Anime/Popular/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Anime/Popular/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Anime/Popular/cover.webp",
         "catalogSources": [
           {
             "type": "series",
@@ -6315,7 +6315,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Anime/Popular/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Anime/Popular/backdrop.webp"
       },
       {
         "id": "folder-371a0ae4",
@@ -6338,8 +6338,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Anime/Top%20Rated/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Anime/Top%20Rated/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Anime/Top%20Rated/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Anime/Top%20Rated/cover.webp",
         "catalogSources": [
           {
             "type": "series",
@@ -6355,7 +6355,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Anime/Top%20Rated/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Anime/Top%20Rated/backdrop.webp"
       },
       {
         "id": "folder-a48debfd",
@@ -6378,8 +6378,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Anime/Premieres/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Anime/Premieres/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Anime/Premieres/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Anime/Premieres/cover.webp",
         "catalogSources": [
           {
             "type": "series",
@@ -6395,7 +6395,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Anime/Premieres/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Anime/Premieres/backdrop.webp"
       },
       {
         "id": "folder-0dcc3536",
@@ -6418,8 +6418,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Anime/Dubbed/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Anime/Dubbed/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Anime/Dubbed/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Anime/Dubbed/cover.webp",
         "catalogSources": [
           {
             "type": "series",
@@ -6435,7 +6435,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Anime/Dubbed/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Anime/Dubbed/backdrop.webp"
       },
       {
         "id": "folder-64cd50e7",
@@ -6451,8 +6451,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Anime/Studio%20Ghibli/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Anime/Studio%20Ghibli/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Anime/Studio%20Ghibli/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Anime/Studio%20Ghibli/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6462,7 +6462,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Anime/Studio%20Ghibli/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Anime/Studio%20Ghibli/backdrop.webp"
       },
       {
         "id": "folder-fcd16840",
@@ -6485,8 +6485,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Anime/Dragon%20Ball/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Anime/Dragon%20Ball/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Anime/Dragon%20Ball/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Anime/Dragon%20Ball/cover.webp",
         "catalogSources": [
           {
             "type": "series",
@@ -6502,7 +6502,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Anime/Dragon%20Ball/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Anime/Dragon%20Ball/backdrop.webp"
       },
       {
         "id": "folder-37580758",
@@ -6525,8 +6525,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Anime/Bleach/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Anime/Bleach/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Anime/Bleach/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Anime/Bleach/cover.webp",
         "catalogSources": [
           {
             "type": "series",
@@ -6542,7 +6542,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Anime/Bleach/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Anime/Bleach/backdrop.webp"
       },
       {
         "id": "folder-2e90096a",
@@ -6565,8 +6565,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Anime/One%20Piece/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Anime/One%20Piece/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Anime/One%20Piece/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Anime/One%20Piece/cover.webp",
         "catalogSources": [
           {
             "type": "series",
@@ -6582,7 +6582,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Anime/One%20Piece/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Anime/One%20Piece/backdrop.webp"
       },
       {
         "id": "folder-b60e94c3",
@@ -6605,8 +6605,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Anime/Naruto/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Anime/Naruto/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Anime/Naruto/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Anime/Naruto/cover.webp",
         "catalogSources": [
           {
             "type": "series",
@@ -6622,7 +6622,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Anime/Naruto/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Anime/Naruto/backdrop.webp"
       },
       {
         "id": "folder-818ec071",
@@ -6645,8 +6645,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Anime/Gundam/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Anime/Gundam/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Anime/Gundam/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Anime/Gundam/cover.webp",
         "catalogSources": [
           {
             "type": "series",
@@ -6662,7 +6662,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Anime/Gundam/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Anime/Gundam/backdrop.webp"
       },
       {
         "id": "folder-f4e773e2",
@@ -6685,8 +6685,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Anime/My%20Hero%20Academia/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Anime/My%20Hero%20Academia/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Anime/My%20Hero%20Academia/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Anime/My%20Hero%20Academia/cover.webp",
         "catalogSources": [
           {
             "type": "series",
@@ -6702,7 +6702,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Anime/My%20Hero%20Academia/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Anime/My%20Hero%20Academia/backdrop.webp"
       },
       {
         "id": "folder-1b6f003d",
@@ -6725,8 +6725,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kao-xt.com/Anime/Detective%20Conan/logo.webp",
-        "coverImageUrl": "https://kao-xt.com/Anime/Detective%20Conan/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Anime/Detective%20Conan/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Anime/Detective%20Conan/cover.webp",
         "catalogSources": [
           {
             "type": "series",
@@ -6742,7 +6742,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kao-xt.com/Anime/Detective%20Conan/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Anime/Detective%20Conan/backdrop.webp"
       }
     ],
     "pinToTop": true,
