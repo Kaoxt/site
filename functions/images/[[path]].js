@@ -37,6 +37,14 @@ export async function onRequest(context) {
     });
   }
 
+  // Keep already-saved Nuvio setups working when their artwork URLs use an
+  // older display name, casing, or historical folder spelling. R2 keeps the
+  // canonical repository keys, so normalize aliases before every lookup.
+  key = key
+    .replace(/^images\/Discover\/Recommended For You\//i, "images/Discover/For You/")
+    .replace(/^images\/Networks\/Syfy\//i, "images/Networks/SYFY/")
+    .replace(/^images\/Franchises\/Jurassic Park\//i, "images/Franchises/Jurrasic Park/");
+
   // Cache GET responses at the Cloudflare edge.
   // The full URL (including ?v=...) is the cache key, which means query
   // parameters can be used to immediately bypass an older cached copy.
