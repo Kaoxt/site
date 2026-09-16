@@ -43,6 +43,7 @@
       ratingSource: settings.ratingSource,
       trendDetails: settings.trendDetails.join(','),
       language: '{language_short}',
+      cv: '2',
     });
     return 'https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?' +
       params.toString().replace('%7Blanguage_short%7D', '{language_short}');
