@@ -1,0 +1,101 @@
+import { onRequest as handlePosterV2 } from '../api/posters-v2/[[path]].js';
+import { decodeBetterPostersConfig } from '../_lib/better-posters-config-token.js';
+
+function jsonError(message, status = 400) {
+  return new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
+  });
+}
+
+function typeValue(raw) {
+  const value = String(raw || '').toLowerCase();
+  if (value === 'movie') return 'movie';
+  if (value === 'series' || value === 'tv') return 'series';
+  return '';
+}
+
+export async function onRequest(context) {
+  const { request } = context;
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'access-control-allow-origin': '*',
+        'access-control-allow-methods': 'GET, HEAD, OPTIONS',
+      },
+    });
+  }
+  if (!['GET', 'HEAD'].includes(request.method)) return jsonError('Method not allowed.', 405);
+
+  const publicUrl = new URL(request.url);
+  const parts = publicUrl.pathname.split('/').filter(Boolean);
+  if (parts.length !== 4 || parts[0] !== 'bp') {
+    return jsonError('Expected /bp/{configId}/{movie|series}/{id}.webp');
+  }
+
+  const configId = String(parts[1] || '').toLowerCase();
+  const config = decodeBetterPostersConfig(configId);
+  const type = typeValue(parts[2]);
+  if (!config || !type) return jsonError('Invalid Better Posters configuration or media type.');
+
+  let rawId = '';
+  try {
+    rawId = decodeURIComponent(String(parts[3] || '')).replace(/\.(webp|jpe?g)$/i, '').toLowerCase();
+  } catch {}
+  if (!/^(tt\d{5,12}|(?:tmdb|tvdb):[1-9]\d{0,11}|[1-9]\d{0,11})$/.test(rawId)) {
+    return jsonError('Invalid poster ID.');
+  }
+
+  const canonical = new URL(publicUrl.origin + `/bp/${configId}/${type}/${encodeURIComponent(rawId)}.webp`);
+  const edgeKeyUrl = new URL(canonical);
+  edgeKeyUrl.searchParams.set('__kollection_bp_delivery', '1');
+  const cacheRequest = new Request(edgeKeyUrl.toString(), { method: 'GET' });
+
+  try {
+    const hit = await caches.default.match(cacheRequest);
+    if (hit) {
+      const headers = new Headers(hit.headers);
+      headers.set('x-kollection-better-posters-cache', 'HIT');
+      if (request.method === 'HEAD') {
+        await hit.body?.cancel();
+        return new Response(null, { status: hit.status, headers });
+      }
+      return new Response(hit.body, { status: hit.status, statusText: hit.statusText, headers });
+    }
+  } catch {}
+
+  const inner = new URL(publicUrl.origin + `/api/posters-v2/${type}/${encodeURIComponent(rawId)}.webp`);
+  inner.searchParams.set('v', '26');
+  inner.searchParams.set('source', 'tmdb');
+  inner.searchParams.set('provider', 'btttr');
+  inner.searchParams.set('tags', config.trendDetails.length ? 'trend' : '');
+  inner.searchParams.set('trendDetails', config.trendDetails.join(','));
+  inner.searchParams.set('language', config.language);
+  inner.searchParams.set('overlayOnly', '1');
+  inner.searchParams.set('bpQuality', config.qualityTags ? '1' : '0');
+  inner.searchParams.set('bpGenre', config.genre ? '1' : '0');
+  inner.searchParams.set('bpRating', config.rating ? '1' : '0');
+  inner.searchParams.set('bpAge', config.ageRating ? '1' : '0');
+  inner.searchParams.set('bpRatingSource', config.ratingSource);
+
+  const response = await handlePosterV2({
+    ...context,
+    request: new Request(inner.toString(), { method: request.method, headers: request.headers }),
+  });
+  const headers = new Headers(response.headers);
+  headers.set('x-kollection-better-posters-config', configId);
+  headers.set('x-kollection-better-posters-cache', 'MISS');
+  headers.set('content-location', canonical.pathname);
+  const delivered = new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+
+  if (request.method === 'GET' && response.status === 200 && /^image\/webp/i.test(headers.get('content-type') || '') && !/no-store/i.test(headers.get('cache-control') || '')) {
+    context.waitUntil(caches.default.put(cacheRequest, delivered.clone()).catch(() => {}));
+  }
+
+  if (request.method === 'HEAD') {
+    await delivered.body?.cancel();
+    return new Response(null, { status: delivered.status, headers: delivered.headers });
+  }
+  return delivered;
+}
