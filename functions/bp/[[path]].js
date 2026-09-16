@@ -89,7 +89,12 @@ export async function onRequest(context) {
   headers.set('content-location', canonical.pathname);
   const delivered = new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 
-  if (request.method === 'GET' && response.status === 200 && /^image\/webp/i.test(headers.get('content-type') || '') && !/no-store/i.test(headers.get('cache-control') || '')) {
+  const directBetterPosters = response.status === 302 &&
+    /^https:\/\/btttr\.cc\//i.test(headers.get('location') || '');
+  const cacheableImage = response.status === 200 &&
+    /^image\//i.test(headers.get('content-type') || '');
+  if (request.method === 'GET' && (cacheableImage || directBetterPosters) &&
+      !/no-store/i.test(headers.get('cache-control') || '')) {
     context.waitUntil(caches.default.put(cacheRequest, delivered.clone()).catch(() => {}));
   }
 
