@@ -794,7 +794,35 @@ async function renderPoster(context, state, id) {
   if (tags.has('trend') && needsCredits(trendDetails)) appendParts.push('credits');
   const append = appendParts.join(',');
   const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
+  const rendererBase = String(env.POSTERS_V2_RENDERER_URL || DEFAULT_RENDERER_URL).replace(/\/$/, '');
+  const rendererShard = String(Number(id) % 2);
   const detailsPromise = measured(context, 'metadata', () => tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null&language=en-US`, env.TMDB_API_KEY, context));
+  const sourceWarmPromise = detailsPromise.then(async details => {
+    if (sourceUrl) return;
+    const smartLayout = url.searchParams.get('source') === 'smart';
+    const artwork = choosePoster(details, smartLayout);
+    const smartTextless = !overlayOnly && smartLayout && artwork.source === 'smart-textless';
+    const logo = chooseLogo(details, smartTextless);
+    if (!artwork.path && !logo.path) return;
+    try {
+      const warmed = await fetch(`${rendererBase}/warm`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-kollection-render-key': String(env.POSTERS_RENDERER_AUTH_TOKEN),
+          'x-kollection-render-shard': rendererShard,
+        },
+        body: JSON.stringify({
+          posterPath: artwork.path,
+          logoPath: overlayOnly ? '' : logo.path,
+          smartLayout,
+          overlayOnly: Boolean(overlayOnly),
+        }),
+        signal: AbortSignal.any([context.signal, AbortSignal.timeout(5000)]),
+      });
+      await warmed.body?.cancel();
+    } catch {}
+  });
   // MDBList's TMDB endpoint needs only the ID. Start it alongside TMDB, while
   // sources that actually need title details still wait for those details.
   const ratingDetails = env.MDBLIST_API_KEY && MDBLIST_RATING_SOURCES.has(requestedRatingSource)
@@ -864,10 +892,15 @@ async function renderPoster(context, state, id) {
   if (!slot.allowed) throw posterError(slot.reason);
 
   try {
-    const rendererBase = String(env.POSTERS_V2_RENDERER_URL || DEFAULT_RENDERER_URL).replace(/\/$/, '');
+    await sourceWarmPromise.catch(() => {});
     const rendered = await measured(context, 'renderer', () => fetch(`${rendererBase}/render`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', accept: 'image/webp', 'x-kollection-render-key': String(env.POSTERS_RENDERER_AUTH_TOKEN) },
+      headers: {
+        'content-type': 'application/json',
+        accept: 'image/webp',
+        'x-kollection-render-key': String(env.POSTERS_RENDERER_AUTH_TOKEN),
+        'x-kollection-render-shard': rendererShard,
+      },
       body: JSON.stringify(payload),
       signal: AbortSignal.any([context.signal, AbortSignal.timeout(10000)]),
     }));
