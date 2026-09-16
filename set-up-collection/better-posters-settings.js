@@ -95,13 +95,11 @@
 
   function pattern(value) {
     const settings = normalize(value);
-    // Fast path: when every Better Posters Trend category is allowed, let
-    // btttr.cc render its native Trend Tag exactly as Better Posters does.
-    if (settings.trendDetails.length === TREND_DETAILS.length) return directPattern(settings, true);
-    // Also avoid Kollection rendering when the user turns all Trend Tags off.
-    if (settings.trendDetails.length === 0) return directPattern(settings, false);
-    // Only customized subsets need Kollection's filtering layer.
-    return `https://kollection.tv/bp/${configId(settings)}/{type}/{imdb_id}.webp`;
+    // AIOMetadata always has {id}, while {imdb_id} can be empty for valid
+    // titles. Route every configuration through the compact Kollection token
+    // so the server can accept IMDb/TMDB/TVDB IDs and still fast-redirect
+    // straight to Better Posters whenever no filtering work is needed.
+    return `https://kollection.tv/bp/${configId(settings)}/{type}/{id}.webp`;
   }
 
   function label(value) {
