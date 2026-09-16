@@ -47,10 +47,12 @@ Daily TMDB rank remains the first choice (`#N Today`). When a title is outside T
 
 ## Freshness and failures
 
-- Trend posters are fresh for up to six hours, never beyond their stored UTC day. They can be served stale for up to 48 more hours while revalidating through `waitUntil`.
+- Dynamic Trend posters (daily rank and release/lifecycle labels) are fresh for up to six hours, never beyond their stored UTC day. They can be served stale for up to 48 more hours while revalidating through `waitUntil`.
+- Static curated Trend labels such as director, studio, and cast spotlights are treated like stable production artwork: they stay fresh for seven days instead of being needlessly refreshed every day. This is especially important for rows such as Christopher Nolan films.
 - Other production posters are fresh for seven days and can survive a refresh failure for up to 30 additional days.
 - Preview freshness is five minutes for trends, ten minutes for other overlays, or one hour for plain artwork. Its stale window is one hour.
-- Stale responses have a 15-second client/CDN TTL, allowing refreshed tags to appear promptly. Internal edge retention is longer, because the Workers Cache API doesn't implement stale-while-revalidate.
+- Stable production responses now advertise up to seven days of client/CDN freshness. Dynamic Trend responses keep their shorter six-hour cap. Stale responses have a 15-second client/CDN TTL, allowing refreshed tags to appear promptly. Internal edge retention is longer, because the Workers Cache API doesn't implement stale-while-revalidate.
+- Persistent R2 hits expose their ETag and exact content length. Conditional requests can return HTTP 304 without retransferring the WebP bytes. Clearing Nuvio's local cache still forces a download, but it does not remove the shared R2 or edge copies and must not trigger a new render.
 - A failed refresh, rating-provider failure, or render-budget denial never overwrites an existing usable overlay. A truly cold title may still need an original-art fallback during an outage or exhausted budget; those responses are `no-store`, not cached as completed overlays.
 - A new title still needs its first render. This system does not promise instantaneous cold loads or pre-render the entire TMDB catalog.
 
