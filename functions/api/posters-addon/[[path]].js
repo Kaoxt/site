@@ -40,7 +40,7 @@ function parseConfig(token) {
   } catch (_) {
     throw new Error('Invalid Posters addon configuration.');
   }
-  if (!config || ![1, 2, 3].includes(config.v) || typeof config.upstream !== 'string') {
+  if (!config || ![1, 2, 3, 4].includes(config.v) || typeof config.upstream !== 'string') {
     throw new Error('Invalid Posters addon configuration.');
   }
   const upstream = new URL(config.upstream);
@@ -52,7 +52,7 @@ function parseConfig(token) {
     throw new Error('Local/private upstreams are not supported.');
   }
   return {
-    v: 3,
+    v: 4,
     upstream: upstream.toString(),
     source: ['smart', 'tmdb', 'inherit'].includes(config.source) ? config.source : 'smart',
     tags: Array.isArray(config.tags) ? config.tags.filter((x) => typeof x === 'string') : ['trend', 'genre', 'rating'],
@@ -60,6 +60,7 @@ function parseConfig(token) {
     ratingSource: typeof config.ratingSource === 'string' ? config.ratingSource : 'average',
     collectionOnly: config.collectionOnly === true,
     preserveSource: config.preserveSource !== false,
+    passthroughPosters: config.passthroughPosters === true,
   };
 }
 
@@ -160,7 +161,9 @@ function mergedManifest(upstream, token, origin, config) {
     id: `tv.kollection.posters.${token.slice(0, 24)}`,
     version: '2.0.0',
     name: `Posters • ${upstream.name || 'Wrapped Addon'}`,
-    description: 'The Kollection Posters v2 wrapper. Catalog and metadata pass through while supported movie/show poster artwork is replaced with configured Kollection overlays.',
+    description: config.passthroughPosters
+      ? 'The Kollection collection-route bridge. Catalog and metadata pass through unchanged while Nuvio gets a unique addon identity for folder routing.'
+      : 'The Kollection Posters v2 wrapper. Catalog and metadata pass through while supported movie/show poster artwork is replaced with configured Kollection overlays.',
     logo: 'https://kollection.tv/favicon.ico',
     resources,
     types,
@@ -194,14 +197,14 @@ export async function onRequest({ request }) {
       const extraParts = parts.slice(6);
       if (extraParts.length) extraParts[extraParts.length - 1] = extraParts[extraParts.length - 1].replace(/\.json$/i, '');
       const payload = await fetchJson(upstreamResourceUrl(config.upstream, 'catalog', type, originalCatalog, extraParts));
-      return json(rewritePayload(payload, config, type));
+      return json(config.passthroughPosters ? payload : rewritePayload(payload, config, type));
     }
 
     if (resource === 'meta') {
       const type = decodeURIComponent(parts[4] || '');
       const id = decodeURIComponent(parts[5] || '').replace(/\.json$/i, '');
       const payload = await fetchJson(upstreamResourceUrl(config.upstream, 'meta', type, id));
-      return json(rewritePayload(payload, config, type));
+      return json(config.passthroughPosters ? payload : rewritePayload(payload, config, type));
     }
 
     return json({ error: 'Unsupported Posters addon resource.' }, 404);
