@@ -152,7 +152,8 @@ export async function onRequest(context) {
   // already supplied an IMDb ID. Better Posters can display the complete base
   // poster immediately; Kollection resolves/renders the allowed Trend Tag in
   // parallel and saves the final response under this same /bp/ cache key.
-  if (request.method === 'GET' && customTrendSubset && /^tt\d{5,12}$/i.test(rawId)) {
+  const prewarmRequest = request.headers.get('x-kollection-poster-prewarm') === '1';
+  if (request.method === 'GET' && !prewarmRequest && customTrendSubset && /^tt\d{5,12}$/i.test(rawId)) {
     context.waitUntil((async () => {
       const filtered = await buildFiltered();
       await filtered.body?.cancel();
