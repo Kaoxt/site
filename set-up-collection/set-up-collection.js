@@ -74,6 +74,20 @@
   const SETUP_ROUTE_BASE = '/set-up-collection';
   const SETUP_SESSION_KEY = 'kollection-setup-wizard:v1';
   const SETUP_SESSION_MAX_AGE = 12 * 60 * 60 * 1000;
+  const LEGACY_KNOWN_COLLECTION_GROUP_IDS = Object.freeze([
+    'f08ce9d6-429d-4c75-83f8-1d4d5eae096e',
+    'bf468c1e-9336-43c4-980e-f23cf09e51c2',
+    'f5d85ab1-70ee-4ea4-9ba3-570006691f49',
+    'collection-999d0cd8',
+    '1f105a34-b5dd-4820-8d1f-f2ce942700fc',
+    '940a3bf9-f385-4633-9bf8-07f9392facbd',
+    '48feb9bc-42c9-4188-8ab6-0e7261a4524c',
+    'collection-11374811',
+    'collection-0b5a31e4',
+    'collection-2c1014c5',
+    'collection-60f93645',
+    'd0ab49e1-b9d0-4b7c-b4ad-ad206d5875cd',
+  ]);
   const setupQuery = new URLSearchParams(window.location.search);
   const setupHasSavedId = setupQuery.has('saved');
   const setupUpdatesExisting = setupHasSavedId && setupQuery.get('update') === '1';
@@ -185,7 +199,18 @@
   window.addEventListener('kollection:restore-collection-selection', event => {
     const detail = event?.detail || {};
     if (Array.isArray(detail.selectedCollectionGroupIds)) {
-      state.selectedCollectionGroupIds = detail.selectedCollectionGroupIds.slice();
+      const selected = new Set(detail.selectedCollectionGroupIds.map(mergeKey).filter(Boolean));
+      if (detail.autoSelectNewCollectionGroups && Array.isArray(state.collectionPack)) {
+        const savedKnown = Array.isArray(detail.knownCollectionGroupIds)
+          ? detail.knownCollectionGroupIds.map(mergeKey).filter(Boolean)
+          : [];
+        const known = new Set(savedKnown.length ? savedKnown : LEGACY_KNOWN_COLLECTION_GROUP_IDS);
+        for (const group of state.collectionPack) {
+          const key = collectionGroupKey(group);
+          if (key && !known.has(key)) selected.add(key);
+        }
+      }
+      state.selectedCollectionGroupIds = [...selected];
     }
     if (detail.selectedCollectionFolderIds && typeof detail.selectedCollectionFolderIds === 'object') {
       state.selectedCollectionFolderIds = jsonClone(detail.selectedCollectionFolderIds);
