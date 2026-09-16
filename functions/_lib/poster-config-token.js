@@ -1,5 +1,5 @@
 export const TOKEN_VERSION = 'k2';
-export const POSTER_VISUAL_VERSION = '24';
+export const POSTER_VISUAL_VERSION = '25';
 export const ALLOWED_TAGS = ['trend', 'quality', 'genre', 'rating', 'age'];
 export const RATING_SOURCES = ['average', 'score', 'imdb', 'letterboxd', 'mal', 'rogerebert', 'tomatometer', 'popcornmeter', 'tmdb'];
 export const TREND_DETAILS = ['studio', 'director', 'cast', 'inCinema', 'rank', 'newMovie', 'comingSoon', 'newSeries', 'returningSeries', 'limitedSeries'];
