@@ -812,7 +812,7 @@ async function renderPoster(context, state, id) {
   const append = appendParts.join(',');
   const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
   const rendererBase = String(env.POSTERS_V2_RENDERER_URL || DEFAULT_RENDERER_URL).replace(/\/$/, '');
-  const rendererShard = String(Number(id) % 2);
+  const rendererShard = String(Number(id) % 4);
   const detailsPromise = measured(context, 'metadata', () => tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null&language=en-US`, env.TMDB_API_KEY, context));
   const sourceWarmPromise = detailsPromise.then(async details => {
     if (sourceUrl) return;
