@@ -27,6 +27,7 @@
       .replace(/\/images\/Based On\/True Events\//gi, '/images/Based On/True Stories/')
       .replace(/\/images\/Discover\/Recommended%20For%20You\//gi, '/images/Discover/For%20You/')
       .replace(/\/images\/Discover\/Recommended For You\//gi, '/images/Discover/For You/')
+      .replace(/\/images\/Networks\/Syfy\//gi, '/images/Networks/SYFY/')
       .replace(/\/images\/Actors\/Robert%20Downey%20Jr\//g, '/images/Actors/Robert%20Downey%20Jr./')
       .replace(/\/images\/Actors\/Robert Downey Jr\//g, '/images/Actors/Robert Downey Jr./')
       .replace(/\/images\/Franchises\/Jurassic%20Park\//gi, '/images/Franchises/Jurrasic%20Park/')
