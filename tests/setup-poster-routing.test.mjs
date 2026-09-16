@@ -11,8 +11,9 @@ test('Kollection poster pattern is valid for AIOMetadata placeholders', () => {
     tags: ['rating', 'trend', 'genre'],
     ratingSource: 'average',
   });
-  assert.match(pattern, /^https:\/\/kollection\.tv\/api\/posters-v2\/\{type\}\/\{tmdb_id\}\.webp\?/);
+  assert.match(pattern, /^https:\/\/kollection\.tv\/api\/posters-v2\/\{type\}\/\{id\}\.webp\?/);
   assert.match(pattern, /v=24/);
+  assert.match(pattern, /cv=4/);
   assert.match(pattern, /source=smart/);
   assert.match(pattern, /tags=genre%2Crating%2Ctrend/);
   assert.match(pattern, /ratingSource=average/);
