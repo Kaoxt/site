@@ -17,7 +17,7 @@
     const requestedTrend = new Set(Array.isArray(input.trendDetails) ? input.trendDetails.map(String) : TREND_DETAILS);
     if (requestedTrend.has('release')) LEGACY_RELEASE_DETAILS.forEach(type => requestedTrend.add(type));
     const trendDetails = TREND_DETAILS.filter(type => requestedTrend.has(type));
-    return { source, tags, ratingSource, trendDetails, artworkProvider: 'btttr' };
+    return { source, tags, ratingSource, trendDetails, artworkProvider: 'tmdb' };
   }
 
   function bitMask(values, allowed) {
@@ -51,7 +51,7 @@
       ratingSource: RATING_SOURCES[ratingIndex],
       trendDetails: valuesFromMask(trendMask, TREND_DETAILS),
     });
-    settings.artworkProvider = match[1] === 'k1' ? 'tmdb' : 'btttr';
+    settings.artworkProvider = 'tmdb';
     return settings;
   }
 
