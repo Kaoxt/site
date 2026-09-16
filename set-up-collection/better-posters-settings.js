@@ -1,46 +1,41 @@
 (() => {
   'use strict';
 
-  const STORAGE_KEY = 'kollection-better-posters-settings-v1';
+  const STORAGE_KEY = 'kollection-better-posters-settings-v2';
   const RATING_SOURCES = Object.freeze([
-    'average',
-    'imdb',
-    'tmdb',
-    'rottentomatoes',
-    'metacritic',
-    'trakt',
-    'letterboxd',
-    'rogerebert',
+    'average','imdb','tmdb','rottentomatoes','metacritic','trakt','letterboxd','rogerebert',
   ]);
   const LANGUAGES = Object.freeze([
     'en','es','fr','de','pt-BR','pt-PT','it','nl','pl','ru','tr','ar','ja','ko','zh','hi','sv','cs',
   ]);
-  const RATING_CODES = Object.freeze({
-    imdb: 'IM',
-    tmdb: 'TM',
-    rottentomatoes: 'RT',
-    metacritic: 'MC',
-    trakt: 'TR',
-    letterboxd: 'LB',
-    rogerebert: 'RE',
+  const TREND_DETAILS = Object.freeze([
+    'studio','director','cast','inCinema','rank','newMovie','comingSoon','newSeries','returningSeries','limitedSeries',
+  ]);
+  const LANGUAGE_CODES = Object.freeze({
+    en:0, es:1, fr:2, de:3, 'pt-BR':4, 'pt-PT':5, it:6, nl:7, pl:8,
+    ru:9, tr:10, ar:11, ja:12, ko:13, zh:14, hi:15, sv:16, cs:17,
   });
 
   function normalize(value) {
     const input = value && typeof value === 'object' ? value : {};
-    const ratingSource = RATING_SOURCES.includes(String(input.ratingSource || '').toLowerCase())
-      ? String(input.ratingSource).toLowerCase()
-      : 'average';
-    const requestedLanguage = String(input.language || 'en');
-    const language = LANGUAGES.includes(requestedLanguage) ? requestedLanguage : 'en';
+    const ratingSourceRaw = String(input.ratingSource || 'average').toLowerCase();
+    const ratingSource = RATING_SOURCES.includes(ratingSourceRaw) ? ratingSourceRaw : 'average';
+    const languageRaw = String(input.language || 'en');
+    const language = LANGUAGES.includes(languageRaw) ? languageRaw : 'en';
+
+    let requestedTrend;
+    if (Array.isArray(input.trendDetails)) requestedTrend = input.trendDetails.map(String);
+    else if (input.trendTags === false) requestedTrend = [];
+    else requestedTrend = TREND_DETAILS.slice();
 
     return {
-      trendTags: input.trendTags !== false,
       qualityTags: input.qualityTags === true,
       genre: input.genre !== false,
       rating: input.rating !== false,
       ageRating: input.ageRating === true,
       ratingSource,
       language,
+      trendDetails: TREND_DETAILS.filter(detail => requestedTrend.includes(detail)),
     };
   }
 
@@ -51,6 +46,24 @@
     } catch {
       return null;
     }
+  }
+
+  function trendMask(values) {
+    const selected = new Set(values || []);
+    return TREND_DETAILS.reduce((mask, value, index) => selected.has(value) ? mask | (1 << index) : mask, 0);
+  }
+
+  function configId(value) {
+    const settings = normalize(value);
+    let flags = 0;
+    if (settings.qualityTags) flags |= 1;
+    if (settings.genre) flags |= 2;
+    if (settings.rating) flags |= 4;
+    if (settings.ageRating) flags |= 8;
+    const rating = RATING_SOURCES.indexOf(settings.ratingSource);
+    const language = LANGUAGE_CODES[settings.language] ?? 0;
+    const trend = trendMask(settings.trendDetails);
+    return `b1${flags.toString(36)}${rating.toString(36)}${language.toString(36)}${trend.toString(36).padStart(2, '0')}`;
   }
 
   function posterPath(value) {
@@ -65,27 +78,18 @@
   }
 
   function pattern(value) {
-    const settings = normalize(value);
-    const params = new URLSearchParams();
-    if (!settings.trendTags) params.set('tag', 'none');
-    if (settings.language !== 'en') params.set('lang', settings.language);
-    const ratingCode = settings.rating ? RATING_CODES[settings.ratingSource] : '';
-    if (ratingCode) params.set('rs', ratingCode);
-
-    const base = `https://btttr.cc/${posterPath(settings)}/imdb/poster-default/{imdb_id}.jpg`;
-    const query = params.toString();
-    return query ? `${base}?${query}` : base;
+    return `https://kollection.tv/bp/${configId(value)}/{type}/{id}.webp`;
   }
 
   function label(value) {
     const settings = normalize(value);
     const parts = [];
-    if (settings.trendTags) parts.push('Trend Tags');
+    if (settings.trendDetails.length) parts.push(`Trend: ${settings.trendDetails.length}`);
     if (settings.qualityTags) parts.push('Quality');
     if (settings.genre) parts.push('Genre');
     if (settings.rating) parts.push(settings.ratingSource === 'average' ? 'Rating' : `${settings.ratingSource} rating`);
     if (settings.ageRating) parts.push('Age Rating');
-    return `Better Posters · ${parts.length ? parts.join(', ') : 'No overlays'}`;
+    return `Better Posters + Kollection Trends · ${parts.length ? parts.join(', ') : 'Base poster only'}`;
   }
 
   function applyToAioConfig(config, value) {
@@ -100,10 +104,12 @@
     }));
     delete config.kollectionPosters;
     config.kollectionBetterPosters = {
-      version: 1,
+      version: 2,
       enabled: true,
       provider: 'btttr.cc',
-      settings: { ...settings },
+      hybridTrendLayer: 'kollection',
+      configId: configId(settings),
+      settings: { ...settings, trendDetails: settings.trendDetails.slice() },
       posterUrlPattern: config.customPosterUrlPattern,
     };
     return config;
@@ -113,8 +119,10 @@
     STORAGE_KEY,
     RATING_SOURCES,
     LANGUAGES,
+    TREND_DETAILS,
     normalize,
     readLocal,
+    configId,
     posterPath,
     pattern,
     label,
