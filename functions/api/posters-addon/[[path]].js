@@ -40,7 +40,7 @@ function parseConfig(token) {
   } catch (_) {
     throw new Error('Invalid Posters addon configuration.');
   }
-  if (!config || ![1, 2].includes(config.v) || typeof config.upstream !== 'string') {
+  if (!config || ![1, 2, 3].includes(config.v) || typeof config.upstream !== 'string') {
     throw new Error('Invalid Posters addon configuration.');
   }
   const upstream = new URL(config.upstream);
@@ -52,12 +52,14 @@ function parseConfig(token) {
     throw new Error('Local/private upstreams are not supported.');
   }
   return {
-    v: 2,
+    v: 3,
     upstream: upstream.toString(),
     source: ['smart', 'tmdb', 'inherit'].includes(config.source) ? config.source : 'smart',
     tags: Array.isArray(config.tags) ? config.tags.filter((x) => typeof x === 'string') : ['trend', 'genre', 'rating'],
     trendDetails: normalizeTrendDetails(config.trendDetails),
     ratingSource: typeof config.ratingSource === 'string' ? config.ratingSource : 'average',
+    collectionOnly: config.collectionOnly === true,
+    preserveSource: config.preserveSource !== false,
   };
 }
 
@@ -90,10 +92,12 @@ function decodeCatalogId(value) {
 }
 
 function normalizePosterId(id) {
-  const raw = String(id || '');
+  const raw = String(id || '').trim();
   if (/^tt\d+$/i.test(raw) || /^\d+$/.test(raw)) return raw;
   let match = /^tmdb(?::(?:movie|tv|series))?:(\d+)$/i.exec(raw);
-  if (match) return match[1];
+  if (match) return `tmdb:${match[1]}`;
+  match = /^tvdb(?::(?:movie|tv|series))?:(\d+)$/i.exec(raw);
+  if (match) return `tvdb:${match[1]}`;
   match = /(?:^|:)tt(\d+)$/i.exec(raw);
   if (match) return `tt${match[1]}`;
   return '';
@@ -105,19 +109,22 @@ function posterUrl(config, type, id, sourceUrl = '') {
   const mediaType = type === 'series' || type === 'tv' ? 'tv' : 'movie';
   const tags = new Set(config.tags);
   const params = new URLSearchParams({
-    v: '23',
+    v: '24',
     source: config.source,
     tags: [...tags].sort().join(','),
     ratingSource: config.ratingSource,
     trendDetails: config.trendDetails.join(','),
+    cv: '4',
   });
-  try {
-    const original = new URL(String(sourceUrl || ''));
-    if (original.protocol === 'https:' && !original.username && !original.password && original.toString().length <= 1800) {
-      params.set('sourceUrl', original.toString());
-      params.set('overlayOnly', '1');
-    }
-  } catch {}
+  if (config.preserveSource) {
+    try {
+      const original = new URL(String(sourceUrl || ''));
+      if (original.protocol === 'https:' && !original.username && !original.password && original.toString().length <= 1800) {
+        params.set('sourceUrl', original.toString());
+        params.set('overlayOnly', '1');
+      }
+    } catch {}
+  }
   return `${POSTER_BASE}/${mediaType}/${encodeURIComponent(normalizedId)}.webp?${params}`;
 }
 
@@ -135,10 +142,14 @@ function rewritePayload(payload, config, type) {
   return out;
 }
 
-function mergedManifest(upstream, token, origin) {
+function mergedManifest(upstream, token, origin, config) {
   const catalogs = (Array.isArray(upstream.catalogs) ? upstream.catalogs : [])
     .filter((catalog) => catalog && typeof catalog.id === 'string' && typeof catalog.type === 'string')
-    .map((catalog) => ({ ...catalog, id: catalogId(catalog.id) }));
+    .map((catalog) => ({
+      ...catalog,
+      id: catalogId(catalog.id),
+      ...(config.collectionOnly ? { showInHome: false } : {}),
+    }));
   const declared = Array.isArray(upstream.resources) ? upstream.resources : [];
   const hasMeta = declared.some((r) => r === 'meta' || r?.name === 'meta');
   const resources = [];
@@ -173,7 +184,7 @@ export async function onRequest({ request }) {
     const resource = parts[3] || '';
 
     if (resource === 'manifest.json') {
-      return json(mergedManifest(upstreamManifest, token, url.origin), 200, { 'cache-control': 'public, max-age=300, s-maxage=1800' });
+      return json(mergedManifest(upstreamManifest, token, url.origin, config), 200, { 'cache-control': 'public, max-age=300, s-maxage=1800' });
     }
 
     if (resource === 'catalog') {
