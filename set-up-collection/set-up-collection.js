@@ -1129,29 +1129,72 @@
   }
 
   function posterBridgeManifestUrl(upstream) {
-    const helper = window.KollectionPosterSettings;
-    const settings = helper
-      ? helper.normalize(state.posterSettings || helper.readLocal() || {})
-      : (state.posterSettings || {});
     const token = encodePosterBridgeValue(JSON.stringify({
-      v: 3,
+      v: 4,
       upstream,
-      source: settings.source || 'smart',
-      tags: Array.isArray(settings.tags) ? settings.tags : ['trend', 'genre', 'rating'],
-      trendDetails: Array.isArray(settings.trendDetails) ? settings.trendDetails : undefined,
-      ratingSource: settings.ratingSource || 'average',
       collectionOnly: true,
-      preserveSource: false,
+      passthroughPosters: true,
     }));
     return `${window.location.origin}/api/posters-addon/${token}/manifest.json`;
   }
 
   async function provisionPosterBridges(ai) {
-    // AIOMetadata already applies Kollection's custom poster pattern to every
-    // selected catalog. Folder pages should use those exact manifest catalog
-    // routes so Home and Collection render the same poster URLs.
-    state.posterBridgeInstalls = [];
-    return { installs: [], routes: { ...(ai.catalogRoutes || {}) } };
+    // Nuvio resolves Collection folders by addon ID first. Multiple AIOMetadata
+    // installs share the same manifest ID, so a folder can silently hit the
+    // wrong instance even though Home is using the correct one. Give each
+    // generated AIOMetadata instance a unique collection-only bridge identity.
+    // The bridge leaves AIOMetadata's poster URLs untouched, so images still go
+    // directly to the shared /p/{configId}/... cache with no image proxy hop.
+    const installs = [];
+    const bridgeByInstallUrl = new Map();
+
+    for (let i = 0; i < (ai.installs || []).length; i++) {
+      const upstream = ai.installs[i];
+      const url = posterBridgeManifestUrl(upstream.url);
+      const manifest = await fetchAddonManifest(url);
+      if (!manifest?.id || !Array.isArray(manifest.catalogs)) {
+        throw new Error('Could not create the Kollection collection poster route.');
+      }
+
+      const bridge = {
+        url,
+        name: (ai.installs || []).length > 1 ? `Kollection Poster Bridge (${i + 1})` : 'Kollection Poster Bridge',
+        addonId: manifest.id,
+        upstreamUrl: upstream.url,
+        upstreamCatalogs: upstream.catalogs || [],
+        manifestCatalogs: manifest.catalogs,
+      };
+      installs.push(bridge);
+      bridgeByInstallUrl.set(upstream.url, bridge);
+    }
+
+    const routes = {};
+    for (const [sourceKey, upstreamRoute] of Object.entries(ai.catalogRoutes || {})) {
+      const install = (ai.installs || []).find(item =>
+        (item.catalogs || []).some(catalog =>
+          String(catalog?.id || '') === String(upstreamRoute?.catalogId || '') &&
+          normalizeAioCatalogType(catalog?.type) === normalizeAioCatalogType(upstreamRoute?.type)
+        )
+      );
+      const bridge = install ? bridgeByInstallUrl.get(install.url) : null;
+      if (!bridge) continue;
+
+      const wrappedId = posterBridgeCatalogId(upstreamRoute.catalogId);
+      const wrappedCatalog = bridge.manifestCatalogs.find(catalog =>
+        String(catalog?.id || '') === wrappedId &&
+        normalizeAioCatalogType(catalog?.type) === normalizeAioCatalogType(upstreamRoute?.type)
+      );
+      if (!wrappedCatalog) continue;
+
+      routes[sourceKey] = {
+        addonId: bridge.addonId,
+        catalogId: wrappedCatalog.id,
+        type: wrappedCatalog.type,
+      };
+    }
+
+    state.posterBridgeInstalls = installs;
+    return { installs, routes };
   }
 
   function repointAioSources(collections, routes, firstManifestId) {
