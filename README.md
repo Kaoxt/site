@@ -68,3 +68,17 @@ Then open `http://localhost:8080`.
 ## Direct Nuvio push
 
 The UI includes a **Send to Nuvio** entry point, but the starter intentionally does not collect credentials or call an undocumented endpoint. Once you have your current exported Nuvio JSON/schema and preferred authentication flow, the adapter can be added without changing the rest of the UI.
+
+## Runtime source of truth
+
+`runtime/database.kaoxt.js` is owned by **The Kollection** and is the authoritative production database used by kollection.tv for collection groups, folders, artwork URLs, and Nuvio setup generation.
+
+It must **not** be automatically replaced by `ImKaptain/Kaptain-Collection`.
+
+The runtime sync workflow may still refresh these AIOMetadata helper assets from upstream:
+
+- `runtime/kaoxt-aio-catalogs.json`
+- `runtime/kaoxt-aio-base-config.json`
+
+Changes to the collection database itself should be made in this repository so Kollection-specific fixes cannot be reverted by an upstream sync.
+
