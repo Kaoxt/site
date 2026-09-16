@@ -309,7 +309,7 @@
     const source = selectedSource();
     const tags = selectedTags().join(',');
     const trendDetails = selectedTrendDetails().join(',');
-    return `https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?v=23&source=${encodeURIComponent(source)}&tags=${encodeURIComponent(tags)}&ratingSource=${encodeURIComponent(selectedRatingSource())}&trendDetails=${encodeURIComponent(trendDetails)}&cv=2`;
+    return `https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?v=24&source=${encodeURIComponent(source)}&tags=${encodeURIComponent(tags)}&ratingSource=${encodeURIComponent(selectedRatingSource())}&trendDetails=${encodeURIComponent(trendDetails)}&cv=3`;
   };
 
   const buildOutput = () => {
