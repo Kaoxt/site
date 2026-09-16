@@ -62,7 +62,9 @@ export async function onRequest(context) {
 
   const language = canonicalLanguage(parts[2]);
   const canonicalPublicUrl = new URL(publicUrl.origin + `/p/${token}/${language}/${type}/${encodeURIComponent(rawId)}.webp`);
-  const cacheRequest = new Request(canonicalPublicUrl.toString(), { method: 'GET' });
+  const edgeCacheUrl = new URL(canonicalPublicUrl);
+  edgeCacheUrl.searchParams.set('__kollection_delivery', '2');
+  const cacheRequest = new Request(edgeCacheUrl.toString(), { method: 'GET' });
 
   try {
     const hit = await caches.default.match(cacheRequest);
