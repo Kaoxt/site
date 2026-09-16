@@ -1,11 +1,10 @@
 import http from 'node:http';
 import sharp from 'sharp';
 import { pathToFileURL } from 'node:url';
-import { loadTmdbPosterSource, SOURCE_CACHE_VERSION } from './source-loader.js';
+import { loadTmdbLogoSource, loadTmdbPosterSource, SOURCE_CACHE_VERSION } from './source-loader.js';
 
 const PORT = Number(process.env.PORT || 8080);
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w342';
-const TMDB_LOGO_BASE = 'https://image.tmdb.org/t/p/original';
 const POSTER_WIDTH = 500;
 const POSTER_HEIGHT = 750;
 const logoCache = new Map();
@@ -165,11 +164,10 @@ async function smartLogoImage(logoPath){
 
 async function loadLogoImage(logoPath){
  try{
-  const response=await fetch(`${TMDB_LOGO_BASE}${logoPath}`,{headers:{accept:'image/*'},signal:AbortSignal.timeout(3000)});
-  if(!response.ok)return null;
-  const image=await fitTitleImage(Buffer.from(await response.arrayBuffer()));
-  // Keep the exact original artwork and approved trim/placement. Cache the
-  // fitted result so another overlay variant skips both download and processing.
+  const source=await loadTmdbLogoSource(logoPath);
+  const image=await fitTitleImage(source.input);
+  // Keep the fitted result in memory while the original w500 logo is also
+  // retained in the shared R2 source cache for future container instances.
   if(image.buffer.length<=LOGO_CACHE_MAX_BYTES){
    logoCache.set(logoPath,{image,expiresAt:Date.now()+LOGO_CACHE_TTL_MS});
    logoCacheBytes+=image.buffer.length;
@@ -180,6 +178,15 @@ async function loadLogoImage(logoPath){
 }
 function smartBottomBackdrop(){const height=px(275);return Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${POSTER_WIDTH}" height="${height}"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="0.42" stop-color="#000" stop-opacity="0.04"/><stop offset="0.72" stop-color="#000" stop-opacity="0.20"/><stop offset="1" stop-color="#000" stop-opacity="0.54"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/></svg>`);}
 async function readJson(req){const chunks=[];for await(const chunk of req)chunks.push(chunk);const raw=Buffer.concat(chunks).toString('utf8');return raw?JSON.parse(raw):{};}
+
+export async function warmPosterAssets(body){
+ const{posterPath,logoPath='',smartLayout=false,overlayOnly=false}=body||{};
+ const jobs=[];
+ if(posterPath)jobs.push(loadTmdbPosterSource(posterPath));
+ if(smartLayout&&!overlayOnly&&logoPath)jobs.push(smartLogoImage(logoPath));
+ await Promise.allSettled(jobs);
+ return {warmed:jobs.length};
+}
 
 export async function renderPoster(body){
  const{posterPath,sourceUrl,logoPath='',title='',smartLayout=false,overlayOnly=false,rating='',ratingLabel='',genre='',trend='',age='',quality='',audio='',overlayColor='dynamic'}=body||{};
@@ -217,5 +224,5 @@ export async function renderPoster(body){
  return output;
 }
 
-const server=http.createServer(async(req,res)=>{try{if(req.method==='GET'&&req.url==='/health'){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return res.end(JSON.stringify({ok:true,renderer:'kollection-posters-v2-bp-layout-29'}));}if(req.method!=='POST'||req.url!=='/render'){res.writeHead(404,{'content-type':'application/json'});return res.end(JSON.stringify({error:'Not found'}));}const body=await readJson(req),started=Date.now(),output=await renderPoster(body);res.writeHead(200,{'content-type':'image/webp','content-length':String(output.length),'cache-control':'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800','x-kollection-renderer':'v2-bp-layout-29','x-kollection-render-ms':String(Date.now()-started),'x-kollection-source-cache':String(output.kollectionSourceCache||'BYPASS'),'x-kollection-source-cache-version':SOURCE_CACHE_VERSION,'x-kollection-source-cache-key':String(output.kollectionSourceCacheKey||'').slice(0,16),'x-kollection-source-retention-until':String(output.kollectionSourceRetentionUntil||0)});res.end(output);}catch(error){res.writeHead(400,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:error?.message||'Render failed'}));}});
+const server=http.createServer(async(req,res)=>{try{if(req.method==='GET'&&req.url==='/health'){res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});return res.end(JSON.stringify({ok:true,renderer:'kollection-posters-v2-bp-layout-29'}));}if(req.method==='POST'&&req.url==='/warm'){const body=await readJson(req),started=Date.now(),result=await warmPosterAssets(body);res.writeHead(204,{'cache-control':'no-store','x-kollection-warm-ms':String(Date.now()-started),'x-kollection-warmed-assets':String(result.warmed)});return res.end();}if(req.method!=='POST'||req.url!=='/render'){res.writeHead(404,{'content-type':'application/json'});return res.end(JSON.stringify({error:'Not found'}));}const body=await readJson(req),started=Date.now(),output=await renderPoster(body);res.writeHead(200,{'content-type':'image/webp','content-length':String(output.length),'cache-control':'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800','x-kollection-renderer':'v2-bp-layout-29','x-kollection-render-ms':String(Date.now()-started),'x-kollection-source-cache':String(output.kollectionSourceCache||'BYPASS'),'x-kollection-source-cache-version':SOURCE_CACHE_VERSION,'x-kollection-source-cache-key':String(output.kollectionSourceCacheKey||'').slice(0,16),'x-kollection-source-retention-until':String(output.kollectionSourceRetentionUntil||0)});res.end(output);}catch(error){res.writeHead(400,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify({error:error?.message||'Render failed'}));}});
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)server.listen(PORT,'0.0.0.0',()=>console.log(`Kollection Posters v2 renderer listening on ${PORT}`));
