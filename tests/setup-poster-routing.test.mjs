@@ -39,7 +39,7 @@ test('AIOMetadata poster routing is enabled for every catalog and library meta',
   });
 
   assert.equal(config.posterRatingProvider, 'custom');
-  assert.equal(config.usePosterProxy, true);
+  assert.equal(config.usePosterProxy, false);
   assert.equal(config.enableRatingPostersForLibrary, true);
   assert.ok(config.customPosterUrlPattern.includes('kollection.tv/api/posters-v2'));
   assert.ok(config.catalogs.every(catalog => catalog.enableRatingPosters === true));
