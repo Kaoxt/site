@@ -23,6 +23,7 @@
     bingecatSkipped: false,
     bingecatManifestUrl: '',
     selectedCollectionGroupIds: [],
+    knownCollectionGroupIds: [],
     selectedCollectionFolderIds: {},
   };
   let autoAction = false;
@@ -97,8 +98,9 @@
     if (/Bingecat is skipped/i.test(panelText)) snapshot.bingecatSkipped = true;
     if (/personal Bingecat manifest is ready/i.test(panelText)) snapshot.bingecatSkipped = false;
 
-    const checks = $$('.section-checkbox');
+    const checks = $('.section-checkbox');
     if (checks.length) {
+      snapshot.knownCollectionGroupIds = checks.map((input) => input.value);
       snapshot.selectedCollectionGroupIds = checks.filter((input) => input.checked).map((input) => input.value);
     }
   }
@@ -106,7 +108,7 @@
   function serializableConfig() {
     captureVisible();
     return {
-      version: 3,
+      version: 4,
       aiSetupMode: snapshot.aiSetupMode === 'custom' ? 'custom' : 'built-in',
       aiHostPreference: snapshot.aiHostPreference || '',
       aiHostMode: snapshot.aiHostMode || '',
@@ -120,6 +122,9 @@
       bingecatManifestUrl: snapshot.bingecatManifestUrl || '',
       selectedCollectionGroupIds: Array.isArray(snapshot.selectedCollectionGroupIds)
         ? snapshot.selectedCollectionGroupIds.slice()
+        : [],
+      knownCollectionGroupIds: Array.isArray(snapshot.knownCollectionGroupIds)
+        ? snapshot.knownCollectionGroupIds.slice()
         : [],
       selectedCollectionFolderIds: snapshot.selectedCollectionFolderIds && typeof snapshot.selectedCollectionFolderIds === 'object'
         ? JSON.parse(JSON.stringify(snapshot.selectedCollectionFolderIds))
@@ -430,6 +435,10 @@
             selectedCollectionGroupIds: Array.isArray(snapshot.selectedCollectionGroupIds)
               ? snapshot.selectedCollectionGroupIds.slice()
               : [],
+            knownCollectionGroupIds: Array.isArray(snapshot.knownCollectionGroupIds)
+              ? snapshot.knownCollectionGroupIds.slice()
+              : [],
+            autoSelectNewCollectionGroups: updateExistingSetup,
             selectedCollectionFolderIds: snapshot.selectedCollectionFolderIds && typeof snapshot.selectedCollectionFolderIds === 'object'
               ? JSON.parse(JSON.stringify(snapshot.selectedCollectionFolderIds))
               : {},
