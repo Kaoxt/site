@@ -18,7 +18,9 @@
 
     return normalizedHost
       .replace(/\/images\/Movie%20Collections\//gi, '/images/Franchises/')
-      .replace(/\/images\/Movie Collections\//gi, '/images/Franchises/');
+      .replace(/\/images\/Movie Collections\//gi, '/images/Franchises/')
+      .replace(/\/images\/International%20Cinema\//gi, '/images/World/')
+      .replace(/\/images\/International Cinema\//gi, '/images/World/');
   }
 
   function normalizeDeep(value) {
