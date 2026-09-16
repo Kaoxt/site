@@ -5,7 +5,9 @@ import { decodePosterConfig, encodePosterConfig } from '../functions/_lib/poster
 
 await import('../posters/config-token.js');
 await import('../set-up-collection/poster-settings.js');
+await import('../set-up-collection/better-posters-settings.js');
 const Posters = globalThis.KollectionPosterSettings;
+const BetterPosters = globalThis.KollectionBetterPostersSettings;
 
 test('Kollection poster pattern is valid for AIOMetadata placeholders', () => {
   const pattern = Posters.pattern({
@@ -47,23 +49,23 @@ test('AIOMetadata poster routing is enabled for every catalog and library meta',
   assert.equal(config.catalogs.find(catalog => catalog.id === 'folder-only').showInHome, false);
 });
 
-test('Set Up Collection offers Smart Overlay Posters as an explicit opt-in', async () => {
+test('Set Up Collection offers Better Posters instead of Kollection Smart Overlay Posters', async () => {
   const source = await readFile(new URL('../set-up-collection/set-up-collection.js', import.meta.url), 'utf8');
-  assert.match(source, /posterOverlaysEnabled: false/);
-  assert.match(source, /id="posterOverlaysEnabled"/);
-  assert.match(source, /Enable Smart Overlay Posters for this collection/);
+  assert.match(source, /betterPostersEnabled: false/);
+  assert.match(source, /id="betterPostersEnabled"/);
+  assert.match(source, /Use Better Posters with this collection/);
   assert.match(source, /Off by default/);
-  assert.match(source, /state\.posterOverlaysEnabled && window\.KollectionPosterSettings/);
-  assert.match(source, /KollectionPosterSettings\.applyToAioConfig\(config, state\.posterSettings\)/);
-  assert.match(source, /Smart Overlay Posters · \$\{state\.posterOverlaysEnabled \? 'Enabled' : 'Off'\}/);
+  assert.match(source, /state\.betterPostersEnabled && window\.KollectionBetterPostersSettings/);
+  assert.match(source, /KollectionBetterPostersSettings\.applyToAioConfig\(config, state\.betterPostersSettings\)/);
+  assert.doesNotMatch(source, /Enable Smart Overlay Posters for this collection/);
 });
 
 
-test('saved collection setups persist the poster overlay selection', async () => {
+test('saved collection setups persist Better Posters preferences', async () => {
   const source = await readFile(new URL('../set-up-collection/saved-setup.js', import.meta.url), 'utf8');
-  assert.match(source, /posterOverlaysEnabled: Boolean\(snapshot\.posterOverlaysEnabled\)/);
-  assert.match(source, /kollection:restore-poster-settings/);
-  assert.match(source, /posterSettingsJson/);
+  assert.match(source, /betterPostersEnabled: Boolean\(snapshot\.betterPostersEnabled\)/);
+  assert.match(source, /kollection:restore-better-posters-settings/);
+  assert.match(source, /betterPostersSettingsJson/);
 });
 
 
@@ -79,28 +81,23 @@ test('legacy grouped release preference expands into the new lifecycle choices',
 });
 
 
-test('existing setup uses a Configure modal for Smart Overlay Poster options', async () => {
+test('existing saved setups use a Configure modal for Better Posters', async () => {
   const source = await readFile(new URL('../set-up-collection/folder-editor.js', import.meta.url), 'utf8');
   assert.match(source, /editingSavedSetup\(\)/);
-  assert.match(source, /id="configureSmartOverlayBtn"/);
-  assert.match(source, /root\.id = 'smartOverlayModalRoot'/);
+  assert.match(source, /id="configureBetterPostersBtn"/);
+  assert.match(source, /betterPostersModalRoot/);
   assert.match(source, /role="dialog"/);
   assert.match(source, />Configure<\/button>/);
   assert.match(source, />Save changes<\/button>/);
-  assert.doesNotMatch(source, />Existing setup<\/span>/);
-  assert.match(source, /id="posterOverlaysEnabled"/);
-  assert.match(source, /id="posterSettingsJson"/);
-  for (const tag of ['trend', 'quality', 'genre', 'rating', 'age']) {
-    assert.ok(source.includes("['" + tag + "',"), 'missing overlay option ' + tag);
+  assert.match(source, /id="betterPostersEnabled"/);
+  assert.match(source, /id="betterPostersSettingsJson"/);
+  for (const option of ['trendTags', 'qualityTags', 'genre', 'rating', 'ageRating']) {
+    assert.ok(source.includes("['" + option + "',"), 'missing Better Posters option ' + option);
   }
-  for (const detail of ['inCinema', 'rank', 'newMovie', 'comingSoon', 'newSeries', 'returningSeries', 'limitedSeries']) {
-    assert.ok(source.includes("['" + detail + "',"), 'missing Trend Tag detail ' + detail);
-  }
-  assert.match(source, /state\.posterOverlaysEnabled = nextEnabled/);
-  assert.match(source, /state\.posterSettings = nextSettings/);
-  assert.match(source, /kollection:poster-settings-changed/);
+  assert.match(source, /Trend Tags are one switch/);
+  assert.match(source, /state\.betterPostersEnabled = nextEnabled/);
+  assert.match(source, /state\.betterPostersSettings = nextSettings/);
 });
-
 
 test('collection folders use unique bridge addon IDs while preserving AIOMetadata poster URLs', async () => {
   const source = await readFile(new URL('../set-up-collection/set-up-collection.js', import.meta.url), 'utf8');
@@ -179,4 +176,40 @@ test('poster bridge passthrough mode preserves upstream overlay poster URLs', as
 test('k1 and k2 tokens both use the reliable TMDB artwork path', () => {
   assert.equal(decodePosterConfig('k1sd0sf')?.artworkProvider, 'tmdb');
   assert.equal(decodePosterConfig('k3sd0sf')?.artworkProvider, 'tmdb');
+});
+
+
+test('Better Posters helper generates the official btttr.cc AIOMetadata pattern', () => {
+  assert.equal(
+    BetterPosters.pattern({ trendTags: true, genre: true, rating: true, qualityTags: false, ageRating: false, ratingSource: 'average', language: 'en' }),
+    'https://btttr.cc/poster/imdb/poster-default/{imdb_id}.jpg'
+  );
+  assert.equal(
+    BetterPosters.pattern({ trendTags: false, genre: false, rating: true, qualityTags: true, ageRating: true, ratingSource: 'imdb', language: 'fr' }),
+    'https://btttr.cc/poster-rqa/imdb/poster-default/{imdb_id}.jpg?tag=none&lang=fr&rs=IM'
+  );
+});
+
+test('Better Posters AIOMetadata integration enables the custom poster pattern without the Kollection renderer', () => {
+  const config = {
+    posterRatingProvider: 'none',
+    customPosterUrlPattern: '',
+    enableRatingPostersForLibrary: false,
+    catalogs: [{ id: 'home', enableRatingPosters: false }],
+    kollectionPosters: { enabled: true },
+  };
+  BetterPosters.applyToAioConfig(config, { trendTags: true, genre: true, rating: true });
+  assert.equal(config.posterRatingProvider, 'custom');
+  assert.equal(config.usePosterProxy, false);
+  assert.equal(config.enableRatingPostersForLibrary, true);
+  assert.match(config.customPosterUrlPattern, /^https:\/\/btttr\.cc\//);
+  assert.ok(config.catalogs.every(catalog => catalog.enableRatingPosters === true));
+  assert.equal(config.kollectionPosters, undefined);
+  assert.equal(config.kollectionBetterPosters?.provider, 'btttr.cc');
+});
+
+test('Better Posters Trend Tags are exposed as one native on/off option', () => {
+  const source = BetterPosters.pattern({ trendTags: false });
+  assert.match(source, /[?&]tag=none(?:&|$)/);
+  assert.equal(BetterPosters.normalize({ trendTags: true }).trendTags, true);
 });
