@@ -16,6 +16,7 @@ const DEFAULT_OMDB_MAX_LOOKUPS_PER_DAY = 900;
 const DEFAULT_MDBLIST_CACHE_DAYS = 30;
 const ALLOWED_TAGS = ['trend', 'rating', 'genre', 'quality', 'age'];
 const OVERLAY_LANGUAGES = ['en', 'es', 'fr', 'de', 'it', 'pt', 'ja', 'ko'];
+const STATIC_TREND_SOURCES = new Set(['studio', 'director', 'cast']);
 
 const TODAY_LABELS = {
   en: 'Today', es: 'Hoy', fr: "Aujourd’hui", de: 'Heute', it: 'Oggi', pt: 'Hoje', ja: '今日', ko: '오늘',
@@ -291,20 +292,25 @@ async function persistentPosterKey(type, id, url, preview, env) {
   return `poster-cache/${variant.scope}/${type}/${id}/${hash}.webp`;
 }
 
-function posterCacheControl(preview, tags, hasTrendValue = false) {
+function isStaticTrendSource(source) {
+  return STATIC_TREND_SOURCES.has(String(source || ''));
+}
+
+function posterCacheControl(preview, tags, trendSource = '') {
   const tagSet = tags instanceof Set ? tags : new Set(tags || []);
+  const staticTrend = tagSet.has('trend') && isStaticTrendSource(trendSource);
   if (preview && tagSet.size === 0) {
     return 'public, max-age=3600, s-maxage=604800, stale-while-revalidate=2592000';
   }
   if (preview) {
-    return hasTrendValue || tagSet.has('trend')
+    return tagSet.has('trend') && !staticTrend
       ? 'public, max-age=30, s-maxage=300'
       : 'public, max-age=60, s-maxage=600';
   }
-  if (hasTrendValue || tagSet.has('trend')) {
+  if (tagSet.has('trend') && !staticTrend) {
     return 'public, max-age=21600, s-maxage=21600, stale-while-revalidate=86400';
   }
-  return 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000';
+  return 'public, max-age=604800, s-maxage=604800, stale-while-revalidate=2592000';
 }
 
 function todayUtc() {
@@ -875,9 +881,10 @@ async function renderPoster(context, state, id) {
     if (String.fromCharCode(...signature.slice(0, 4)) !== 'RIFF' || String.fromCharCode(...signature.slice(8, 12)) !== 'WEBP') {
       throw posterError('renderer-invalid-image');
     }
-    const cacheControl = posterCacheControl(preview, tags, Boolean(payload.trend));
+    const cacheControl = posterCacheControl(preview, tags, trendChoice.source);
     const headers = new Headers(rendered.headers);
     headers.set('content-type', 'image/webp');
+    headers.set('content-length', String(output.byteLength));
     headers.set('access-control-allow-origin', '*');
     headers.set('cdn-cache-control', cacheControl);
     headers.set('cache-control', cacheControl);
@@ -898,7 +905,7 @@ async function renderPoster(context, state, id) {
     headers.set('x-kollection-overlay-language', overlayLanguage);
     headers.set('x-kollection-trend-label', resolvedTrend || 'none');
     headers.set('x-kollection-generated-at', String(Date.now()));
-    headers.set('x-kollection-fresh-until', String(freshUntil(Date.now(), state)));
+    headers.set('x-kollection-fresh-until', String(freshUntil(Date.now(), state, '', trendChoice.source)));
     return { body: output, headers: [...headers], status: 200 };
   } finally {
     slot.release();
@@ -909,11 +916,13 @@ function posterError(code) {
   return Object.assign(new Error(code), { code });
 }
 
-function freshUntil(generatedAt, state, trendDay = '') {
-  const ttl = state.preview ? (state.tags.size === 0 ? 3600 : state.tags.has('trend') ? 300 : 600)
-    : state.tags.has('trend') ? 21600 : 604800;
+function freshUntil(generatedAt, state, trendDay = '', trendSource = '') {
+  const staticTrend = state.tags.has('trend') && isStaticTrendSource(trendSource);
+  const ttl = state.preview
+    ? (state.tags.size === 0 ? 3600 : state.tags.has('trend') && !staticTrend ? 300 : 600)
+    : state.tags.has('trend') && !staticTrend ? 21600 : 604800;
   let expires = generatedAt + ttl * 1000;
-  if (state.tags.has('trend')) {
+  if (state.tags.has('trend') && !staticTrend) {
     const day = /^\d{4}-\d{2}-\d{2}$/.test(trendDay) ? trendDay : new Date(generatedAt).toISOString().slice(0, 10);
     expires = Math.min(expires, Date.parse(day + 'T00:00:00Z') + 86400000);
   }
@@ -950,9 +959,10 @@ function persistentResponse(object, state) {
   const headers = new Headers();
   object.writeHttpMetadata(headers);
   headers.set('content-type', 'image/webp');
+  if (Number.isFinite(Number(object.size)) && Number(object.size) > 0) headers.set('content-length', String(object.size));
   if (object.httpEtag) headers.set('etag', object.httpEtag);
   headers.set('x-kollection-generated-at', String(generated));
-  headers.set('x-kollection-fresh-until', String(Number(metadata.freshUntil) || freshUntil(generated, state, metadata.trendDay)));
+  headers.set('x-kollection-fresh-until', String(Number(metadata.freshUntil) || freshUntil(generated, state, metadata.trendDay, metadata.trendSource)));
   headers.set('x-kollection-render-version', CACHE_VERSION);
   headers.set('x-kollection-cache', 'MISS');
   headers.set('x-kollection-persistent-cache', 'HIT');
@@ -962,6 +972,8 @@ function persistentResponse(object, state) {
   if (metadata.ratingStatus) headers.set('x-kollection-rating-status', metadata.ratingStatus);
   if (metadata.qualitySource) headers.set('x-kollection-quality-source', metadata.qualitySource);
   if (metadata.qualityStatus) headers.set('x-kollection-quality-status', metadata.qualityStatus);
+  if (metadata.trendSource) headers.set('x-kollection-trend-source', metadata.trendSource);
+  if (metadata.trendLabel) headers.set('x-kollection-trend-label', metadata.trendLabel);
   return new Response(object.body, { headers });
 }
 
@@ -982,6 +994,8 @@ async function saveResult(context, state, key, result) {
     ratingStatus: headers.get('x-kollection-rating-status') || '',
     qualitySource: headers.get('x-kollection-quality-source') || '',
     qualityStatus: headers.get('x-kollection-quality-status') || '',
+    trendSource: headers.get('x-kollection-trend-source') || '',
+    trendLabel: headers.get('x-kollection-trend-label') || '',
     // Copying an alias must preserve the original date, not make old tags fresh.
     trendDay: state.tags.has('trend') ? new Date(Number(headers.get('x-kollection-generated-at'))).toISOString().slice(0, 10) : '',
   });
@@ -1003,7 +1017,9 @@ function deliveryResponse(response, state) {
   const headers = new Headers(response.headers);
   const remaining = Math.max(0, Math.floor((Number(headers.get('x-kollection-fresh-until')) - Date.now()) / 1000));
   const stale = remaining === 0;
-  const browserAge = stale ? 15 : Math.min(remaining, state.preview ? 60 : state.tags.has('trend') ? 21600 : 86400);
+  const staticTrend = state.tags.has('trend') && isStaticTrendSource(headers.get('x-kollection-trend-source'));
+  const browserCap = state.preview ? 60 : state.tags.has('trend') && !staticTrend ? 21600 : 604800;
+  const browserAge = stale ? 15 : Math.min(remaining, browserCap);
   const cacheControl = stale
     ? 'public, max-age=15, s-maxage=15, stale-while-revalidate=30'
     : `public, max-age=${browserAge}, s-maxage=${remaining}, stale-while-revalidate=60`;
@@ -1100,7 +1116,17 @@ function serveSaved(context, state, saved, edgeHit = false) {
     if (alias) await saveResult(context, state, state.rawKey, await toResult(alias)).catch(() => {});
     if (stale) await refreshPoster(context, state, true);
   })().catch(() => { /* Keep the last successful overlay on refresh failure. */ }));
-  return deliveryResponse(saved, state);
+
+  const delivered = deliveryResponse(saved, state);
+  const etag = delivered.headers.get('etag');
+  const ifNoneMatch = context.request.headers.get('if-none-match') || '';
+  if (etag && ifNoneMatch.split(',').map(value => value.trim()).includes(etag)) {
+    const headers = new Headers(delivered.headers);
+    headers.delete('content-length');
+    delivered.body?.cancel();
+    return new Response(null, { status: 304, headers });
+  }
+  return delivered;
 }
 
 async function handlePoster(context) {
