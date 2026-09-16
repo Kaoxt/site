@@ -41,9 +41,9 @@
       tags: [...new Set(tags)].sort().join(','),
       ratingSource: ratingSource(),
       trendDetails: selectedTrendDetails().join(','),
-      cv: '3',
+      cv: '4',
     });
-    return `https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?${params}`;
+    return `https://kollection.tv/api/posters-v2/{type}/{id}.webp?${params}`;
   }
 
   function refreshPattern() {
