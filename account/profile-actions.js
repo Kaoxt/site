@@ -418,7 +418,9 @@
       status.textContent = 'Clearing collection…';
       try {
         const result = await window.KollectionCollectionEligibility?.clear?.(id);
-        if (!result?.eligible) throw new Error('The collection could not be cleared from this profile.');
+        if (!result?.cleared || result?.state !== 'available' || result?.existingCount !== 0) {
+          throw new Error('The collection could not be confirmed as cleared from this profile.');
+        }
         setLastSync(window.__kollectionProfileActionUserId || 'default');
         const availability = row?.querySelector('.account-profile-copy small');
         if (availability) {
@@ -426,10 +428,15 @@
           availability.classList.remove('account-profile-setup-unavailable', 'account-profile-setup-checking');
           availability.classList.add('account-profile-setup-available');
         }
-        if (row) row.dataset.collectionEligibility = 'eligible';
+        if (row) {
+          row.dataset.collectionEligibility = 'eligible';
+          row.dataset.collectionEligibilityState = 'available';
+          delete row.dataset.activeSavedSetupId;
+        }
         row?.classList.remove('account-profile-ineligible');
         row?.querySelector('[data-clear-profile-collection]')?.remove();
         status.textContent = 'Collection cleared. This profile is now available for Set Up Collection.';
+        window.KollectionProfileCollectionStatus?.refresh?.();
         window.KollectionSavedCollections?.load?.();
         setTimeout(closeModal, 900);
       } catch (error) {

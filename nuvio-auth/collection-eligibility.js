@@ -84,6 +84,20 @@
     return rows.length ? parseCollections(rows[0]?.collections_json) : [];
   }
 
+  function availableResult(profileId, options = {}) {
+    return {
+      profileId,
+      state: 'available',
+      eligible: true,
+      existingCount: 0,
+      kollectionCount: 0,
+      externalCount: 0,
+      hasKollection: false,
+      collections: [],
+      cleared: Boolean(options.cleared),
+    };
+  }
+
   async function check(profileId, options = {}) {
     const id = Number(profileId);
     if (!Number.isFinite(id) || id < 1) throw new Error('Choose a valid Nuvio profile.');
@@ -94,16 +108,7 @@
     const collections = await pullCollections(id, accessToken);
 
     if (!collections.length) {
-      const result = {
-        profileId: id,
-        state: 'available',
-        eligible: true,
-        existingCount: 0,
-        kollectionCount: 0,
-        externalCount: 0,
-        hasKollection: false,
-        collections,
-      };
+      const result = availableResult(id);
       cache.set(id, result);
       return result;
     }
@@ -161,8 +166,25 @@
       p_profile_id: id,
       p_collections_json: [],
     }, accessToken);
+
+    const attempts = Math.max(1, Math.min(5, Number(options.verifyAttempts) || 3));
+    const verifyDelayMs = Math.max(0, Number(options.verifyDelayMs) || 180);
+    let remaining = [];
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      remaining = await pullCollections(id, accessToken);
+      if (!remaining.length) break;
+      if (attempt < attempts - 1 && verifyDelayMs) {
+        await new Promise((resolve) => setTimeout(resolve, verifyDelayMs));
+      }
+    }
+
     cache.delete(id);
-    const result = await check(id, { accessToken, force: true });
+    if (remaining.length) {
+      throw new Error(`Nuvio still reports ${remaining.length} collection group${remaining.length === 1 ? '' : 's'} on this profile. Nothing was marked as cleared. Please try again after Nuvio finishes syncing.`);
+    }
+
+    const result = availableResult(id, { cleared: true });
+    cache.set(id, result);
     window.dispatchEvent(new CustomEvent('kollection:profile-collection-cleared', {
       detail: { profileId: id, eligibility: result },
     }));

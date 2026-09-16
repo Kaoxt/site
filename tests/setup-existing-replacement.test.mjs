@@ -3,6 +3,8 @@ import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 
 const setupSource = await readFile(new URL('../set-up-collection/set-up-collection.js', import.meta.url), 'utf8');
+const eligibilitySource = await readFile(new URL('../nuvio-auth/collection-eligibility.js', import.meta.url), 'utf8');
+const profileActionsSource = await readFile(new URL('../account/profile-actions.js', import.meta.url), 'utf8');
 
 test('ineligible profiles stay blocked and offer a clear-current-collection action', () => {
   assert.match(setupSource, /This Nuvio profile is using a collection that was not created through The Kollection/);
@@ -10,6 +12,9 @@ test('ineligible profiles stay blocked and offer a clear-current-collection acti
   assert.match(setupSource, /if \(next\) next\.disabled = true/);
   assert.match(setupSource, /KollectionCollectionEligibility\.clear\(state\.profileId\)/);
   assert.match(setupSource, /does not delete the profile, add-ons, plugins, or saved Kollection setups/);
+  assert.match(eligibilitySource, /remaining = await pullCollections\(id, accessToken\)/);
+  assert.match(eligibilitySource, /Nuvio still reports \$\{remaining\.length\} collection group/);
+  assert.match(profileActionsSource, /result\?\.cleared \|\| result\?\.state !== 'available' \|\| result\?\.existingCount !== 0/);
 });
 
 test('Update Existing replaces collection groups and retires stale AIOMetadata addons', () => {

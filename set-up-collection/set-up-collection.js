@@ -1382,6 +1382,9 @@
       }
       try {
         const cleared = await window.KollectionCollectionEligibility.clear(state.profileId);
+        if (!cleared?.cleared || cleared?.state !== 'available' || cleared?.existingCount !== 0) {
+          throw new Error('The collection could not be confirmed as cleared from this profile.');
+        }
         state.profileEligibility = cleared;
         renderProfileEligibility(cleared);
         alert('Current collection cleared. This profile is now available for Set Up Collection.', 'success');

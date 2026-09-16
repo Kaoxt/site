@@ -137,6 +137,7 @@
     };
     new MutationObserver(schedule).observe(root, { childList: true });
     window.addEventListener('kollection:nuvio-profile-changed', refresh);
+    window.addEventListener('kollection:profile-collection-cleared', refresh);
     window.addEventListener('kollection:setup-synced', refresh);
     window.addEventListener('kollection:nuvio-signed-in', schedule);
     schedule();
