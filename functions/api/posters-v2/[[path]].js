@@ -198,8 +198,8 @@ function certification(details, type) {
   return details.content_ratings?.results?.find((x) => x.iso_3166_1 === 'US')?.rating || '';
 }
 
-function betterPostersBaseUrl(details, language = 'en', options = {}) {
-  const imdbId = String(details?.external_ids?.imdb_id || '').trim();
+function betterPostersBaseUrl(details, language = 'en', options = {}, imdbOverride = '') {
+  const imdbId = String(imdbOverride || details?.external_ids?.imdb_id || '').trim();
   if (!/^tt\d{5,12}$/i.test(imdbId)) return '';
 
   const genre = options.genre !== false;
@@ -934,9 +934,10 @@ async function renderPoster(context, state, id) {
 
   const trendDetails = normalizeTrendDetails(url.searchParams.get('trendDetails'));
   const artworkProvider = url.searchParams.get('provider') === 'btttr' ? 'btttr' : 'tmdb';
+  const knownImdbId = /^tt\d{5,12}$/i.test(state.rawId || '') ? String(state.rawId).toLowerCase() : '';
   const needsTrendCredits = tags.has('trend') && needsCredits(trendDetails);
   const appendParts = artworkProvider === 'btttr'
-    ? ['external_ids']
+    ? (knownImdbId ? [] : ['external_ids'])
     : (type === 'movie' ? ['images', 'release_dates', 'external_ids'] : ['images', 'content_ratings', 'external_ids']);
   if (artworkProvider === 'btttr' && type === 'movie' && tags.has('trend') && trendDetails.includes('inCinema')) {
     appendParts.push('release_dates');
@@ -946,8 +947,10 @@ async function renderPoster(context, state, id) {
   const requestedRatingSource = normalizeRatingSource(url.searchParams.get('ratingSource'));
   const rendererBase = String(env.POSTERS_V2_RENDERER_URL || DEFAULT_RENDERER_URL).replace(/\/$/, '');
   const rendererShard = String(Number(id) % 4);
-  const detailsPromise = measured(context, 'metadata', () => tmdbFetch(`/${type}/${id}?append_to_response=${append}&include_image_language=en,null&language=en-US`, env.TMDB_API_KEY, context));
-  const sourceWarmPromise = detailsPromise.then(async details => {
+  const detailParams = new URLSearchParams({ include_image_language: 'en,null', language: 'en-US' });
+  if (append) detailParams.set('append_to_response', append);
+  const detailsPromise = measured(context, 'metadata', () => tmdbFetch(`/${type}/${id}?${detailParams}`, env.TMDB_API_KEY, context));
+  const sourceWarmPromise = state.betterPostersWarm || detailsPromise.then(async details => {
     if (sourceUrl) return;
     const smartLayout = url.searchParams.get('source') === 'smart';
     let warmBody = null;
@@ -958,7 +961,7 @@ async function renderPoster(context, state, id) {
         rating: url.searchParams.get('bpRating') !== '0',
         age: url.searchParams.get('bpAge') === '1',
         ratingSource: url.searchParams.get('bpRatingSource') || 'average',
-      });
+      }, knownImdbId);
       if (btttrUrl) {
         warmBody = {
           sourceUrl: btttrUrl,
@@ -1019,7 +1022,7 @@ async function renderPoster(context, state, id) {
         rating: url.searchParams.get('bpRating') !== '0',
         age: url.searchParams.get('bpAge') === '1',
         ratingSource: url.searchParams.get('bpRatingSource') || 'average',
-      })
+      }, knownImdbId)
     : '';
   const renderSourceUrl = sourceUrl || betterPostersUrl;
   const usingBetterPostersArt = Boolean(betterPostersUrl);
@@ -1052,6 +1055,44 @@ async function renderPoster(context, state, id) {
     // Don't cache a long-lived poster with a missing quality badge because the
     // configured quality source happened to be unavailable during this request.
     throw posterError('quality-unavailable');
+  }
+
+  // Custom Better Posters subsets only need Kollection's renderer when there
+  // is actually a selected Trend Tag to draw. Most titles do not match every
+  // curated subset, so send those straight to btttr.cc with its native tag
+  // disabled instead of downloading, decoding, resizing, and re-encoding an
+  // identical poster.
+  if (artworkProvider === 'btttr' && effectiveOverlayOnly && renderSourceUrl &&
+      tags.size === 1 && tags.has('trend') && !resolvedTrend) {
+    const generatedAt = Date.now();
+    const cacheControl = posterCacheControl(preview, tags, trendChoice.source);
+    const headers = new Headers({
+      location: renderSourceUrl,
+      'cache-control': cacheControl,
+      'cdn-cache-control': cacheControl,
+      'access-control-allow-origin': '*',
+      'x-kollection-posters': 'betterposters-direct',
+      'x-kollection-render-version': CACHE_VERSION,
+      'x-kollection-cache': 'MISS',
+      'x-kollection-persistent-cache': 'BYPASS',
+      'x-kollection-cache-scope': preview ? 'preview' : 'production',
+      'x-kollection-trend-source': trendChoice.source,
+      'x-kollection-artwork-source': artwork.source,
+      'x-kollection-tmdb-id': id,
+      'x-kollection-overlay-language': overlayLanguage,
+      'x-kollection-trend-label': 'none',
+      'x-kollection-better-posters-bypass': '1',
+      'x-kollection-generated-at': String(generatedAt),
+      'x-kollection-fresh-until': String(freshUntil(generatedAt, state, '', trendChoice.source)),
+    });
+    return { body: new ArrayBuffer(0), headers: [...headers], status: 302 };
+  }
+
+  // If an IMDb-addressed Better Posters source was warmed while TMDB metadata
+  // was resolving, make sure that shared source cache fill has finished before
+  // the renderer needs it. This overlaps the two cold-network operations.
+  if (usingBetterPostersArt && state.betterPostersWarm) {
+    await measured(context, 'sourcewarm', () => state.betterPostersWarm.catch(() => {}));
   }
 
   const payload = {
@@ -1152,7 +1193,9 @@ function staleSeconds(state) {
 
 function usable(response, state) {
   const expires = Number(response?.headers.get('x-kollection-fresh-until'));
-  return response?.ok && expires > 0 && Date.now() < expires + staleSeconds(state) * 1000;
+  const directBetterPosters = response?.status === 302 &&
+    /^https:\/\/btttr\.cc\//i.test(response?.headers.get('location') || '');
+  return (response?.ok || directBetterPosters) && expires > 0 && Date.now() < expires + staleSeconds(state) * 1000;
 }
 
 function isFresh(response) {
@@ -1272,6 +1315,15 @@ async function renderUnderLease(context, state, id, key, background) {
     if (isFresh(ready)) { success = true; return await toResult(ready); }
     await ready?.body?.cancel();
     const result = await renderPoster(context, state, id);
+    if (result.status !== 200) {
+      // Redirect-only Better Posters bypasses are edge-cacheable decisions, not
+      // rendered image objects. Keep them out of the WebP R2 namespace.
+      success = true;
+      saving = true;
+      result.completion = Promise.resolve(false);
+      await lease.release(0).catch(() => {});
+      return result;
+    }
     // Hold the distributed lease until the canonical image is durable, but send
     // the completed image to the client without waiting for that storage write.
     result.completion = (async () => {
@@ -1294,6 +1346,32 @@ async function refreshPoster(context, state, background = false) {
     const timer = setTimeout(() => controller.abort(posterError('render-timeout')), 25000);
     const workContext = { ...context, signal: controller.signal, waitUntil: promise => context.waitUntil(promise) };
     try {
+      const rawImdbId = /^tt\d{5,12}$/i.test(state.rawId || '') ? String(state.rawId).toLowerCase() : '';
+      if (rawImdbId && state.url.searchParams.get('provider') === 'btttr' && !state.sourceUrl) {
+        const earlySourceUrl = betterPostersBaseUrl(null, state.overlayLanguage, {
+          quality: state.url.searchParams.get('bpQuality') === '1',
+          genre: state.url.searchParams.get('bpGenre') !== '0',
+          rating: state.url.searchParams.get('bpRating') !== '0',
+          age: state.url.searchParams.get('bpAge') === '1',
+          ratingSource: state.url.searchParams.get('bpRatingSource') || 'average',
+        }, rawImdbId);
+        if (earlySourceUrl) {
+          const rendererBase = String(context.env.POSTERS_V2_RENDERER_URL || DEFAULT_RENDERER_URL).replace(/\/$/, '');
+          const rendererShard = String(Number(rawImdbId.slice(2)) % 4);
+          state.betterPostersWarm = fetch(`${rendererBase}/warm`, {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+              'x-kollection-render-key': String(context.env.POSTERS_RENDERER_AUTH_TOKEN),
+              'x-kollection-render-shard': rendererShard,
+            },
+            body: JSON.stringify({ sourceUrl: earlySourceUrl, smartLayout: false, overlayOnly: true }),
+            signal: AbortSignal.any([workContext.signal, AbortSignal.timeout(5000)]),
+          }).then(response => response.body?.cancel()).catch(() => {});
+          context.waitUntil(state.betterPostersWarm);
+        }
+      }
+
       const id = state.idHint || await resolveTmdbId(state.type, state.rawId, context.env.TMDB_API_KEY, workContext);
       if (!id) throw posterError('id-not-found');
       state.idHint = id;
@@ -1307,7 +1385,7 @@ async function refreshPoster(context, state, background = false) {
       const completion = Promise.allSettled([
         result.completion,
         putEdge(state, fromResult(result)),
-        ...(state.rawKey !== key ? [saveResult(context, state, state.rawKey, result)] : []),
+        ...(result.status === 200 && state.rawKey !== key ? [saveResult(context, state, state.rawKey, result)] : []),
       ]);
       context.waitUntil(completion);
       return { ...result, completion };
