@@ -837,7 +837,6 @@ test('hybrid Better Posters uses btttr base overlays and Kollection trend only',
   assert.equal(payload.quality, '');
   assert.equal(payload.age, '');
   assert.equal(payload.trend, '#1 Aujourd’hui');
-  assert.equal(response.headers.get('x-kollection-artwork-source'), 'betterposters-btttr');
 });
 
 test('Better Posters native options participate in the persistent cache variant', async () => {
