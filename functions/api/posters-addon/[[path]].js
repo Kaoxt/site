@@ -143,6 +143,48 @@ function rewritePayload(payload, config, type) {
   return out;
 }
 
+function collectPassthroughPosterUrls(payload, limit = 24) {
+  const items = [];
+  if (Array.isArray(payload?.metas)) items.push(...payload.metas);
+  if (payload?.meta && typeof payload.meta === 'object') items.push(payload.meta);
+
+  const urls = [];
+  const seen = new Set();
+  for (const item of items) {
+    if (urls.length >= limit) break;
+    try {
+      const poster = new URL(String(item?.poster || ''));
+      if (poster.protocol !== 'https:' || poster.hostname !== 'kollection.tv') continue;
+      if (!/^\/bp\/b1[0-9a-z]+\/(?:movie|series|tv)\//i.test(poster.pathname)) continue;
+      const normalized = poster.toString();
+      if (seen.has(normalized)) continue;
+      seen.add(normalized);
+      urls.push(normalized);
+    } catch {}
+  }
+  return urls;
+}
+
+async function prewarmPassthroughPosters(payload) {
+  const urls = collectPassthroughPosterUrls(payload);
+  const batchSize = 6;
+  for (let index = 0; index < urls.length; index += batchSize) {
+    const batch = urls.slice(index, index + batchSize);
+    await Promise.allSettled(batch.map(async posterUrl => {
+      const response = await fetch(posterUrl, {
+        method: 'GET',
+        redirect: 'manual',
+        headers: {
+          accept: 'image/webp,image/jpeg,image/*',
+          'x-kollection-poster-prewarm': '1',
+        },
+        signal: AbortSignal.timeout(20000),
+      });
+      await response.body?.cancel();
+    }));
+  }
+}
+
 function mergedManifest(upstream, token, origin, config) {
   const catalogs = (Array.isArray(upstream.catalogs) ? upstream.catalogs : [])
     .filter((catalog) => catalog && typeof catalog.id === 'string' && typeof catalog.type === 'string')
@@ -172,7 +214,8 @@ function mergedManifest(upstream, token, origin, config) {
   };
 }
 
-export async function onRequest({ request }) {
+export async function onRequest(context) {
+  const { request } = context;
   const url = new URL(request.url);
   const parts = url.pathname.split('/').filter(Boolean);
   const token = parts[2] || '';
@@ -197,14 +240,22 @@ export async function onRequest({ request }) {
       const extraParts = parts.slice(6);
       if (extraParts.length) extraParts[extraParts.length - 1] = extraParts[extraParts.length - 1].replace(/\.json$/i, '');
       const payload = await fetchJson(upstreamResourceUrl(config.upstream, 'catalog', type, originalCatalog, extraParts));
-      return json(config.passthroughPosters ? payload : rewritePayload(payload, config, type));
+      if (config.passthroughPosters) {
+        context.waitUntil(prewarmPassthroughPosters(payload).catch(() => {}));
+        return json(payload);
+      }
+      return json(rewritePayload(payload, config, type));
     }
 
     if (resource === 'meta') {
       const type = decodeURIComponent(parts[4] || '');
       const id = decodeURIComponent(parts[5] || '').replace(/\.json$/i, '');
       const payload = await fetchJson(upstreamResourceUrl(config.upstream, 'meta', type, id));
-      return json(config.passthroughPosters ? payload : rewritePayload(payload, config, type));
+      if (config.passthroughPosters) {
+        context.waitUntil(prewarmPassthroughPosters(payload).catch(() => {}));
+        return json(payload);
+      }
+      return json(rewritePayload(payload, config, type));
     }
 
     return json({ error: 'Unsupported Posters addon resource.' }, 404);
