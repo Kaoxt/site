@@ -81,7 +81,7 @@ function harness(overrides = {}) {
   const bucket = new Bucket(), edge = new EdgeCache(), db = new D1();
   const env = { IMAGES: bucket, DB: db, TMDB_API_KEY: 'test-tmdb-secret', MDBLIST_API_KEY: 'test-mdb-secret', POSTERS_RENDERER_AUTH_TOKEN: 'test-render-secret', ...overrides };
   const jobs = [];
-  const count = { find: 0, details: 0, trend: 0, ratings: 0, quality: 0, render: 0, fallback: 0 };
+  const count = { find: 0, details: 0, trend: 0, ratings: 0, quality: 0, warm: 0, render: 0, fallback: 0 };
   const h = { bucket, edge, db, env, jobs, count, payloads: [], qualityAuth: [], qualityResolution: '2160p', qualityResults: null, qualityStatus: 200, renderStatus: 200, ratingStatus: 200 };
   globalThis.caches = { default: edge };
   globalThis.fetch = async (input, options = {}) => {
@@ -124,8 +124,13 @@ function harness(overrides = {}) {
       });
     }
     if (url.hostname === 'poster-renderer.kollection.tv') {
+      const payload = JSON.parse(options.body || '{}');
+      if (url.pathname === '/warm') {
+        count.warm++;
+        if (h.warmHook) await h.warmHook(payload);
+        return new Response(null, { status: 204 });
+      }
       count.render++;
-      const payload = JSON.parse(options.body);
       h.payloads.push(payload);
       if (h.renderHook) await h.renderHook();
       if (h.renderStatus !== 200) return new Response('private provider error', { status: h.renderStatus });
@@ -759,4 +764,13 @@ test('cancelled capacity wait does not leak slots or reserve budget', async () =
   await assert.rejects(pending, /cancelled/); assert.equal(h.db.used(), 1); slot.release();
   const next = await acquirePosterRenderSlot(h.env, h.context().request);
   assert.equal(next.allowed, true); next.release();
+});
+
+
+test('source warming is separate from render-budget accounting', async () => {
+  const h = harness();
+  await h.seed('27205');
+  assert.equal(h.count.warm, 1);
+  assert.equal(h.count.render, 1);
+  assert.equal(h.db.used(), 1);
 });
