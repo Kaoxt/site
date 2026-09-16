@@ -196,25 +196,12 @@
     }, 0);
   }
 
-  const SMART_OVERLAY_TAGS = Object.freeze([
-    ['trend', 'Trend Tag'],
-    ['quality', 'Quality'],
+  const BETTER_POSTERS_OPTIONS = Object.freeze([
+    ['trendTags', 'Trend Tags'],
+    ['qualityTags', 'Quality Tags'],
     ['genre', 'Genre'],
     ['rating', 'Rating'],
-    ['age', 'Age Rating'],
-  ]);
-
-  const SMART_TREND_DETAILS = Object.freeze([
-    ['studio', 'Notable Studios'],
-    ['director', 'Notable Directors'],
-    ['cast', 'Notable Cast'],
-    ['inCinema', 'In Cinema'],
-    ['rank', 'Daily Rank'],
-    ['newMovie', 'New Movie'],
-    ['comingSoon', 'Coming Soon'],
-    ['newSeries', 'New Series'],
-    ['returningSeries', 'Returning Series'],
-    ['limitedSeries', 'Limited Series'],
+    ['ageRating', 'Age Rating'],
   ]);
 
   function editingSavedSetup() {
@@ -222,104 +209,123 @@
     return params.get('edit') === '1' && Boolean(params.get('saved'));
   }
 
-  function currentPosterSettings(state) {
-    const helper = window.KollectionPosterSettings;
+  function currentBetterPostersSettings(state) {
+    const helper = window.KollectionBetterPostersSettings;
     if (!helper) return {
-      source: 'smart',
-      tags: ['trend', 'genre', 'rating'],
+      trendTags: true,
+      qualityTags: false,
+      genre: true,
+      rating: true,
+      ageRating: false,
       ratingSource: 'average',
-      trendDetails: SMART_TREND_DETAILS.map(([value]) => value),
+      language: 'en',
     };
-    return helper.normalize(state.posterSettings || helper.readLocal?.() || {});
+    return helper.normalize(state.betterPostersSettings || helper.readLocal?.() || {});
   }
 
-  function smartOverlayEditorHtml(state, esc) {
+  function betterPostersEditorHtml(state, esc) {
     if (!editingSavedSetup()) return '';
-    const settings = currentPosterSettings(state);
-    state.posterSettings = settings;
-    const enabled = Boolean(state.posterOverlaysEnabled);
-    const summary = window.KollectionPosterSettings?.label(settings) || 'Smart Overlay Posters';
+    const settings = currentBetterPostersSettings(state);
+    state.betterPostersSettings = settings;
+    const enabled = Boolean(state.betterPostersEnabled);
+    const summary = window.KollectionBetterPostersSettings?.label(settings) || 'Better Posters';
 
     return `
-      <section class="existing-smart-overlay-editor" aria-labelledby="existingSmartOverlayTitle">
+      <section class="existing-smart-overlay-editor" aria-labelledby="existingBetterPostersTitle">
         <div class="existing-smart-overlay-copy-main">
-          <h3 id="existingSmartOverlayTitle">Smart Overlay Posters</h3>
-          <p id="existingSmartOverlaySummary">${enabled ? esc(summary) : 'Smart Overlay Posters are off for this collection.'}</p>
+          <h3 id="existingBetterPostersTitle">Better Posters</h3>
+          <p id="existingBetterPostersSummary">${enabled ? esc(summary) : 'Better Posters are off for this collection.'}</p>
         </div>
         <div class="existing-smart-overlay-actions">
-          <button class="ghost small" id="configureSmartOverlayBtn" type="button" aria-haspopup="dialog" aria-controls="smartOverlayModalRoot">Configure</button>
+          <button class="ghost small" id="configureBetterPostersBtn" type="button" aria-haspopup="dialog" aria-controls="betterPostersModalRoot">Configure</button>
         </div>
-        <input id="posterOverlaysEnabled" type="checkbox" ${enabled ? 'checked' : ''} hidden>
-        <input id="posterSettingsJson" type="hidden" value="${esc(JSON.stringify(settings))}">
+        <input id="betterPostersEnabled" type="checkbox" ${enabled ? 'checked' : ''} hidden>
+        <input id="betterPostersSettingsJson" type="hidden" value="${esc(JSON.stringify(settings))}">
       </section>`;
   }
 
-  function closeSmartOverlayModal(root) {
+  function closeBetterPostersModal(root) {
     if (!root) return;
     root.remove();
     document.documentElement.classList.remove('smart-overlay-modal-open');
   }
 
-  function openSmartOverlayModal(state, host, invalidateState) {
-    document.getElementById('smartOverlayModalRoot')?.remove();
+  function openBetterPostersModal(state, host, invalidateState) {
+    document.getElementById('betterPostersModalRoot')?.remove();
 
-    const helper = window.KollectionPosterSettings;
-    const current = currentPosterSettings(state);
-    const tags = new Set(current.tags || []);
-    const trendDetails = new Set(current.trendDetails || []);
+    const helper = window.KollectionBetterPostersSettings;
+    const current = currentBetterPostersSettings(state);
+    const ratingSources = [
+      ['average', 'Average'],
+      ['imdb', 'IMDb'],
+      ['tmdb', 'TMDB'],
+      ['rottentomatoes', 'Rotten Tomatoes'],
+      ['metacritic', 'Metacritic'],
+      ['trakt', 'Trakt'],
+      ['letterboxd', 'Letterboxd'],
+      ['rogerebert', 'Roger Ebert'],
+    ];
+    const languages = [
+      ['en', 'English'], ['es', 'Spanish'], ['fr', 'French'], ['de', 'German'],
+      ['pt-BR', 'Portuguese (Brazil)'], ['pt-PT', 'Portuguese (Portugal)'],
+      ['it', 'Italian'], ['nl', 'Dutch'], ['pl', 'Polish'], ['ru', 'Russian'],
+      ['tr', 'Turkish'], ['ar', 'Arabic'], ['ja', 'Japanese'], ['ko', 'Korean'],
+      ['zh', 'Chinese'], ['hi', 'Hindi'], ['sv', 'Swedish'], ['cs', 'Czech'],
+    ];
+
     const root = document.createElement('div');
-    root.id = 'smartOverlayModalRoot';
+    root.id = 'betterPostersModalRoot';
     root.className = 'smart-overlay-modal-root';
     root.innerHTML = `
       <div class="smart-overlay-modal-backdrop">
-        <section class="smart-overlay-modal" role="dialog" aria-modal="true" aria-labelledby="smartOverlayModalTitle">
+        <section class="smart-overlay-modal" role="dialog" aria-modal="true" aria-labelledby="betterPostersSavedTitle">
           <header class="smart-overlay-modal-head">
             <div>
-              <h3 id="smartOverlayModalTitle">Smart Overlay Posters</h3>
-              <p>Choose which poster overlays this saved collection should use in Nuvio.</p>
+              <h3 id="betterPostersSavedTitle">Better Posters</h3>
+              <p>Configure the Better Posters URL that AIOMetadata will use for this saved setup.</p>
             </div>
-            <button class="smart-overlay-modal-x" type="button" aria-label="Close Smart Overlay Posters"></button>
+            <button class="smart-overlay-modal-x" type="button" aria-label="Close Better Posters"></button>
           </header>
           <div class="smart-overlay-modal-body">
             <label class="smart-overlay-modal-master">
-              <input id="smartOverlayModalEnabled" type="checkbox" ${state.posterOverlaysEnabled ? 'checked' : ''}>
-              <span><b>Use Smart Overlay Posters</b><small>Apply your selected overlays across Home rows, collection folders, and AIOMetadata posters.</small></span>
+              <input id="betterPostersModalEnabled" type="checkbox" ${state.betterPostersEnabled ? 'checked' : ''}>
+              <span><b>Use Better Posters</b><small>AIOMetadata will request btttr.cc artwork for titles where it can resolve an IMDb ID.</small></span>
             </label>
 
-            <div id="smartOverlayModalControls" class="smart-overlay-modal-controls" ${state.posterOverlaysEnabled ? '' : 'hidden'}>
+            <div id="betterPostersModalControls" class="smart-overlay-modal-controls" ${state.betterPostersEnabled ? '' : 'hidden'}>
               <div class="smart-overlay-modal-group">
-                <div class="smart-overlay-modal-group-copy"><b>Poster overlays</b><span>Turn individual overlay types on or off.</span></div>
+                <div class="smart-overlay-modal-group-copy"><b>Poster options</b><span>These are the switches Better Posters currently supports.</span></div>
                 <div class="smart-overlay-modal-grid">
-                  ${SMART_OVERLAY_TAGS.map(([value, label]) => `
+                  ${BETTER_POSTERS_OPTIONS.map(([value, label]) => `
                     <label class="smart-overlay-modal-choice">
-                      <input type="checkbox" data-smart-overlay-tag value="${value}" ${tags.has(value) ? 'checked' : ''}>
+                      <input type="checkbox" data-better-posters-option value="${value}" ${current[value] ? 'checked' : ''}>
                       <span>${label}</span>
                     </label>`).join('')}
                 </div>
               </div>
 
-              <div id="smartOverlayModalTrendDetails" class="smart-overlay-modal-group" ${tags.has('trend') ? '' : 'hidden'}>
-                <div class="smart-overlay-modal-group-copy"><b>Trend Tag details</b><span>Choose which labels are allowed in the Trend Tag area.</span></div>
-                <div class="smart-overlay-modal-grid trend-details">
-                  ${SMART_TREND_DETAILS.map(([value, label]) => `
-                    <label class="smart-overlay-modal-choice">
-                      <input type="checkbox" data-smart-trend-detail value="${value}" ${trendDetails.has(value) ? 'checked' : ''}>
-                      <span>${label}</span>
-                    </label>`).join('')}
-                </div>
+              <div class="callout"><strong>Trend Tags are one switch.</strong> Better Posters decides whether a matching poster shows Trending, New, an IMDb rank, or another supported trend label. It does not currently expose individual Trend Tag filters.</div>
+
+              <div id="betterPostersSavedRatingSection" class="smart-overlay-modal-group" ${current.rating ? '' : 'hidden'}>
+                <div class="smart-overlay-modal-group-copy"><b>Rating source</b><span>Choose which rating Better Posters should display.</span></div>
+                <select id="betterPostersSavedRatingSource">
+                  ${ratingSources.map(([value, label]) => `<option value="${value}" ${current.ratingSource === value ? 'selected' : ''}>${label}</option>`).join('')}
+                </select>
               </div>
 
-              <div class="smart-overlay-modal-advanced">
-                <span>Need poster source, rating provider, or other advanced options?</span>
-                <a class="ghost small" href="/posters" target="_blank" rel="noopener">Advanced settings</a>
+              <div class="smart-overlay-modal-group">
+                <div class="smart-overlay-modal-group-copy"><b>Poster language</b><span>Choose the language Better Posters should request.</span></div>
+                <select id="betterPostersSavedLanguage">
+                  ${languages.map(([value, label]) => `<option value="${value}" ${current.language === value ? 'selected' : ''}>${label}</option>`).join('')}
+                </select>
               </div>
             </div>
 
-            <p id="smartOverlayModalStatus" class="smart-overlay-modal-status" role="status"></p>
+            <p id="betterPostersModalStatus" class="smart-overlay-modal-status" role="status"></p>
           </div>
           <footer class="smart-overlay-modal-footer">
-            <button class="smart-overlay-modal-button" id="cancelSmartOverlayBtn" type="button">Cancel</button>
-            <button class="smart-overlay-modal-button primary" id="saveSmartOverlayBtn" type="button">Save changes</button>
+            <button class="smart-overlay-modal-button" id="cancelBetterPostersBtn" type="button">Cancel</button>
+            <button class="smart-overlay-modal-button primary" id="saveBetterPostersBtn" type="button">Save changes</button>
           </footer>
         </section>
       </div>`;
@@ -329,24 +335,22 @@
 
     const backdrop = root.querySelector('.smart-overlay-modal-backdrop');
     const closeButton = root.querySelector('.smart-overlay-modal-x');
-    const cancelButton = root.querySelector('#cancelSmartOverlayBtn');
-    const saveButton = root.querySelector('#saveSmartOverlayBtn');
-    const enabledInput = root.querySelector('#smartOverlayModalEnabled');
-    const controls = root.querySelector('#smartOverlayModalControls');
-    const trendGroup = root.querySelector('#smartOverlayModalTrendDetails');
-    const status = root.querySelector('#smartOverlayModalStatus');
+    const cancelButton = root.querySelector('#cancelBetterPostersBtn');
+    const saveButton = root.querySelector('#saveBetterPostersBtn');
+    const enabledInput = root.querySelector('#betterPostersModalEnabled');
+    const controls = root.querySelector('#betterPostersModalControls');
+    const ratingSection = root.querySelector('#betterPostersSavedRatingSection');
 
     const refreshVisibility = () => {
       controls.hidden = !enabledInput.checked;
-      const trendOn = Boolean(root.querySelector('[data-smart-overlay-tag][value="trend"]')?.checked);
-      if (trendGroup) trendGroup.hidden = !enabledInput.checked || !trendOn;
-      status.textContent = '';
+      const ratingOn = Boolean(root.querySelector('[data-better-posters-option][value="rating"]')?.checked);
+      if (ratingSection) ratingSection.hidden = !enabledInput.checked || !ratingOn;
     };
 
     let keyHandler = null;
     const close = () => {
       if (keyHandler) document.removeEventListener('keydown', keyHandler);
-      closeSmartOverlayModal(root);
+      closeBetterPostersModal(root);
     };
     closeButton.addEventListener('click', close);
     cancelButton.addEventListener('click', close);
@@ -354,7 +358,7 @@
       if (event.target === backdrop) close();
     });
     enabledInput.addEventListener('change', refreshVisibility);
-    root.querySelectorAll('[data-smart-overlay-tag]').forEach(input => input.addEventListener('change', refreshVisibility));
+    root.querySelectorAll('[data-better-posters-option]').forEach(input => input.addEventListener('change', refreshVisibility));
 
     keyHandler = event => {
       if (event.key !== 'Escape' || !document.body.contains(root)) return;
@@ -364,31 +368,32 @@
 
     saveButton.addEventListener('click', () => {
       const nextEnabled = Boolean(enabledInput.checked);
-      const nextTags = [...root.querySelectorAll('[data-smart-overlay-tag]:checked')].map(input => input.value);
-      const nextTrendDetails = [...root.querySelectorAll('[data-smart-trend-detail]:checked')].map(input => input.value);
-
-      if (nextEnabled && nextTags.includes('trend') && !nextTrendDetails.length) {
-        status.textContent = 'Choose at least one Trend Tag detail, or turn off Trend Tag.';
-        return;
-      }
-
+      const optionValue = (name) => Boolean(root.querySelector(`[data-better-posters-option][value="${name}"]`)?.checked);
       const nextSettings = helper
-        ? helper.normalize({ ...current, tags: nextTags, trendDetails: nextTrendDetails })
-        : { ...current, tags: nextTags, trendDetails: nextTrendDetails };
+        ? helper.normalize({
+            trendTags: optionValue('trendTags'),
+            qualityTags: optionValue('qualityTags'),
+            genre: optionValue('genre'),
+            rating: optionValue('rating'),
+            ageRating: optionValue('ageRating'),
+            ratingSource: root.querySelector('#betterPostersSavedRatingSource')?.value || 'average',
+            language: root.querySelector('#betterPostersSavedLanguage')?.value || 'en',
+          })
+        : current;
 
-      state.posterOverlaysEnabled = nextEnabled;
-      state.posterSettings = nextSettings;
+      state.betterPostersEnabled = nextEnabled;
+      state.betterPostersSettings = nextSettings;
 
-      const savedEnabled = host.querySelector('#posterOverlaysEnabled');
-      const savedJson = host.querySelector('#posterSettingsJson');
-      const summary = host.querySelector('#existingSmartOverlaySummary');
+      const savedEnabled = host.querySelector('#betterPostersEnabled');
+      const savedJson = host.querySelector('#betterPostersSettingsJson');
+      const summary = host.querySelector('#existingBetterPostersSummary');
       if (savedEnabled) savedEnabled.checked = nextEnabled;
       if (savedJson) savedJson.value = JSON.stringify(nextSettings);
       if (summary) summary.textContent = nextEnabled
-        ? (helper?.label(nextSettings) || 'Smart Overlay Posters')
-        : 'Smart Overlay Posters are off for this collection.';
+        ? (helper?.label(nextSettings) || 'Better Posters')
+        : 'Better Posters are off for this collection.';
       invalidateState(state);
-      window.dispatchEvent(new CustomEvent('kollection:poster-settings-changed', {
+      window.dispatchEvent(new CustomEvent('kollection:better-posters-settings-changed', {
         detail: {
           enabled: nextEnabled,
           settings: clone(nextSettings),
@@ -402,11 +407,11 @@
     setTimeout(() => closeButton.focus(), 0);
   }
 
-  function bindSmartOverlayEditor(state, host, invalidateState) {
+  function bindBetterPostersEditor(state, host, invalidateState) {
     if (!editingSavedSetup()) return;
-    const configure = host.querySelector('#configureSmartOverlayBtn');
+    const configure = host.querySelector('#configureBetterPostersBtn');
     if (!configure) return;
-    configure.addEventListener('click', () => openSmartOverlayModal(state, host, invalidateState));
+    configure.addEventListener('click', () => openBetterPostersModal(state, host, invalidateState));
   }
 
   function render(options) {
@@ -434,7 +439,7 @@
       'STEP 5 · CUSTOMIZE',
       'Choose and edit your collection',
       'Choose the sections you want first, then open any selected section to remove individual folders. Only the folders you keep will be added to Nuvio and used to prepare AIOMetadata.',
-      `${smartOverlayEditorHtml(state, esc)}
+      `${betterPostersEditorHtml(state, esc)}
       <div class="card collection-editor-shell">
         <div class="collection-select-toolbar">
           <div>
@@ -470,7 +475,7 @@
       </div>`
     );
 
-    bindSmartOverlayEditor(state, host, invalidate);
+    bindBetterPostersEditor(state, host, invalidate);
 
     const syncOverview = () => {
       state.selectedCollectionGroupIds = $$('.section-checkbox:checked').map(input => input.value);
