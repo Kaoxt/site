@@ -9,7 +9,7 @@ The Posters renderer is cache-first. Cache hits are returned before any render b
 - `POSTERS_CONSERVE_AT_PERCENT=95` — enter conservation mode at 95% of the configured daily render budget.
 - `POSTERS_HARD_STOP_AT_PERCENT=98` — stop all new expensive renders at 98% of the configured daily render budget.
 - `POSTERS_MAX_CLIENT_HOURLY_RENDERS=60` — per-client hourly render budget. Client addresses are SHA-256 hashed before being stored.
-- `POSTERS_MAX_CONCURRENT_RENDERS=4` — normal concurrent renderer cap per active runtime instance. Conservation mode reduces effective concurrency to 1.
+- `POSTERS_MAX_CONCURRENT_RENDERS=8` — normal concurrent renderer cap per active runtime instance. Conservation mode reduces effective concurrency to 1.
 - `POSTERS_SAFETY_FAIL_OPEN=0` — fail closed if the D1 safety counter cannot be reached. Leave this at `0` for production.
 
 The existing Cloudflare D1 binding must be named `DB`. The safety module creates its own `poster_usage_daily` and `poster_usage_client_hourly` tables automatically.
