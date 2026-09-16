@@ -465,7 +465,7 @@
             </div>`;
           }).join('')}
         </div>
-        <div class="callout" style="margin-top:18px"><strong>Your choices control the final collection.</strong> Removing a folder here also prevents AIOMetadata catalogs used only by that folder from being provisioned. Unrelated personal Nuvio groups remain untouched.</div>
+        <div class="callout" style="margin-top:18px"><strong>Your choices control the final collection.</strong> When you update an existing setup, newly added Kollection categories are selected automatically. You can deselect any category you do not want. Removing a folder here also prevents AIOMetadata catalogs used only by that folder from being provisioned. Unrelated personal Nuvio groups remain untouched.</div>
         <div class="actions"><button class="ghost" id="backBtn">Back</button><button class="btn" id="nextBtn" ${selectedCount ? '' : 'disabled'}>Continue to review</button></div>
       </div>`
     );
