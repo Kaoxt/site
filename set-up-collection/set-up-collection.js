@@ -1129,11 +1129,16 @@
   }
 
   function posterBridgeManifestUrl(upstream) {
+    const helper = window.KollectionBetterPostersSettings;
+    const betterPostersConfigId = state.betterPostersEnabled && helper
+      ? helper.configId(helper.normalize(state.betterPostersSettings || helper.readLocal() || {}))
+      : '';
     const token = encodePosterBridgeValue(JSON.stringify({
-      v: 4,
+      v: 5,
       upstream,
       collectionOnly: true,
       passthroughPosters: true,
+      betterPostersConfigId,
     }));
     return `${window.location.origin}/api/posters-addon/${token}/manifest.json`;
   }
@@ -1143,8 +1148,9 @@
     // installs share the same manifest ID, so a folder can silently hit the
     // wrong instance even though Home is using the correct one. Give each
     // generated AIOMetadata instance a unique collection-only bridge identity.
-    // The bridge leaves AIOMetadata's poster URLs untouched, so images still go
-    // directly to the shared /p/{configId}/... cache with no image proxy hop.
+    // The bridge preserves AIOMetadata's Better Posters URLs when present and
+    // applies the same /bp/{configId}/... route as a fallback when a folder
+    // catalog returns plain artwork. This keeps Home and folder rows consistent.
     const installs = [];
     const bridgeByInstallUrl = new Map();
 

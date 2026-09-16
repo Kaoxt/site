@@ -40,7 +40,7 @@ function parseConfig(token) {
   } catch (_) {
     throw new Error('Invalid Posters addon configuration.');
   }
-  if (!config || ![1, 2, 3, 4].includes(config.v) || typeof config.upstream !== 'string') {
+  if (!config || ![1, 2, 3, 4, 5].includes(config.v) || typeof config.upstream !== 'string') {
     throw new Error('Invalid Posters addon configuration.');
   }
   const upstream = new URL(config.upstream);
@@ -51,8 +51,11 @@ function parseConfig(token) {
   if (host === 'localhost' || host === '127.0.0.1' || host === '::1' || host.endsWith('.local')) {
     throw new Error('Local/private upstreams are not supported.');
   }
+  const betterPostersConfigId = /^b1[0-9a-f][0-7][0-9a-h][0-9a-z]{2}$/i.test(String(config.betterPostersConfigId || ''))
+    ? String(config.betterPostersConfigId).toLowerCase()
+    : '';
   return {
-    v: 4,
+    v: 5,
     upstream: upstream.toString(),
     source: ['smart', 'tmdb', 'inherit'].includes(config.source) ? config.source : 'smart',
     tags: Array.isArray(config.tags) ? config.tags.filter((x) => typeof x === 'string') : ['trend', 'genre', 'rating'],
@@ -61,6 +64,7 @@ function parseConfig(token) {
     collectionOnly: config.collectionOnly === true,
     preserveSource: config.preserveSource !== false,
     passthroughPosters: config.passthroughPosters === true,
+    betterPostersConfigId,
   };
 }
 
@@ -127,6 +131,38 @@ function posterUrl(config, type, id, sourceUrl = '') {
     } catch {}
   }
   return `${POSTER_BASE}/${mediaType}/${encodeURIComponent(normalizedId)}.webp?${params}`;
+}
+
+function betterPostersPosterUrl(config, type, id) {
+  if (!config.betterPostersConfigId) return '';
+  const normalizedId = normalizePosterId(id);
+  if (!normalizedId) return '';
+  const mediaType = type === 'series' || type === 'tv' ? 'series' : 'movie';
+  return `https://kollection.tv/bp/${config.betterPostersConfigId}/${mediaType}/${encodeURIComponent(normalizedId)}.webp`;
+}
+
+function rewritePassthroughItem(item, config, fallbackType) {
+  if (!item || typeof item !== 'object') return item;
+  if (config.betterPostersConfigId) {
+    try {
+      const current = new URL(String(item.poster || ''));
+      if (current.hostname === 'kollection.tv' &&
+          current.pathname.startsWith(`/bp/${config.betterPostersConfigId}/`)) {
+        return item;
+      }
+    } catch {}
+    const replacement = betterPostersPosterUrl(config, item.type || fallbackType, item.id);
+    if (replacement) return { ...item, poster: replacement };
+  }
+  return item;
+}
+
+function rewritePassthroughPayload(payload, config, type) {
+  if (!payload || typeof payload !== 'object') return payload;
+  const out = { ...payload };
+  if (Array.isArray(payload.metas)) out.metas = payload.metas.map((item) => rewritePassthroughItem(item, config, type));
+  if (payload.meta && typeof payload.meta === 'object') out.meta = rewritePassthroughItem(payload.meta, config, type);
+  return out;
 }
 
 function rewriteMetaItem(item, config, fallbackType) {
@@ -204,7 +240,7 @@ function mergedManifest(upstream, token, origin, config) {
     version: '2.0.0',
     name: `Posters • ${upstream.name || 'Wrapped Addon'}`,
     description: config.passthroughPosters
-      ? 'The Kollection collection-route bridge. Catalog and metadata pass through unchanged while Nuvio gets a unique addon identity for folder routing.'
+      ? 'The Kollection collection-route bridge. Existing overlay poster URLs pass through, while plain folder artwork falls back to the configured Better Posters route.'
       : 'The Kollection Posters v2 wrapper. Catalog and metadata pass through while supported movie/show poster artwork is replaced with configured Kollection overlays.',
     logo: 'https://kollection.tv/favicon.ico',
     resources,
@@ -241,8 +277,9 @@ export async function onRequest(context) {
       if (extraParts.length) extraParts[extraParts.length - 1] = extraParts[extraParts.length - 1].replace(/\.json$/i, '');
       const payload = await fetchJson(upstreamResourceUrl(config.upstream, 'catalog', type, originalCatalog, extraParts));
       if (config.passthroughPosters) {
-        context.waitUntil(prewarmPassthroughPosters(payload).catch(() => {}));
-        return json(payload);
+        const delivered = rewritePassthroughPayload(payload, config, type);
+        context.waitUntil(prewarmPassthroughPosters(delivered).catch(() => {}));
+        return json(delivered);
       }
       return json(rewritePayload(payload, config, type));
     }
@@ -252,8 +289,9 @@ export async function onRequest(context) {
       const id = decodeURIComponent(parts[5] || '').replace(/\.json$/i, '');
       const payload = await fetchJson(upstreamResourceUrl(config.upstream, 'meta', type, id));
       if (config.passthroughPosters) {
-        context.waitUntil(prewarmPassthroughPosters(payload).catch(() => {}));
-        return json(payload);
+        const delivered = rewritePassthroughPayload(payload, config, type);
+        context.waitUntil(prewarmPassthroughPosters(delivered).catch(() => {}));
+        return json(delivered);
       }
       return json(rewritePayload(payload, config, type));
     }
