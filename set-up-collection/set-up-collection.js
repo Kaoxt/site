@@ -831,31 +831,43 @@
     return { folders: folders.length, sources: sourceKeys.size };
   }
 
-  function collectAioCatalogIds(collections) {
-    const ids = new Set();
-    const typeById = {};
-    (collections || []).forEach(c => {
-      (c.folders || []).forEach(f => {
-        for (const list of [f.sources, f.catalogSources]) {
-          (list || []).forEach(s => {
-            if (!s || s.provider && s.provider !== 'addon') return;
-            if (isBingecatSource(s)) return;
-            const cid = s.catalogId;
-            if (!cid) return;
-            if (s.addonId === 'aio-metadata' || String(cid).startsWith('mdblist.')) {
-              ids.add(cid);
-              if (!typeById[cid]) typeById[cid] = s.type || 'movie';
-            }
+  function normalizeAioCatalogType(value) {
+    const raw = String(value || 'movie').trim().toLowerCase();
+    if (raw === 'tv' || raw === 'show') return 'series';
+    return ['movie', 'series', 'anime', 'all'].includes(raw) ? raw : 'movie';
+  }
+
+  function aioCatalogRouteKey(id, type) {
+    return `${String(id || '').trim()}|${normalizeAioCatalogType(type)}`;
+  }
+
+  function manifestBaseCatalogId(id) {
+    const value = String(id || '').trim();
+    return value.replace(/_(movie|series|anime|all)$/i, '');
+  }
+
+  function collectAioCatalogRefs(collections) {
+    const refs = new Map();
+    (collections || []).forEach(group => {
+      (group.folders || []).forEach(folder => {
+        for (const list of [folder.sources, folder.catalogSources]) {
+          (list || []).forEach(source => {
+            if (!source || source.provider && source.provider !== 'addon') return;
+            if (isBingecatSource(source)) return;
+            const manifestId = String(source.catalogId || '').trim();
+            if (!manifestId) return;
+            if (source.addonId !== 'aio-metadata' && !manifestId.startsWith('mdblist.')) return;
+            const type = normalizeAioCatalogType(source.type);
+            refs.set(aioCatalogRouteKey(manifestId, type), { manifestId, type });
           });
         }
       });
     });
-    return { ids: [...ids], typeById };
+    return [...refs.values()];
   }
 
   function synthesizeCatalog(id, typeHint) {
-    const raw = String(typeHint || 'movie').toLowerCase();
-    const type = ['series', 'tv', 'show'].includes(raw) ? 'series' : raw === 'all' ? 'all' : 'movie';
+    const type = normalizeAioCatalogType(typeHint);
     const prefix = String(id || '').split('.')[0].toLowerCase();
     const knownSources = new Set([
       'mdblist', 'streaming', 'flixpatrol', 'tmdb', 'tvdb', 'trakt',
@@ -877,10 +889,38 @@
     };
   }
 
-  function filterAioCatalogs(allCatalogs, wantedIds, typeById) {
-    const byId = new Map();
-    (allCatalogs || []).forEach(c => { if (c?.id) byId.set(c.id, c); });
-    return wantedIds.map(id => byId.has(id) ? jsonClone(byId.get(id)) : synthesizeCatalog(id, typeById[id]));
+  function filterAioCatalogs(allCatalogs, wantedRefs) {
+    const source = Array.isArray(allCatalogs) ? allCatalogs : [];
+    const selected = new Map();
+
+    const findConfig = ref => {
+      const ids = [ref.manifestId];
+      const base = manifestBaseCatalogId(ref.manifestId);
+      if (base && base !== ref.manifestId) ids.push(base);
+
+      for (const id of ids) {
+        const exact = source.find(catalog =>
+          catalog?.id === id && normalizeAioCatalogType(catalog?.type) === ref.type
+        );
+        if (exact) return exact;
+
+        const displayed = source.find(catalog =>
+          catalog?.id === id &&
+          catalog?.displayType &&
+          normalizeAioCatalogType(catalog.displayType) === ref.type
+        );
+        if (displayed) return displayed;
+      }
+      return null;
+    };
+
+    for (const ref of wantedRefs || []) {
+      const found = findConfig(ref);
+      const baseId = found?.id || manifestBaseCatalogId(ref.manifestId) || ref.manifestId;
+      const catalog = found ? jsonClone(found) : synthesizeCatalog(baseId, ref.type);
+      selected.set(aioCatalogRouteKey(catalog.id, catalog.type), catalog);
+    }
+    return [...selected.values()];
   }
 
   function hostDef(url) {
@@ -991,7 +1031,45 @@
     state.aiChunks = chunkAioCatalogs(state.aiNeededCatalogs, chosenHost);
     const installs = [];
     const catalogIdToAddonId = {};
+    const catalogRoutes = {};
     let firstManifestId = 'aio-metadata';
+
+    const routeMatch = (catalog, manifestCatalogs) => {
+      const expectedType = normalizeAioCatalogType(catalog?.displayType || catalog?.type);
+      const candidateIds = [
+        String(catalog?.id || ''),
+        `${catalog?.id || ''}_${normalizeAioCatalogType(catalog?.type)}`,
+      ].filter(Boolean);
+      return manifestCatalogs.find(item =>
+        candidateIds.includes(String(item?.id || '')) &&
+        normalizeAioCatalogType(item?.type) === expectedType
+      ) || manifestCatalogs.find(item =>
+        candidateIds.includes(String(item?.id || ''))
+      ) || manifestCatalogs.find(item =>
+        String(item?.id || '').startsWith(String(catalog?.id || '') + '_') &&
+        normalizeAioCatalogType(item?.type) === expectedType
+      ) || null;
+    };
+
+    const registerRoute = (catalog, addonId, manifestCatalog) => {
+      const route = {
+        addonId,
+        catalogId: String(manifestCatalog?.id || catalog?.id || ''),
+        type: String(manifestCatalog?.type || catalog?.displayType || catalog?.type || 'movie'),
+      };
+      const keys = new Set([
+        aioCatalogRouteKey(catalog?.id, catalog?.type),
+        aioCatalogRouteKey(catalog?.id, catalog?.displayType || catalog?.type),
+        aioCatalogRouteKey(route.catalogId, route.type),
+        aioCatalogRouteKey(`${catalog?.id || ''}_${normalizeAioCatalogType(catalog?.type)}`, route.type),
+      ]);
+      for (const key of keys) {
+        if (key && !key.startsWith('|')) catalogRoutes[key] = route;
+      }
+      if (catalog?.id && !catalogIdToAddonId[catalog.id]) catalogIdToAddonId[catalog.id] = addonId;
+      if (route.catalogId && !catalogIdToAddonId[route.catalogId]) catalogIdToAddonId[route.catalogId] = addonId;
+      return route;
+    };
 
     for (let i = 0; i < state.aiChunks.length; i++) {
       const chunk = state.aiChunks[i];
@@ -1004,29 +1082,39 @@
 
       let realAddonId = 'aio-metadata';
       let manifestName = state.aiChunks.length > 1 ? `AIOMetadata (${i + 1})` : 'AIOMetadata';
+      let manifestCatalogs = [];
       try {
         const manifest = await fetchAddonManifest(installUrl);
         if (manifest?.id) realAddonId = manifest.id;
         if (manifest?.name) manifestName = manifest.name;
+        if (Array.isArray(manifest?.catalogs)) manifestCatalogs = manifest.catalogs;
       } catch { /* shared aio-metadata id is the normal fallback */ }
+
       if (i === 0) firstManifestId = realAddonId;
-      chunk.catalogs.forEach(c => { if (c?.id) catalogIdToAddonId[c.id] = realAddonId; });
+      const installedCatalogs = chunk.catalogs.map(catalog => {
+        const matched = routeMatch(catalog, manifestCatalogs);
+        const route = registerRoute(catalog, realAddonId, matched);
+        return {
+          id: route.catalogId,
+          type: route.type,
+          configId: catalog?.id || '',
+          configType: catalog?.type || 'movie',
+          displayType: catalog?.displayType || '',
+        };
+      }).filter(catalog => catalog.id);
+
       installs.push({
         url: installUrl,
         name: manifestName,
         addonId: realAddonId,
         host: chunk.host,
         catalogCount: chunk.catalogs.length,
-        catalogs: chunk.catalogs.map(catalog => ({
-          id: catalog?.id || '',
-          type: catalog?.type || 'movie',
-          displayType: catalog?.displayType || '',
-        })).filter(catalog => catalog.id),
+        catalogs: installedCatalogs,
       });
     }
 
     state.aiInstalls = installs;
-    return { installs, catalogIdToAddonId, firstManifestId };
+    return { installs, catalogIdToAddonId, catalogRoutes, firstManifestId };
   }
 
   function encodePosterBridgeValue(value) {
@@ -1059,35 +1147,31 @@
   }
 
   async function provisionPosterBridges(ai) {
-    // AIOMetadata already rewrites every selected catalog's poster URL with the
-    // Kollection custom poster pattern. Route collection folders straight to
-    // those same AIOMetadata manifests instead of inserting a second catalog
-    // proxy. Nuvio's FolderDetailViewModel reads folder.sources directly, so
-    // using the exact generated addon/catalog pair keeps folder and Home poster
-    // behavior identical and removes an extra network hop.
+    // AIOMetadata already applies Kollection's custom poster pattern to every
+    // selected catalog. Folder pages should use those exact manifest catalog
+    // routes so Home and Collection render the same poster URLs.
     state.posterBridgeInstalls = [];
-    const routes = {};
-    Object.entries(ai.catalogIdToAddonId || {}).forEach(([catalogId, addonId]) => {
-      routes[catalogId] = { addonId, catalogId };
-    });
-    return { installs: [], routes };
+    return { installs: [], routes: { ...(ai.catalogRoutes || {}) } };
   }
 
   function repointAioSources(collections, routes, firstManifestId) {
     const defaultId = firstManifestId || 'aio-metadata';
-    (collections || []).forEach(c => {
-      (c.folders || []).forEach(f => {
-        for (const list of [f.sources, f.catalogSources]) {
-          (list || []).forEach(s => {
-            if (!s || isBingecatSource(s)) return;
-            if (s.addonId !== 'aio-metadata') return;
-            const route = routes?.[s.catalogId];
+    (collections || []).forEach(group => {
+      (group.folders || []).forEach(folder => {
+        for (const list of [folder.sources, folder.catalogSources]) {
+          (list || []).forEach(source => {
+            if (!source || isBingecatSource(source)) return;
+            if (source.addonId !== 'aio-metadata') return;
+            const key = aioCatalogRouteKey(source.catalogId, source.type);
+            const route = routes?.[key];
             if (route) {
-              s.addonId = route.addonId;
-              s.catalogId = route.catalogId;
-              if (route.type) s.type = route.type;
+              source.addonId = route.addonId;
+              source.catalogId = route.catalogId;
+              source.type = route.type || source.type;
+              if (list === folder.sources) source.provider = 'addon';
             } else {
-              s.addonId = defaultId;
+              source.addonId = defaultId;
+              if (list === folder.sources) source.provider = 'addon';
             }
           });
         }
@@ -1212,11 +1296,11 @@
       : [];
     state.existingCollections = await pullCollections();
 
-    const { ids, typeById } = collectAioCatalogIds(selectedPack);
+    const catalogRefs = collectAioCatalogRefs(selectedPack);
     const catalogLibrary = state.aiCustomCatalogLibrary.length
-      ? [...state.aiCustomCatalogLibrary, ...state.aiCatalogLibrary.filter(c => !state.aiCustomCatalogLibrary.some(u => u?.id && u.id === c?.id))]
+      ? [...state.aiCustomCatalogLibrary, ...state.aiCatalogLibrary.filter(c => !state.aiCustomCatalogLibrary.some(u => u?.id && u.id === c?.id && normalizeAioCatalogType(u?.type) === normalizeAioCatalogType(c?.type)))]
       : state.aiCatalogLibrary;
-    state.aiNeededCatalogs = filterAioCatalogs(catalogLibrary, ids, typeById);
+    state.aiNeededCatalogs = filterAioCatalogs(catalogLibrary, catalogRefs);
     const preferred = normalizeHost(state.aiHostPreference || CFG.aiometadataHosts[0].url);
     state.aiChunks = chunkAioCatalogs(state.aiNeededCatalogs, preferred);
 
