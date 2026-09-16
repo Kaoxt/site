@@ -102,14 +102,16 @@ test('existing setup uses a Configure modal for Smart Overlay Poster options', a
 });
 
 
-test('collection folders route directly through the exact AIOMetadata manifest catalog', async () => {
+test('collection folders use unique bridge addon IDs while preserving AIOMetadata poster URLs', async () => {
   const source = await readFile(new URL('../set-up-collection/set-up-collection.js', import.meta.url), 'utf8');
   const start = source.indexOf('async function provisionPosterBridges(ai)');
   const end = source.indexOf('function repointAioSources', start);
   const block = source.slice(start, end);
-  assert.match(block, /state\.posterBridgeInstalls = \[\]/);
-  assert.match(block, /ai\.catalogRoutes/);
-  assert.doesNotMatch(block, /fetchAddonManifest\(bridgeUrl\)/);
+  assert.match(block, /posterBridgeManifestUrl\(upstream\.url\)/);
+  assert.match(block, /fetchAddonManifest\(url\)/);
+  assert.match(block, /bridgeByInstallUrl/);
+  assert.match(block, /posterBridgeCatalogId\(upstreamRoute\.catalogId\)/);
+  assert.match(block, /state\.posterBridgeInstalls = installs/);
   assert.match(source, /aioCatalogRouteKey\(source\.catalogId, source\.type\)/);
   assert.match(source, /source\.provider = 'addon'/);
   assert.match(source, /manifestCatalogs = manifest\.catalogs/);
@@ -162,4 +164,13 @@ test('token poster route is importable and wired to the v2 engine', async () => 
   assert.match(source, /handlePosterV2/);
   assert.match(source, /caches\.default\.match/);
   assert.match(source, /caches\.default\.put/);
+});
+
+
+test('poster bridge passthrough mode preserves upstream overlay poster URLs', async () => {
+  const source = await readFile(new URL('../functions/api/posters-addon/[[path]].js', import.meta.url), 'utf8');
+  assert.match(source, /\[1, 2, 3, 4\]\.includes\(config\.v\)/);
+  assert.match(source, /passthroughPosters: config\.passthroughPosters === true/);
+  assert.match(source, /config\.passthroughPosters \? payload : rewritePayload\(payload, config, type\)/);
+  assert.match(source, /id: `tv\.kollection\.posters\.\$\{token\.slice\(0, 24\)\}`/);
 });
