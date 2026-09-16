@@ -329,7 +329,7 @@
       }
 
       config.posterRatingProvider = 'custom';
-      config.usePosterProxy = true;
+      config.usePosterProxy = false;
       config.enableRatingPostersForLibrary = true;
       config.customPosterUrlPattern = posterPattern();
       if (Array.isArray(config.catalogs)) {
@@ -366,7 +366,7 @@
         posterUrlPattern: posterPattern(),
         aiometadata: {
           posterRatingProvider: 'custom',
-          usePosterProxy: true,
+          usePosterProxy: false,
           enableRatingPostersForLibrary: true,
           customPosterUrlPattern: posterPattern(),
           moviePosterProvider: source === 'tmdb' ? 'tmdb' : 'inherit',
