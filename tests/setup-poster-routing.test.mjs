@@ -243,6 +243,9 @@ test('hybrid Better Posters delivery route delegates to v2 with btttr base and K
   assert.match(source, /bpAge/);
   assert.match(source, /BETTER_POSTERS_TREND_DETAILS/);
   assert.match(source, /x-kollection-better-posters-direct/);
+  assert.match(source, /customTrendSubset/);
+  assert.match(source, /x-kollection-better-posters-provisional/);
+  assert.match(source, /context\.waitUntil/);
 });
 
 
