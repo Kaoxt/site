@@ -29,17 +29,17 @@ function authorized(request, env) {
 
 function renderShard(request) {
   const requested = Number(request.headers.get('x-kollection-render-shard'));
-  if (Number.isInteger(requested) && requested >= 0) return requested & 1;
+  if (Number.isInteger(requested) && requested >= 0) return requested & 3;
   // Each distinct container name maps to a separate Cloudflare container
   // instance. CF-Ray is unique per request and cheap to hash, so unpinned
-  // bursts are spread across both configured max_instances.
+  // bursts are spread across the configured renderer instances.
   const key = request.headers.get('cf-ray') || crypto.randomUUID();
   let hash = 2166136261;
   for (let i = 0; i < key.length; i++) {
     hash ^= key.charCodeAt(i);
     hash = Math.imul(hash, 16777619);
   }
-  return hash & 1;
+  return hash & 3;
 }
 
 export default {
@@ -55,7 +55,7 @@ export default {
     }
 
     const shard = url.pathname === '/health' ? 0 : renderShard(request);
-    const instance = getContainer(env.POSTER_RENDERER, `primary-v26-${shard}`);
+    const instance = getContainer(env.POSTER_RENDERER, `primary-v27-${shard}`);
     return instance.fetch(request);
   },
 
