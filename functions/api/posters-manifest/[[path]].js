@@ -52,7 +52,7 @@ function parseConfig(token) {
 
 function posterUrl(config, type, id) {
   const params = new URLSearchParams({
-    v: '23',
+    v: '24',
     source: config.source,
     provider: 'tmdb-bp11',
     tags: [...new Set(config.tags)].sort().join(','),
