@@ -77,8 +77,31 @@
     return suffix ? `poster-${suffix}` : 'poster';
   }
 
+  function directPattern(value, trendEnabled) {
+    const settings = normalize(value);
+    const params = new URLSearchParams();
+    if (!trendEnabled) params.set('tag', 'none');
+    if (settings.language !== 'en') params.set('lang', settings.language);
+    const ratingCodes = {
+      imdb: 'IM', tmdb: 'TM', rottentomatoes: 'RT', metacritic: 'MC',
+      trakt: 'TR', letterboxd: 'LB', rogerebert: 'RE',
+    };
+    const ratingCode = settings.rating ? ratingCodes[settings.ratingSource] : '';
+    if (ratingCode) params.set('rs', ratingCode);
+    const base = `https://btttr.cc/${posterPath(settings)}/imdb/poster-default/{imdb_id}.jpg`;
+    const query = params.toString();
+    return query ? `${base}?${query}` : base;
+  }
+
   function pattern(value) {
-    return `https://kollection.tv/bp/${configId(value)}/{type}/{id}.webp`;
+    const settings = normalize(value);
+    // Fast path: when every Better Posters Trend category is allowed, let
+    // btttr.cc render its native Trend Tag exactly as Better Posters does.
+    if (settings.trendDetails.length === TREND_DETAILS.length) return directPattern(settings, true);
+    // Also avoid Kollection rendering when the user turns all Trend Tags off.
+    if (settings.trendDetails.length === 0) return directPattern(settings, false);
+    // Only customized subsets need Kollection's filtering layer.
+    return `https://kollection.tv/bp/${configId(settings)}/{type}/{imdb_id}.webp`;
   }
 
   function label(value) {
@@ -124,6 +147,7 @@
     readLocal,
     configId,
     posterPath,
+    directPattern,
     pattern,
     label,
     applyToAioConfig,
