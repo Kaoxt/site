@@ -92,9 +92,26 @@ async function tmdbFetch(path, key, context) {
 }
 
 async function resolveTmdbId(type, rawId, key, context) {
-  if (/^\d+$/.test(rawId)) return rawId;
-  if (!/^tt\d+$/i.test(rawId)) return null;
-  const found = await tmdbFetch(`/find/${encodeURIComponent(rawId)}?external_source=imdb_id`, key, context);
+  const value = String(rawId || '').toLowerCase();
+  if (/^\d+$/.test(value)) return value;
+  const tmdb = value.match(/^tmdb:([1-9]\d{0,11})$/);
+  if (tmdb) return tmdb[1];
+
+  let externalSource = '';
+  let externalId = '';
+  if (/^tt\d+$/i.test(value)) {
+    externalSource = 'imdb_id';
+    externalId = value;
+  } else {
+    const tvdb = value.match(/^tvdb:([1-9]\d{0,11})$/);
+    if (tvdb) {
+      externalSource = 'tvdb_id';
+      externalId = tvdb[1];
+    }
+  }
+  if (!externalSource) return null;
+
+  const found = await tmdbFetch(`/find/${encodeURIComponent(externalId)}?external_source=${externalSource}`, key, context);
   const list = type === 'tv' ? found.tv_results : found.movie_results;
   return list?.[0]?.id ? String(list[0].id) : null;
 }
@@ -1171,9 +1188,14 @@ async function handlePoster(context) {
   const url = new URL(request.url);
   const parts = url.pathname.split('/').filter(Boolean);
   const type = ['tv', 'series'].includes(parts[2]) ? 'tv' : parts[2] === 'movie' ? 'movie' : '';
-  const rawId = String(parts[3] || '').replace(/\.(webp|jpe?g)$/i, '').toLowerCase();
-  if (!type || parts.length !== 4 || !/^(tt\d{5,12}|[1-9]\d{0,11})$/.test(rawId)) {
-    return json({ error: 'Expected /api/posters-v2/{movie|series}/{tmdb_id|imdb_id}.webp' }, 400);
+  let rawId = '';
+  try {
+    rawId = decodeURIComponent(String(parts[3] || '')).replace(/\.(webp|jpe?g)$/i, '').toLowerCase();
+  } catch {
+    rawId = '';
+  }
+  if (!type || parts.length !== 4 || !/^(tt\d{5,12}|(?:tmdb|tvdb):[1-9]\d{0,11}|[1-9]\d{0,11})$/.test(rawId)) {
+    return json({ error: 'Expected /api/posters-v2/{movie|series}/{id}.webp using TMDB, IMDb, tmdb:, or tvdb: IDs' }, 400);
   }
   const sourceUrl = normalizeSourceUrl(url.searchParams.get('sourceUrl'));
   const state = {
@@ -1183,7 +1205,7 @@ async function handlePoster(context) {
     overlayOnly: Boolean(sourceUrl && url.searchParams.get('overlayOnly') === '1'),
     overlayLanguage: normalizeOverlayLanguage(url.searchParams.get('language')),
     cacheRequest: cacheRequestFor(request, env),
-    idHint: /^\d+$/.test(rawId) ? rawId : '',
+    idHint: /^\d+$/.test(rawId) ? rawId : (rawId.startsWith('tmdb:') ? rawId.slice(5) : ''),
   };
   try {
     const edge = await caches.default.match(state.cacheRequest);
