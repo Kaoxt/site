@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 
 const setupSource = await readFile(new URL('../set-up-collection/set-up-collection.js', import.meta.url), 'utf8');
+const savedSetupSource = await readFile(new URL('../set-up-collection/saved-setup.js', import.meta.url), 'utf8');
 const eligibilitySource = await readFile(new URL('../nuvio-auth/collection-eligibility.js', import.meta.url), 'utf8');
 const profileActionsSource = await readFile(new URL('../account/profile-actions.js', import.meta.url), 'utf8');
 
@@ -32,4 +33,13 @@ test('Update Existing replaces collection groups and retires stale AIOMetadata a
 test('Update Existing targets the profile linked to the selected saved setup', () => {
   assert.match(setupSource, /next\.searchParams\.set\('targetProfile', String\(targetId\)\)/);
   assert.match(setupSource, /const preferredId = requestedProfileId \|\| storedActiveProfileId\(\)/);
+});
+
+
+test('new runtime categories are selected automatically during Update Existing', () => {
+  assert.match(savedSetupSource, /knownCollectionGroupIds/);
+  assert.match(savedSetupSource, /autoSelectNewCollectionGroups: updateExistingSetup/);
+  assert.match(savedSetupSource, /version: 4/);
+  assert.match(setupSource, /LEGACY_KNOWN_COLLECTION_GROUP_IDS/);
+  assert.match(setupSource, /if \(key && !known\.has\(key\)\) selected\.add\(key\)/);
 });
