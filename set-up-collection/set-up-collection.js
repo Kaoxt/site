@@ -33,6 +33,7 @@
     profileEligibilityBusy: false,
     addons: [],
     previousAiMetadataAddons: [],
+    previousPosterBridgeAddons: [],
     existingCollections: [],
 
     mdblistKey: '',
@@ -49,6 +50,7 @@
     aiNeededCatalogs: [],
     aiChunks: [],
     aiInstalls: [],
+    posterBridgeInstalls: [],
     posterOverlaysEnabled: false,
     posterSettings: null,
 
@@ -119,6 +121,7 @@
         addonProfileId: state.addonProfileId,
         addons: state.addons,
         previousAiMetadataAddons: state.previousAiMetadataAddons,
+        previousPosterBridgeAddons: state.previousPosterBridgeAddons,
         existingCollections: state.existingCollections,
         mdblistKey: state.mdblistKey,
         tmdbKey: state.tmdbKey,
@@ -134,6 +137,7 @@
         aiNeededCatalogs: state.aiNeededCatalogs,
         aiChunks: state.aiChunks,
         aiInstalls: state.aiInstalls,
+        posterBridgeInstalls: state.posterBridgeInstalls,
         posterOverlaysEnabled: state.posterOverlaysEnabled,
         posterSettings: state.posterSettings,
         collectionPack: state.collectionPack,
@@ -668,13 +672,16 @@
     return /^AIOMetadata(?:\s*\(\d+\))?$/i.test(String(addon?.name || '').trim());
   }
 
-  async function removePreviousAiMetadataAddons(nextInstalls) {
-    if (!setupUpdatesExisting || !state.previousAiMetadataAddons.length) return 0;
+  function isKollectionPosterBridgeAddon(addon) {
+    return /^Kollection Poster Bridge(?:\s*\(\d+\))?$/i.test(String(addon?.name || '').trim());
+  }
 
+  async function removeStaleAddons(previous, nextInstalls, label) {
+    if (!setupUpdatesExisting || !previous.length) return 0;
     const nextUrls = new Set((nextInstalls || [])
       .map(item => normalizeUrl(item?.url).replace(/\/+$/, ''))
       .filter(Boolean));
-    const stale = state.previousAiMetadataAddons.filter(addon => {
+    const stale = previous.filter(addon => {
       const url = normalizeUrl(addon?.url).replace(/\/+$/, '');
       return url && !nextUrls.has(url);
     });
@@ -694,11 +701,17 @@
         method: 'DELETE',
         headers: { ...authHeaders(), Prefer: 'return=minimal' },
       });
-      if (!response.ok) {
-        throw new Error(`Could not remove the previous AIOMetadata add-on (HTTP ${response.status}).`);
-      }
+      if (!response.ok) throw new Error(`Could not remove the previous ${label} add-on (HTTP ${response.status}).`);
     }
     return stale.length;
+  }
+
+  async function removePreviousPosterBridgeAddons(nextInstalls) {
+    return removeStaleAddons(state.previousPosterBridgeAddons, nextInstalls, 'Kollection Poster Bridge');
+  }
+
+  async function removePreviousAiMetadataAddons(nextInstalls) {
+    return removeStaleAddons(state.previousAiMetadataAddons, nextInstalls, 'AIOMetadata');
   }
 
   async function pullCollections() {
@@ -993,14 +1006,114 @@
       } catch { /* shared aio-metadata id is the normal fallback */ }
       if (i === 0) firstManifestId = realAddonId;
       chunk.catalogs.forEach(c => { if (c?.id) catalogIdToAddonId[c.id] = realAddonId; });
-      installs.push({ url: installUrl, name: manifestName, addonId: realAddonId, host: chunk.host, catalogCount: chunk.catalogs.length });
+      installs.push({
+        url: installUrl,
+        name: manifestName,
+        addonId: realAddonId,
+        host: chunk.host,
+        catalogCount: chunk.catalogs.length,
+        catalogs: chunk.catalogs.map(catalog => ({
+          id: catalog?.id || '',
+          type: catalog?.type || 'movie',
+          displayType: catalog?.displayType || '',
+        })).filter(catalog => catalog.id),
+      });
     }
 
     state.aiInstalls = installs;
     return { installs, catalogIdToAddonId, firstManifestId };
   }
 
-  function repointAioSources(collections, catalogIdToAddonId, firstManifestId) {
+  function encodePosterBridgeValue(value) {
+    const bytes = new TextEncoder().encode(String(value || ''));
+    let binary = '';
+    for (const byte of bytes) binary += String.fromCharCode(byte);
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  }
+
+  function posterBridgeCatalogId(catalogId) {
+    return `kp0_${encodePosterBridgeValue(catalogId)}`;
+  }
+
+  function posterBridgeManifestUrl(upstream) {
+    const helper = window.KollectionPosterSettings;
+    const settings = helper
+      ? helper.normalize(state.posterSettings || helper.readLocal() || {})
+      : (state.posterSettings || {});
+    const token = encodePosterBridgeValue(JSON.stringify({
+      v: 3,
+      upstream,
+      source: settings.source || 'smart',
+      tags: Array.isArray(settings.tags) ? settings.tags : ['trend', 'genre', 'rating'],
+      trendDetails: Array.isArray(settings.trendDetails) ? settings.trendDetails : undefined,
+      ratingSource: settings.ratingSource || 'average',
+      collectionOnly: true,
+      preserveSource: false,
+    }));
+    return `${window.location.origin}/api/posters-addon/${token}/manifest.json`;
+  }
+
+  async function provisionPosterBridges(ai) {
+    if (!state.posterOverlaysEnabled) {
+      state.posterBridgeInstalls = [];
+      const routes = {};
+      Object.entries(ai.catalogIdToAddonId || {}).forEach(([catalogId, addonId]) => {
+        routes[catalogId] = { addonId, catalogId };
+      });
+      return { installs: [], routes };
+    }
+
+    const installs = [];
+    const routes = {};
+    for (let i = 0; i < (ai.installs || []).length; i++) {
+      const upstream = ai.installs[i];
+      const bridgeUrl = posterBridgeManifestUrl(upstream.url);
+      const manifest = await fetchAddonManifest(bridgeUrl);
+      if (!manifest?.id || !Array.isArray(manifest.catalogs)) {
+        throw new Error('The Kollection Poster Bridge did not return a valid manifest.');
+      }
+
+      const available = new Map(manifest.catalogs.map(catalog => [
+        `${catalog?.id || ''}|${catalog?.type || ''}`,
+        catalog,
+      ]));
+      for (const catalog of (upstream.catalogs || [])) {
+        const preferredType = catalog.displayType || catalog.type;
+        const candidateIds = [
+          posterBridgeCatalogId(catalog.id),
+          posterBridgeCatalogId(`${catalog.id}_${catalog.type}`),
+        ];
+        let match = null;
+        for (const candidateId of candidateIds) {
+          match = available.get(`${candidateId}|${preferredType}`) ||
+            available.get(`${candidateId}|${catalog.type}`);
+          if (match) break;
+        }
+        if (!match) {
+          match = manifest.catalogs.find(item => candidateIds.includes(item?.id));
+        }
+        if (!match) {
+          throw new Error(`Poster overlays could not route the collection catalog ${catalog.id} (${catalog.type}).`);
+        }
+        routes[catalog.id] = {
+          addonId: manifest.id,
+          catalogId: match.id,
+          type: match.type || catalog.type,
+        };
+      }
+
+      installs.push({
+        url: bridgeUrl,
+        name: (ai.installs || []).length > 1 ? `Kollection Poster Bridge (${i + 1})` : 'Kollection Poster Bridge',
+        addonId: manifest.id,
+        catalogCount: upstream.catalogs?.length || 0,
+      });
+    }
+    state.posterBridgeInstalls = installs;
+    return { installs, routes };
+  }
+
+  function repointAioSources(collections, routes, firstManifestId) {
     const defaultId = firstManifestId || 'aio-metadata';
     (collections || []).forEach(c => {
       (c.folders || []).forEach(f => {
@@ -1008,7 +1121,14 @@
           (list || []).forEach(s => {
             if (!s || isBingecatSource(s)) return;
             if (s.addonId !== 'aio-metadata') return;
-            s.addonId = catalogIdToAddonId[s.catalogId] || defaultId;
+            const route = routes?.[s.catalogId];
+            if (route) {
+              s.addonId = route.addonId;
+              s.catalogId = route.catalogId;
+              if (route.type) s.type = route.type;
+            } else {
+              s.addonId = defaultId;
+            }
           });
         }
       });
@@ -1127,6 +1247,9 @@
     state.previousAiMetadataAddons = setupUpdatesExisting
       ? state.addons.filter(isKollectionAiMetadataAddon)
       : [];
+    state.previousPosterBridgeAddons = setupUpdatesExisting
+      ? state.addons.filter(isKollectionPosterBridgeAddon)
+      : [];
     state.existingCollections = await pullCollections();
 
     const { ids, typeById } = collectAioCatalogIds(selectedPack);
@@ -1162,6 +1285,7 @@
     // Provision everything first. No collection is pushed until every generated
     // manifest is ready, matching the proven friend-pack provisioning flow.
     const ai = await provisionAiMetadata();
+    const posterBridge = await provisionPosterBridges(ai);
 
     const bcNeeded = shouldInstallBingecat(selectedCollectionPack());
     loading(bcNeeded ? 'Installing AIOMetadata and Bingecat in Nuvio…' : 'Installing AIOMetadata in Nuvio…');
@@ -1169,13 +1293,16 @@
       const item = ai.installs[i];
       await addAddon(item.url, ai.installs.length > 1 ? `AIOMetadata (${i + 1})` : 'AIOMetadata');
     }
+    for (const item of posterBridge.installs) {
+      await addAddon(item.url, item.name);
+    }
     const selectedPack = selectedCollectionPack();
     if (shouldInstallBingecat(selectedPack)) {
       await addAddon(state.bingecatManifestUrl, state.bingecatManifest?.name || 'Bingecat');
     }
 
     const finalPack = jsonClone(selectedPack);
-    repointAioSources(finalPack, ai.catalogIdToAddonId, ai.firstManifestId);
+    repointAioSources(finalPack, posterBridge.routes, ai.firstManifestId);
     rewriteBingecatInCollections(finalPack, state.bingecatAddonId, state.bingecatCatalogs);
     state.finalCollections = setupUpdatesExisting
       ? finalPack
@@ -1184,8 +1311,9 @@
     loading('Adding The Kollection to Nuvio…');
     await pushCollections(state.finalCollections);
     if (setupUpdatesExisting) {
-      loading('Removing the previous AIOMetadata installation…');
+      loading('Removing previous Kollection metadata routes…');
       await removePreviousAiMetadataAddons(ai.installs);
+      await removePreviousPosterBridgeAddons(posterBridge.installs);
     }
     state.installCompleted = true;
     window.KollectionCollectionEligibility?.invalidate?.(state.profileId);
@@ -2457,6 +2585,7 @@
       profileEligibilityBusy: false,
       addons: [],
       previousAiMetadataAddons: [],
+      previousPosterBridgeAddons: [],
       existingCollections: [],
       mdblistKey: '',
       tmdbKey: '',
@@ -2470,6 +2599,7 @@
       aiNeededCatalogs: [],
       aiChunks: [],
       aiInstalls: [],
+      posterBridgeInstalls: [],
       posterOverlaysEnabled: false,
       posterSettings: null,
       collectionPack: null,
