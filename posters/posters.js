@@ -309,7 +309,7 @@
     const source = selectedSource();
     const tags = selectedTags().join(',');
     const trendDetails = selectedTrendDetails().join(',');
-    return `https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?v=24&source=${encodeURIComponent(source)}&tags=${encodeURIComponent(tags)}&ratingSource=${encodeURIComponent(selectedRatingSource())}&trendDetails=${encodeURIComponent(trendDetails)}&cv=3`;
+    return `https://kollection.tv/api/posters-v2/{type}/{id}.webp?v=24&source=${encodeURIComponent(source)}&tags=${encodeURIComponent(tags)}&ratingSource=${encodeURIComponent(selectedRatingSource())}&trendDetails=${encodeURIComponent(trendDetails)}&cv=4`;
   };
 
   const buildOutput = () => {
@@ -343,7 +343,7 @@
         ratingSource: ratingProvider,
         trendDetails,
         smartTags: { enabled: true, tags, trendDetails, fixedPlacement: true },
-        renderer: 'https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp'
+        renderer: 'https://kollection.tv/api/posters-v2/{type}/{id}.webp'
       };
 
       if (normalized.wrapper) {
