@@ -204,11 +204,11 @@
   ]);
 
   const BETTER_POSTERS_TREND_DETAILS = Object.freeze([
-    ['studio', 'Notable Studios'],
-    ['director', 'Notable Directors'],
-    ['cast', 'Notable Cast'],
+    ['studio', 'Studio Tags'],
+    ['director', 'Director Tags'],
+    ['cast', 'Cast Tags'],
     ['inCinema', 'In Cinema'],
-    ['rank', 'Daily Rank'],
+    ['rank', 'Trending'],
     ['newMovie', 'New Movie'],
     ['comingSoon', 'Coming Soon'],
     ['newSeries', 'New Series'],
