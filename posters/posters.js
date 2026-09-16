@@ -309,7 +309,7 @@
     const source = selectedSource();
     const tags = selectedTags().join(',');
     const trendDetails = selectedTrendDetails().join(',');
-    return `https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?v=23&source=${encodeURIComponent(source)}&tags=${encodeURIComponent(tags)}&ratingSource=${encodeURIComponent(selectedRatingSource())}&trendDetails=${encodeURIComponent(trendDetails)}`;
+    return `https://kollection.tv/api/posters-v2/{type}/{tmdb_id}.webp?v=23&source=${encodeURIComponent(source)}&tags=${encodeURIComponent(tags)}&ratingSource=${encodeURIComponent(selectedRatingSource())}&trendDetails=${encodeURIComponent(trendDetails)}&cv=2`;
   };
 
   const buildOutput = () => {
@@ -330,7 +330,11 @@
 
       config.posterRatingProvider = 'custom';
       config.usePosterProxy = true;
+      config.enableRatingPostersForLibrary = true;
       config.customPosterUrlPattern = posterPattern();
+      if (Array.isArray(config.catalogs)) {
+        config.catalogs = config.catalogs.map((catalog) => ({ ...catalog, enableRatingPosters: true }));
+      }
 
       config.kollectionPosters = {
         version: 4,
@@ -363,6 +367,7 @@
         aiometadata: {
           posterRatingProvider: 'custom',
           usePosterProxy: true,
+          enableRatingPostersForLibrary: true,
           customPosterUrlPattern: posterPattern(),
           moviePosterProvider: source === 'tmdb' ? 'tmdb' : 'inherit',
           seriesPosterProvider: source === 'tmdb' ? 'tmdb' : 'inherit'
