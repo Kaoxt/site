@@ -1960,6 +1960,18 @@
       ['sv', 'Swedish'],
       ['cs', 'Czech'],
     ];
+    const trendDetailOptions = [
+      ['studio', 'Notable Studios', 'A24 Film, Pixar Film, Studio Ghibli'],
+      ['director', 'Notable Directors', 'Christopher Nolan Film, Denis Villeneuve Film'],
+      ['cast', 'Notable Cast', 'Leonardo DiCaprio, Zendaya, Florence Pugh'],
+      ['inCinema', 'In Cinema', 'Movies currently in their theatrical window'],
+      ['rank', 'Daily Rank', '#1 Today, #8 Today'],
+      ['newMovie', 'New Movie', 'Recently released movies'],
+      ['comingSoon', 'Coming Soon', 'Upcoming movie or series releases'],
+      ['newSeries', 'New Series', 'Recently premiered TV series'],
+      ['returningSeries', 'Returning Series', 'Ongoing or returning TV series'],
+      ['limitedSeries', 'Limited Series', 'Miniseries and limited TV events'],
+    ];
 
     document.getElementById('smartOverlayModalRoot')?.remove();
     const root = document.createElement('div');
@@ -1976,7 +1988,7 @@
             <button class="smart-overlay-modal-x" type="button" aria-label="Close" data-better-posters-close></button>
           </header>
           <div class="smart-overlay-modal-body">
-            <p class="smart-overlay-modal-copy">These are the controls Better Posters currently exposes for AIOMetadata. The Kollection writes the generated btttr.cc poster URL into your AIOMetadata setup automatically.</p>
+            <p class="smart-overlay-modal-copy">Better Posters supplies the base artwork, genre, rating, quality, and age overlays. The Kollection adds only the individually-selected top Trend Tag so you can control exactly which trend labels are allowed.</p>
 
             <section class="smart-overlay-modal-section">
               <div class="smart-overlay-modal-section-head">
@@ -1985,27 +1997,37 @@
               </div>
               <div class="smart-overlay-tag-grid">
                 <label class="smart-overlay-tag-option">
-                  <input type="checkbox" id="betterTrendTags" ${current.trendTags ? 'checked' : ''}>
-                  <span><b>Trend Tags</b><small>Trending, New, IMDb ranking, and other Better Posters trend labels.</small></span>
-                </label>
-                <label class="smart-overlay-tag-option">
                   <input type="checkbox" id="betterQualityTags" ${current.qualityTags ? 'checked' : ''}>
-                  <span><b>Quality Tags</b><small>4K, Dolby Vision, Atmos, and supported quality badges.</small></span>
+                  <span><b>Quality Tags</b><small>4K, Dolby Vision, Atmos, and supported quality badges from Better Posters.</small></span>
                 </label>
                 <label class="smart-overlay-tag-option">
                   <input type="checkbox" id="betterGenre" ${current.genre ? 'checked' : ''}>
-                  <span><b>Genre</b><small>Genre label at the bottom of the poster.</small></span>
+                  <span><b>Genre</b><small>Better Posters genre label at the bottom of the poster.</small></span>
                 </label>
                 <label class="smart-overlay-tag-option">
                   <input type="checkbox" id="betterRating" ${current.rating ? 'checked' : ''}>
-                  <span><b>Rating</b><small>Rating at the bottom of the poster.</small></span>
+                  <span><b>Rating</b><small>Better Posters rating at the bottom of the poster.</small></span>
                 </label>
                 <label class="smart-overlay-tag-option">
                   <input type="checkbox" id="betterAgeRating" ${current.ageRating ? 'checked' : ''}>
-                  <span><b>Age Rating</b><small>PG-13, TV-MA, R, and similar classifications.</small></span>
+                  <span><b>Age Rating</b><small>PG-13, TV-MA, R, and similar classifications from Better Posters.</small></span>
                 </label>
               </div>
-              <div class="callout" style="margin-top:14px"><strong>Trend Tag selection:</strong> Better Posters currently lets us turn Trend Tags on or off, but it does not expose controls for choosing only specific trend labels such as In Cinema, New, or IMDb rank. Better Posters decides which applicable Trend Tag is shown.</div>
+            </section>
+
+            <section class="smart-overlay-modal-section smart-overlay-trend-section">
+              <div class="smart-overlay-modal-section-head">
+                <span>TREND TAG DETAILS</span>
+                <strong>Choose exactly which top tags can appear</strong>
+                <small>Better Posters supplies the base poster with its own Trend Tag disabled. The Kollection adds one matching top tag from your allowed list.</small>
+              </div>
+              <div class="smart-overlay-trend-grid">
+                ${trendDetailOptions.map(([value, label, copy]) => `
+                  <label class="smart-overlay-trend-option">
+                    <input type="checkbox" value="${value}" data-better-trend-detail ${current.trendDetails.includes(value) ? 'checked' : ''}>
+                    <span><b>${label}</b><small>${copy}</small></span>
+                  </label>`).join('')}
+              </div>
             </section>
 
             <section id="betterRatingSourceSection" class="smart-overlay-modal-section smart-overlay-detail-section" ${current.rating ? '' : 'hidden'}>
@@ -2064,13 +2086,13 @@
 
     root.querySelector('#saveBetterPostersSettingsBtn')?.addEventListener('click', () => {
       state.betterPostersSettings = helper.normalize({
-        trendTags: Boolean(root.querySelector('#betterTrendTags')?.checked),
         qualityTags: Boolean(root.querySelector('#betterQualityTags')?.checked),
         genre: Boolean(root.querySelector('#betterGenre')?.checked),
         rating: Boolean(root.querySelector('#betterRating')?.checked),
         ageRating: Boolean(root.querySelector('#betterAgeRating')?.checked),
         ratingSource: root.querySelector('#betterRatingSource')?.value || 'average',
         language: root.querySelector('#betterPosterLanguage')?.value || 'en',
+        trendDetails: [...root.querySelectorAll('[data-better-trend-detail]:checked')].map(input => input.value),
       });
       state.backup = null;
 
@@ -2079,7 +2101,7 @@
 
       try {
         localStorage.setItem(helper.STORAGE_KEY, JSON.stringify({
-          version: 1,
+          version: 2,
           ...state.betterPostersSettings,
         }));
       } catch {}
@@ -2108,10 +2130,10 @@
     const betterPostersHelper = window.KollectionBetterPostersSettings;
     const betterPostersSettings = betterPostersHelper
       ? betterPostersHelper.normalize(state.betterPostersSettings || betterPostersHelper.readLocal() || {})
-      : { trendTags: true, qualityTags: false, genre: true, rating: true, ageRating: false, ratingSource: 'average', language: 'en' };
+      : { qualityTags: false, genre: true, rating: true, ageRating: false, ratingSource: 'average', language: 'en', trendDetails: ['studio','director','cast','inCinema','rank','newMovie','comingSoon','newSeries','returningSeries','limitedSeries'] };
     const betterPostersSummary = betterPostersHelper
       ? betterPostersHelper.label(betterPostersSettings)
-      : 'Better Posters · Trend Tags, Genre, Rating';
+      : 'Better Posters + Kollection Trends · Genre, Rating';
     host.innerHTML = panel('STEP 3 · AIOMETADATA', 'Prepare AIOMetadata for The Kollection',
       'Use the built-in catalog setup or bring your own AIOMetadata JSON export, then choose where your AIOMetadata configuration should be hosted.',
       `<div class="card">
@@ -2155,7 +2177,7 @@
             <div>
               <span class="badge">Optional</span>
               <h3>Better Posters</h3>
-              <p>Automatically configure AIOMetadata to use Better Posters from btttr.cc for supported movie and series posters.</p>
+              <p>Use Better Posters for the base poster and let The Kollection add only your selected top Trend Tag.</p>
             </div>
           </div>
           <div class="smart-overlay-control-row">
