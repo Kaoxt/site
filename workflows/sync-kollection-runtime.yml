@@ -30,6 +30,40 @@ jobs:
 
           curl -fL --retry 3 --retry-delay 2             'https://raw.githubusercontent.com/ImKaptain/Kaptain-Collection/main/collections/kaoxt-aio-base-config.json'             -o runtime/kaoxt-aio-base-config.json
 
+      - name: Canonicalize artwork URLs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('runtime/database.kaoxt.js')
+          text = path.read_text(encoding='utf-8')
+          replacements = [
+              ('https://kao-xt.com/images/', 'https://kollection.tv/images/'),
+              ('https://ka-oxt.com/images/', 'https://kollection.tv/images/'),
+              ('https://kao-xt.com/', 'https://kollection.tv/images/'),
+              ('https://ka-oxt.com/', 'https://kollection.tv/images/'),
+              ('/images/Movie%20Collections/', '/images/Franchises/'),
+              ('/images/Movie Collections/', '/images/Franchises/'),
+              ('/images/International%20Cinema/', '/images/World/'),
+              ('/images/International Cinema/', '/images/World/'),
+              ('/images/Directors/Guillermo%20Del%20Toro/', '/images/Directors/Guillermo%20del%20Toro/'),
+              ('/images/Directors/Guillermo Del Toro/', '/images/Directors/Guillermo del Toro/'),
+              ('/images/Based%20On/True%20Events/', '/images/Based%20On/True%20Stories/'),
+              ('/images/Based On/True Events/', '/images/Based On/True Stories/'),
+              ('/images/Discover/Recommended%20For%20You/', '/images/Discover/For%20You/'),
+              ('/images/Discover/Recommended For You/', '/images/Discover/For You/'),
+              ('/images/Networks/Syfy/', '/images/Networks/SYFY/'),
+              ('/images/Actors/Robert%20Downey%20Jr/', '/images/Actors/Robert%20Downey%20Jr./'),
+              ('/images/Actors/Robert Downey Jr/', '/images/Actors/Robert Downey Jr./'),
+              ('/images/Franchises/Jurassic%20Park/', '/images/Franchises/Jurrasic%20Park/'),
+              ('/images/Franchises/Jurassic Park/', '/images/Franchises/Jurrasic Park/'),
+          ]
+          for old, new in replacements:
+              text = text.replace(old, new)
+          path.write_text(text, encoding='utf-8')
+          PY
+
       - name: Validate runtime assets
         shell: bash
         run: |
