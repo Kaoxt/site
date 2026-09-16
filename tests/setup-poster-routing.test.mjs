@@ -111,3 +111,15 @@ test('collection folders use a unique poster bridge when Smart Overlays are enab
   assert.match(source, /posterBridgeCatalogId/);
   assert.match(source, /repointAioSources\(finalPack, posterBridge\.routes/);
 });
+
+
+test('collection folders route directly through AIOMetadata instead of a poster bridge', async () => {
+  const source = await readFile(new URL('../set-up-collection/set-up-collection.js', import.meta.url), 'utf8');
+  const start = source.indexOf('async function provisionPosterBridges(ai)');
+  const end = source.indexOf('function repointAioSources', start);
+  const block = source.slice(start, end);
+  assert.match(block, /state\.posterBridgeInstalls = \[\]/);
+  assert.match(block, /routes\[catalogId\] = \{ addonId, catalogId \}/);
+  assert.doesNotMatch(block, /fetchAddonManifest\(bridgeUrl\)/);
+  assert.doesNotMatch(block, /posterBridgeManifestUrl\(upstream\.url\)/);
+});
