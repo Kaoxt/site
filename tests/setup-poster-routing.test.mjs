@@ -100,3 +100,14 @@ test('existing setup uses a Configure modal for Smart Overlay Poster options', a
   assert.match(source, /state\.posterSettings = nextSettings/);
   assert.match(source, /kollection:poster-settings-changed/);
 });
+
+
+test('collection folders use a unique poster bridge when Smart Overlays are enabled', async () => {
+  const source = await readFile(new URL('../set-up-collection/set-up-collection.js', import.meta.url), 'utf8');
+  assert.match(source, /posterBridgeManifestUrl/);
+  assert.match(source, /collectionOnly:\s*true/);
+  assert.match(source, /preserveSource:\s*false/);
+  assert.match(source, /Kollection Poster Bridge/);
+  assert.match(source, /posterBridgeCatalogId/);
+  assert.match(source, /repointAioSources\(finalPack, posterBridge\.routes/);
+});
