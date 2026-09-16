@@ -195,7 +195,7 @@ test('Better Posters helper generates the hybrid Kollection delivery pattern', (
   };
   const token = BetterPosters.configId(settings);
   assert.equal(token, encodeBetterPostersConfig(settings));
-  assert.equal(BetterPosters.pattern(settings), `https://kollection.tv/bp/${token}/{type}/{imdb_id}.webp`);
+  assert.equal(BetterPosters.pattern(settings), `https://kollection.tv/bp/${token}/{type}/{id}.webp`);
   assert.deepEqual(decodeBetterPostersConfig(token), BetterPosters.normalize(settings));
 });
 
@@ -215,7 +215,7 @@ test('Better Posters AIOMetadata integration uses the hybrid Better Posters + Ko
   assert.equal(config.posterRatingProvider, 'custom');
   assert.equal(config.usePosterProxy, false);
   assert.equal(config.enableRatingPostersForLibrary, true);
-  assert.match(config.customPosterUrlPattern, /^https:\/\/kollection\.tv\/bp\/b1[0-9a-z]+\/\{type\}\/\{imdb_id\}\.webp$/);
+  assert.match(config.customPosterUrlPattern, /^https:\/\/kollection\.tv\/bp\/b1[0-9a-z]+\/\{type\}\/\{id\}\.webp$/);
   assert.ok(config.catalogs.every(catalog => catalog.enableRatingPosters === true));
   assert.equal(config.kollectionPosters, undefined);
   assert.equal(config.kollectionBetterPosters?.provider, 'btttr.cc');
@@ -241,10 +241,12 @@ test('hybrid Better Posters delivery route delegates to v2 with btttr base and K
   assert.match(source, /bpGenre/);
   assert.match(source, /bpRating/);
   assert.match(source, /bpAge/);
+  assert.match(source, /BETTER_POSTERS_TREND_DETAILS/);
+  assert.match(source, /x-kollection-better-posters-direct/);
 });
 
 
-test('native Better Posters fast path is used when every Trend category is allowed', () => {
+test('AIOMetadata always receives a concrete Better Posters token route with its reliable id placeholder', () => {
   const settings = BetterPosters.normalize({
     genre: true,
     rating: true,
@@ -253,14 +255,13 @@ test('native Better Posters fast path is used when every Trend category is allow
     ratingSource: 'average',
     language: 'en',
   });
+  assert.equal(BetterPosters.configId(settings), 'b1600sf');
   assert.equal(
     BetterPosters.pattern(settings),
-    'https://btttr.cc/poster/imdb/poster-default/{imdb_id}.jpg'
+    'https://kollection.tv/bp/b1600sf/{type}/{id}.webp'
   );
-});
 
-test('native Better Posters fast path is used when every Trend category is disabled', () => {
-  const settings = BetterPosters.normalize({
+  const none = BetterPosters.normalize({
     genre: true,
     rating: true,
     qualityTags: false,
@@ -270,12 +271,12 @@ test('native Better Posters fast path is used when every Trend category is disab
     trendDetails: [],
   });
   assert.equal(
-    BetterPosters.pattern(settings),
-    'https://btttr.cc/poster/imdb/poster-default/{imdb_id}.jpg?tag=none'
+    BetterPosters.pattern(none),
+    `https://kollection.tv/bp/${BetterPosters.configId(none)}/{type}/{id}.webp`
   );
 });
 
-test('custom Trend subsets use the Kollection filter route', () => {
+test('custom Trend subsets use the same reliable Kollection id route', () => {
   const settings = BetterPosters.normalize({
     genre: true,
     rating: true,
@@ -283,6 +284,6 @@ test('custom Trend subsets use the Kollection filter route', () => {
   });
   assert.match(
     BetterPosters.pattern(settings),
-    /^https:\/\/kollection\.tv\/bp\/b1[0-9a-z]+\/\{type\}\/\{imdb_id\}\.webp$/
+    /^https:\/\/kollection\.tv\/bp\/b1[0-9a-z]+\/\{type\}\/\{id\}\.webp$/
   );
 });
