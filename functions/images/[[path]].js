@@ -42,6 +42,7 @@ export async function onRequest(context) {
   // canonical repository keys, so normalize aliases before every lookup.
   key = key
     .replace(/^images\/Discover\/Recommended For You\//i, "images/Discover/For You/")
+    .replace(/^images\/International Cinema\//i, "images/World/")
     .replace(/^images\/Networks\/Syfy\//i, "images/Networks/SYFY/")
     .replace(/^images\/Franchises\/Jurassic Park\//i, "images/Franchises/Jurrasic Park/")
     .replace(/^images\/Actors\/Robert Downey Jr\//i, "images/Actors/Robert Downey Jr./")
