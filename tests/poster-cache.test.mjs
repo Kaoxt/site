@@ -301,7 +301,7 @@ test('default poster tags include genre with trend and rating', async () => {
   const response = await onRequest(context);
   await response.arrayBuffer(); await h.flush();
   assert.equal(h.payloads.at(-1).genre, 'Drama');
-  assert.equal(h.payloads.at(-1).trend, '#1 Today');
+  assert.equal(h.payloads.at(-1).trend, 'Trending');
   assert.equal(h.payloads.at(-1).rating, '8.6');
 });
 
@@ -313,7 +313,7 @@ test('Trend Tag details can prioritize notable directors over daily rank', async
   };
   const response = await h.request('27205', '&trendDetails=director,rank');
   await response.arrayBuffer(); await h.flush();
-  assert.equal(h.payloads.at(-1).trend, 'Christopher Nolan Film');
+  assert.equal(h.payloads.at(-1).trend, 'Nolan Movie');
   assert.equal(response.headers.get('x-kollection-trend-source'), 'director');
 
   const rankOnly = harness();
@@ -752,7 +752,7 @@ test('series IDs and localized variants cannot reuse the movie overlay', async (
   url.pathname = url.pathname.replace('/movie/', '/series/'); url.searchParams.set('language', 'es');
   context.request = new Request(url);
   const response = await onRequest(context); await response.arrayBuffer(); await h.flush();
-  assert.equal(h.count.render, 2); assert.equal(h.payloads.at(-1).trend, '#1 Hoy');
+  assert.equal(h.count.render, 2); assert.equal(h.payloads.at(-1).trend, 'Trending');
   assert.equal(response.headers.get('x-kollection-overlay-language'), 'es');
   assert.ok(h.bucket.posters().some(([key]) => key.includes('/tv/')));
 });
@@ -836,7 +836,7 @@ test('hybrid Better Posters uses btttr base overlays and Kollection trend only',
   assert.equal(payload.rating, '');
   assert.equal(payload.quality, '');
   assert.equal(payload.age, '');
-  assert.equal(payload.trend, '#1 Aujourd’hui');
+  assert.equal(payload.trend, 'Trending');
 });
 
 test('Better Posters native options participate in the persistent cache variant', async () => {
