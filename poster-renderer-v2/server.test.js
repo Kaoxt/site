@@ -177,7 +177,7 @@ test('smart and original outputs keep visible top tags and genre/rating at portr
   }
 });
 
-test('polished top tags stay compact and split cleanly when quality is enabled', async () => {
+test('larger top tags stay readable and split cleanly when quality is enabled', async () => {
   await fixture();
   const plain = await renderPoster({ posterPath: '/polish.jpg', smartLayout: true });
   const trendOnly = await renderPoster({ posterPath: '/polish.jpg', smartLayout: true, trend: '#5 Today' });
@@ -189,17 +189,17 @@ test('polished top tags stay compact and split cleanly when quality is enabled',
     return after.reduce((n, value, index) => n + (Math.abs(value - before[index]) > threshold ? 1 : 0), 0);
   };
 
-  assert.ok(await changedPixels(plain, trendOnly, { left: 100, top: 0, width: 300, height: 50 }) > 500);
-  assert.ok(await changedPixels(plain, trendOnly, { left: 80, top: 56, width: 340, height: 8 }) < 350,
-    'top tag should end near 50px instead of forming a tall banner');
+  assert.ok(await changedPixels(plain, trendOnly, { left: 80, top: 0, width: 340, height: 64 }) > 800);
+  assert.ok(await changedPixels(plain, trendOnly, { left: 80, top: 70, width: 340, height: 8 }) < 350,
+    'larger top tag should still end cleanly below roughly 65px');
 
-  assert.ok(await changedPixels(plain, split, { left: 10, top: 0, width: 300, height: 50 }) > 500,
+  assert.ok(await changedPixels(plain, split, { left: 10, top: 0, width: 275, height: 64 }) > 700,
     'trend tag should occupy the left side when quality is enabled');
-  assert.ok(await changedPixels(plain, split, { left: 315, top: 0, width: 175, height: 50 }) > 250,
+  assert.ok(await changedPixels(plain, split, { left: 300, top: 0, width: 190, height: 64 }) > 350,
     'quality tag should occupy the right side');
-  assert.ok(await changedPixels(plain, split, { left: 375, top: 55, width: 115, height: 45 }) > 150,
-    'audio tag should render beneath quality');
-  assert.ok(await changedPixels(plain, split, { left: 296, top: 0, width: 10, height: 48 }) < 180,
+  assert.ok(await changedPixels(plain, split, { left: 345, top: 70, width: 145, height: 50 }) > 220,
+    'larger audio tag should render beneath quality');
+  assert.ok(await changedPixels(plain, split, { left: 279, top: 0, width: 12, height: 62 }) < 220,
     'long spotlight label should leave a clean gap before quality');
 });
 
