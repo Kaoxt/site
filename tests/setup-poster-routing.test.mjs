@@ -102,24 +102,25 @@ test('existing setup uses a Configure modal for Smart Overlay Poster options', a
 });
 
 
-test('collection folders use a unique poster bridge when Smart Overlays are enabled', async () => {
-  const source = await readFile(new URL('../set-up-collection/set-up-collection.js', import.meta.url), 'utf8');
-  assert.match(source, /posterBridgeManifestUrl/);
-  assert.match(source, /collectionOnly:\s*true/);
-  assert.match(source, /preserveSource:\s*false/);
-  assert.match(source, /Kollection Poster Bridge/);
-  assert.match(source, /posterBridgeCatalogId/);
-  assert.match(source, /repointAioSources\(finalPack, posterBridge\.routes/);
-});
-
-
-test('collection folders route directly through AIOMetadata instead of a poster bridge', async () => {
+test('collection folders route directly through the exact AIOMetadata manifest catalog', async () => {
   const source = await readFile(new URL('../set-up-collection/set-up-collection.js', import.meta.url), 'utf8');
   const start = source.indexOf('async function provisionPosterBridges(ai)');
   const end = source.indexOf('function repointAioSources', start);
   const block = source.slice(start, end);
   assert.match(block, /state\.posterBridgeInstalls = \[\]/);
-  assert.match(block, /routes\[catalogId\] = \{ addonId, catalogId \}/);
+  assert.match(block, /ai\.catalogRoutes/);
   assert.doesNotMatch(block, /fetchAddonManifest\(bridgeUrl\)/);
-  assert.doesNotMatch(block, /posterBridgeManifestUrl\(upstream\.url\)/);
+  assert.match(source, /aioCatalogRouteKey\(source\.catalogId, source\.type\)/);
+  assert.match(source, /source\.provider = 'addon'/);
+  assert.match(source, /manifestCatalogs = manifest\.catalogs/);
+  assert.match(source, /routeMatch\(catalog, manifestCatalogs\)/);
+});
+
+test('catalog provisioning keeps movie and series routes distinct', async () => {
+  const source = await readFile(new URL('../set-up-collection/set-up-collection.js', import.meta.url), 'utf8');
+  assert.match(source, /function aioCatalogRouteKey\(id, type\)/);
+  assert.match(source, /normalizeAioCatalogType/);
+  assert.match(source, /collectAioCatalogRefs/);
+  assert.match(source, /catalog\.displayType/);
+  assert.match(source, /catalogRoutes\[key\] = route/);
 });
