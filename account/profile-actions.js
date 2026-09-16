@@ -62,6 +62,53 @@
   const profileId = (profile) => Number(profile?.profile_index ?? profile?.id);
   const profileName = (profile) => String(profile?.name || `Profile ${profileId(profile)}`);
 
+  function normalizeArtworkString(value) {
+    if (typeof value !== 'string' || !value) return value;
+    const normalizedHost = value.replace(/https?:\/\/(?:www\.)?(?:kao-xt|ka-oxt)\.com(?:\/images)?(?=\/|$)([^\s"'<>]*)/gi, (match, tail) => {
+      const suffix = String(tail || '');
+      return `https://kollection.tv/images${suffix.startsWith('/') ? suffix : `/${suffix}`}`;
+    });
+    return normalizedHost
+      .replace(/\/images\/Movie%20Collections\//gi, '/images/Franchises/')
+      .replace(/\/images\/Movie Collections\//gi, '/images/Franchises/')
+      .replace(/\/images\/International%20Cinema\//gi, '/images/World/')
+      .replace(/\/images\/International Cinema\//gi, '/images/World/')
+      .replace(/\/images\/Directors\/Guillermo%20Del%20Toro\//g, '/images/Directors/Guillermo%20del%20Toro/')
+      .replace(/\/images\/Directors\/Guillermo Del Toro\//g, '/images/Directors/Guillermo del Toro/')
+      .replace(/\/images\/Based%20On\/True%20Events\//gi, '/images/Based%20On/True%20Stories/')
+      .replace(/\/images\/Based On\/True Events\//gi, '/images/Based On/True Stories/')
+      .replace(/\/images\/Discover\/Recommended%20For%20You\//gi, '/images/Discover/For%20You/')
+      .replace(/\/images\/Discover\/Recommended For You\//gi, '/images/Discover/For You/')
+      .replace(/\/images\/Networks\/Syfy\//gi, '/images/Networks/SYFY/')
+      .replace(/\/images\/Actors\/Robert%20Downey%20Jr\//g, '/images/Actors/Robert%20Downey%20Jr./')
+      .replace(/\/images\/Actors\/Robert Downey Jr\//g, '/images/Actors/Robert Downey Jr./')
+      .replace(/\/images\/Franchises\/Jurassic%20Park\//gi, '/images/Franchises/Jurrasic%20Park/')
+      .replace(/\/images\/Franchises\/Jurassic Park\//gi, '/images/Franchises/Jurrasic Park/');
+  }
+
+  function normalizeArtworkDeep(value) {
+    if (typeof value === 'string') return normalizeArtworkString(value);
+    if (Array.isArray(value)) return value.map(normalizeArtworkDeep);
+    if (!value || typeof value !== 'object') return value;
+    const copy = {};
+    for (const [key, item] of Object.entries(value)) copy[key] = normalizeArtworkDeep(item);
+    return copy;
+  }
+
+  async function repairLiveKollectionArtwork(profileIndex, eligibility) {
+    if (!eligibility?.eligible || eligibility?.state !== 'kollection' || Number(eligibility?.externalCount || 0) !== 0) return eligibility;
+    const current = Array.isArray(eligibility.collections) ? eligibility.collections : [];
+    const normalized = normalizeArtworkDeep(current);
+    if (JSON.stringify(normalized) === JSON.stringify(current)) return eligibility;
+    const { accessToken, userId } = await getAuth();
+    await rpc('sync_push_collections', {
+      p_profile_id: Number(profileIndex),
+      p_collections_json: normalized,
+    }, accessToken);
+    setLastSync(userId);
+    return { ...eligibility, collections: normalized };
+  }
+
   async function getSavedSetups(force = false) {
     if (force || !savedSetupsPromise) {
       savedSetupsPromise = fetch('/api/account/collections', {
@@ -286,7 +333,7 @@
   async function writeCopyTarget(accessToken, targetId, kind, data) {
     if (kind === 'addons') return rpc('sync_push_addons', { p_profile_id: targetId, p_addons: data }, accessToken);
     if (kind === 'plugins') return rpc('sync_push_plugins', { p_profile_id: targetId, p_plugins: data }, accessToken);
-    return rpc('sync_push_collections', { p_profile_id: targetId, p_collections_json: data }, accessToken);
+    return rpc('sync_push_collections', { p_profile_id: targetId, p_collections_json: normalizeArtworkDeep(data) }, accessToken);
   }
 
   async function openCopySettings(targetProfile) {
@@ -461,6 +508,10 @@
         getSavedSetups().catch(() => []),
       ]);
       if (!result) throw new Error('Profile availability could not be checked.');
+      const repairedResult = await repairLiveKollectionArtwork(id, result);
+      if (repairedResult !== result) {
+        result.collections = repairedResult.collections;
+      }
       row.dataset.collectionEligibility = result.eligible ? 'eligible' : 'ineligible';
       row.dataset.collectionEligibilityState = String(result.state || 'unknown');
 
