@@ -5932,6 +5932,1566 @@ window.NUVIO_DATABASE = [
     "focusGlowEnabled": false
   },
   {
+    "id": "collection-47e99b69",
+    "title": "World",
+    "folders": [
+      {
+        "id": "folder-9255cab4",
+        "title": "Argentina",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206402"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206413"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206428"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206429"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.64533"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.64335"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "",
+        "coverImageUrl": "https://kollection.tv/images/World/Argentina/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206402"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206413"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206428"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206429"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.64533"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.64335"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": ""
+      },
+      {
+        "id": "folder-b07c655c",
+        "title": "Brazil",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206422"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206421"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206431"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206430"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.64633"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.64636"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "",
+        "coverImageUrl": "https://kollection.tv/images/World/Brazil/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206422"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206421"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206431"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206430"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.64633"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.64636"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": ""
+      },
+      {
+        "id": "folder-a9ee6fff",
+        "title": "China",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206224"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207005"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206457"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206503"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206243"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207009"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "",
+        "coverImageUrl": "https://kollection.tv/images/World/China/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206224"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207005"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206457"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206503"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206243"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207009"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": ""
+      },
+      {
+        "id": "folder-eca09e41",
+        "title": "France",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207030"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207033"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206506"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206507"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207039"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207036"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "",
+        "coverImageUrl": "https://kollection.tv/images/World/France/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207030"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207033"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206506"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206507"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207039"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207036"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": ""
+      },
+      {
+        "id": "folder-a366a04f",
+        "title": "Germany",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207404"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207405"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206517"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206519"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207703"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207702"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "",
+        "coverImageUrl": "https://kollection.tv/images/World/Germany/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207404"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207405"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206517"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206519"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207703"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207702"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": ""
+      },
+      {
+        "id": "folder-2f28cc7e",
+        "title": "India",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207704"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207705"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206520"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206521"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207709"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207710"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "",
+        "coverImageUrl": "https://kollection.tv/images/World/India/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207704"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207705"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206520"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206521"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207709"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207710"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": ""
+      },
+      {
+        "id": "folder-5bdbcb36",
+        "title": "Italy",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207711"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207712"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206522"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206523"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207713"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207714"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "",
+        "coverImageUrl": "https://kollection.tv/images/World/Italy/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207711"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207712"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206522"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206523"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207713"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207714"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": ""
+      },
+      {
+        "id": "folder-5d2103d7",
+        "title": "Japan",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207721"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207723"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.58660"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.58659"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207725"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207727"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "",
+        "coverImageUrl": "https://kollection.tv/images/World/Japan/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207721"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207723"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.58660"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.58659"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207725"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207727"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": ""
+      },
+      {
+        "id": "folder-c34d75ca",
+        "title": "Mexico",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207742"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207743"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206528"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206529"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207744"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207745"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "",
+        "coverImageUrl": "https://kollection.tv/images/World/Mexico/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207742"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207743"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206528"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206529"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207744"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207745"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": ""
+      },
+      {
+        "id": "folder-a1807bbb",
+        "title": "Nordic",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207747"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207750"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206530"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206531"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207751"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207752"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "",
+        "coverImageUrl": "https://kollection.tv/images/World/Nordic/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207747"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207750"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206530"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206531"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207751"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207752"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": ""
+      },
+      {
+        "id": "folder-c1a6f102",
+        "title": "Russia",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208158"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208159"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206532"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206533"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208153"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208157"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "",
+        "coverImageUrl": "https://kollection.tv/images/World/Russia/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208158"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208159"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206532"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206533"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208153"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208157"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": ""
+      },
+      {
+        "id": "folder-6d771722",
+        "title": "South Korea",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208230"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208231"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.12721"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.3584"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208232"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208234"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208235"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.64079"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "",
+        "coverImageUrl": "https://kollection.tv/images/World/South%20Korea/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208230"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208231"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.12721"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.3584"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208232"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208234"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208235"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.64079"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": ""
+      },
+      {
+        "id": "folder-38ad58e2",
+        "title": "Spain",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208357"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208358"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206606"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206607"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208359"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208388"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "",
+        "coverImageUrl": "https://kollection.tv/images/World/Spain/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208357"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208358"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206606"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206607"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208359"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208388"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": ""
+      },
+      {
+        "id": "folder-76e97b6d",
+        "title": "Türkiye",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208396"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208398"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206608"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206609"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208399"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208400"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "",
+        "coverImageUrl": "https://kollection.tv/images/World/T%C3%BCrkiye/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208396"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208398"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206608"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206609"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208399"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208400"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": ""
+      },
+      {
+        "id": "folder-f84c1325",
+        "title": "United Kingdom",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208401"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208402"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207392"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207393"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208406"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208408"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.74626"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.168089"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.168081"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.55720"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "",
+        "coverImageUrl": "https://kollection.tv/images/World/United%20Kingdom/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208401"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208402"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207392"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207393"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208406"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208408"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.74626"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.168089"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.168081"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.55720"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": ""
+      },
+      {
+        "id": "folder-ee98388c",
+        "title": "USA",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207274"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207271"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.101881"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.101882"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.86934"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.86710"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/World/USA/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/World/USA/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207274"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207271"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.101881"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.101882"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.86934"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.86710"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/World/USA/backdrop.webp"
+      }
+    ],
+    "pinToTop": true,
+    "viewMode": "FOLLOW_LAYOUT",
+    "showAllTab": false,
+    "focusGlowEnabled": false
+  },
+  {
     "id": "collection-2c1014c5-community",
     "title": "Based On...",
     "folders": [
