@@ -5,7 +5,7 @@ const LOGO_SOURCE_PREFIX = `poster-source/${LOGO_SOURCE_VERSION}/`;
 const TMDB_POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
 const TMDB_LOGO_BASE = 'https://image.tmdb.org/t/p/w500';
 const RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
-const TOUCH_INTERVAL_MS = 12 * 60 * 60 * 1000;
+const TOUCH_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_BYTES = 8 * 1024 * 1024;
 
 function objectHash(request) {
