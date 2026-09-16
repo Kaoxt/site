@@ -32,6 +32,7 @@
     profileEligibility: null,
     profileEligibilityBusy: false,
     addons: [],
+    previousAiMetadataAddons: [],
     existingCollections: [],
 
     mdblistKey: '',
@@ -75,6 +76,8 @@
   const SETUP_SESSION_MAX_AGE = 12 * 60 * 60 * 1000;
   const setupQuery = new URLSearchParams(window.location.search);
   const setupHasSavedId = setupQuery.has('saved');
+  const setupUpdatesExisting = setupHasSavedId && setupQuery.get('update') === '1';
+  const requestedProfileId = Number(setupQuery.get('targetProfile')) || null;
 
   function routeStepFromLocation() {
     const path = window.location.pathname.replace(/\/+$/, '');
@@ -101,6 +104,7 @@
         profileName: state.profileName,
         addonProfileId: state.addonProfileId,
         addons: state.addons,
+        previousAiMetadataAddons: state.previousAiMetadataAddons,
         existingCollections: state.existingCollections,
         mdblistKey: state.mdblistKey,
         tmdbKey: state.tmdbKey,
@@ -356,7 +360,7 @@
       state.profiles = await getProfiles();
 
       if (state.profiles.length) {
-        const preferredId = storedActiveProfileId();
+        const preferredId = requestedProfileId || storedActiveProfileId();
         const selected =
           state.profiles.find(p => p.id === preferredId) ||
           state.profiles.find(p => p.id === state.profileId) ||
@@ -633,6 +637,43 @@
     const data = await readResponse(res);
     if (!res.ok) throw new Error(`Could not install ${name || 'addon'} in Nuvio (HTTP ${res.status}).`);
     return Array.isArray(data) ? data[0] : data;
+  }
+
+  function isKollectionAiMetadataAddon(addon) {
+    return /^AIOMetadata(?:\s*\(\d+\))?$/i.test(String(addon?.name || '').trim());
+  }
+
+  async function removePreviousAiMetadataAddons(nextInstalls) {
+    if (!setupUpdatesExisting || !state.previousAiMetadataAddons.length) return 0;
+
+    const nextUrls = new Set((nextInstalls || [])
+      .map(item => normalizeUrl(item?.url).replace(/\/+$/, ''))
+      .filter(Boolean));
+    const stale = state.previousAiMetadataAddons.filter(addon => {
+      const url = normalizeUrl(addon?.url).replace(/\/+$/, '');
+      return url && !nextUrls.has(url);
+    });
+    if (!stale.length) return 0;
+
+    const owner = await getSyncOwner();
+    const targetProfileId = state.addonProfileId || state.profileId;
+    for (const addon of stale) {
+      const params = new URLSearchParams({
+        user_id: `eq.${owner}`,
+        profile_id: `eq.${targetProfileId}`,
+      });
+      if (addon?.id != null && String(addon.id).trim()) params.set('id', `eq.${addon.id}`);
+      else params.set('url', `eq.${normalizeUrl(addon?.url)}`);
+
+      const response = await fetch(`${CFG.nuvioApiBase}/rest/v1/addons?${params}`, {
+        method: 'DELETE',
+        headers: { ...authHeaders(), Prefer: 'return=minimal' },
+      });
+      if (!response.ok) {
+        throw new Error(`Could not remove the previous AIOMetadata add-on (HTTP ${response.status}).`);
+      }
+    }
+    return stale.length;
   }
 
   async function pullCollections() {
@@ -1051,6 +1092,9 @@
     if (!selectedPack.length) throw new Error('Choose at least one collection section before continuing.');
 
     state.addons = await listAddons();
+    state.previousAiMetadataAddons = setupUpdatesExisting
+      ? state.addons.filter(isKollectionAiMetadataAddon)
+      : [];
     state.existingCollections = await pullCollections();
 
     const { ids, typeById } = collectAioCatalogIds(selectedPack);
@@ -1063,7 +1107,9 @@
 
     const previewPack = jsonClone(selectedPack);
     rewriteBingecatInCollections(previewPack, state.bingecatAddonId, state.bingecatCatalogs);
-    state.previewCollections = mergeCollections(state.existingCollections, previewPack, state.collectionPack);
+    state.previewCollections = setupUpdatesExisting
+      ? previewPack
+      : mergeCollections(state.existingCollections, previewPack, state.collectionPack);
     state.finalCollections = null;
     state.backup = {
       createdAt: new Date().toISOString(),
@@ -1099,10 +1145,16 @@
     const finalPack = jsonClone(selectedPack);
     repointAioSources(finalPack, ai.catalogIdToAddonId, ai.firstManifestId);
     rewriteBingecatInCollections(finalPack, state.bingecatAddonId, state.bingecatCatalogs);
-    state.finalCollections = mergeCollections(state.existingCollections, finalPack, state.collectionPack);
+    state.finalCollections = setupUpdatesExisting
+      ? finalPack
+      : mergeCollections(state.existingCollections, finalPack, state.collectionPack);
 
     loading('Adding The Kollection to Nuvio…');
     await pushCollections(state.finalCollections);
+    if (setupUpdatesExisting) {
+      loading('Removing the previous AIOMetadata installation…');
+      await removePreviousAiMetadataAddons(ai.installs);
+    }
     state.installCompleted = true;
     window.KollectionCollectionEligibility?.invalidate?.(state.profileId);
   }
@@ -1227,11 +1279,23 @@
         button.onclick = () => {
           const id = String(button.dataset.savedId || '').trim();
           if (!id) return;
+          const selectedSetup = setups.find(item => String(item?.id || '') === id);
+          const targetId = Number(selectedSetup?.nuvioProfileId);
+          if (Number.isFinite(targetId) && targetId >= 1) {
+            const targetProfile = state.profiles.find(profile => profile.id === targetId);
+            if (targetProfile) {
+              state.profileId = targetProfile.id;
+              state.profileName = targetProfile.name;
+              state.addonProfileId = targetProfile.usesPrimaryAddons ? 1 : targetProfile.id;
+              rememberActiveProfile(targetProfile);
+            }
+          }
           const next = new URL(window.location.href);
           next.pathname = '/set-up-collection/customize';
           next.search = '';
           next.searchParams.set('saved', id);
           next.searchParams.set('update', '1');
+          if (Number.isFinite(targetId) && targetId >= 1) next.searchParams.set('targetProfile', String(targetId));
           window.location.href = next.toString();
         };
       });
@@ -1263,7 +1327,7 @@
     if (!result) return '';
     if (result.state === 'kollection') return 'This profile already uses a collection created through The Kollection setup and is available to update.';
     if (result.state === 'available') return 'This profile is available for Set Up Collection.';
-    if (result.state === 'blocked') return 'This profile already has collection data that was not created through The Kollection Set Up Collection wizard. Clear the old collection before continuing.';
+    if (result.state === 'blocked') return 'This Nuvio profile is using a collection that was not created through The Kollection. Clear its current collection before continuing with setup.';
     return result.message || 'The Kollection could not verify whether this profile is available.';
   }
 
@@ -1304,7 +1368,7 @@
         <span>${esc(profileEligibilityMessage(result))}</span>
       </div>
       <div class="profile-eligibility-actions">
-        ${canClear ? '<button class="ghost profile-clear-collection-btn" id="clearOldCollectionBtn" type="button">Clear old collection</button>' : '<button class="ghost" id="retryProfileEligibilityBtn" type="button">Try again</button>'}
+        ${canClear ? '<button class="ghost profile-clear-collection-btn" id="clearOldCollectionBtn" type="button">Clear Current Collection</button>' : '<button class="ghost" id="retryProfileEligibilityBtn" type="button">Try again</button>'}
       </div>
       <small class="profile-eligibility-note">${canClear ? 'Clearing removes the current Nuvio collection layout from this profile. It does not delete the profile, add-ons, plugins, or saved Kollection setups.' : 'Setup stays blocked until this profile can be verified.'}</small>`;
     if (next) next.disabled = true;
@@ -1320,11 +1384,11 @@
         const cleared = await window.KollectionCollectionEligibility.clear(state.profileId);
         state.profileEligibility = cleared;
         renderProfileEligibility(cleared);
-        alert('Old collection cleared. This profile is now available for Set Up Collection.', 'success');
+        alert('Current collection cleared. This profile is now available for Set Up Collection.', 'success');
       } catch (error) {
         state.profileEligibility = result;
         renderProfileEligibility(result);
-        alert(error?.message || 'Could not clear the old collection from this profile.', 'error');
+        alert(error?.message || 'Could not clear the current collection from this profile.', 'error');
       }
     });
 
@@ -2174,10 +2238,10 @@
           <div class="summary-item"><span class="icon">A</span><div><b>${state.aiNeededCatalogs.length} AIOMetadata catalogs</b><span>${state.aiSetupMode === 'custom' ? `Using ${esc(state.aiCustomFileName)} as the configuration base. ` : ''}Planned across ${state.aiChunks.length} configuration${state.aiChunks.length === 1 ? '' : 's'} using your selected AIOMetadata host.</span></div></div>
           <div class="summary-item"><span class="icon">P</span><div><b>Smart Overlay Posters · ${state.posterOverlaysEnabled ? 'Enabled' : 'Off'}</b><span>${state.posterOverlaysEnabled ? `Your collection will use Smart Overlay Posters across Home rows, folders, and AIOMetadata library/meta posters. ${esc(window.KollectionPosterSettings?.label(state.posterSettings || window.KollectionPosterSettings?.readLocal?.() || {}) || 'Poster settings selected.')}` : 'Standard AIOMetadata poster behavior will be used. You can enable Smart Overlay Posters during setup later.'}</span></div></div>
           <div class="summary-item"><span class="icon">B</span><div><b>${state.bingecatSkipped ? 'Bingecat skipped' : (bcNeeded ? `Bingecat · ${bc.length} recommendation catalogs` : 'Bingecat not needed')}</b><span>${state.bingecatSkipped ? 'For You Bingecat placeholders will be removed.' : (bcNeeded ? `Your personal add-on ID ${esc(state.bingecatAddonId)} will replace the creator-specific For You references.` : 'None of the selected sections use Bingecat, so its add-on will not be installed.')}</span></div></div>
-          <div class="summary-item"><span class="icon">K</span><div><b>The Kollection</b><span>${selectedPack.length} of ${state.collectionPack?.length || 0} sections selected · ${selectedFolders} folders included. This profile goes from ${existingCount} to ${previewCount} groups after the ID-aware merge.</span></div></div>
+          <div class="summary-item"><span class="icon">K</span><div><b>The Kollection</b><span>${selectedPack.length} of ${state.collectionPack?.length || 0} sections selected · ${selectedFolders} folders included. ${setupUpdatesExisting ? `The previous setup will be replaced with ${previewCount} updated groups.` : `This profile goes from ${existingCount} to ${previewCount} groups after the ID-aware merge.`}</span></div></div>
         </div>
         <hr class="sep">
-        <div class="callout warn"><strong>The final setup adds AIOMetadata${bcNeeded ? ' and Bingecat' : ''} before pushing your selected sections.</strong> Unselected matching The Kollection sections are omitted; unrelated add-ons and collection groups are preserved.</div>
+        <div class="callout warn"><strong>${setupUpdatesExisting ? 'This update replaces the previous Kollection setup and its AIOMetadata installation.' : `The final setup adds AIOMetadata${bcNeeded ? ' and Bingecat' : ''} before pushing your selected sections.`}</strong> ${setupUpdatesExisting ? 'The new AIOMetadata configuration is created first, the updated collection is synced, and then the previous AIOMetadata add-on is removed. Unrelated add-ons and plugins are preserved.' : 'Unselected matching The Kollection sections are omitted; unrelated add-ons and collection groups are preserved.'}</div>
         <div class="actions"><button class="ghost" id="backBtn">Back</button><div class="action-group"><button class="ghost" id="backupBtn">Download backup</button><button class="btn" id="nextBtn">Continue</button></div></div>
       </div>`);
     $('#backBtn').onclick = () => setStep(4);
@@ -2211,7 +2275,7 @@
     const existingName = window.KollectionSavedSetup?.getName?.() || '';
     const buttonLabel = state.installCompleted ? 'Finish setup' : 'Set Up The Kollection';
     host.innerHTML = panel('STEP 7 · SET UP', 'Ready to set up The Kollection',
-      `Set Up Collection will generate the required AIOMetadata configuration${state.aiChunks.length === 1 ? '' : 's'}, install ${bcNeeded ? 'AIOMetadata and your personal Bingecat manifest' : 'AIOMetadata'}, ${state.posterOverlaysEnabled ? 'apply Smart Overlay Posters to the collection, ' : ''}rewrite the collection sources, and add ${selectedPack.length} selected section${selectedPack.length === 1 ? '' : 's'} to Nuvio.`,
+      `${setupUpdatesExisting ? 'Update Existing will replace the previous Kollection collection and AIOMetadata installation.' : 'Set Up Collection will add the selected collection to Nuvio.'} It will generate the required AIOMetadata configuration${state.aiChunks.length === 1 ? '' : 's'}, install ${bcNeeded ? 'AIOMetadata and your personal Bingecat manifest' : 'AIOMetadata'}, ${state.posterOverlaysEnabled ? 'apply Smart Overlay Posters to the collection, ' : ''}rewrite the collection sources, and sync ${selectedPack.length} selected section${selectedPack.length === 1 ? '' : 's'}.`,
       `<div class="card">
         <div class="field setup-name-field">
           <label for="setupName">Setup name</label>
@@ -2357,6 +2421,7 @@
       profileEligibility: null,
       profileEligibilityBusy: false,
       addons: [],
+      previousAiMetadataAddons: [],
       existingCollections: [],
       mdblistKey: '',
       tmdbKey: '',
