@@ -1,7 +1,9 @@
 const SOURCE_VERSION = 'tmdb-source-art-v1';
 const LOGO_SOURCE_VERSION = 'tmdb-logo-art-v1';
+const BTTTR_SOURCE_VERSION = 'btttr-source-art-v1';
 const SOURCE_PREFIX = `poster-source/${SOURCE_VERSION}/`;
 const LOGO_SOURCE_PREFIX = `poster-source/${LOGO_SOURCE_VERSION}/`;
+const BTTTR_SOURCE_PREFIX = `poster-source/${BTTTR_SOURCE_VERSION}/`;
 const TMDB_POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
 const TMDB_LOGO_BASE = 'https://image.tmdb.org/t/p/w500';
 const RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
@@ -14,7 +16,26 @@ function objectHash(request) {
 }
 
 function assetRequest(request) {
-  const kind = request.headers.get('x-tmdb-asset-type') === 'logo' ? 'logo' : 'poster';
+  const requestedKind = request.headers.get('x-tmdb-asset-type');
+  if (requestedKind === 'btttr') {
+    try {
+      const url = new URL(String(request.headers.get('x-btttr-source-url') || ''));
+      if (url.protocol !== 'https:' || url.hostname !== 'btttr.cc' || url.username || url.password) return null;
+      if (!/^\/poster(?:-[a-z]+)?\/imdb\/poster-default\/tt\d{5,12}\.jpg$/i.test(url.pathname)) return null;
+      if (url.toString().length > 1800) return null;
+      return {
+        kind: 'btttr',
+        path: url.toString(),
+        version: BTTTR_SOURCE_VERSION,
+        prefix: BTTTR_SOURCE_PREFIX,
+        url: url.toString(),
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  const kind = requestedKind === 'logo' ? 'logo' : 'poster';
   const path = String(
     kind === 'logo'
       ? request.headers.get('x-tmdb-logo-path')
@@ -95,7 +116,7 @@ export async function sourceCacheOutbound(request, env) {
     // R2 is an acceleration layer; continue to TMDB if it is temporarily unavailable.
   }
 
-  const origin = await fetch(asset.base + asset.path, {
+  const origin = await fetch(asset.url || asset.base + asset.path, {
     headers: { accept: 'image/webp,image/jpeg,image/*' },
     signal: AbortSignal.timeout(4000),
   });
@@ -147,4 +168,5 @@ async function prunePrefix(env, prefix, now, maxPages) {
 export async function pruneExpiredSourceArt(env, now = Date.now(), maxPages = 50) {
   await prunePrefix(env, SOURCE_PREFIX, now, maxPages);
   await prunePrefix(env, LOGO_SOURCE_PREFIX, now, maxPages);
+  await prunePrefix(env, BTTTR_SOURCE_PREFIX, now, maxPages);
 }
