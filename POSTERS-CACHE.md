@@ -9,7 +9,7 @@ The AIOMetadata pattern replaces only `poster`. It does not change a title's bac
 3. On an IMDb miss, cached ID metadata locates the existing TMDB-addressed R2 poster. That legacy poster is reused and an IMDb-addressed copy is saved to avoid future ID lookups. Both IDs still share one render lock.
 4. Only a true cache miss renders a new image. Refreshes and cold requests share in-flight work; D1 leases coordinate separate Worker instances. The finished canonical R2 write completes before a successful lease is released.
 
-The artwork version remains `production-cache-19`, preserving previously rendered 500×750 images. The delivery version is independent (`cold-pipeline-3`); generated client patterns use `v=23`. The layout version is part of both edge and persistent cache keys, so visual revisions do not require a global artwork-cache purge.
+The artwork version remains `production-cache-19`, preserving previously rendered 500×750 images. The delivery version is independent (`cold-pipeline-3`); generated client patterns use `v=24`. The layout version is part of both edge and persistent cache keys, so visual revisions do not require a global artwork-cache purge.
 
 ## First loads
 
@@ -21,7 +21,7 @@ Renderer `v2-bp-layout-26` renders directly on the delivered 500×750 canvas ins
 
 ## Shared source artwork
 
-Renderer `v2-bp-layout-28` coalesces simultaneous cold source-art requests within each container, including origin fallback, so overlay variants share one download. Successful centered title logos are cached after trimming and fitting for 24 hours, with an LRU limit of 64 logos / 8 MB per container; concurrent requests share the same logo work and failed lookups remain retryable. Original logo resolution, title placement, output dimensions, WebP quality, and finished-poster cache keys are unchanged.
+Renderer `v2-bp-layout-29` keeps the same 500×750 WebP delivery size while increasing the on-poster Trend, quality, audio, age, genre, and rating typography/padding for better readability in Nuvio. The `v=24` client layout key isolates these larger overlays from previously cached v23 artwork. It also retains the source-art coalescing behavior from layout-28, including origin fallback, so overlay variants share one download. Successful centered title logos are cached after trimming and fitting for 24 hours, with an LRU limit of 64 logos / 8 MB per container; concurrent requests share the same logo work and failed lookups remain retryable. Original logo resolution, title placement, output dimensions, WebP quality, and finished-poster cache keys are unchanged.
 
 Compositing now feeds the WebP encoder directly, removing a redundant full-canvas raw-buffer export and reload. A local fixture comparison produced byte-identical output for plain, centered-logo, title-text, and quality-tag variants. A 20-variant fixture batch reduced logo downloads from 20 to 1 and renderer elapsed time from 3035 ms to 2580 ms (about 15%). This is a local renderer measurement, not an end-to-end Nuvio latency guarantee; first-time provider lookups and container startup still apply.
 
