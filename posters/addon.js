@@ -34,16 +34,12 @@
   const ratingSource = () => document.getElementById('ratingSource')?.value || 'average';
 
   function buildPosterPattern() {
-    const tags = selectedTags();
-    const params = new URLSearchParams({
-      v: '24',
+    return globalThis.KollectionPosterConfigToken.pattern({
       source: selectedSource(),
-      tags: [...new Set(tags)].sort().join(','),
+      tags: selectedTags(),
       ratingSource: ratingSource(),
-      trendDetails: selectedTrendDetails().join(','),
-      cv: '4',
+      trendDetails: selectedTrendDetails(),
     });
-    return `https://kollection.tv/api/posters-v2/{type}/{id}.webp?${params}`;
   }
 
   function refreshPattern() {
