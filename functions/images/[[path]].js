@@ -43,7 +43,10 @@ export async function onRequest(context) {
   key = key
     .replace(/^images\/Discover\/Recommended For You\//i, "images/Discover/For You/")
     .replace(/^images\/Networks\/Syfy\//i, "images/Networks/SYFY/")
-    .replace(/^images\/Franchises\/Jurassic Park\//i, "images/Franchises/Jurrasic Park/");
+    .replace(/^images\/Franchises\/Jurassic Park\//i, "images/Franchises/Jurrasic Park/")
+    .replace(/^images\/Actors\/Robert Downey Jr\//i, "images/Actors/Robert Downey Jr./")
+    .replace(/^images\/Directors\/Guillermo Del Toro\//i, "images/Directors/Guillermo del Toro/")
+    .replace(/^images\/Based On\/True Events\//i, "images/Based On/True Stories/");
 
   // Cache GET responses at the Cloudflare edge.
   // The full URL (including ?v=...) is the cache key, which means query
