@@ -2,27 +2,14 @@
   'use strict';
 
   const STORAGE_KEY = 'kollection-posters-settings-v1';
-  const ALLOWED_TAGS = ['trend', 'quality', 'genre', 'rating', 'age'];
-  const RATING_SOURCES = ['average', 'score', 'imdb', 'letterboxd', 'mal', 'rogerebert', 'tomatometer', 'popcornmeter', 'tmdb'];
-  const TREND_DETAILS = ['studio', 'director', 'cast', 'inCinema', 'rank', 'newMovie', 'comingSoon', 'newSeries', 'returningSeries', 'limitedSeries'];
-  const LEGACY_RELEASE_DETAILS = ['inCinema', 'newMovie', 'comingSoon', 'newSeries', 'returningSeries', 'limitedSeries'];
+
+  function codec() {
+    if (!globalThis.KollectionPosterConfigToken) throw new Error('Poster config token codec is unavailable.');
+    return globalThis.KollectionPosterConfigToken;
+  }
 
   function normalize(value) {
-    const input = value && typeof value === 'object' ? value : {};
-    const source = input.source === 'tmdb' ? 'tmdb' : 'smart';
-    const requested = Array.isArray(input.tags) ? input.tags.map(String) : ['trend', 'genre', 'rating'];
-    const tags = ALLOWED_TAGS.filter(tag => requested.includes(tag));
-    const ratingSource = RATING_SOURCES.includes(String(input.ratingSource || '').toLowerCase())
-      ? String(input.ratingSource).toLowerCase()
-      : 'average';
-    const requestedTrendDetails = new Set(Array.isArray(input.trendDetails)
-      ? input.trendDetails.map(String)
-      : TREND_DETAILS);
-    if (requestedTrendDetails.has('release')) {
-      LEGACY_RELEASE_DETAILS.forEach(type => requestedTrendDetails.add(type));
-    }
-    const trendDetails = TREND_DETAILS.filter(type => requestedTrendDetails.has(type));
-    return { source, tags, ratingSource, trendDetails, artworkProvider: 'tmdb' };
+    return codec().normalize(value);
   }
 
   function readLocal() {
@@ -34,19 +21,12 @@
     }
   }
 
+  function configId(value) {
+    return codec().encode(normalize(value));
+  }
+
   function pattern(value) {
-    const settings = normalize(value);
-    const params = new URLSearchParams({
-      v: '24',
-      source: settings.source,
-      tags: [...new Set(settings.tags)].sort().join(','),
-      ratingSource: settings.ratingSource,
-      trendDetails: settings.trendDetails.join(','),
-      language: '{language_short}',
-      cv: '4',
-    });
-    return 'https://kollection.tv/api/posters-v2/{type}/{id}.webp?' +
-      params.toString().replace('%7Blanguage_short%7D', '{language_short}');
+    return codec().pattern(normalize(value));
   }
 
   function label(value) {
@@ -70,8 +50,9 @@
       enableRatingPosters: true,
     }));
     config.kollectionPosters = {
-      version: 4,
+      version: 5,
       enabled: true,
+      configId: configId(settings),
       posterSource: settings.source,
       ratingSource: settings.ratingSource,
       trendDetails: settings.trendDetails.slice(),
@@ -89,6 +70,7 @@
     STORAGE_KEY,
     normalize,
     readLocal,
+    configId,
     pattern,
     label,
     applyToAioConfig,
