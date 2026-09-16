@@ -123,25 +123,60 @@ export async function onRequest(context) {
   inner.searchParams.set('bpAge', config.ageRating ? '1' : '0');
   inner.searchParams.set('bpRatingSource', config.ratingSource);
 
-  const response = await handlePosterV2({
-    ...context,
-    request: new Request(inner.toString(), { method: request.method, headers: request.headers }),
-  });
-  const headers = new Headers(response.headers);
-  headers.set('x-kollection-better-posters-config', configId);
-  headers.set('x-kollection-better-posters-cache', 'MISS');
-  headers.set('content-location', canonical.pathname);
-  const delivered = new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+  const buildFiltered = async () => {
+    const response = await handlePosterV2({
+      ...context,
+      request: new Request(inner.toString(), { method: request.method, headers: request.headers }),
+    });
+    const headers = new Headers(response.headers);
+    headers.set('x-kollection-better-posters-config', configId);
+    headers.set('x-kollection-better-posters-cache', 'MISS');
+    headers.set('content-location', canonical.pathname);
+    const delivered = new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 
-  const directBetterPosters = response.status === 302 &&
-    /^https:\/\/btttr\.cc\//i.test(headers.get('location') || '');
-  const cacheableImage = response.status === 200 &&
-    /^image\//i.test(headers.get('content-type') || '');
-  if (request.method === 'GET' && (cacheableImage || directBetterPosters) &&
-      !/no-store/i.test(headers.get('cache-control') || '')) {
-    context.waitUntil(caches.default.put(cacheRequest, delivered.clone()).catch(() => {}));
+    const directBetterPosters = response.status === 302 &&
+      /^https:\/\/btttr\.cc\//i.test(headers.get('location') || '');
+    const cacheableImage = response.status === 200 &&
+      /^image\//i.test(headers.get('content-type') || '');
+    if (request.method === 'GET' && (cacheableImage || directBetterPosters) &&
+        !/no-store/i.test(headers.get('cache-control') || '')) {
+      await caches.default.put(cacheRequest, delivered.clone()).catch(() => {});
+    }
+    return delivered;
+  };
+
+  const customTrendSubset = config.trendDetails.length > 0 &&
+    config.trendDetails.length < BETTER_POSTERS_TREND_DETAILS.length;
+
+  // Never make Nuvio wait on a cold custom-subset decision when AIOMetadata has
+  // already supplied an IMDb ID. Better Posters can display the complete base
+  // poster immediately; Kollection resolves/renders the allowed Trend Tag in
+  // parallel and saves the final response under this same /bp/ cache key.
+  if (request.method === 'GET' && customTrendSubset && /^tt\d{5,12}$/i.test(rawId)) {
+    context.waitUntil((async () => {
+      const filtered = await buildFiltered();
+      await filtered.body?.cancel();
+    })().catch(() => {}));
+
+    const location = nativeBetterPostersUrl(config, rawId, false);
+    return new Response(null, {
+      status: 302,
+      headers: {
+        location,
+        // The provisional /bp/ response must never stick. The btttr.cc image it
+        // points at remains independently cacheable and therefore displays fast.
+        'cache-control': 'private, no-store',
+        'cdn-cache-control': 'no-store',
+        'access-control-allow-origin': '*',
+        'x-kollection-better-posters-config': configId,
+        'x-kollection-better-posters-cache': 'MISS',
+        'x-kollection-better-posters-provisional': '1',
+        'content-location': canonical.pathname,
+      },
+    });
   }
 
+  const delivered = await buildFiltered();
   if (request.method === 'HEAD') {
     await delivered.body?.cancel();
     return new Response(null, { status: delivered.status, headers: delivered.headers });
