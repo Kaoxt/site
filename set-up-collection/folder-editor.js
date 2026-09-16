@@ -197,11 +197,23 @@
   }
 
   const BETTER_POSTERS_OPTIONS = Object.freeze([
-    ['trendTags', 'Trend Tags'],
     ['qualityTags', 'Quality Tags'],
     ['genre', 'Genre'],
     ['rating', 'Rating'],
     ['ageRating', 'Age Rating'],
+  ]);
+
+  const BETTER_POSTERS_TREND_DETAILS = Object.freeze([
+    ['studio', 'Notable Studios'],
+    ['director', 'Notable Directors'],
+    ['cast', 'Notable Cast'],
+    ['inCinema', 'In Cinema'],
+    ['rank', 'Daily Rank'],
+    ['newMovie', 'New Movie'],
+    ['comingSoon', 'Coming Soon'],
+    ['newSeries', 'New Series'],
+    ['returningSeries', 'Returning Series'],
+    ['limitedSeries', 'Limited Series'],
   ]);
 
   function editingSavedSetup() {
@@ -212,13 +224,13 @@
   function currentBetterPostersSettings(state) {
     const helper = window.KollectionBetterPostersSettings;
     if (!helper) return {
-      trendTags: true,
       qualityTags: false,
       genre: true,
       rating: true,
       ageRating: false,
       ratingSource: 'average',
       language: 'en',
+      trendDetails: BETTER_POSTERS_TREND_DETAILS.map(([value]) => value),
     };
     return helper.normalize(state.betterPostersSettings || helper.readLocal?.() || {});
   }
@@ -255,6 +267,7 @@
 
     const helper = window.KollectionBetterPostersSettings;
     const current = currentBetterPostersSettings(state);
+    const trendDetails = new Set(current.trendDetails || []);
     const ratingSources = [
       ['average', 'Average'],
       ['imdb', 'IMDb'],
@@ -304,7 +317,16 @@
                 </div>
               </div>
 
-              <div class="callout"><strong>Trend Tags are one switch.</strong> Better Posters decides whether a matching poster shows Trending, New, an IMDb rank, or another supported trend label. It does not currently expose individual Trend Tag filters.</div>
+              <div class="smart-overlay-modal-group">
+                <div class="smart-overlay-modal-group-copy"><b>Trend Tag details</b><span>Better Posters supplies the base poster with its own Trend Tag off. Choose which Kollection top tags are allowed.</span></div>
+                <div class="smart-overlay-modal-grid trend-details">
+                  ${BETTER_POSTERS_TREND_DETAILS.map(([value, label]) => `
+                    <label class="smart-overlay-modal-choice">
+                      <input type="checkbox" data-better-trend-detail value="${value}" ${trendDetails.has(value) ? 'checked' : ''}>
+                      <span>${label}</span>
+                    </label>`).join('')}
+                </div>
+              </div>
 
               <div id="betterPostersSavedRatingSection" class="smart-overlay-modal-group" ${current.rating ? '' : 'hidden'}>
                 <div class="smart-overlay-modal-group-copy"><b>Rating source</b><span>Choose which rating Better Posters should display.</span></div>
@@ -378,6 +400,7 @@
             ageRating: optionValue('ageRating'),
             ratingSource: root.querySelector('#betterPostersSavedRatingSource')?.value || 'average',
             language: root.querySelector('#betterPostersSavedLanguage')?.value || 'en',
+            trendDetails: [...root.querySelectorAll('[data-better-trend-detail]:checked')].map(input => input.value),
           })
         : current;
 
