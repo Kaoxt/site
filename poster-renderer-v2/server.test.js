@@ -298,7 +298,7 @@ test('shared source art persists with a sliding 30-day retention window', async 
 
   const key = `poster-source/${SOURCE_CACHE_VERSION}/${hash}.bin`;
   const record = bucket.objects.get(key);
-  record.customMetadata.lastAccessedAt = String(Date.now() - 13 * 60 * 60 * 1000);
+  record.customMetadata.lastAccessedAt = String(Date.now() - 8 * 24 * 60 * 60 * 1000);
   record.customMetadata.retentionUntil = String(Date.now() + 60 * 60 * 1000);
 
   globalThis.fetch = async () => { throw new Error('origin should not be used on an R2 hit'); };
