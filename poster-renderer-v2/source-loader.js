@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 
 export const SOURCE_CACHE_VERSION = 'tmdb-source-art-v1';
+export const LOGO_SOURCE_CACHE_VERSION = 'tmdb-logo-art-v1';
 const SOURCE_CACHE_HOST = 'source-cache.internal';
 const SOURCE_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 const SOURCE_TOUCH_INTERVAL_MS = 12 * 60 * 60 * 1000;
@@ -60,12 +61,11 @@ function cacheUrl(hash) {
   return `http://${SOURCE_CACHE_HOST}/v1/${hash}.bin`;
 }
 
-async function readShared(path, hash) {
+async function readShared(path, hash, kind = 'poster') {
+  const headers = { accept: 'image/*', 'x-tmdb-asset-type': kind };
+  headers[kind === 'logo' ? 'x-tmdb-logo-path' : 'x-tmdb-poster-path'] = path;
   const response = await fetch(cacheUrl(hash), {
-    headers: {
-      accept: 'image/*',
-      'x-tmdb-poster-path': path,
-    },
+    headers,
     signal: AbortSignal.timeout(5000),
   });
   if (!response.ok) throw new Error(`Shared source cache failed: ${response.status}`);
@@ -81,27 +81,31 @@ async function readShared(path, hash) {
   };
 }
 
-function touchShared(path, hash, entry, now) {
+function touchShared(path, hash, entry, now, kind = 'poster') {
   if (now - Number(entry.persistedAccessAt || 0) < SOURCE_TOUCH_INTERVAL_MS) return;
   entry.persistedAccessAt = now;
   entry.retentionUntil = now + SOURCE_RETENTION_MS;
+  const headers = { accept: 'image/*', 'x-tmdb-asset-type': kind };
+  headers[kind === 'logo' ? 'x-tmdb-logo-path' : 'x-tmdb-poster-path'] = path;
   void fetch(cacheUrl(hash), {
-    headers: {
-      accept: 'image/*',
-      'x-tmdb-poster-path': path,
-    },
+    headers,
     signal: AbortSignal.timeout(5000),
   }).then(response => response.body?.cancel()).catch(() => {});
 }
 
-export async function loadTmdbPosterSource(posterPath) {
-  const path = validPosterPath(posterPath);
-  if (!path) throw new Error('posterPath is required');
+async function loadTmdbAsset(pathValue, {
+  kind = 'poster',
+  version = SOURCE_CACHE_VERSION,
+  base = 'https://image.tmdb.org/t/p/w342',
+  requiredLabel = 'posterPath',
+} = {}) {
+  const path = validPosterPath(pathValue);
+  if (!path) throw new Error(`${requiredLabel} is required`);
   const now = Date.now();
-  const hash = digest(`${SOURCE_CACHE_VERSION}|${path}`);
+  const hash = digest(`${version}|${path}`);
   const warm = getMemory(hash, now);
   if (warm) {
-    if (warm.status !== 'ORIGIN_FALLBACK') touchShared(path, hash, warm, now);
+    if (warm.status !== 'ORIGIN_FALLBACK') touchShared(path, hash, warm, now, kind);
     return {
       ...warm,
       key: hash,
@@ -113,19 +117,32 @@ export async function loadTmdbPosterSource(posterPath) {
   // Variants of one title can arrive together before the LRU has any bytes.
   // Share the entire lookup (including fallback) instead of downloading each.
   if (pending.has(hash)) return pending.get(hash);
-  const work = loadColdSource(path, hash, now);
+  const work = loadColdSource(path, hash, now, { kind, base });
   pending.set(hash, work);
   try { return await work; }
   finally { if (pending.get(hash) === work) pending.delete(hash); }
 }
 
-async function loadColdSource(path, hash, now) {
+export function loadTmdbPosterSource(posterPath) {
+  return loadTmdbAsset(posterPath);
+}
+
+export function loadTmdbLogoSource(logoPath) {
+  return loadTmdbAsset(logoPath, {
+    kind: 'logo',
+    version: LOGO_SOURCE_CACHE_VERSION,
+    base: 'https://image.tmdb.org/t/p/w500',
+    requiredLabel: 'logoPath',
+  });
+}
+
+async function loadColdSource(path, hash, now, { kind = 'poster', base = 'https://image.tmdb.org/t/p/w342' } = {}) {
   let shared;
   try {
-    shared = await readShared(path, hash);
+    shared = await readShared(path, hash, kind);
   } catch {
     // The shared cache accelerates artwork delivery; it must not disable overlays.
-    const response = await fetch(`https://image.tmdb.org/t/p/w342${path}`, {
+    const response = await fetch(`${base}${path}`, {
       headers: { accept: 'image/webp,image/jpeg,image/*' },
       signal: AbortSignal.timeout(4000),
     });
