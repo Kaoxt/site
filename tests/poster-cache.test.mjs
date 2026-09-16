@@ -814,3 +814,48 @@ test('plain fallback artwork is persisted separately and reused without another 
   assert.equal(second.headers.get('x-kollection-plain-cache'), 'HIT');
   assert.equal(h.count.fallback, 1);
 });
+
+
+test('hybrid Better Posters uses btttr base overlays and Kollection trend only', async () => {
+  const h = harness();
+  const context = h.context('27205');
+  context.request = new Request(
+    'https://kollection.tv/api/posters-v2/movie/27205.webp?v=26&source=tmdb&provider=btttr&tags=trend&trendDetails=rank&language=fr&overlayOnly=1&bpQuality=1&bpGenre=0&bpRating=1&bpAge=1&bpRatingSource=imdb'
+  );
+  const response = await onRequest(context);
+  await response.arrayBuffer();
+  await h.flush();
+
+  const payload = h.payloads.at(-1);
+  assert.match(payload.sourceUrl, /^https:\/\/btttr\.cc\/poster-rqa\/imdb\/poster-default\/tt1375666\.jpg\?/);
+  assert.match(payload.sourceUrl, /tag=none/);
+  assert.match(payload.sourceUrl, /lang=fr/);
+  assert.match(payload.sourceUrl, /rs=IM/);
+  assert.equal(payload.overlayOnly, true);
+  assert.equal(payload.genre, '');
+  assert.equal(payload.rating, '');
+  assert.equal(payload.quality, '');
+  assert.equal(payload.age, '');
+  assert.equal(payload.trend, '#1 Today');
+  assert.equal(response.headers.get('x-kollection-artwork-source'), 'betterposters-btttr');
+});
+
+test('Better Posters native options participate in the persistent cache variant', async () => {
+  const h = harness();
+  const firstContext = h.context('27205');
+  firstContext.request = new Request(
+    'https://kollection.tv/api/posters-v2/movie/27205.webp?v=26&source=tmdb&provider=btttr&tags=trend&trendDetails=rank&overlayOnly=1&bpQuality=0&bpGenre=1&bpRating=1&bpAge=0&bpRatingSource=average'
+  );
+  await (await onRequest(firstContext)).arrayBuffer();
+  await h.flush();
+
+  const secondContext = h.context('27205');
+  secondContext.request = new Request(
+    'https://kollection.tv/api/posters-v2/movie/27205.webp?v=26&source=tmdb&provider=btttr&tags=trend&trendDetails=rank&overlayOnly=1&bpQuality=1&bpGenre=1&bpRating=1&bpAge=0&bpRatingSource=average'
+  );
+  await (await onRequest(secondContext)).arrayBuffer();
+  await h.flush();
+
+  assert.equal(h.count.render, 2);
+  assert.equal(h.bucket.posters().filter(([key]) => key.startsWith('poster-cache/production/')).length, 2);
+});
