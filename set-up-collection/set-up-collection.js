@@ -1059,63 +1059,18 @@
   }
 
   async function provisionPosterBridges(ai) {
-    if (!state.posterOverlaysEnabled) {
-      state.posterBridgeInstalls = [];
-      const routes = {};
-      Object.entries(ai.catalogIdToAddonId || {}).forEach(([catalogId, addonId]) => {
-        routes[catalogId] = { addonId, catalogId };
-      });
-      return { installs: [], routes };
-    }
-
-    const installs = [];
+    // AIOMetadata already rewrites every selected catalog's poster URL with the
+    // Kollection custom poster pattern. Route collection folders straight to
+    // those same AIOMetadata manifests instead of inserting a second catalog
+    // proxy. Nuvio's FolderDetailViewModel reads folder.sources directly, so
+    // using the exact generated addon/catalog pair keeps folder and Home poster
+    // behavior identical and removes an extra network hop.
+    state.posterBridgeInstalls = [];
     const routes = {};
-    for (let i = 0; i < (ai.installs || []).length; i++) {
-      const upstream = ai.installs[i];
-      const bridgeUrl = posterBridgeManifestUrl(upstream.url);
-      const manifest = await fetchAddonManifest(bridgeUrl);
-      if (!manifest?.id || !Array.isArray(manifest.catalogs)) {
-        throw new Error('The Kollection Poster Bridge did not return a valid manifest.');
-      }
-
-      const available = new Map(manifest.catalogs.map(catalog => [
-        `${catalog?.id || ''}|${catalog?.type || ''}`,
-        catalog,
-      ]));
-      for (const catalog of (upstream.catalogs || [])) {
-        const preferredType = catalog.displayType || catalog.type;
-        const candidateIds = [
-          posterBridgeCatalogId(catalog.id),
-          posterBridgeCatalogId(`${catalog.id}_${catalog.type}`),
-        ];
-        let match = null;
-        for (const candidateId of candidateIds) {
-          match = available.get(`${candidateId}|${preferredType}`) ||
-            available.get(`${candidateId}|${catalog.type}`);
-          if (match) break;
-        }
-        if (!match) {
-          match = manifest.catalogs.find(item => candidateIds.includes(item?.id));
-        }
-        if (!match) {
-          throw new Error(`Poster overlays could not route the collection catalog ${catalog.id} (${catalog.type}).`);
-        }
-        routes[catalog.id] = {
-          addonId: manifest.id,
-          catalogId: match.id,
-          type: match.type || catalog.type,
-        };
-      }
-
-      installs.push({
-        url: bridgeUrl,
-        name: (ai.installs || []).length > 1 ? `Kollection Poster Bridge (${i + 1})` : 'Kollection Poster Bridge',
-        addonId: manifest.id,
-        catalogCount: upstream.catalogs?.length || 0,
-      });
-    }
-    state.posterBridgeInstalls = installs;
-    return { installs, routes };
+    Object.entries(ai.catalogIdToAddonId || {}).forEach(([catalogId, addonId]) => {
+      routes[catalogId] = { addonId, catalogId };
+    });
+    return { installs: [], routes };
   }
 
   function repointAioSources(collections, routes, firstManifestId) {
