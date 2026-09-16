@@ -28,9 +28,11 @@ function authorized(request, env) {
 }
 
 function renderShard(request) {
+  const requested = Number(request.headers.get('x-kollection-render-shard'));
+  if (Number.isInteger(requested) && requested >= 0) return requested & 1;
   // Each distinct container name maps to a separate Cloudflare container
-  // instance. CF-Ray is unique per request and cheap to hash, so bursts are
-  // spread across both configured max_instances without reading the POST body.
+  // instance. CF-Ray is unique per request and cheap to hash, so unpinned
+  // bursts are spread across both configured max_instances.
   const key = request.headers.get('cf-ray') || crypto.randomUUID();
   let hash = 2166136261;
   for (let i = 0; i < key.length; i++) {
@@ -48,7 +50,7 @@ export default {
       return json({ error: 'Unauthorized renderer request.' }, 401);
     }
 
-    if (url.pathname !== '/render' && url.pathname !== '/health') {
+    if (!['/render', '/warm', '/health'].includes(url.pathname)) {
       return json({ error: 'Not found.' }, 404);
     }
 
