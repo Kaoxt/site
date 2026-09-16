@@ -227,7 +227,7 @@ test('movie lifecycle Trend Tags are independently selectable', async () => {
     release_dates: { results: [{ iso_3166_1: 'US', release_dates: [{ type: 3, release_date: release(10) }] }] },
   };
   await (await ranked.request('27205', '&trendDetails=rank')).arrayBuffer(); await ranked.flush();
-  assert.equal(ranked.payloads.at(-1).trend, '#1 Today');
+  assert.equal(ranked.payloads.at(-1).trend, 'Trending');
 
   const fresh = harness();
   fresh.detailsOverride = {
@@ -320,7 +320,7 @@ test('Trend Tag details can prioritize notable directors over daily rank', async
   rankOnly.detailsOverride = h.detailsOverride;
   const rankResponse = await rankOnly.request('27205', '&trendDetails=rank');
   await rankResponse.arrayBuffer(); await rankOnly.flush();
-  assert.equal(rankOnly.payloads.at(-1).trend, '#1 Today');
+  assert.equal(rankOnly.payloads.at(-1).trend, 'Trending');
   assert.equal(rankResponse.headers.get('x-kollection-trend-source'), 'rank');
 });
 
