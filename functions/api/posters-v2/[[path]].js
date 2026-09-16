@@ -198,17 +198,41 @@ function certification(details, type) {
   return details.content_ratings?.results?.find((x) => x.iso_3166_1 === 'US')?.rating || '';
 }
 
-function betterPostersBaseUrl(details, language = 'en') {
+function betterPostersBaseUrl(details, language = 'en', options = {}) {
   const imdbId = String(details?.external_ids?.imdb_id || '').trim();
   if (!/^tt\d{5,12}$/i.test(imdbId)) return '';
-  const langMap = { es: 'es', fr: 'fr', de: 'de', it: 'it', pt: 'pt-BR', ja: 'ja', ko: 'ko' };
+
+  const genre = options.genre !== false;
+  const rating = options.rating !== false;
+  const quality = options.quality === true;
+  const age = options.age === true;
+  let suffix = '';
+  if (!genre && rating) suffix = 'r';
+  else if (genre && !rating) suffix = 'g';
+  else if (!genre && !rating) suffix = 'n';
+  if (quality) suffix += 'q';
+  if (age) suffix += 'a';
+  const posterPath = suffix ? `poster-${suffix}` : 'poster';
+
+  const langMap = {
+    es: 'es', fr: 'fr', de: 'de', it: 'it', nl: 'nl', pl: 'pl', ru: 'ru', tr: 'tr',
+    ar: 'ar', ja: 'ja', ko: 'ko', zh: 'zh', hi: 'hi', sv: 'sv', cs: 'cs',
+    'pt-br': 'pt-BR', 'pt-pt': 'pt-PT', pt: 'pt-BR',
+  };
+  const ratingCodes = {
+    imdb: 'IM', tmdb: 'TM', rottentomatoes: 'RT', metacritic: 'MC',
+    trakt: 'TR', letterboxd: 'LB', rogerebert: 'RE',
+  };
+
+  // Kollection owns the individually-selectable Trend Tag layer, so the
+  // underlying Better Posters image always has btttr's single trend tag off.
   const params = new URLSearchParams({ tag: 'none' });
   const lang = langMap[String(language || '').toLowerCase()];
   if (lang) params.set('lang', lang);
-  // BetterPosters' poster-n variant disables genre/rating/quality/age artwork.
-  // tag=none disables its Trend tag, leaving only btttr.cc's chosen base poster
-  // for Kollection to decorate with our own overlay system.
-  return `https://btttr.cc/poster-n/imdb/poster-default/${encodeURIComponent(imdbId)}.jpg?${params}`;
+  const ratingCode = rating ? ratingCodes[String(options.ratingSource || '').toLowerCase()] : '';
+  if (ratingCode) params.set('rs', ratingCode);
+
+  return `https://btttr.cc/${posterPath}/imdb/poster-default/${encodeURIComponent(imdbId)}.jpg?${params}`;
 }
 
 function choosePoster(details, smartLayout) {
@@ -305,6 +329,13 @@ function posterVariant(url, preview, env) {
     scope: preview ? 'preview' : 'production',
     source: url.searchParams.get('source') === 'smart' ? 'smart' : 'tmdb',
     provider: url.searchParams.get('provider') || 'tmdb',
+    betterPosters: url.searchParams.get('provider') === 'btttr' ? {
+      quality: url.searchParams.get('bpQuality') === '1',
+      genre: url.searchParams.get('bpGenre') !== '0',
+      rating: url.searchParams.get('bpRating') !== '0',
+      age: url.searchParams.get('bpAge') === '1',
+      ratingSource: String(url.searchParams.get('bpRatingSource') || 'average').toLowerCase(),
+    } : null,
     tags,
     ratingSource: normalizeRatingSource(url.searchParams.get('ratingSource')),
     language: normalizeOverlayLanguage(url.searchParams.get('language')),
@@ -948,7 +979,13 @@ async function renderPoster(context, state, id) {
   ]);
   const smartLayout = url.searchParams.get('source') === 'smart';
   const betterPostersUrl = !sourceUrl && artworkProvider === 'btttr'
-    ? betterPostersBaseUrl(details, overlayLanguage)
+    ? betterPostersBaseUrl(details, overlayLanguage, {
+        quality: url.searchParams.get('bpQuality') === '1',
+        genre: url.searchParams.get('bpGenre') !== '0',
+        rating: url.searchParams.get('bpRating') !== '0',
+        age: url.searchParams.get('bpAge') === '1',
+        ratingSource: url.searchParams.get('bpRatingSource') || 'average',
+      })
     : '';
   const renderSourceUrl = sourceUrl || betterPostersUrl;
   const usingBetterPostersArt = Boolean(betterPostersUrl);
