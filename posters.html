@@ -7,87 +7,136 @@
   <link rel="shortcut icon" href="/favicon.ico?v=3" type="image/x-icon" />
   <meta name="theme-color" content="#050608" />
   <title>Posters | The Kollection</title>
-  <meta name="description" content="Create smart movie and TV poster overlays for AIOmetadata, Nuvio, Stremio, and The Kollection." />
+  <meta name="description" content="Configure Better Posters for Nuvio, Stremio, AIOMetadata, and The Kollection." />
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/secondary-pages.css?v=20260909-3" />
-  <link rel="stylesheet" href="/posters/styles.css?v=20260911-2" />
-  <link rel="stylesheet" href="/posters/overlays.css?v=20260914-trenddetails2" />
-  <link rel="stylesheet" href="/posters/addon.css?v=20260913-3" />
-  <link rel="stylesheet" href="/posters/betterposters-match.css?v=20260912-5" />
-  <link rel="stylesheet" href="/posters/betterposters-overlays.css?v=20260913-3" />
+  <link rel="stylesheet" href="/posters/styles.css?v=20260917-bp1" />
+  <link rel="stylesheet" href="/posters/better-posters-page.css?v=20260917-bp1" />
   <script src="/components.js?v=20260908-3" defer></script>
 </head>
 <body>
   <main class="page" data-kollection-page="secondary">
     <div id="site-nav" aria-label="Site navigation"></div>
-    <header data-page-header><div data-page-chip>Poster Configurator</div><h1 data-page-title>Posters</h1><p data-page-subtitle>Add smart tags to movie and TV posters without locking your setup to one app. Use Posters by itself or later as part of Set Up Collection.</p><div class="hero-pills"><span>AIOmetadata compatible</span><span>Movies + TV</span><span>Nuvio + Stremio</span></div></header>
 
-    <section id="postersUsageChoice" class="posters-usage" data-page-content aria-label="Choose how to use Posters">
-      <div class="usage-progress" aria-hidden="true"><span class="active"></span><span></span><span></span><span></span></div><div class="usage-kicker">HOW DO YOU WANT TO USE POSTERS?</div>
-      <button class="usage-card" type="button" data-usage="setup"><span><strong>Smart Overlay Posters</strong><small>Configure polished adaptive overlays, Smart Tags, previews, and your poster settings.</small></span><span class="usage-arrow">›</span></button>
-      <button class="usage-card" type="button" data-usage="addon"><span><strong>AIOmetadata / Other Addon</strong><small>I already have catalogs — help me generate the poster URL and JSON settings.</small></span><span class="usage-arrow">›</span></button>
-    </section>
+    <header data-page-header>
+      <div data-page-chip>Poster Configurator</div>
+      <h1 data-page-title>Posters</h1>
+      <p data-page-subtitle>Configure Better Posters directly from The Kollection. Better Posters supplies the artwork and overlays; Kollection only generates the settings and AIOMetadata-compatible URL.</p>
+      <div class="hero-pills"><span>Powered by btttr.cc</span><span>AIOMetadata compatible</span><span>Nuvio + Stremio</span></div>
+    </header>
 
-    <section id="postersCatalogStep" class="posters-catalog-step" data-page-content hidden aria-label="Choose poster catalogs">
-      <div class="config-routebar"><button id="catalogBackBtn" class="route-back" type="button">‹ Back</button><div><span>SMART OVERLAY POSTERS</span><strong>Choose your catalogs</strong></div></div>
-      <div class="catalog-shell">
-        <div class="catalog-nav-group" aria-label="Catalog categories">
-          <div class="catalog-tabs" role="tablist">
-            <button class="catalog-tab active" type="button" data-catalog-tab="default">Default</button>
-            <button class="catalog-tab" type="button" data-catalog-tab="discover">Discover</button>
+    <section class="bp-layout" data-page-content>
+      <section id="bpPreviewPanel" class="bp-preview-panel" aria-label="Live Better Posters preview">
+        <div class="preview-heading">
+          <span class="section-kicker">LIVE PREVIEW</span>
+          <strong>See the actual Better Posters output</strong>
+        </div>
+        <div class="bp-preview-grid">
+          <div class="bp-preview-card"><img data-bp-preview alt="Better Posters preview" /></div>
+          <div class="bp-preview-card"><img data-bp-preview alt="Better Posters preview" /></div>
+          <div class="bp-preview-card"><img data-bp-preview alt="Better Posters preview" /></div>
+        </div>
+        <div id="bpPreviewStatus" class="bp-preview-meta">Loading Better Posters preview…</div>
+        <div class="bp-provider-line">Preview images load directly from btttr.cc. The Kollection does not render or proxy these poster image bytes.</div>
+      </section>
+
+      <section class="bp-card">
+        <div class="bp-title-row">
+          <div class="bp-title-copy">
+            <span class="bp-badge">Better Posters</span>
+            <h2>Better Posters</h2>
+            <p>Add native Better Posters overlays to your posters — trend tags, ratings, genre, quality badges, age ratings and more. The generated URL below is the real btttr.cc pattern.</p>
           </div>
-          <div class="discover-tabs" role="tablist" hidden>
-            <button class="active" type="button" data-discover-mode="smart-lists">Search Lists</button>
-            <button type="button" data-discover-mode="browse-users">Browse Users</button>
-          </div>
+          <label class="bp-master">
+            <span>Enable Better Posters</span>
+            <input id="bpEnabled" class="bp-switch" type="checkbox" checked />
+          </label>
         </div>
 
-        <div class="catalog-panel" data-catalog-panel="default">
-          <p class="catalog-intro">Choose which default catalogs should use Smart Overlay Posters.</p>
-          <label class="catalog-card"><input type="checkbox" checked><span><strong>Trending Movies</strong><small>TMDB</small></span></label>
-          <label class="catalog-card"><input type="checkbox" checked><span><strong>Trending Series</strong><small>TMDB</small></span></label>
-          <label class="catalog-card"><input type="checkbox" checked><span><strong>Popular Movies</strong><small>TMDB</small></span></label>
-          <label class="catalog-card"><input type="checkbox" checked><span><strong>Popular Series</strong><small>TMDB</small></span></label>
-          <label class="catalog-card"><input type="checkbox" checked><span><strong>Top Rated</strong><small>TMDB</small></span></label>
-          <label class="catalog-card"><input type="checkbox" checked><span><strong>Coming Soon</strong><small>TMDB</small></span></label>
-        </div>
-
-        <div class="catalog-panel" data-catalog-panel="discover" hidden>
-          <div class="discover-view" data-discover-view="smart-lists">
-            <label class="catalog-search"><span>⌕</span><input id="popularListSearch" type="search" placeholder="Search public lists…" aria-label="Search MDBList popular lists"></label>
-            <div class="popular-lists-heading"><strong>Popular Lists</strong><small>Popular public lists from MDBList.</small></div>
-            <div id="popularListsResults" class="popular-lists-results"></div>
+        <div id="bpConfigOptions" class="bp-options">
+          <div class="bp-section bp-grid-two">
+            <label>
+              <span class="bp-field-label">Rating Source</span>
+              <select id="bpRatingSource" class="bp-select">
+                <option value="average">Average (all sources)</option>
+                <option value="imdb">IMDb</option>
+                <option value="tmdb">TMDB</option>
+                <option value="rottentomatoes">Rotten Tomatoes</option>
+                <option value="metacritic">Metacritic</option>
+                <option value="trakt">Trakt</option>
+                <option value="letterboxd">Letterboxd</option>
+                <option value="rogerebert">Roger Ebert</option>
+              </select>
+            </label>
+            <label>
+              <span class="bp-field-label">Language</span>
+              <select id="bpLanguage" class="bp-select">
+                <option value="en">English</option><option value="es">Spanish</option><option value="fr">French</option><option value="de">German</option><option value="pt-BR">Portuguese (Brazil)</option><option value="pt-PT">Portuguese (Portugal)</option><option value="it">Italian</option><option value="nl">Dutch</option><option value="pl">Polish</option><option value="ru">Russian</option><option value="tr">Turkish</option><option value="ar">Arabic</option><option value="ja">Japanese</option><option value="ko">Korean</option><option value="zh">Chinese</option><option value="hi">Hindi</option><option value="sv">Swedish</option><option value="cs">Czech</option>
+              </select>
+            </label>
           </div>
 
-          <div class="discover-view" data-discover-view="browse-users" hidden>
-            <label class="catalog-search"><span>⌕</span><input id="browseUserSearch" type="search" placeholder="Search MDBList users…" aria-label="Search MDBList users"></label>
-            <span class="recommended-label">RECOMMENDED MDBLIST USERS</span>
-            <div class="recommended-users"><button type="button" data-provider="mdblist" data-username="snoak">snoak</button><button type="button" data-provider="mdblist" data-username="garycrawfordgc">gary</button><button type="button" data-provider="mdblist" data-username="kaoxt">kaoxt</button></div>
-            <div id="userListsResults" class="user-lists-results"></div>
+          <div class="bp-section">
+            <span class="bp-field-label">Overlays</span>
+            <div class="bp-overlay-grid">
+              <label class="bp-option"><span><strong>Trend Tags</strong><small>Trending, In Cinema, ranking, studios, directors, cast and lifecycle tags</small></span><input id="bpTrendTags" class="bp-switch" type="checkbox" checked /></label>
+              <label class="bp-option"><span><strong>Quality Tags</strong><small>4K, Dolby Vision, HDR and Atmos when Better Posters has the data</small></span><input id="bpQualityTags" class="bp-switch" type="checkbox" /></label>
+              <label class="bp-option"><span><strong>Genre</strong><small>Genre label at the bottom</small></span><input id="bpGenre" class="bp-switch" type="checkbox" checked /></label>
+              <label class="bp-option"><span><strong>Rating</strong><small>Star rating at the bottom using the selected source</small></span><input id="bpRating" class="bp-switch" type="checkbox" checked /></label>
+              <label class="bp-option"><span><strong>Age Rating</strong><small>PG-13, TV-MA, R and equivalent regional ratings</small></span><input id="bpAgeRating" class="bp-switch" type="checkbox" /></label>
+            </div>
+          </div>
+
+          <div class="bp-section">
+            <span class="bp-field-label">Generated Better Posters URL pattern</span>
+            <div class="bp-pattern-box"><code id="bpGeneratedPattern">—</code><button id="bpCopyGenerated" class="bp-button" type="button">Copy</button></div>
+            <div class="bp-actions"><button id="bpTestUrl" class="bp-button primary" type="button">Test URL</button></div>
+            <span class="bp-helper">This is the direct btttr.cc pattern, matching the style of the Ultra MAX setup you referenced.</span>
+          </div>
+
+          <div class="bp-section">
+            <span class="bp-field-label">AIOMetadata / Nuvio URL pattern</span>
+            <div class="bp-pattern-box"><code id="bpAioPattern">—</code><button id="bpCopyAio" class="bp-button" type="button">Copy</button></div>
+            <span class="bp-helper">Kollection keeps its compatibility wrapper here so AIOMetadata can pass IMDb, TMDB, or TVDB IDs reliably. The wrapper redirects to Better Posters; it does not render the image.</span>
+          </div>
+
+          <div class="bp-section">
+            <label for="bpCustomPattern"><span class="bp-field-label">Or paste your own URL from btttr.cc</span></label>
+            <input id="bpCustomPattern" class="bp-input" type="text" spellcheck="false" placeholder="https://btttr.cc/poster.../imdb/poster-default/{imdb_id}.jpg" />
+            <span id="bpCustomPatternStatus" class="bp-helper">Leave blank to use the URL generated from the controls above.</span>
+          </div>
+
+          <div class="bp-section">
+            <div class="bp-note"><strong>Trend Tags stay native to Better Posters.</strong> Kollection only turns the feature on or off. Better Posters decides which trend label applies, its wording, priority, color and placement, so the result stays visually identical to btttr.cc.</div>
           </div>
         </div>
+      </section>
 
-        <div class="catalog-actions"><button id="catalogNextBtn" class="catalog-next" type="button">Next</button><button id="catalogBackBottomBtn" class="catalog-back" type="button">Back</button></div>
-      </div>
+      <section class="bp-card">
+        <div class="bp-title-copy">
+          <span class="bp-badge">AIOMetadata JSON</span>
+          <h2>Generate poster settings</h2>
+          <p>Import an existing AIOMetadata configuration to preserve everything else, or generate a small standalone Better Posters settings file.</p>
+        </div>
+        <div class="bp-section bp-import">
+          <label class="bp-button" for="configFile">Import JSON</label>
+          <input id="configFile" type="file" accept="application/json,.json" />
+          <button id="clearImport" class="bp-button" type="button" hidden>Clear import</button>
+          <span id="importStatus" class="bp-helper">No config imported</span>
+        </div>
+        <div class="bp-actions"><button id="generateBtn" class="bp-button primary" type="button">Generate JSON</button></div>
+        <div id="jsonPanel" class="bp-json" hidden>
+          <div class="bp-json-toolbar"><strong>Generated JSON</strong><div class="bp-actions"><button id="copyBtn" class="bp-button" type="button">Copy JSON</button><button id="downloadBtn" class="bp-button" type="button">Download JSON</button></div></div>
+          <pre id="jsonOutput"></pre>
+          <span id="copyStatus" class="bp-copy-status"></span>
+        </div>
+      </section>
     </section>
 
-    <section id="postersConfigurator" class="posters-configurator" data-page-content hidden>
-      <div class="config-routebar"><button id="postersBackBtn" class="route-back" type="button">‹ Back</button><div><span id="routeKicker">SMART OVERLAY POSTERS</span><strong id="routeTitle">Configure Posters</strong></div></div>
-      <section class="poster-preview-panel preview-top"><div class="preview-heading"><span class="section-kicker">LIVE PREVIEW</span><strong>See your Smart Tags before you generate anything</strong></div><div class="poster-preview-grid">
-        <div class="poster-mock poster-example-one"><div class="poster-art"></div><div class="overlay overlay-trend" data-tag="trend">#3 TODAY</div><div class="overlay overlay-rating" data-tag="rating"><b>8.7</b><small>AVG</small></div><div class="overlay overlay-quality" data-tag="quality">4K</div><div class="overlay overlay-age" data-tag="age">PG-13</div><div class="overlay overlay-genre" data-tag="genre">SCI-FI</div></div>
-        <div class="poster-mock poster-example-two"><div class="poster-art"></div><div class="overlay overlay-trend" data-tag="trend">#2 TODAY</div><div class="overlay overlay-rating" data-tag="rating"><b>7.9</b><small>AVG</small></div><div class="overlay overlay-quality" data-tag="quality">HD</div><div class="overlay overlay-age" data-tag="age">TV-14</div><div class="overlay overlay-genre" data-tag="genre">DRAMA</div></div>
-        <div class="poster-mock poster-example-three"><div class="poster-art"></div><div class="overlay overlay-trend" data-tag="trend">#7 TODAY</div><div class="overlay overlay-rating" data-tag="rating"><b>8.2</b><small>AVG</small></div><div class="overlay overlay-quality" data-tag="quality">4K</div><div class="overlay overlay-age" data-tag="age">PG</div><div class="overlay overlay-genre" data-tag="genre">ADVENTURE</div></div></div>
-        <div class="preview-description" id="previewDescription">Smart Overlay Posters using TMDB artwork. 2 Smart Tags enabled.</div><div class="preview-legend"><span><i></i> Preview tag changes render locally to reduce server usage</span><span><i></i> Original Posters keep the provider's original poster/title placement</span></div></section>
-      <section class="posters-shell"><div class="posters-config">
-        <div class="section-heading"><span class="section-kicker">POSTER STYLE</span><h2>Choose your poster style</h2><p>Poster style controls how The Kollection formats the artwork. Artwork provider is selected separately below.</p></div>
-        <div class="choice-grid poster-style-grid" id="posterSourceChoices"><label class="choice-card selected"><input type="radio" name="posterSource" value="smart" checked><span class="choice-title">Smart Overlay Posters</span><span class="choice-copy">Adds polished, adaptive overlays to the selected provider's poster artwork. Smart Tags automatically arrange themselves based on which tags are enabled.</span></label><label class="choice-card"><input type="radio" name="posterSource" value="tmdb"><span class="choice-title">Original Posters</span><span class="choice-copy">Keeps the selected provider's original poster composition and title placement, then adds the Original-style overlays without relocating the title.</span></label></div>
-        <div class="provider-block"><div class="provider-copy"><span class="section-kicker">ARTWORK PROVIDER</span><strong>Choose where poster artwork comes from</strong><small>TMDB is available now. Additional providers will become selectable as their artwork APIs are added.</small></div><label class="provider-field" for="artworkProvider"><span>Provider</span><select id="artworkProvider"><option value="tmdb" selected>The Movie Database (TMDB)</option><option value="tvdb" disabled>TheTVDB — Coming soon</option><option value="fanart" disabled>Fanart.tv — Coming soon</option><option value="cinemeta" disabled>IMDb / Cinemeta — Coming soon</option><option value="inherit" disabled>Use AIOmetadata provider — Coming soon</option></select></label></div>
-        <div class="divider"></div><div class="section-heading compact-heading"><span class="section-kicker">SMART TAGS</span><h2>Choose your poster overlays</h2><p>Posters includes overlays by default. Trend Tags, Genre, and Rating start on; turn on Quality or Age Rating if you want them.</p></div>
-        <div id="tagOptions" class="tag-options"><div class="tag-grid"><label class="tag-option"><input type="checkbox" value="trend" checked><span><strong>Trend Tags</strong><small>Trending, In Cinema, movie/series lifecycle, directors, studios, cast</small></span></label><label class="tag-option"><input type="checkbox" value="quality"><span><strong>Quality Tags</strong><small>4K, HD, Dolby Vision, HDR10+, Atmos, DTS:X from AIOStreams when available</small></span></label><label class="tag-option"><input type="checkbox" value="genre" checked><span><strong>Genre</strong><small>Genre label at bottom</small></span></label><label class="tag-option"><input type="checkbox" value="rating" checked><span><strong>Rating</strong><small>Star rating at bottom</small></span></label><label class="tag-option"><input type="checkbox" value="age"><span><strong>Age Rating</strong><small>PG-13, TV-MA, R</small></span></label></div><p class="fixed-note">Smart Overlay Posters use adaptive tag placement.</p></div>
-        <div class="divider"></div><div class="section-heading compact-heading"><span class="section-kicker">AIOmetadata JSON</span><h2>Bring your existing configuration</h2><p>Importing a config lets Posters preserve everything else and modify only the poster-related fields.</p></div><div class="import-row"><label class="file-button" for="configFile">Import JSON</label><input id="configFile" type="file" accept="application/json,.json"><button id="clearImport" class="secondary-button" type="button" hidden>Clear import</button><span id="importStatus" class="import-status">No config imported</span></div><div class="generate-box"><div><strong>Generate your configuration</strong><span id="generateHint">You can generate a Posters configuration now.</span></div><button id="generateBtn" class="primary-button" type="button">Generate JSON</button></div><div id="jsonPanel" class="json-panel" hidden><div class="json-toolbar"><span>Generated JSON</span><div><button id="copyBtn" class="secondary-button" type="button">Copy JSON</button><button id="downloadBtn" class="secondary-button" type="button">Download JSON</button></div></div><pre id="jsonOutput"></pre><span id="copyStatus" class="copy-status"></span></div>
-      </div></section>
-    </section>
     <div id="site-footer"></div>
   </main>
-  <script src="/posters/config-token.js?v=20260916-k3overlay1"></script><script src="/posters/posters.js?v=20260916-k3overlay1"></script><script src="/posters/preview-controller.js?v=20260916-overlaybig1"></script><script src="/posters/rating-sources-status.js?v=20260914-tags2"></script><script src="/posters/addon.js?v=20260916-k3overlay1"></script><script src="/posters/discover-live.js?v=20260912-7"></script><script src="/posters/my-lists.js?v=20260912-1"></script><script src="/posters/catalog-flow.js?v=20260912-7"></script><script src="/posters/mdblist-only.js?v=20260912-2"></script><script src="/posters/manifest-final.js?v=20260914-trenddetails2"></script><script src="/posters/overlay-language-sync.js?v=20260912-1"></script>
-</body></html>
+
+  <script src="/set-up-collection/better-posters-settings.js?v=20260917-native1"></script>
+  <script src="/posters/better-posters-page.js?v=20260917-bp1"></script>
+</body>
+</html>
