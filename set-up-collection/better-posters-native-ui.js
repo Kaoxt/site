@@ -13,7 +13,7 @@
 
   function nativeTrendControl(enabled) {
     return `
-      <label class="smart-overlay-tag-option smart-overlay-native-trend-option">
+      <label class="smart-overlay-tag-option smart-overlay-modal-choice smart-overlay-native-trend-option">
         <input type="checkbox" data-better-native-trend ${enabled ? 'checked' : ''}>
         <span>
           <b>Trend Tags</b>
