@@ -23,10 +23,12 @@
     const languageRaw = String(input.language || 'en');
     const language = LANGUAGES.includes(languageRaw) ? languageRaw : 'en';
 
-    let requestedTrend;
-    if (Array.isArray(input.trendDetails)) requestedTrend = input.trendDetails.map(String);
-    else if (input.trendTags === false) requestedTrend = [];
-    else requestedTrend = TREND_DETAILS.slice();
+    // Better Posters exposes Trend Tags as one native setting. Legacy Kollection
+    // subset selections are intentionally collapsed to native Trend Tags on/off.
+    let trendTags;
+    if (typeof input.trendTags === 'boolean') trendTags = input.trendTags;
+    else if (Array.isArray(input.trendDetails)) trendTags = input.trendDetails.length > 0;
+    else trendTags = true;
 
     return {
       qualityTags: input.qualityTags === true,
@@ -35,7 +37,8 @@
       ageRating: input.ageRating === true,
       ratingSource,
       language,
-      trendDetails: TREND_DETAILS.filter(detail => requestedTrend.includes(detail)),
+      trendTags,
+      trendDetails: trendTags ? TREND_DETAILS.slice() : [],
     };
   }
 
@@ -77,10 +80,10 @@
     return suffix ? `poster-${suffix}` : 'poster';
   }
 
-  function directPattern(value, trendEnabled) {
+  function directPattern(value) {
     const settings = normalize(value);
     const params = new URLSearchParams();
-    if (!trendEnabled) params.set('tag', 'none');
+    if (!settings.trendTags) params.set('tag', 'none');
     if (settings.language !== 'en') params.set('lang', settings.language);
     const ratingCodes = {
       imdb: 'IM', tmdb: 'TM', rottentomatoes: 'RT', metacritic: 'MC',
@@ -95,22 +98,20 @@
 
   function pattern(value) {
     const settings = normalize(value);
-    // AIOMetadata always has {id}, while {imdb_id} can be empty for valid
-    // titles. Route every configuration through the compact Kollection token
-    // so the server can accept IMDb/TMDB/TVDB IDs and still fast-redirect
-    // straight to Better Posters whenever no filtering work is needed.
+    // Keep Kollection's id-compatible route so AIOMetadata can pass IMDb/TMDB/TVDB ids.
+    // The route redirects straight to Better Posters whenever an IMDb id is available.
     return `https://kollection.tv/bp/${configId(settings)}/{type}/{id}.webp`;
   }
 
   function label(value) {
     const settings = normalize(value);
     const parts = [];
-    if (settings.trendDetails.length) parts.push(`Trend: ${settings.trendDetails.length}`);
+    if (settings.trendTags) parts.push('Trend Tags');
     if (settings.qualityTags) parts.push('Quality');
     if (settings.genre) parts.push('Genre');
     if (settings.rating) parts.push(settings.ratingSource === 'average' ? 'Rating' : `${settings.ratingSource} rating`);
     if (settings.ageRating) parts.push('Age Rating');
-    return `Better Posters + Kollection Trends · ${parts.length ? parts.join(', ') : 'Base poster only'}`;
+    return `Better Posters · ${parts.length ? parts.join(', ') : 'Base poster only'}`;
   }
 
   function applyToAioConfig(config, value) {
@@ -125,10 +126,10 @@
     }));
     delete config.kollectionPosters;
     config.kollectionBetterPosters = {
-      version: 2,
+      version: 3,
       enabled: true,
       provider: 'btttr.cc',
-      hybridTrendLayer: 'kollection',
+      trendProvider: 'btttr.cc',
       configId: configId(settings),
       settings: { ...settings, trendDetails: settings.trendDetails.slice() },
       posterUrlPattern: config.customPosterUrlPattern,
