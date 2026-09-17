@@ -21,11 +21,9 @@
     ratingSource: $('bpRatingSource'),
     language: $('bpLanguage'),
     generated: $('bpGeneratedPattern'),
-    aio: $('bpAioPattern'),
     custom: $('bpCustomPattern'),
     customStatus: $('bpCustomPatternStatus'),
     copyGenerated: $('bpCopyGenerated'),
-    copyAio: $('bpCopyAio'),
     test: $('bpTestUrl'),
     previewStatus: $('bpPreviewStatus'),
     previewPanel: $('bpPreviewPanel'),
@@ -147,7 +145,6 @@
     const settings = currentSettings();
     els.ratingSource.disabled = !els.rating.checked;
     els.generated.textContent = Better.directPattern(settings);
-    els.aio.textContent = Better.pattern(settings);
     updateCustomStatus();
     writeState();
     refreshPreview();
@@ -246,7 +243,6 @@
   });
 
   els.copyGenerated?.addEventListener('click', () => copyText(activeDirectPattern(), els.copyGenerated));
-  els.copyAio?.addEventListener('click', () => copyText(Better.pattern(currentSettings()), els.copyAio));
   els.test?.addEventListener('click', () => {
     refresh();
     refreshPreview(true);
