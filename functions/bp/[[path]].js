@@ -1,11 +1,24 @@
 import { BETTER_POSTERS_TREND_DETAILS, decodeBetterPostersConfig } from '../_lib/better-posters-config-token.js';
 
 const TMDB_API = 'https://api.themoviedb.org/3';
+const DELIVERY_VERSION = '5';
+const RESOLUTION_TTL_SEC = 30 * 24 * 60 * 60;
+const REDIRECT_TTL_SEC = 30 * 24 * 60 * 60;
+const NEGATIVE_TTL_SEC = 60 * 60;
+const STALE_REDIRECT_SEC = 7 * 24 * 60 * 60;
 
-function jsonError(message, status = 400) {
+// Pictorium-style request coalescing, but only for lightweight ID resolution.
+// Kollection never renders, composites, converts, or proxies Better Posters images.
+const inflightResolutions = new Map();
+
+function jsonError(message, status = 400, cacheControl = 'no-store') {
   return new Response(JSON.stringify({ error: message }), {
     status,
-    headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': cacheControl,
+      'access-control-allow-origin': '*',
+    },
   });
 }
 
@@ -77,34 +90,75 @@ async function resolveTmdbRecord(type, rawId, apiKey) {
   };
 }
 
+function resolutionCacheRequest(requestUrl, type, rawId) {
+  const cacheUrl = new URL(requestUrl);
+  cacheUrl.pathname = `/__bp-id/v2/${type}/${encodeURIComponent(rawId)}`;
+  cacheUrl.search = '';
+  return new Request(cacheUrl.toString(), { method: 'GET' });
+}
+
+async function readResolutionCache(cacheRequest) {
+  try {
+    const cached = await caches.default.match(cacheRequest);
+    if (!cached?.ok) return { hit: false, value: null };
+    const value = await cached.json();
+    if (!value || typeof value !== 'object') return { hit: false, value: null };
+    return {
+      hit: true,
+      value: {
+        imdbId: String(value.imdbId || ''),
+        posterPath: String(value.posterPath || ''),
+      },
+    };
+  } catch {
+    return { hit: false, value: null };
+  }
+}
+
+function writeResolutionCache(context, cacheRequest, resolved) {
+  const value = resolved || { imdbId: '', posterPath: '' };
+  const ttl = resolved ? RESOLUTION_TTL_SEC : NEGATIVE_TTL_SEC;
+  const stored = new Response(JSON.stringify(value), {
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': `public, max-age=${ttl}, s-maxage=${ttl}`,
+      'x-kollection-bp-resolution': resolved ? 'resolved' : 'negative',
+    },
+  });
+  try {
+    context.waitUntil(caches.default.put(cacheRequest, stored).catch(() => {}));
+  } catch {}
+}
+
 async function resolveNativeTarget(context, type, rawId) {
   if (/^tt\d{5,12}$/i.test(rawId)) {
     return { imdbId: rawId.toLowerCase(), posterPath: '' };
   }
 
-  const cacheUrl = new URL(context.request.url);
-  cacheUrl.pathname = `/__bp-id/${type}/${encodeURIComponent(rawId)}`;
-  cacheUrl.search = '';
-  const cacheRequest = new Request(cacheUrl.toString(), { method: 'GET' });
+  const cacheRequest = resolutionCacheRequest(context.request.url, type, rawId);
+  const cached = await readResolutionCache(cacheRequest);
+  if (cached.hit) return cached.value;
 
+  const flightKey = `${type}:${rawId}`;
+  const existing = inflightResolutions.get(flightKey);
+  if (existing) return existing;
+
+  const pending = (async () => {
+    const resolved = await resolveTmdbRecord(type, rawId, context.env?.TMDB_API_KEY);
+    writeResolutionCache(context, cacheRequest, resolved);
+    return resolved;
+  })();
+
+  inflightResolutions.set(flightKey, pending);
   try {
-    const cached = await caches.default.match(cacheRequest);
-    if (cached?.ok) return cached.json();
-  } catch {}
-
-  const resolved = await resolveTmdbRecord(type, rawId, context.env?.TMDB_API_KEY);
-  if (resolved) {
-    try {
-      const stored = new Response(JSON.stringify(resolved), {
-        headers: {
-          'content-type': 'application/json; charset=utf-8',
-          'cache-control': 'public, max-age=604800, s-maxage=604800',
-        },
-      });
-      context.waitUntil(caches.default.put(cacheRequest, stored).catch(() => {}));
-    } catch {}
+    return await pending;
+  } finally {
+    if (inflightResolutions.get(flightKey) === pending) inflightResolutions.delete(flightKey);
   }
-  return resolved;
+}
+
+function redirectCacheControl() {
+  return `public, max-age=${REDIRECT_TTL_SEC}, s-maxage=${REDIRECT_TTL_SEC}, stale-while-revalidate=${STALE_REDIRECT_SEC}`;
 }
 
 export async function onRequest(context) {
@@ -119,6 +173,21 @@ export async function onRequest(context) {
     });
   }
   if (!['GET', 'HEAD'].includes(request.method)) return jsonError('Method not allowed.', 405);
+
+  // Old folder bridges used speculative poster prewarming. Do not let those
+  // probes resolve IDs or contact Better Posters. This keeps Cloudflare usage
+  // demand-driven: only posters a client actually requests do any work.
+  if (request.headers.get('x-kollection-poster-prewarm') === '1') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'cache-control': 'no-store',
+        'access-control-allow-origin': '*',
+        'x-kollection-better-posters-prewarm': 'skipped',
+        'x-kollection-better-posters-rendering': 'none',
+      },
+    });
+  }
 
   const publicUrl = new URL(request.url);
   const parts = publicUrl.pathname.split('/').filter(Boolean);
@@ -147,7 +216,7 @@ export async function onRequest(context) {
 
   const canonical = new URL(publicUrl.origin + `/bp/${configId}/${type}/${encodeURIComponent(rawId)}.webp`);
   const edgeKeyUrl = new URL(canonical);
-  edgeKeyUrl.searchParams.set('__kollection_bp_delivery', '4');
+  edgeKeyUrl.searchParams.set('__kollection_bp_delivery', DELIVERY_VERSION);
   const cacheRequest = new Request(edgeKeyUrl.toString(), { method: 'GET' });
 
   try {
@@ -155,6 +224,7 @@ export async function onRequest(context) {
     if (hit) {
       const headers = new Headers(hit.headers);
       headers.set('x-kollection-better-posters-cache', 'HIT');
+      headers.set('x-kollection-better-posters-rendering', 'none');
       if (request.method === 'HEAD') {
         await hit.body?.cancel();
         return new Response(null, { status: hit.status, headers });
@@ -170,27 +240,41 @@ export async function onRequest(context) {
     location = nativeBetterPostersUrl(config, resolved.imdbId);
   } else if (resolved?.posterPath) {
     // Rare titles without IMDb IDs cannot be requested from Better Posters.
-    // Preserve a usable normal poster rather than invoking Kollection overlays.
+    // Preserve a usable normal TMDB poster. The image is still served by TMDB,
+    // never rendered or proxied through Kollection.
     location = `https://image.tmdb.org/t/p/w500${resolved.posterPath}`;
     fallback = 'tmdb';
   }
 
-  if (!location) return jsonError('Could not resolve this title to a Better Posters-compatible IMDb ID.', 404);
+  if (!location) {
+    const miss = jsonError(
+      'Could not resolve this title to a Better Posters-compatible IMDb ID.',
+      404,
+      `public, max-age=${NEGATIVE_TTL_SEC}, s-maxage=${NEGATIVE_TTL_SEC}`
+    );
+    try { context.waitUntil(caches.default.put(cacheRequest, miss.clone()).catch(() => {})); } catch {}
+    return miss;
+  }
 
   const headers = new Headers({
     location,
-    'cache-control': 'public, max-age=604800, s-maxage=604800',
+    'cache-control': redirectCacheControl(),
     'access-control-allow-origin': '*',
     'x-kollection-better-posters-config': configId,
     'x-kollection-better-posters-cache': 'MISS',
     'x-kollection-better-posters-direct': resolved?.imdbId ? '1' : '0',
+    'x-kollection-better-posters-rendering': 'none',
     'content-location': canonical.pathname,
   });
   if (fallback) headers.set('x-kollection-better-posters-fallback', fallback);
 
+  // Cache only the tiny redirect response. The Better Posters/TMDB image bytes
+  // never pass through this Worker and are never rendered by Cloudflare.
   const direct = new Response(null, { status: 302, headers });
-  if (request.method === 'GET') {
-    context.waitUntil(caches.default.put(cacheRequest, direct.clone()).catch(() => {}));
+  try { context.waitUntil(caches.default.put(cacheRequest, direct.clone()).catch(() => {})); } catch {}
+
+  if (request.method === 'HEAD') {
+    return new Response(null, { status: 302, headers });
   }
   return direct;
 }
