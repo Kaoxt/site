@@ -1,5 +1,6 @@
-import { onRequest as handlePosterV2 } from '../api/posters-v2/[[path]].js';
 import { BETTER_POSTERS_TREND_DETAILS, decodeBetterPostersConfig } from '../_lib/better-posters-config-token.js';
+
+const TMDB_API = 'https://api.themoviedb.org/3';
 
 function jsonError(message, status = 400) {
   return new Response(JSON.stringify({ error: message }), {
@@ -15,7 +16,7 @@ function typeValue(raw) {
   return '';
 }
 
-function nativeBetterPostersUrl(config, imdbId, trendEnabled) {
+function nativeBetterPostersUrl(config, imdbId) {
   let suffix = '';
   if (!config.genre && config.rating) suffix = 'r';
   else if (config.genre && !config.rating) suffix = 'g';
@@ -25,7 +26,7 @@ function nativeBetterPostersUrl(config, imdbId, trendEnabled) {
   const posterPath = suffix ? `poster-${suffix}` : 'poster';
 
   const params = new URLSearchParams();
-  if (!trendEnabled) params.set('tag', 'none');
+  if (!config.trendTags) params.set('tag', 'none');
   if (config.language !== 'en') params.set('lang', config.language);
   const ratingCodes = {
     imdb: 'IM', tmdb: 'TM', rottentomatoes: 'RT', metacritic: 'MC',
@@ -37,6 +38,73 @@ function nativeBetterPostersUrl(config, imdbId, trendEnabled) {
   const base = `https://btttr.cc/${posterPath}/imdb/poster-default/${encodeURIComponent(imdbId)}.jpg`;
   const query = params.toString();
   return query ? `${base}?${query}` : base;
+}
+
+async function tmdbJson(path, apiKey) {
+  if (!apiKey) return null;
+  const joiner = path.includes('?') ? '&' : '?';
+  const response = await fetch(`${TMDB_API}${path}${joiner}api_key=${encodeURIComponent(apiKey)}`, {
+    headers: { accept: 'application/json' },
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!response.ok) return null;
+  return response.json();
+}
+
+async function resolveTmdbRecord(type, rawId, apiKey) {
+  const tmdbType = type === 'series' ? 'tv' : 'movie';
+  let tmdbId = '';
+
+  const directTmdb = rawId.match(/^tmdb:([1-9]\d{0,11})$/);
+  if (directTmdb) tmdbId = directTmdb[1];
+  else if (/^[1-9]\d{0,11}$/.test(rawId)) tmdbId = rawId;
+  else {
+    const tvdb = rawId.match(/^tvdb:([1-9]\d{0,11})$/);
+    if (tvdb) {
+      const found = await tmdbJson(`/find/${encodeURIComponent(tvdb[1])}?external_source=tvdb_id`, apiKey);
+      const results = tmdbType === 'tv' ? found?.tv_results : found?.movie_results;
+      tmdbId = results?.[0]?.id ? String(results[0].id) : '';
+    }
+  }
+
+  if (!tmdbId) return null;
+  const details = await tmdbJson(`/${tmdbType}/${encodeURIComponent(tmdbId)}?append_to_response=external_ids`, apiKey);
+  if (!details) return null;
+  const imdbId = String(details.imdb_id || details.external_ids?.imdb_id || '').toLowerCase();
+  return {
+    imdbId: /^tt\d{5,12}$/.test(imdbId) ? imdbId : '',
+    posterPath: String(details.poster_path || ''),
+  };
+}
+
+async function resolveNativeTarget(context, type, rawId) {
+  if (/^tt\d{5,12}$/i.test(rawId)) {
+    return { imdbId: rawId.toLowerCase(), posterPath: '' };
+  }
+
+  const cacheUrl = new URL(context.request.url);
+  cacheUrl.pathname = `/__bp-id/${type}/${encodeURIComponent(rawId)}`;
+  cacheUrl.search = '';
+  const cacheRequest = new Request(cacheUrl.toString(), { method: 'GET' });
+
+  try {
+    const cached = await caches.default.match(cacheRequest);
+    if (cached?.ok) return cached.json();
+  } catch {}
+
+  const resolved = await resolveTmdbRecord(type, rawId, context.env?.TMDB_API_KEY);
+  if (resolved) {
+    try {
+      const stored = new Response(JSON.stringify(resolved), {
+        headers: {
+          'content-type': 'application/json; charset=utf-8',
+          'cache-control': 'public, max-age=604800, s-maxage=604800',
+        },
+      });
+      context.waitUntil(caches.default.put(cacheRequest, stored).catch(() => {}));
+    } catch {}
+  }
+  return resolved;
 }
 
 export async function onRequest(context) {
@@ -63,6 +131,12 @@ export async function onRequest(context) {
   const type = typeValue(parts[2]);
   if (!config || !type) return jsonError('Invalid Better Posters configuration or media type.');
 
+  // Decoder normalizes legacy subset tokens to Better Posters' native all/none
+  // Trend Tags switch. This guard makes that contract explicit at the route.
+  const nativeTrendShape = config.trendDetails.length === 0 ||
+    config.trendDetails.length === BETTER_POSTERS_TREND_DETAILS.length;
+  if (!nativeTrendShape) return jsonError('Unsupported legacy Trend Tag subset.');
+
   let rawId = '';
   try {
     rawId = decodeURIComponent(String(parts[3] || '')).replace(/\.(webp|jpe?g)$/i, '').toLowerCase();
@@ -73,7 +147,7 @@ export async function onRequest(context) {
 
   const canonical = new URL(publicUrl.origin + `/bp/${configId}/${type}/${encodeURIComponent(rawId)}.webp`);
   const edgeKeyUrl = new URL(canonical);
-  edgeKeyUrl.searchParams.set('__kollection_bp_delivery', '3');
+  edgeKeyUrl.searchParams.set('__kollection_bp_delivery', '4');
   const cacheRequest = new Request(edgeKeyUrl.toString(), { method: 'GET' });
 
   try {
@@ -89,71 +163,34 @@ export async function onRequest(context) {
     }
   } catch {}
 
-  const allTrendDetails = config.trendDetails.length === BETTER_POSTERS_TREND_DETAILS.length;
-  const noTrendDetails = config.trendDetails.length === 0;
-  if (/^tt\d{5,12}$/i.test(rawId) && (allTrendDetails || noTrendDetails)) {
-    const location = nativeBetterPostersUrl(config, rawId, allTrendDetails);
-    const headers = new Headers({
-      location,
-      'cache-control': 'public, max-age=604800, s-maxage=604800',
-      'access-control-allow-origin': '*',
-      'x-kollection-better-posters-config': configId,
-      'x-kollection-better-posters-cache': 'MISS',
-      'x-kollection-better-posters-direct': '1',
-      'content-location': canonical.pathname,
-    });
-    const direct = new Response(null, { status: 302, headers });
-    if (request.method === 'GET') {
-      context.waitUntil(caches.default.put(cacheRequest, direct.clone()).catch(() => {}));
-    }
-    return direct;
+  const resolved = await resolveNativeTarget(context, type, rawId);
+  let location = '';
+  let fallback = '';
+  if (resolved?.imdbId) {
+    location = nativeBetterPostersUrl(config, resolved.imdbId);
+  } else if (resolved?.posterPath) {
+    // Rare titles without IMDb IDs cannot be requested from Better Posters.
+    // Preserve a usable normal poster rather than invoking Kollection overlays.
+    location = `https://image.tmdb.org/t/p/w500${resolved.posterPath}`;
+    fallback = 'tmdb';
   }
 
-  const inner = new URL(publicUrl.origin + `/api/posters-v2/${type}/${encodeURIComponent(rawId)}.webp`);
-  inner.searchParams.set('v', '27');
-  inner.searchParams.set('source', 'tmdb');
-  inner.searchParams.set('provider', 'btttr');
-  inner.searchParams.set('tags', config.trendDetails.length ? 'trend' : '');
-  inner.searchParams.set('trendDetails', config.trendDetails.join(','));
-  inner.searchParams.set('language', config.language);
-  inner.searchParams.set('overlayOnly', '1');
-  inner.searchParams.set('bpQuality', config.qualityTags ? '1' : '0');
-  inner.searchParams.set('bpGenre', config.genre ? '1' : '0');
-  inner.searchParams.set('bpRating', config.rating ? '1' : '0');
-  inner.searchParams.set('bpAge', config.ageRating ? '1' : '0');
-  inner.searchParams.set('bpRatingSource', config.ratingSource);
+  if (!location) return jsonError('Could not resolve this title to a Better Posters-compatible IMDb ID.', 404);
 
-  const buildFiltered = async () => {
-    const response = await handlePosterV2({
-      ...context,
-      request: new Request(inner.toString(), { method: request.method, headers: request.headers }),
-    });
-    const headers = new Headers(response.headers);
-    headers.set('x-kollection-better-posters-config', configId);
-    headers.set('x-kollection-better-posters-cache', 'MISS');
-    headers.set('content-location', canonical.pathname);
-    const delivered = new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+  const headers = new Headers({
+    location,
+    'cache-control': 'public, max-age=604800, s-maxage=604800',
+    'access-control-allow-origin': '*',
+    'x-kollection-better-posters-config': configId,
+    'x-kollection-better-posters-cache': 'MISS',
+    'x-kollection-better-posters-direct': resolved?.imdbId ? '1' : '0',
+    'content-location': canonical.pathname,
+  });
+  if (fallback) headers.set('x-kollection-better-posters-fallback', fallback);
 
-    const directBetterPosters = response.status === 302 &&
-      /^https:\/\/btttr\.cc\//i.test(headers.get('location') || '');
-    const cacheableImage = response.status === 200 &&
-      /^image\//i.test(headers.get('content-type') || '');
-    if (request.method === 'GET' && (cacheableImage || directBetterPosters) &&
-        !/no-store/i.test(headers.get('cache-control') || '')) {
-      await caches.default.put(cacheRequest, delivered.clone()).catch(() => {});
-    }
-    return delivered;
-  };
-
-  // Custom Trend subsets must return the completed filtered poster on the
-  // first request. Nuvio keeps the first image it receives for a poster URL, so
-  // a temporary Better Posters tag=none redirect makes the Trend badge appear
-  // permanently missing even after the filtered image finishes in background.
-
-  const delivered = await buildFiltered();
-  if (request.method === 'HEAD') {
-    await delivered.body?.cancel();
-    return new Response(null, { status: delivered.status, headers: delivered.headers });
+  const direct = new Response(null, { status: 302, headers });
+  if (request.method === 'GET') {
+    context.waitUntil(caches.default.put(cacheRequest, direct.clone()).catch(() => {}));
   }
-  return delivered;
+  return direct;
 }
