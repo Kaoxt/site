@@ -44,10 +44,25 @@
 .save-setup-status[data-kind="error"]{color:#ff9a9a}
 .save-setup-status[data-kind="info"]{color:#b8c0ff}
 
+.saved-setup-name{
+  display:block;
+  margin-top:6px;
+  max-width:360px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#b8c0ff;
+  font-size:12px;
+  font-weight:750;
+  line-height:1.2;
+}
+.saved-setup-name[hidden]{display:none !important}
+
 html[data-theme="light"] .save-setup-status{color:rgba(27,34,48,.68)}
 html[data-theme="light"] .save-setup-status[data-kind="success"]{color:#257447}
 html[data-theme="light"] .save-setup-status[data-kind="error"]{color:#b42318}
 html[data-theme="light"] .save-setup-status[data-kind="info"]{color:#4d57b8}
+html[data-theme="light"] .saved-setup-name{color:#4d57b8}
 
 @media(max-width:760px){
   .setup-toolbar{
@@ -94,6 +109,11 @@ html[data-theme="light"] .save-setup-status[data-kind="info"]{color:#4d57b8}
     min-height:42px;
     padding:0 12px;
     font-size:12.5px;
+  }
+
+  .saved-setup-name{
+    max-width:170px;
+    font-size:11px;
   }
 }
 
