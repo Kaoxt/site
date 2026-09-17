@@ -24,7 +24,7 @@
     <header data-page-header>
       <div data-page-chip>Poster Configurator</div>
       <h1 data-page-title>Posters</h1>
-      <p data-page-subtitle>Configure Better Posters directly from The Kollection. Better Posters supplies the artwork and overlays; Kollection only generates the settings and AIOMetadata-compatible URL.</p>
+      <p data-page-subtitle>Configure Better Posters directly from The Kollection. Better Posters supplies the artwork and overlays; Kollection generates the Better Posters URL and settings.</p>
       <div class="hero-pills"><span>Powered by btttr.cc</span><span>AIOMetadata compatible</span><span>Nuvio + Stremio</span></div>
     </header>
 
@@ -94,12 +94,6 @@
           </div>
 
           <div class="bp-section">
-            <span class="bp-field-label">AIOMetadata / Nuvio URL pattern</span>
-            <div class="bp-pattern-box"><code id="bpAioPattern">—</code><button id="bpCopyAio" class="bp-button" type="button">Copy</button></div>
-            <span class="bp-helper">Kollection keeps its compatibility wrapper here so AIOMetadata can pass IMDb, TMDB, or TVDB IDs reliably. The wrapper redirects to Better Posters; it does not render the image.</span>
-          </div>
-
-          <div class="bp-section">
             <label for="bpCustomPattern"><span class="bp-field-label">Or paste your own URL from btttr.cc</span></label>
             <input id="bpCustomPattern" class="bp-input" type="text" spellcheck="false" placeholder="https://btttr.cc/poster.../imdb/poster-default/{imdb_id}.jpg" />
             <span id="bpCustomPatternStatus" class="bp-helper">Leave blank to use the URL generated from the controls above.</span>
@@ -136,6 +130,6 @@
   </main>
 
   <script src="/set-up-collection/better-posters-settings.js?v=20260917-native1"></script>
-  <script src="/posters/better-posters-page.js?v=20260917-bp3"></script>
+  <script src="/posters/better-posters-page.js?v=20260917-bp4"></script>
 </body>
 </html>
