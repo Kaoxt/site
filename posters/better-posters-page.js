@@ -13,7 +13,6 @@
   ];
 
   const els = {
-    enabled: $('bpEnabled'),
     trend: $('bpTrendTags'),
     quality: $('bpQualityTags'),
     genre: $('bpGenre'),
@@ -29,7 +28,6 @@
     copyAio: $('bpCopyAio'),
     test: $('bpTestUrl'),
     previewStatus: $('bpPreviewStatus'),
-    configOptions: $('bpConfigOptions'),
     previewPanel: $('bpPreviewPanel'),
     configFile: $('configFile'),
     clearImport: $('clearImport'),
@@ -72,7 +70,6 @@
     try {
       localStorage.setItem(Better.STORAGE_KEY, JSON.stringify(settings));
       localStorage.setItem(pageKey, JSON.stringify({
-        enabled: els.enabled.checked,
         customPattern: els.custom.value.trim(),
       }));
     } catch {}
@@ -108,17 +105,12 @@
   }
 
   function refreshPreview(force = false) {
-    const enabled = els.enabled.checked;
-    els.previewPanel.classList.toggle('bp-disabled', !enabled);
+    els.previewPanel.classList.remove('bp-disabled');
     const pattern = activeDirectPattern();
     document.querySelectorAll('[data-bp-preview]').forEach((img, index) => {
       const sample = previewSamples[index];
       if (!sample) return;
       img.alt = `${sample.label} Better Posters preview`;
-      if (!enabled) {
-        img.removeAttribute('src');
-        return;
-      }
       const next = previewUrl(pattern, sample.imdb);
       if (force || img.dataset.current !== next) {
         img.dataset.current = next;
@@ -126,10 +118,6 @@
       }
     });
 
-    if (!enabled) {
-      els.previewStatus.textContent = 'Better Posters is off. Enable it to load the live btttr.cc preview.';
-      return;
-    }
     const settings = currentSettings();
     const labels = [];
     if (settings.trendTags) labels.push('Trend Tags');
@@ -156,16 +144,10 @@
   }
 
   function refresh() {
-    const enabled = els.enabled.checked;
-    els.configOptions.classList.toggle('disabled', !enabled);
-    els.configOptions.querySelectorAll('input, select').forEach((control) => {
-      if (control !== els.enabled && control !== els.custom) control.disabled = !enabled;
-    });
-
     const settings = currentSettings();
-    els.ratingSource.disabled = !enabled || !els.rating.checked;
-    els.generated.textContent = enabled ? Better.directPattern(settings) : '—';
-    els.aio.textContent = enabled ? Better.pattern(settings) : '—';
+    els.ratingSource.disabled = !els.rating.checked;
+    els.generated.textContent = Better.directPattern(settings);
+    els.aio.textContent = Better.pattern(settings);
     updateCustomStatus();
     writeState();
     refreshPreview();
@@ -174,7 +156,6 @@
   function restore() {
     const saved = Better.readLocal() || Better.normalize({});
     const page = readPageState();
-    els.enabled.checked = page.enabled !== false;
     els.trend.checked = saved.trendTags !== false;
     els.quality.checked = saved.qualityTags === true;
     els.genre.checked = saved.genre !== false;
@@ -210,13 +191,12 @@
   function buildOutput() {
     const settings = currentSettings();
     const directPattern = activeDirectPattern();
-    const enabled = els.enabled.checked;
 
     if (importedConfig) {
       const clone = structuredClone(importedConfig);
       const normalized = normalizeAioExport(clone);
-      if (enabled) Better.applyToAioConfig(normalized.config, settings);
-      if (enabled && normalized.config.kollectionBetterPosters) {
+      Better.applyToAioConfig(normalized.config, settings);
+      if (normalized.config.kollectionBetterPosters) {
         normalized.config.kollectionBetterPosters.directPosterUrlPattern = directPattern;
         if (els.custom.value.trim()) normalized.config.kollectionBetterPosters.customDirectPattern = els.custom.value.trim();
       }
@@ -232,19 +212,17 @@
       exportedAt: new Date().toISOString(),
       type: 'kollection-better-posters',
       betterPosters: {
-        enabled,
+        enabled: true,
         provider: 'btttr.cc',
         settings,
-        directPosterUrlPattern: enabled ? directPattern : '',
-        aiometadataPosterUrlPattern: enabled ? Better.pattern(settings) : '',
+        directPosterUrlPattern: directPattern,
+        aiometadataPosterUrlPattern: Better.pattern(settings),
       },
-      aiometadata: enabled ? {
+      aiometadata: {
         posterRatingProvider: 'custom',
         usePosterProxy: false,
         enableRatingPostersForLibrary: true,
         customPosterUrlPattern: Better.pattern(settings),
-      } : {
-        posterRatingProvider: 'none',
       },
     };
   }
@@ -258,7 +236,7 @@
     els.jsonPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
-  [els.enabled, els.trend, els.quality, els.genre, els.rating, els.age, els.ratingSource, els.language]
+  [els.trend, els.quality, els.genre, els.rating, els.age, els.ratingSource, els.language]
     .forEach((control) => control?.addEventListener('change', refresh));
 
   els.custom?.addEventListener('input', () => {
@@ -270,7 +248,6 @@
   els.copyGenerated?.addEventListener('click', () => copyText(activeDirectPattern(), els.copyGenerated));
   els.copyAio?.addEventListener('click', () => copyText(Better.pattern(currentSettings()), els.copyAio));
   els.test?.addEventListener('click', () => {
-    if (!els.enabled.checked) els.enabled.checked = true;
     refresh();
     refreshPreview(true);
     els.previewStatus.textContent = 'Test refreshed using live Better Posters images.';
