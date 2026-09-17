@@ -23,10 +23,15 @@ export function normalizeBetterPostersConfig(value) {
   const ratingSource = BETTER_POSTERS_RATING_SOURCES.includes(ratingSourceRaw) ? ratingSourceRaw : 'average';
   const languageRaw = String(input.language || 'en');
   const language = BETTER_POSTERS_LANGUAGES.includes(languageRaw) ? languageRaw : 'en';
-  const requestedTrend = Array.isArray(input.trendDetails)
-    ? input.trendDetails.map(String)
-    : BETTER_POSTERS_TREND_DETAILS;
-  const trendDetails = BETTER_POSTERS_TREND_DETAILS.filter(detail => requestedTrend.includes(detail));
+
+  // Better Posters exposes Trend Tags as one native switch. Treat any legacy
+  // non-empty Kollection subset as native Trend Tags enabled so old saved
+  // setups immediately regain Better Posters' exact wording and appearance.
+  let trendTags;
+  if (typeof input.trendTags === 'boolean') trendTags = input.trendTags;
+  else if (Array.isArray(input.trendDetails)) trendTags = input.trendDetails.length > 0;
+  else trendTags = true;
+
   return {
     qualityTags: input.qualityTags === true,
     genre: input.genre !== false,
@@ -34,7 +39,8 @@ export function normalizeBetterPostersConfig(value) {
     ageRating: input.ageRating === true,
     ratingSource,
     language,
-    trendDetails,
+    trendTags,
+    trendDetails: trendTags ? BETTER_POSTERS_TREND_DETAILS.slice() : [],
   };
 }
 
@@ -67,6 +73,6 @@ export function decodeBetterPostersConfig(token) {
     ageRating: Boolean(flags & 8),
     ratingSource: BETTER_POSTERS_RATING_SOURCES[ratingIndex],
     language,
-    trendDetails: fromMask(trendMask, BETTER_POSTERS_TREND_DETAILS),
+    trendTags: fromMask(trendMask, BETTER_POSTERS_TREND_DETAILS).length > 0,
   });
 }
