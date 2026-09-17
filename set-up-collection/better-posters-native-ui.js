@@ -77,8 +77,18 @@
     document.querySelectorAll('.smart-overlay-option').forEach(card => {
       const title = card.querySelector('h3');
       if (title?.textContent.trim() !== 'Better Posters') return;
+
       const copy = title.parentElement?.querySelector('p');
-      if (copy) copy.textContent = 'Use Better Posters directly for poster artwork and native overlays, including its exact Trend Tags.';
+      if (copy) {
+        copy.textContent = 'Include your saved Better Posters configuration when this collection is installed to Nuvio.';
+      }
+
+      const configureButton = card.querySelector('.smart-overlay-configure-btn, #configureBetterPostersBtn');
+      if (configureButton) configureButton.remove();
+
+      const controlRow = card.querySelector('.smart-overlay-control-row');
+      if (controlRow) controlRow.classList.add('better-posters-include-only');
+
       const summary = card.querySelector('#betterPostersSummary');
       if (summary && /Kollection Trends/i.test(summary.textContent || '')) {
         summary.textContent = (summary.textContent || '').replace(/Better Posters \+ Kollection Trends/i, 'Better Posters');
