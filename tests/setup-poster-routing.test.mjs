@@ -61,14 +61,12 @@ test('Set Up Collection offers Better Posters instead of Kollection Smart Overla
   assert.doesNotMatch(source, /Enable Smart Overlay Posters for this collection/);
 });
 
-
 test('saved collection setups persist Better Posters preferences', async () => {
   const source = await readFile(new URL('../set-up-collection/saved-setup.js', import.meta.url), 'utf8');
   assert.match(source, /betterPostersEnabled: Boolean\(snapshot\.betterPostersEnabled\)/);
   assert.match(source, /kollection:restore-better-posters-settings/);
   assert.match(source, /betterPostersSettingsJson/);
 });
-
 
 test('legacy grouped release preference expands into the new lifecycle choices', () => {
   const normalized = Posters.normalize({
@@ -81,7 +79,6 @@ test('legacy grouped release preference expands into the new lifecycle choices',
   ]);
 });
 
-
 test('existing saved setups use a Configure modal for Better Posters', async () => {
   const source = await readFile(new URL('../set-up-collection/folder-editor.js', import.meta.url), 'utf8');
   assert.match(source, /editingSavedSetup\(\)/);
@@ -92,15 +89,13 @@ test('existing saved setups use a Configure modal for Better Posters', async () 
   assert.match(source, />Save changes<\/button>/);
   assert.match(source, /id="betterPostersEnabled"/);
   assert.match(source, /id="betterPostersSettingsJson"/);
-  for (const option of ['qualityTags', 'genre', 'rating', 'ageRating']) {
-    assert.ok(source.includes("['" + option + "',"), 'missing Better Posters option ' + option);
-  }
-  for (const detail of ['studio', 'director', 'cast', 'inCinema', 'rank', 'newMovie', 'comingSoon', 'newSeries', 'returningSeries', 'limitedSeries']) {
-    assert.ok(source.includes("['" + detail + "',"), 'missing Trend Tag detail ' + detail);
-  }
-  assert.match(source, /data-better-trend-detail/);
   assert.match(source, /state\.betterPostersEnabled = nextEnabled/);
   assert.match(source, /state\.betterPostersSettings = nextSettings/);
+
+  const nativeUi = await readFile(new URL('../set-up-collection/better-posters-native-ui.js', import.meta.url), 'utf8');
+  assert.match(nativeUi, /data-better-native-trend/);
+  assert.match(nativeUi, /Better Posters controls the exact tag text/);
+  assert.match(nativeUi, /native Trend Tags exactly as supplied by btttr\.cc/);
 });
 
 test('collection folders use unique bridge addon IDs while preserving AIOMetadata poster URLs', async () => {
@@ -130,7 +125,6 @@ test('catalog provisioning keeps movie and series routes distinct', async () => 
   assert.match(source, /catalogRoutes\[key\] = route/);
 });
 
-
 test('Smart Poster config token is deterministic, compact, and reversible', () => {
   const input = {
     source: 'smart',
@@ -158,7 +152,6 @@ test('different poster preferences receive different shared config IDs', () => {
   assert.notEqual(encodePosterConfig(base), encodePosterConfig(imdb));
 });
 
-
 test('token poster route is importable and wired to the v2 engine', async () => {
   const route = await import('../functions/p/[[path]].js');
   assert.equal(typeof route.onRequest, 'function');
@@ -168,7 +161,6 @@ test('token poster route is importable and wired to the v2 engine', async () => 
   assert.match(source, /caches\.default\.match/);
   assert.match(source, /caches\.default\.put/);
 });
-
 
 test('poster bridge passthrough mode preserves upstream overlay poster URLs', async () => {
   const source = await readFile(new URL('../functions/api/posters-addon/[[path]].js', import.meta.url), 'utf8');
@@ -182,14 +174,12 @@ test('poster bridge passthrough mode preserves upstream overlay poster URLs', as
   assert.match(source, /id: `tv\.kollection\.posters\.\$\{token\.slice\(0, 24\)\}`/);
 });
 
-
 test('k1 and k2 tokens both use the reliable TMDB artwork path', () => {
   assert.equal(decodePosterConfig('k1sd0sf')?.artworkProvider, 'tmdb');
   assert.equal(decodePosterConfig('k3sd0sf')?.artworkProvider, 'tmdb');
 });
 
-
-test('Better Posters helper generates the hybrid Kollection delivery pattern', () => {
+test('Better Posters helper generates the native Better Posters delivery pattern', () => {
   const settings = {
     genre: true,
     rating: true,
@@ -197,7 +187,7 @@ test('Better Posters helper generates the hybrid Kollection delivery pattern', (
     ageRating: false,
     ratingSource: 'average',
     language: 'en',
-    trendDetails: ['inCinema', 'rank', 'newMovie'],
+    trendTags: true,
   };
   const token = BetterPosters.configId(settings);
   assert.equal(token, encodeBetterPostersConfig(settings));
@@ -205,7 +195,7 @@ test('Better Posters helper generates the hybrid Kollection delivery pattern', (
   assert.deepEqual(decodeBetterPostersConfig(token), BetterPosters.normalize(settings));
 });
 
-test('Better Posters AIOMetadata integration uses the hybrid Better Posters + Kollection trend route', () => {
+test('Better Posters AIOMetadata integration records btttr.cc as artwork and Trend provider', () => {
   const config = {
     posterRatingProvider: 'none',
     customPosterUrlPattern: '',
@@ -216,7 +206,7 @@ test('Better Posters AIOMetadata integration uses the hybrid Better Posters + Ko
   BetterPosters.applyToAioConfig(config, {
     genre: true,
     rating: true,
-    trendDetails: ['inCinema', 'rank'],
+    trendTags: true,
   });
   assert.equal(config.posterRatingProvider, 'custom');
   assert.equal(config.usePosterProxy, false);
@@ -224,36 +214,34 @@ test('Better Posters AIOMetadata integration uses the hybrid Better Posters + Ko
   assert.match(config.customPosterUrlPattern, /^https:\/\/kollection\.tv\/bp\/b1[0-9a-z]+\/\{type\}\/\{id\}\.webp$/);
   assert.ok(config.catalogs.every(catalog => catalog.enableRatingPosters === true));
   assert.equal(config.kollectionPosters, undefined);
+  assert.equal(config.kollectionBetterPosters?.version, 3);
   assert.equal(config.kollectionBetterPosters?.provider, 'btttr.cc');
-  assert.equal(config.kollectionBetterPosters?.hybridTrendLayer, 'kollection');
+  assert.equal(config.kollectionBetterPosters?.trendProvider, 'btttr.cc');
+  assert.equal(config.kollectionBetterPosters?.hybridTrendLayer, undefined);
 });
 
-test('Better Posters hybrid exposes broad Trend category choices', () => {
+test('Better Posters uses one native Trend Tags switch and collapses legacy subsets', () => {
   const normalized = BetterPosters.normalize({ trendDetails: ['rank', 'inCinema'] });
-  assert.deepEqual(normalized.trendDetails, ['inCinema', 'rank']);
+  assert.equal(normalized.trendTags, true);
+  assert.deepEqual(normalized.trendDetails, BetterPosters.TREND_DETAILS);
+
   const none = BetterPosters.normalize({ trendDetails: [] });
+  assert.equal(none.trendTags, false);
   assert.deepEqual(none.trendDetails, []);
 });
 
-
-test('hybrid Better Posters delivery route delegates to v2 with btttr base and Kollection trend-only overlays', async () => {
+test('Better Posters delivery route resolves IDs and redirects directly to btttr.cc', async () => {
   const source = await readFile(new URL('../functions/bp/[[path]].js', import.meta.url), 'utf8');
   assert.match(source, /decodeBetterPostersConfig/);
-  assert.match(source, /provider', 'btttr'/);
-  assert.match(source, /tags', config\.trendDetails\.length \? 'trend' : ''/);
-  assert.match(source, /trendDetails', config\.trendDetails\.join/);
-  assert.match(source, /overlayOnly', '1'/);
-  assert.match(source, /bpQuality/);
-  assert.match(source, /bpGenre/);
-  assert.match(source, /bpRating/);
-  assert.match(source, /bpAge/);
-  assert.match(source, /BETTER_POSTERS_TREND_DETAILS/);
+  assert.match(source, /resolveNativeTarget/);
+  assert.match(source, /nativeBetterPostersUrl/);
+  assert.match(source, /TMDB_API/);
+  assert.match(source, /append_to_response=external_ids/);
   assert.match(source, /x-kollection-better-posters-direct/);
-  assert.doesNotMatch(source, /x-kollection-better-posters-provisional/);
-  assert.doesNotMatch(source, /customTrendSubset/);
-  assert.match(source, /const delivered = await buildFiltered\(\)/);
+  assert.match(source, /image\.tmdb\.org\/t\/p\/w500/);
+  assert.doesNotMatch(source, /handlePosterV2/);
+  assert.doesNotMatch(source, /overlayOnly/);
 });
-
 
 test('AIOMetadata always receives a concrete Better Posters token route with its reliable id placeholder', () => {
   const settings = BetterPosters.normalize({
@@ -277,7 +265,7 @@ test('AIOMetadata always receives a concrete Better Posters token route with its
     ageRating: false,
     ratingSource: 'average',
     language: 'en',
-    trendDetails: [],
+    trendTags: false,
   });
   assert.equal(
     BetterPosters.pattern(none),
@@ -285,14 +273,17 @@ test('AIOMetadata always receives a concrete Better Posters token route with its
   );
 });
 
-test('custom Trend subsets use the same reliable Kollection id route', () => {
-  const settings = BetterPosters.normalize({
+test('legacy custom Trend subsets collapse to the same native Trend Tags configuration', () => {
+  const subset = BetterPosters.normalize({
     genre: true,
     rating: true,
     trendDetails: ['director', 'studio'],
   });
-  assert.match(
-    BetterPosters.pattern(settings),
-    /^https:\/\/kollection\.tv\/bp\/b1[0-9a-z]+\/\{type\}\/\{id\}\.webp$/
-  );
+  const nativeOn = BetterPosters.normalize({
+    genre: true,
+    rating: true,
+    trendTags: true,
+  });
+  assert.deepEqual(subset.trendDetails, BetterPosters.TREND_DETAILS);
+  assert.equal(BetterPosters.configId(subset), BetterPosters.configId(nativeOn));
 });
