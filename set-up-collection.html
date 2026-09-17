@@ -1,30 +1,26 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <link rel="icon" href="/favicon.ico?v=3" sizes="any" />
-  <link rel="shortcut icon" href="/favicon.ico?v=3" type="image/x-icon" />
-  <meta name="theme-color" content="#050608" />
-  <title>Set Up Collection | The Kollection</title>
-  <meta name="description" content="Set up The Kollection for Nuvio with AIOMetadata and optional personalized Bingecat recommendations." />
-  <link rel="stylesheet" href="/set-up-collection/styles.css?v=20260914-11" />
-  <link rel="stylesheet" href="/shared.css?v=20260906-1" />
-  <link rel="stylesheet" href="/nuvio-auth/setup-account.css?v=20260906-1" />
-  <link rel="stylesheet" href="/set-up-collection/saved-setup.css?v=20260914-5" />
+  <title>Set Up The Kollection</title>
+  <meta name="description" content="Set up AIOMetadata, optionally connect your personal Bingecat recommendations, and add only the collection sections you want to your Nuvio profile." />
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="stylesheet" href="/shared.css" />
+  <link rel="stylesheet" href="/set-up-collection/styles.css?v=20260914-10" />
+  <link rel="stylesheet" href="/set-up-collection/category-order.css?v=20260911-1" />
   <link rel="stylesheet" href="/set-up-collection/folder-editor.css?v=20260914-actions1" />
   <link rel="stylesheet" href="/set-up-collection/folder-backdrop-links.css?v=20260914-actions1" />
-  <link rel="stylesheet" href="/set-up-collection/category-order.css?v=20260913-3" />
   <link rel="stylesheet" href="/set-up-collection/folder-source-editor.css?v=20260914-actions1" />
-  <link rel="stylesheet" href="/set-up-collection/existing-setup-picker.css?v=20260913-4" />
-  <script src="/components.js?v=20260908-2" defer></script>
+  <link rel="stylesheet" href="/set-up-collection/saved-setup.css?v=20260917-1" />
+  <link rel="stylesheet" href="/set-up-collection/smart-overlay.css?v=20260911-1" />
 </head>
 <body>
-  <main class="page">
-    <div id="site-nav" aria-label="Site navigation"></div>
+  <div id="site-nav"></div>
 
-    <section class="setup-hero">
-      <div class="eyebrow"><span class="eyebrow-dot"></span> Guided Nuvio Setup</div>
+  <main class="page setup-page">
+    <section class="setup-intro">
+      <span class="eyebrow"><i></i>Guided Nuvio Setup</span>
       <h1>Set Up The Kollection</h1>
       <p>Set up AIOMetadata, optionally connect your personal Bingecat recommendations, and add only the collection sections you want to your Nuvio profile.</p>
       <div class="setup-meta">
@@ -36,9 +32,10 @@
 
     <section class="setup-frame" aria-label="Set Up The Kollection">
       <div class="setup-toolbar">
-        <div>
+        <div class="setup-toolbar-copy">
           <span class="toolbar-label">SET UP COLLECTION</span>
           <strong>Personalize your setup</strong>
+          <span id="savedSetupName" class="saved-setup-name" hidden></span>
         </div>
         <div class="setup-toolbar-actions">
           <span id="saveSetupStatus" class="save-setup-status" role="status" aria-live="polite"></span>
@@ -63,41 +60,25 @@
 
         <section class="content">
           <div class="mobile-progress"><span id="mobileStepText"></span><div><i id="mobileProgressBar"></i></div></div>
-          <div id="alertHost" aria-live="polite"></div>
+          <div id="alertHost"></div>
           <div id="panelHost"></div>
         </section>
       </div>
     </section>
-
-    <div id="site-footer"></div>
   </main>
 
-  <template id="loadingTemplate">
-    <div class="loading"><span class="spinner"></span><span class="loading-text">Working…</span></div>
-  </template>
+  <div id="site-footer"></div>
 
-  <script src="/set-up-collection/config.js?v=20260906-1"></script>
-  <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
-  <script src="/nuvio-auth/collection-eligibility.js?v=20260916-artrepair2"></script>
-  <script src="/set-up-collection/legacy-artwork-url-migration.js?v=20260916-artfix1"></script>
-  <script src="/set-up-collection/folder-editor.js?v=20260916-bphybrid1"></script>
+  <script src="/components.js"></script>
+  <script src="/nuvio-auth/nuvio-auth.js"></script>
+  <script src="/nuvio-auth/collection-eligibility.js?v=20260911-1"></script>
+  <script src="/set-up-collection/saved-setup.js?v=20260917-1"></script>
+  <script src="/set-up-collection/setup-sync.js?v=20260911-1"></script>
+  <script src="/set-up-collection/smart-overlay.js?v=20260911-1"></script>
+  <script src="/set-up-collection/category-order.js?v=20260911-1"></script>
+  <script src="/set-up-collection/folder-editor.js?v=20260914-bingecat1"></script>
   <script src="/set-up-collection/folder-backdrop-links.js?v=20260914-actions1"></script>
-  <script src="/set-up-collection/category-order.js?v=20260913-6"></script>
-  <script src="/set-up-collection/folder-source-editor.js?v=20260915-canonical2"></script>
-  <script src="/set-up-collection/folder-source-close-hotfix.js?v=20260913-1"></script>
-  <script src="/set-up-collection/folder-source-modal-stability.js?v=20260913-3"></script>
-  <script src="/set-up-collection/existing-collection-policy.js?v=20260914-eligibility1"></script>
-  <script src="/set-up-collection/better-posters-settings.js?v=20260916-bphybrid1"></script>
-  <script src="/set-up-collection/set-up-collection.js?v=20260916-bphybrid1"></script>
-  <script src="/set-up-collection/bingecat-stability.js?v=20260913-1"></script>
-  <script src="/set-up-collection/key-verifier.js?v=20260913-1"></script>
-  <script src="/nuvio-auth/onsite-login-only.js?v=20260908-1"></script>
-  <script src="/set-up-collection/saved-setup.js?v=20260916-bphybrid1"></script>
-  <script src="/set-up-collection/saved-secrets.js?v=20260908-1"></script>
-  <script src="/set-up-collection/selection-status.js?v=20260913-2"></script>
-  <script src="/set-up-collection/setup-sync.js?v=20260914-autosave5"></script>
-  <script src="/set-up-collection/saved-restore-status.js?v=20260913-1"></script>
-  <script src="/set-up-collection/existing-setup-picker.js?v=20260913-5"></script>
-  <script src="/set-up-collection/edit-existing-restore.js?v=20260913-2"></script>
+  <script src="/set-up-collection/folder-source-editor.js?v=20260914-actions1"></script>
+  <script src="/set-up-collection/set-up-collection.js?v=20260914-9"></script>
 </body>
 </html>
