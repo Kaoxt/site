@@ -176,10 +176,12 @@
     const eligible = externalCount === 0;
     let finalCollections = collections;
 
-    // If this is entirely a Kollection-owned collection, repair any legacy
-    // artwork URLs in Nuvio itself. This keeps stale Nuvio clients and old
-    // saved collection payloads from leaving broken artwork paths behind.
-    if (eligible && kollectionCount > 0) {
+    // Eligibility checks must stay read-only. Rewriting a large existing
+    // collection here can make the setup UI appear stuck on "Checking profile
+    // availability…" and is unnecessary for deciding whether the profile is
+    // safe to use. Artwork migration is opt-in for callers that explicitly
+    // request it.
+    if (options.repairArtwork === true && eligible && kollectionCount > 0) {
       const normalizedCollections = normalizeArtworkDeep(collections);
       if (JSON.stringify(normalizedCollections) !== JSON.stringify(collections)) {
         await rpc('sync_push_collections', {
