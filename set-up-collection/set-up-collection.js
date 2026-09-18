@@ -237,7 +237,10 @@
   }
 
   restoreWizardSession();
-  if (!setupHasSavedId) state.step = routeStepFromLocation();
+  // Always honor the route that was requested. Update Existing intentionally
+  // links to /customize, so a saved setup should open there directly instead
+  // of being auto-driven through Nuvio and AIOMetadata first.
+  state.step = routeStepFromLocation();
 
   window.KollectionSetupRoute = Object.freeze({
     getStep: routeStepFromLocation,
