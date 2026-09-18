@@ -79,8 +79,9 @@
       if (title?.textContent.trim() !== 'Better Posters') return;
 
       const copy = title.parentElement?.querySelector('p');
-      if (copy) {
-        copy.textContent = 'Include your saved Better Posters configuration when this collection is installed to Nuvio.';
+      const desiredCopy = 'Include your saved Better Posters configuration when this collection is installed to Nuvio.';
+      if (copy && copy.textContent !== desiredCopy) {
+        copy.textContent = desiredCopy;
       }
 
       const configureButton = card.querySelector('.smart-overlay-configure-btn, #configureBetterPostersBtn');
@@ -91,7 +92,8 @@
 
       const summary = card.querySelector('#betterPostersSummary');
       if (summary && /Kollection Trends/i.test(summary.textContent || '')) {
-        summary.textContent = (summary.textContent || '').replace(/Better Posters \+ Kollection Trends/i, 'Better Posters');
+        const desiredSummary = (summary.textContent || '').replace(/Better Posters \+ Kollection Trends/i, 'Better Posters');
+        if (summary.textContent !== desiredSummary) summary.textContent = desiredSummary;
       }
     });
   }
