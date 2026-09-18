@@ -295,6 +295,73 @@
     if (state.step === 2) renderAi();
   });
 
+  window.addEventListener('kollection:restore-saved-update-state', event => {
+    const detail = event?.detail || {};
+    const config = detail.config && typeof detail.config === 'object' ? detail.config : {};
+    const secrets = detail.secrets && typeof detail.secrets === 'object' ? detail.secrets : {};
+
+    const profileId = Number(detail.profileId);
+    if (Number.isFinite(profileId) && profileId >= 1) {
+      state.profileId = profileId;
+      const profile = state.profiles.find(item => item.id === profileId);
+      if (profile) {
+        state.profileName = profile.name;
+        state.addonProfileId = profile.usesPrimaryAddons ? 1 : profile.id;
+      } else if (detail.profileName) {
+        state.profileName = String(detail.profileName);
+      }
+    }
+
+    state.aiSetupMode = config.aiSetupMode === 'custom' ? 'custom' : 'built-in';
+    state.aiHostPreference = String(config.aiHostPreference || state.aiHostPreference || '');
+    state.aiHostMode = String(config.aiHostMode || state.aiHostMode || '');
+    state.aiSelfHostUrl = String(config.aiSelfHostUrl || state.aiSelfHostUrl || '');
+    state.aiCustomFileName = String(config.aiCustomFileName || state.aiCustomFileName || '');
+    state.mdblistKey = String(secrets.mdblistKey || state.mdblistKey || '');
+    state.tmdbKey = String(secrets.tmdbKey || state.tmdbKey || '');
+    state.betterPostersEnabled = Boolean(config.betterPostersEnabled);
+    if (config.betterPostersSettings && typeof config.betterPostersSettings === 'object') {
+      state.betterPostersSettings = window.KollectionBetterPostersSettings
+        ? window.KollectionBetterPostersSettings.normalize(config.betterPostersSettings)
+        : jsonClone(config.betterPostersSettings);
+    }
+    state.bingecatSkipped = Boolean(config.bingecatSkipped);
+    state.bingecatManifestUrl = String(config.bingecatManifestUrl || '');
+    state.backup = null;
+    state.previewCollections = null;
+    state.finalCollections = null;
+
+    const selected = new Set(
+      Array.isArray(config.selectedCollectionGroupIds)
+        ? config.selectedCollectionGroupIds.map(mergeKey).filter(Boolean)
+        : []
+    );
+    if (Array.isArray(state.collectionPack)) {
+      const knownValues = Array.isArray(config.knownCollectionGroupIds)
+        ? config.knownCollectionGroupIds.map(mergeKey).filter(Boolean)
+        : [];
+      const known = new Set(knownValues.length ? knownValues : LEGACY_KNOWN_COLLECTION_GROUP_IDS);
+      for (const group of state.collectionPack) {
+        const key = collectionGroupKey(group);
+        if (key && !known.has(key)) selected.add(key);
+      }
+    }
+    state.selectedCollectionGroupIds = [...selected];
+    state.selectedCollectionFolderIds = config.selectedCollectionFolderIds && typeof config.selectedCollectionFolderIds === 'object'
+      ? jsonClone(config.selectedCollectionFolderIds)
+      : {};
+    state.collectionSelectionInitialized = true;
+    state.customizeGroupKey = null;
+
+    if (state.step === 4 && state.collectionPack) renderCustomize();
+
+    if (!state.bingecatSkipped && state.bingecatManifestUrl) {
+      verifyBingecatManifest(state.bingecatManifestUrl).catch(error => {
+        console.warn('[The Kollection] Could not refresh saved Bingecat manifest during update restore.', error);
+      });
+    }
+  });
+
   window.addEventListener('kollection:existing-collection-policy', event => {
     const detail = event?.detail || {};
     const profileId = Number(detail.profileId || 0);
