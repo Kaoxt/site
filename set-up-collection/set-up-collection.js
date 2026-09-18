@@ -353,7 +353,9 @@
     state.collectionSelectionInitialized = true;
     state.customizeGroupKey = null;
 
-    if (state.step === 4 && state.collectionPack) renderCustomize();
+    if (state.step === 2) renderAi();
+    else if (state.step === 3) renderBingecat();
+    else if (state.step === 4 && state.collectionPack) renderCustomize();
 
     if (!state.bingecatSkipped && state.bingecatManifestUrl) {
       verifyBingecatManifest(state.bingecatManifestUrl).catch(error => {
@@ -2931,11 +2933,10 @@
 
   async function initialize() {
     if (setupUpdatesExisting) {
-      // Update Existing should open directly at Step 5. Restore the Nuvio
-      // session and collection assets before rendering Customize so no
-      // intermediate Step 2/3 UI can steal focus or trigger auto-navigation.
-      state.step = 4;
-      syncSetupRoute(4, 'replace');
+      // The initial Update Existing link opens on Customize, but once the user
+      // navigates backward the requested route remains authoritative. Reloading
+      // AIOMetadata/Bingecat must not force the update back to Step 5.
+      state.step = routeStepFromLocation();
       renderNav();
       loading('Loading your saved setup…');
 
@@ -2948,16 +2949,14 @@
       }
 
       try {
-        await loadKaoxtAssets();
-        ensureCollectionSelection();
-        state.step = 4;
-        syncSetupRoute(4, 'replace');
+        if (state.step >= 4) {
+          await loadKaoxtAssets();
+          ensureCollectionSelection();
+        }
         render();
       } catch (error) {
-        state.step = 4;
-        syncSetupRoute(4, 'replace');
-        renderCustomize();
-        alert(error?.message || 'Could not load the saved setup collection data.', 'error');
+        render();
+        alert(error?.message || 'Could not load the saved setup data.', 'error');
       }
 
       syncSetupToolbarActions();
