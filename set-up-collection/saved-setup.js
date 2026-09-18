@@ -494,6 +494,16 @@
   }
 
   function init() {
+    // Belt-and-suspenders guard for Update Existing: this mode belongs on
+    // Step 5 / Customize. If any stale route or restore race lands elsewhere,
+    // correct the URL before attaching the old auto-restore click behavior.
+    if (updateExistingSetup && Number(window.KollectionSetupRoute?.getStep?.() ?? -1) !== 4) {
+      const next = new URL(window.location.href);
+      next.pathname = '/set-up-collection/customize';
+      window.location.replace(next.toString());
+      return;
+    }
+
     const panel = $('#panelHost');
     if (panel) {
       const observer = new MutationObserver(() => {
