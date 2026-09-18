@@ -31,8 +31,8 @@ export default {
     }
 
     // The Kollection renderer is permanently retired in favor of Better Posters.
-    // Do not call getContainer() here: requests to this legacy hostname must never
-    // start a Cloudflare Container instance or accrue Container Memory usage.
+    // Requests to this legacy hostname must never start a Cloudflare Container
+    // instance or accrue Container Memory usage.
     return json({
       error: 'Kollection poster rendering is retired.',
       provider: 'Better Posters',
