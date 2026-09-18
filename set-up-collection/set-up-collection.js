@@ -125,7 +125,11 @@
           window.setTimeout(() => reject(new Error('Saved setup lookup timed out.')), 5000);
         }),
       ]);
-      if (!item || Number(item.draftStep || 0) < 7) return null;
+      const completedSavedSetup = Boolean(item) && (
+        Number(item.draftStep || 0) >= 7 ||
+        Boolean(item.lastAppliedAt)
+      );
+      if (!completedSavedSetup) return null;
       if (Number(item.nuvioProfileId) !== id) return null;
 
       return {
@@ -1850,6 +1854,13 @@
   async function ensureSelectedProfileEligible() {
     const result = await refreshSelectedProfileEligibility({ force: true });
     if (result?.eligible) return true;
+
+    // Never yank an Update Existing session back to Step 2 while the user is
+    // editing/reviewing. Keep the current step stable and surface the
+    // verification problem there instead. Brand-new setup flows still return
+    // to Nuvio so the user can choose/clear a profile.
+    if (setupUpdatesExisting) return false;
+
     if (state.step !== 1) {
       setStep(1);
       setTimeout(() => renderProfileEligibility(state.profileEligibility), 0);
