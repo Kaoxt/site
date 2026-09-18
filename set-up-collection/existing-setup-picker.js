@@ -67,7 +67,7 @@
             </button>
           </header>
           <div class="existing-setup-modal-body">
-            <p class="existing-setup-copy">Choose a saved setup to open it directly in Step 5. Your saved categories, folders, Smart Overlay Poster settings, keys, and setup preferences will be restored.</p>
+            <p class="existing-setup-copy">Choose a saved setup to open it directly in Step 5. Your saved categories, folders, Better Posters settings, keys, and setup preferences will be restored.</p>
             <div id="existingSetupList" class="existing-setup-list"><div class="existing-setup-loading">Loading saved setups…</div></div>
             <div id="existingSetupError" class="existing-setup-error" role="status"></div>
           </div>
