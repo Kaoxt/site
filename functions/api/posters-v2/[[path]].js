@@ -1447,6 +1447,22 @@ async function handlePoster(context) {
   if (!type || parts.length !== 4 || !/^(tt\d{5,12}|(?:tmdb|tvdb):[1-9]\d{0,11}|[1-9]\d{0,11})$/.test(rawId)) {
     return json({ error: 'Expected /api/posters-v2/{movie|series}/{id}.webp using TMDB, IMDb, tmdb:, or tvdb: IDs' }, 400);
   }
+  // The legacy Kollection renderer is retired. Keep old poster URLs working by
+  // sending them through the current Better Posters delivery route instead.
+  // This path never contacts poster-renderer.kollection.tv or starts a Container.
+  const legacyBetterPosters = new URL(
+    `/bp/b1600sf/${type === 'tv' ? 'series' : 'movie'}/${encodeURIComponent(rawId)}.webp`,
+    url.origin
+  );
+  const redirectHeaders = new Headers({
+    location: legacyBetterPosters.toString(),
+    'cache-control': 'public, max-age=86400, s-maxage=604800',
+    'access-control-allow-origin': '*',
+    'x-kollection-posters-v2': 'retired-to-better-posters',
+    'x-kollection-rendering': 'none',
+  });
+  return new Response(null, { status: 302, headers: redirectHeaders });
+
   const sourceUrl = normalizeSourceUrl(url.searchParams.get('sourceUrl'));
   const state = {
     url, type, rawId, sourceUrl,
