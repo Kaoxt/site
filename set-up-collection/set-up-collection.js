@@ -95,6 +95,54 @@
   const setupHasSavedId = setupQuery.has('saved');
   const setupUpdatesExisting = setupHasSavedId && setupQuery.get('update') === '1';
   const requestedProfileId = Number(setupQuery.get('targetProfile')) || null;
+  let linkedSavedSetupPromise = null;
+
+  async function linkedSavedSetupEligibility(profileId) {
+    if (!setupHasSavedId) return null;
+    const id = Number(profileId);
+    if (!Number.isFinite(id) || id < 1) return null;
+
+    try {
+      if (!linkedSavedSetupPromise) {
+        const savedId = String(setupQuery.get('saved') || '').trim();
+        linkedSavedSetupPromise = fetch(`/api/account/collections/${encodeURIComponent(savedId)}`, {
+          credentials: 'same-origin',
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        }).then(async (response) => {
+          const body = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(body?.error || `Could not load saved setup (HTTP ${response.status}).`);
+          return body?.collection || null;
+        }).catch((error) => {
+          linkedSavedSetupPromise = null;
+          throw error;
+        });
+      }
+
+      const item = await Promise.race([
+        linkedSavedSetupPromise,
+        new Promise((_, reject) => {
+          window.setTimeout(() => reject(new Error('Saved setup lookup timed out.')), 5000);
+        }),
+      ]);
+      if (!item || Number(item.draftStep || 0) < 7) return null;
+      if (Number(item.nuvioProfileId) !== id) return null;
+
+      return {
+        profileId: id,
+        state: 'kollection',
+        eligible: true,
+        existingCount: 1,
+        kollectionCount: 1,
+        externalCount: 0,
+        hasKollection: true,
+        linkedSavedSetup: true,
+        message: 'This saved Kollection setup is already linked to the selected Nuvio profile.',
+      };
+    } catch {
+      return null;
+    }
+  }
 
   function routeStepFromLocation() {
     const path = window.location.pathname.replace(/\/+$/, '');
@@ -1655,7 +1703,7 @@
   }
 
   async function refreshSelectedProfileEligibility(options = {}) {
-    if (!state.token || !state.profileId || !window.KollectionCollectionEligibility) {
+    if (!state.token || !state.profileId) {
       state.profileEligibility = null;
       state.profileEligibilityBusy = false;
       renderProfileEligibility(null);
@@ -1667,6 +1715,20 @@
     renderProfileEligibility(state.profileEligibility);
 
     try {
+      // A completed saved setup that is already linked to this exact profile is
+      // safe to restore without re-scanning the live collection first. This
+      // keeps Update/Edit Existing from stalling on Step 2.
+      const linkedSaved = await linkedSavedSetupEligibility(checkedProfileId);
+      if (Number(state.profileId) !== checkedProfileId) return null;
+      if (linkedSaved) {
+        state.profileEligibility = linkedSaved;
+        return linkedSaved;
+      }
+
+      if (!window.KollectionCollectionEligibility) {
+        throw new Error('Profile availability service is not ready yet.');
+      }
+
       const eligibilityCheck = window.KollectionCollectionEligibility.check(checkedProfileId, {
         force: options.force !== false,
       });
