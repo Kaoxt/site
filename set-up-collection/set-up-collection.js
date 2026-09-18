@@ -76,6 +76,7 @@
   const SETUP_ROUTE_BASE = '/set-up-collection';
   const SETUP_SESSION_KEY = 'kollection-setup-wizard:v1';
   const SETUP_SESSION_MAX_AGE = 12 * 60 * 60 * 1000;
+  const PROFILE_ELIGIBILITY_TIMEOUT_MS = 12000;
   const LEGACY_KNOWN_COLLECTION_GROUP_IDS = Object.freeze([
     'f08ce9d6-429d-4c75-83f8-1d4d5eae096e',
     'bf468c1e-9336-43c4-980e-f23cf09e51c2',
@@ -1666,9 +1667,15 @@
     renderProfileEligibility(state.profileEligibility);
 
     try {
-      const result = await window.KollectionCollectionEligibility.check(checkedProfileId, {
+      const eligibilityCheck = window.KollectionCollectionEligibility.check(checkedProfileId, {
         force: options.force !== false,
       });
+      const result = await Promise.race([
+        eligibilityCheck,
+        new Promise((_, reject) => {
+          window.setTimeout(() => reject(new Error('Nuvio is taking too long to verify this profile. Tap Try again to retry the check.')), PROFILE_ELIGIBILITY_TIMEOUT_MS);
+        }),
+      ]);
       if (Number(state.profileId) !== checkedProfileId) return null;
       state.profileEligibility = result;
       return result;
