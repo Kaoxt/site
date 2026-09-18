@@ -148,6 +148,16 @@
     document.addEventListener('input', () => setTimeout(driveToCustomize, 20), true);
     document.addEventListener('change', () => setTimeout(driveToCustomize, 20), true);
     window.addEventListener('kollection:nuvio-signed-in', () => setTimeout(() => { if (!originVerified) verifyOrigin(); else driveToCustomize(); }, 150));
+    window.addEventListener('kollection:setup-step-changed', event => {
+      const detail = event?.detail || {};
+      const previousStep = Number(detail.previousStep);
+      const nextStep = Number(detail.step);
+      if (Number.isFinite(previousStep) && Number.isFinite(nextStep) && nextStep < previousStep) {
+        active = false;
+        busy = false;
+        reachedCustomize = true;
+      }
+    });
     let tries = 0;
     const timer = setInterval(() => { tries += 1; driveToCustomize(); if ((!active && originVerified) || reachedCustomize || tries > 300) clearInterval(timer); }, 100);
     verifyOrigin();
