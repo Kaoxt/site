@@ -23,7 +23,6 @@ on:
       - 'set-up-collection/folder-editor.css'
       - 'set-up-collection/existing-setup-picker.js'
       - 'set-up-collection.html'
-      - 'poster-renderer-v2/**'
       - '.github/workflows/test-posters.yml'
   pull_request:
     paths:
@@ -47,7 +46,6 @@ on:
       - 'set-up-collection/folder-editor.css'
       - 'set-up-collection/existing-setup-picker.js'
       - 'set-up-collection.html'
-      - 'poster-renderer-v2/**'
       - '.github/workflows/test-posters.yml'
 
 permissions:
@@ -64,17 +62,3 @@ jobs:
           node-version: '24'
       - run: node --check set-up-collection/folder-editor.js
       - run: node --test tests/poster-cache.test.mjs tests/setup-poster-routing.test.mjs
-
-  renderer:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    defaults:
-      run:
-        working-directory: poster-renderer-v2
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - run: npm install
-      - run: npm test
