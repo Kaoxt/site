@@ -310,6 +310,14 @@
       message: detail.message || '',
     };
 
+    // Update Existing already targets a completed saved setup/profile pair.
+    // Do not let the background policy event kick that restore back to Step 2
+    // while the saved setup and Nuvio session are still being restored.
+    if (setupUpdatesExisting && setupHasSavedId) {
+      if (state.step === 1) renderProfileEligibility(state.profileEligibility);
+      return;
+    }
+
     if (!state.profileEligibility.eligible && state.step > 1) {
       setStep(1);
       return;
@@ -2833,6 +2841,41 @@
   document.addEventListener('input', () => setTimeout(persistWizardSession, 120), true);
 
   async function initialize() {
+    if (setupUpdatesExisting) {
+      // Update Existing should open directly at Step 5. Restore the Nuvio
+      // session and collection assets before rendering Customize so no
+      // intermediate Step 2/3 UI can steal focus or trigger auto-navigation.
+      state.step = 4;
+      syncSetupRoute(4, 'replace');
+      renderNav();
+      loading('Loading your saved setup…');
+
+      const restored = await restoreNuvioSession();
+      if (!restored) {
+        setStep(1, { replaceRoute: true });
+        syncSetupToolbarActions();
+        persistWizardSession();
+        return;
+      }
+
+      try {
+        await loadKaoxtAssets();
+        ensureCollectionSelection();
+        state.step = 4;
+        syncSetupRoute(4, 'replace');
+        render();
+      } catch (error) {
+        state.step = 4;
+        syncSetupRoute(4, 'replace');
+        renderCustomize();
+        alert(error?.message || 'Could not load the saved setup collection data.', 'error');
+      }
+
+      syncSetupToolbarActions();
+      persistWizardSession();
+      return;
+    }
+
     if (!setupHasSavedId) syncSetupRoute(state.step, 'replace');
     render();
     const restored = await restoreNuvioSession();
