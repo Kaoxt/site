@@ -517,6 +517,19 @@
     document.addEventListener('input', () => setTimeout(captureVisible, 0), true);
     document.addEventListener('click', () => setTimeout(captureVisible, 80), true);
     window.addEventListener('kollection:nuvio-signed-in', () => setTimeout(applyVisible, 200));
+    window.addEventListener('kollection:setup-step-changed', event => {
+      const detail = event?.detail || {};
+      const previousStep = Number(detail.previousStep);
+      const nextStep = Number(detail.step);
+
+      // Once the user intentionally navigates backward, stop the restore
+      // helper from clicking forward again. The restored values already live
+      // in state, so there is no reason to fight browser/page Back navigation.
+      if (Number.isFinite(previousStep) && Number.isFinite(nextStep) && nextStep < previousStep) {
+        restoring = false;
+        autoAction = false;
+      }
+    });
     window.addEventListener('kollection:nuvio-profile-changed', event => {
       const detail = event?.detail || {};
       const id = Number(detail.profileId ?? detail.profile?.id ?? detail.profile?.profile_index);
