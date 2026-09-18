@@ -360,12 +360,21 @@
   }
 
   function setStep(step, options = {}) {
+    const previousStep = state.step;
     state.step = Math.max(0, Math.min(steps.length - 1, step));
     clearAlert();
     persistWizardSession();
     if (!options.fromPopState) syncSetupRoute(state.step, options.replaceRoute ? 'replace' : 'push');
     renderNav();
     render();
+    window.dispatchEvent(new CustomEvent('kollection:setup-step-changed', {
+      detail: {
+        previousStep,
+        step: state.step,
+        direction: state.step < previousStep ? 'back' : state.step > previousStep ? 'forward' : 'same',
+        source: options.fromPopState ? 'history' : 'wizard',
+      },
+    }));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -2827,12 +2836,25 @@
   });
 
   window.addEventListener('popstate', () => {
+    const previousStep = state.step;
     const nextStep = routeStepFromLocation();
-    if (nextStep === state.step) return;
+
+    // The URL is the source of truth for browser Back/Forward. Always render
+    // from it, even if an async restore helper previously left the internal
+    // step number matching while the visible panel was stale.
     state.step = nextStep;
     clearAlert();
     persistWizardSession();
+    renderNav();
     render();
+    window.dispatchEvent(new CustomEvent('kollection:setup-step-changed', {
+      detail: {
+        previousStep,
+        step: nextStep,
+        direction: nextStep < previousStep ? 'back' : nextStep > previousStep ? 'forward' : 'same',
+        source: 'history',
+      },
+    }));
     window.scrollTo({ top: 0, behavior: 'auto' });
   });
 
