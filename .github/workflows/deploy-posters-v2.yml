@@ -29,8 +29,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Test image rendering
-        run: npm test
+      - name: Verify renderer is retired
+        run: |
+          grep -q "Kollection poster rendering is retired" src/index.js
+          if grep -q "getContainer(" src/index.js; then
+            echo "Retired renderer must not start a Cloudflare Container."
+            exit 1
+          fi
 
       - name: Create renderer secret file
         shell: bash
