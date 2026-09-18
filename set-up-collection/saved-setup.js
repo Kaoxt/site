@@ -485,6 +485,26 @@
         profileName: targetProfileId ? snapshot.profileName : (item?.nuvioProfileName || snapshot.profileName),
       };
       collectionRestoreApplied = false;
+
+      if (updateExistingSetup) {
+        restoring = false;
+        autoAction = false;
+        window.dispatchEvent(new CustomEvent('kollection:restore-saved-update-state', {
+          detail: {
+            profileId: snapshot.profileId,
+            profileName: snapshot.profileName,
+            config: item?.config && typeof item.config === 'object'
+              ? JSON.parse(JSON.stringify(item.config))
+              : {},
+            secrets: item?.secrets && typeof item.secrets === 'object'
+              ? { ...item.secrets }
+              : {},
+          },
+        }));
+        setStatus('Saved setup restored.', 'success');
+        return;
+      }
+
       restoring = true;
       applyVisible();
     } catch (error) {
@@ -494,21 +514,11 @@
   }
 
   function init() {
-    // Belt-and-suspenders guard for Update Existing: this mode belongs on
-    // Step 5 / Customize. If any stale route or restore race lands elsewhere,
-    // correct the URL before attaching the old auto-restore click behavior.
-    if (updateExistingSetup && Number(window.KollectionSetupRoute?.getStep?.() ?? -1) !== 4) {
-      const next = new URL(window.location.href);
-      next.pathname = '/set-up-collection/customize';
-      window.location.replace(next.toString());
-      return;
-    }
-
     const panel = $('#panelHost');
     if (panel) {
       const observer = new MutationObserver(() => {
         captureVisible();
-        setTimeout(applyVisible, 40);
+        if (!updateExistingSetup) setTimeout(applyVisible, 40);
       });
       observer.observe(panel, { childList: true, subtree: true });
     }
@@ -516,7 +526,9 @@
     document.addEventListener('change', () => setTimeout(captureVisible, 0), true);
     document.addEventListener('input', () => setTimeout(captureVisible, 0), true);
     document.addEventListener('click', () => setTimeout(captureVisible, 80), true);
-    window.addEventListener('kollection:nuvio-signed-in', () => setTimeout(applyVisible, 200));
+    window.addEventListener('kollection:nuvio-signed-in', () => {
+      if (!updateExistingSetup) setTimeout(applyVisible, 200);
+    });
     window.addEventListener('kollection:setup-step-changed', event => {
       const detail = event?.detail || {};
       const previousStep = Number(detail.previousStep);
