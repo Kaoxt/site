@@ -13,13 +13,13 @@
 .account-origin-message { color: #f4a7a7 !important; max-width: 680px; }
 .account-origin-message.account-origin-message-info { color: var(--account-muted) !important; }
 .account-saved-invalid { border-color: rgba(239,68,68,.28); background: rgba(239,68,68,.035); }
-.account-saved-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.account-saved-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex: 0 0 auto; flex-wrap: wrap; }
 .account-small-button { min-height: 36px; padding: 0 12px; border-radius: 11px; font-size: 13px; }
 .account-secondary-button:disabled { opacity: .5; cursor: default; transform: none; }
 .account-edit-pending,.account-edit-invalid { opacity: .52; pointer-events: none; cursor: default; }
 
 @media (max-width: 680px) {
   .account-saved-row { align-items: flex-start; flex-direction: column; }
-  .account-saved-actions { width: 100%; }
-  .account-saved-actions .account-small-button { flex: 1; }
+  .account-saved-actions { width: 100%; justify-content: stretch; }
+  .account-saved-actions .account-small-button { flex: 1 1 110px; }
 }
