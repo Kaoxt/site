@@ -18,6 +18,7 @@
     aiHostMode: '',
     aiSelfHostUrl: '',
     aiCustomFileName: '',
+    aiometadataExports: [],
     betterPostersEnabled: false,
     betterPostersSettings: null,
     bingecatSkipped: false,
@@ -107,13 +108,18 @@
 
   function serializableConfig() {
     captureVisible();
+    const generatedAioExports = window.KollectionAioExport?.getStoredExports?.();
+    const aiometadataExports = Array.isArray(generatedAioExports) && generatedAioExports.length
+      ? generatedAioExports
+      : (Array.isArray(snapshot.aiometadataExports) ? snapshot.aiometadataExports : []);
     return {
-      version: 5,
+      version: 6,
       aiSetupMode: snapshot.aiSetupMode === 'custom' ? 'custom' : 'built-in',
       aiHostPreference: snapshot.aiHostPreference || '',
       aiHostMode: snapshot.aiHostMode || '',
       aiSelfHostUrl: snapshot.aiSelfHostUrl || '',
       aiCustomFileName: snapshot.aiCustomFileName || '',
+      aiometadataExports: JSON.parse(JSON.stringify(aiometadataExports)),
       betterPostersEnabled: Boolean(snapshot.betterPostersEnabled),
       betterPostersSettings: snapshot.betterPostersSettings && typeof snapshot.betterPostersSettings === 'object'
         ? JSON.parse(JSON.stringify(snapshot.betterPostersSettings))
