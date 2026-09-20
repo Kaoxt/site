@@ -49,6 +49,7 @@
     aiCatalogLibrary: [],
     aiNeededCatalogs: [],
     aiChunks: [],
+    aiExportConfigs: [],
     aiInstalls: [],
     posterBridgeInstalls: [],
     betterPostersEnabled: false,
@@ -1150,7 +1151,10 @@
     if (!chunks.length) return [];
     const slug = aioExportSlug();
     return chunks.map((chunk, index) => {
-      const config = prepareAiConfig(state.aiBaseConfig, chunk.catalogs || [], index);
+      const captured = Array.isArray(state.aiExportConfigs) ? state.aiExportConfigs[index] : null;
+      const config = captured && typeof captured === 'object'
+        ? jsonClone(captured)
+        : prepareAiConfig(state.aiBaseConfig, chunk.catalogs || [], index);
       return {
         index: index + 1,
         host: normalizeHost(chunk.host || state.aiHostPreference || CFG.aiometadataHosts[0].url),
@@ -1221,6 +1225,7 @@
   }
 
   async function provisionAiMetadata() {
+    state.aiExportConfigs = [];
     const chosenHost = await chooseAiHost();
     state.aiChunks = chunkAioCatalogs(state.aiNeededCatalogs, chosenHost);
     const installs = [];
@@ -1269,6 +1274,7 @@
       const chunk = state.aiChunks[i];
       loading(`Creating AIOMetadata ${i + 1} of ${state.aiChunks.length}…`);
       const config = prepareAiConfig(state.aiBaseConfig, chunk.catalogs, i);
+      state.aiExportConfigs[i] = jsonClone(config);
       const saveData = await saveAioConfig(chunk.host, config);
       const uuid = saveData?.userUUID || saveData?.uuid;
       const installUrl = normalizeUrl(saveData?.installUrl || (uuid ? `${normalizeHost(chunk.host)}stremio/${uuid}/manifest.json` : ''));
@@ -1545,6 +1551,7 @@
       : state.aiCatalogLibrary;
     state.aiNeededCatalogs = filterAioCatalogs(catalogLibrary, catalogRefs);
     const preferred = normalizeHost(state.aiHostPreference || CFG.aiometadataHosts[0].url);
+    state.aiExportConfigs = [];
     state.aiChunks = chunkAioCatalogs(state.aiNeededCatalogs, preferred);
 
     const previewPack = jsonClone(selectedPack);
