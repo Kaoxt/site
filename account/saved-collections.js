@@ -248,12 +248,12 @@
     }));
 
     try {
-      await readJson(await fetch(`/api/account/collections/${encodeURIComponent(collection.id)}`, {
-        method: 'PATCH',
+      await readJson(await fetch(`/api/account/collections/${encodeURIComponent(collection.id)}/export-snapshot`, {
+        method: 'POST',
         credentials: 'same-origin',
         cache: 'no-store',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ config: { ...savedConfig, aiometadataExports: stored, version: Math.max(6, Number(savedConfig.version) || 0) } }),
+        body: JSON.stringify({ aiometadataExports: stored }),
       }));
     } catch (error) {
       console.warn('[The Kollection] AIOMetadata legacy export migration could not be saved.', error);
