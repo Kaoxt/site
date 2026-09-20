@@ -12,6 +12,75 @@
     return body;
   }
 
+  function downloadJson(filename, data) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }
+
+  function exportSlug(value) {
+    return String(value || 'My-Kollection')
+      .trim()
+      .replace(/[^a-z0-9._-]+/gi, '-')
+      .replace(/^-+|-+$/g, '') || 'My-Kollection';
+  }
+
+  async function exportSavedAiMetadata(item, button) {
+    const status = document.getElementById('accountSavedStatus');
+    const id = String(item?.id || '').trim();
+    if (!id) return;
+
+    const original = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Exporting…';
+    try {
+      const data = await readJson(await fetch(`/api/account/collections/${encodeURIComponent(id)}`, {
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { Accept: 'application/json' },
+      }));
+      const collection = data?.collection || {};
+      const exports = Array.isArray(collection?.config?.aiometadataExports)
+        ? collection.config.aiometadataExports.filter(entry => entry?.config && typeof entry.config === 'object')
+        : [];
+
+      if (!exports.length) {
+        const next = new URL('/set-up-collection/review', window.location.origin);
+        next.searchParams.set('saved', id);
+        next.searchParams.set('edit', '1');
+        next.searchParams.set('exportAio', '1');
+        window.location.href = next.toString();
+        return;
+      }
+
+      const secrets = collection?.secrets && typeof collection.secrets === 'object' ? collection.secrets : {};
+      const slug = exportSlug(collection?.name || item?.name);
+      exports.forEach((entry, index) => {
+        const config = JSON.parse(JSON.stringify(entry.config));
+        if (!config.apiKeys || typeof config.apiKeys !== 'object') config.apiKeys = {};
+        if (secrets.mdblistKey) config.apiKeys.mdblist = secrets.mdblistKey;
+        if (secrets.tmdbKey) config.apiKeys.tmdb = secrets.tmdbKey;
+        const suffix = exports.length > 1 ? `-${index + 1}` : '';
+        downloadJson(`AIOMetadata-${slug}${suffix}.json`, config);
+      });
+
+      if (status) {
+        status.textContent = `Exported ${exports.length} AIOMetadata configuration${exports.length === 1 ? '' : 's'} for “${collection?.name || item?.name || 'My Kollection'}”.`;
+      }
+    } catch (error) {
+      if (status) status.textContent = error?.message || 'Could not export AIOMetadata.';
+    } finally {
+      button.disabled = false;
+      button.textContent = original;
+    }
+  }
+
   function formatDate(value) {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return '';
@@ -299,6 +368,16 @@
       });
     }
 
+    let exportButton = null;
+    if (complete) {
+      exportButton = document.createElement('button');
+      exportButton.className = 'account-secondary-button account-small-button';
+      exportButton.type = 'button';
+      exportButton.textContent = 'Export AIO';
+      exportButton.setAttribute('aria-label', `Export AIOMetadata for ${item.name || 'saved setup'}`);
+      exportButton.addEventListener('click', () => exportSavedAiMetadata(item, exportButton));
+    }
+
     const remove = document.createElement('button');
     remove.className = 'account-secondary-button account-small-button';
     remove.type = 'button';
@@ -318,6 +397,7 @@
       }
     });
 
+    if (exportButton) actions.append(exportButton);
     actions.append(resume, remove);
     row.append(copy, actions);
     return { row, resume, badge, originMessage, meta, complete };
