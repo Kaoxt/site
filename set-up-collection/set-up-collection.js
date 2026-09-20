@@ -1132,6 +1132,58 @@
     return config;
   }
 
+  function aioExportSlug() {
+    const raw = String(window.KollectionSavedSetup?.getName?.() || state.profileName || 'The-Kollection').trim();
+    return raw.replace(/[^a-z0-9._-]+/gi, '-').replace(/^-+|-+$/g, '') || 'The-Kollection';
+  }
+
+  function redactAioExportConfig(config) {
+    const copy = jsonClone(config || {});
+    if (copy.apiKeys && typeof copy.apiKeys === 'object') {
+      for (const key of Object.keys(copy.apiKeys)) copy.apiKeys[key] = '';
+    }
+    return copy;
+  }
+
+  function currentAioExports(includeSecrets = true) {
+    const chunks = Array.isArray(state.aiChunks) ? state.aiChunks : [];
+    if (!chunks.length) return [];
+    const slug = aioExportSlug();
+    return chunks.map((chunk, index) => {
+      const config = prepareAiConfig(state.aiBaseConfig, chunk.catalogs || [], index);
+      return {
+        index: index + 1,
+        host: normalizeHost(chunk.host || state.aiHostPreference || CFG.aiometadataHosts[0].url),
+        fileName: `AIOMetadata-${slug}${chunks.length > 1 ? `-${index + 1}` : ''}.json`,
+        config: includeSecrets ? config : redactAioExportConfig(config),
+      };
+    });
+  }
+
+  function getStoredAioExports() {
+    return currentAioExports(false).map(item => ({
+      index: item.index,
+      host: item.host,
+      fileName: item.fileName,
+      config: item.config,
+    }));
+  }
+
+  function downloadCurrentAioExports() {
+    const items = currentAioExports(true);
+    if (!items.length) {
+      alert('AIOMetadata is not ready to export yet. Continue to Review first.', 'error');
+      return false;
+    }
+    items.forEach(item => downloadJson(item.fileName, item.config));
+    return true;
+  }
+
+  window.KollectionAioExport = Object.freeze({
+    getStoredExports: getStoredAioExports,
+    downloadCurrent: downloadCurrentAioExports,
+  });
+
   async function saveAioConfig(host, config) {
     const base = normalizeHost(host);
     let lastErr = null;
@@ -2675,10 +2727,20 @@
         </div>
         <hr class="sep">
         <div class="callout warn"><strong>${setupUpdatesExisting ? 'This update replaces the previous Kollection setup and its AIOMetadata installation.' : `The final setup adds AIOMetadata${bcNeeded ? ' and Bingecat' : ''} before pushing your selected sections.`}</strong> ${setupUpdatesExisting ? 'The new AIOMetadata configuration is created first, the updated collection is synced, and then the previous AIOMetadata add-on is removed. Unrelated add-ons and plugins are preserved.' : 'Unselected matching The Kollection sections are omitted; unrelated add-ons and collection groups are preserved.'}</div>
-        <div class="actions"><button class="ghost" id="backBtn">Back</button><div class="action-group"><button class="ghost" id="backupBtn">Download backup</button><button class="btn" id="nextBtn">Continue</button></div></div>
+        <div class="actions"><button class="ghost" id="backBtn">Back</button><div class="action-group"><button class="ghost" id="backupBtn">Download backup</button><button class="ghost" id="aioExportBtn">Export AIOMetadata</button><button class="btn" id="nextBtn">Continue</button></div></div>
       </div>`);
     $('#backBtn').onclick = () => setStep(4);
     $('#backupBtn').onclick = () => downloadJson(`nuvio-backup-profile-${state.profileId}-${new Date().toISOString().slice(0,10)}.json`, state.backup);
+    $('#aioExportBtn').onclick = () => downloadCurrentAioExports();
+    if (setupQuery.get('exportAio') === '1') {
+      setTimeout(() => {
+        if (downloadCurrentAioExports()) {
+          const next = new URL(window.location.href);
+          next.searchParams.delete('exportAio');
+          history.replaceState(history.state, '', next);
+        }
+      }, 0);
+    }
     const reviewName = $('#reviewSetupName');
     reviewName?.addEventListener('input', event => {
       window.KollectionSavedSetup?.setName?.(event.target.value);
@@ -2796,7 +2858,7 @@
           <div class="summary-item"><span class="icon">✓</span><div><b>Nuvio synced</b><span>${selectedPack.length} selected The Kollection sections were synced to profile ${state.profileId}.</span></div></div>
           <div class="summary-item"><span class="icon">✓</span><div><b>Saved automatically</b><span>${esc(savedSetupName)} is saved under Your setups and linked to ${esc(state.profileName || `profile ${state.profileId}`)}.</span></div></div>
         </div>
-        <div class="actions"><button class="ghost" id="recordBtn">Download setup record</button><a class="btn" href="https://nuvio.tv/" target="_blank" rel="noopener">Open Nuvio</a></div>
+        <div class="actions"><button class="ghost" id="recordBtn">Download setup record</button><button class="ghost" id="doneAioExportBtn">Export AIOMetadata</button><a class="btn" href="https://nuvio.tv/" target="_blank" rel="noopener">Open Nuvio</a></div>
       </div>`);
     $('#recordBtn').onclick = () => downloadJson(`the-kollection-setup-${new Date().toISOString().slice(0,10)}.json`, {
       completedAt: new Date().toISOString(),
@@ -2806,6 +2868,7 @@
       selection: selectedPack.map(group => ({ id: group.id, title: group.title, folders: (group.folders || []).length })),
       collections: { before: state.existingCollections.length, after: state.finalCollections?.length || 0 },
     });
+    $('#doneAioExportBtn').onclick = () => downloadCurrentAioExports();
   }
 
   function syncSetupToolbarActions() {
