@@ -606,7 +606,7 @@
       exportButton = document.createElement('button');
       exportButton.className = 'account-secondary-button account-small-button';
       exportButton.type = 'button';
-      exportButton.textContent = 'Export AIO';
+      exportButton.textContent = 'Export AIOMetadata';
       exportButton.setAttribute('aria-label', `Export AIOMetadata for ${item.name || 'saved setup'}`);
       exportButton.addEventListener('click', () => exportSavedAiMetadata(item, exportButton));
     }
