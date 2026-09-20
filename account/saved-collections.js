@@ -31,6 +31,237 @@
       .replace(/^-+|-+$/g, '') || 'My-Kollection';
   }
 
+  const LEGACY_AIO_HOST = 'https://aiometadatafortheweebs.midnightignite.me/';
+
+  function cloneJson(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function mergeCollectionKey(value) {
+    return String(value || '').replace(/-community$/i, '');
+  }
+
+  function normalizeAioCatalogType(value) {
+    const raw = String(value || 'movie').trim().toLowerCase();
+    if (raw === 'tv' || raw === 'show') return 'series';
+    return ['movie', 'series', 'anime', 'all'].includes(raw) ? raw : 'movie';
+  }
+
+  function aioCatalogRouteKey(id, type) {
+    return `${String(id || '').trim()}|${normalizeAioCatalogType(type)}`;
+  }
+
+  function manifestBaseCatalogId(id) {
+    return String(id || '').trim().replace(/_(movie|series|anime|all)$/i, '');
+  }
+
+  function parseKollectionDatabase(jsText) {
+    const marker = 'window.NUVIO_DATABASE =';
+    const index = String(jsText || '').indexOf(marker);
+    if (index < 0) throw new Error('The Kollection catalog database could not be read.');
+    const json = String(jsText).slice(index + marker.length).trim().replace(/;\s*$/, '');
+    const data = JSON.parse(json);
+    if (!Array.isArray(data)) throw new Error('The Kollection catalog database is invalid.');
+    return data;
+  }
+
+  function filterSavedCollectionPack(pack, savedConfig) {
+    const selectedGroups = new Set(
+      (Array.isArray(savedConfig?.selectedCollectionGroupIds) ? savedConfig.selectedCollectionGroupIds : [])
+        .map(mergeCollectionKey)
+    );
+    const folderSelections = savedConfig?.selectedCollectionFolderIds && typeof savedConfig.selectedCollectionFolderIds === 'object'
+      ? savedConfig.selectedCollectionFolderIds
+      : {};
+
+    const source = Array.isArray(pack) ? pack : [];
+    const groups = selectedGroups.size
+      ? source.filter(group => selectedGroups.has(mergeCollectionKey(group?.id || group?.title)))
+      : source;
+
+    return groups.map(group => {
+      const copy = cloneJson(group);
+      const groupKey = mergeCollectionKey(group?.id || group?.title);
+      const chosen = Array.isArray(folderSelections[groupKey]) ? folderSelections[groupKey].map(mergeCollectionKey) : null;
+      if (chosen && chosen.length) {
+        const set = new Set(chosen);
+        copy.folders = (copy.folders || []).filter(folder => set.has(mergeCollectionKey(folder?.id || folder?.title)));
+      }
+      return copy;
+    });
+  }
+
+  function collectAioCatalogRefs(collections) {
+    const refs = new Map();
+    (collections || []).forEach(group => {
+      (group.folders || []).forEach(folder => {
+        for (const list of [folder.sources, folder.catalogSources]) {
+          (list || []).forEach(source => {
+            if (!source || (source.provider && source.provider !== 'addon')) return;
+            if (String(source.addonId || '').startsWith('com.aicat.')) return;
+            const manifestId = String(source.catalogId || '').trim();
+            if (!manifestId) return;
+            if (source.addonId !== 'aio-metadata' && !manifestId.startsWith('mdblist.')) return;
+            const type = normalizeAioCatalogType(source.type);
+            refs.set(aioCatalogRouteKey(manifestId, type), { manifestId, type });
+          });
+        }
+      });
+    });
+    return [...refs.values()];
+  }
+
+  function synthesizeCatalog(id, typeHint) {
+    const type = normalizeAioCatalogType(typeHint);
+    const prefix = String(id || '').split('.')[0].toLowerCase();
+    const knownSources = new Set([
+      'mdblist', 'streaming', 'flixpatrol', 'tmdb', 'tvdb', 'trakt',
+      'simkl', 'mal', 'anilist', 'letterboxd', 'movielens', 'publicmetadb',
+    ]);
+    return {
+      id,
+      type,
+      name: id,
+      enabled: true,
+      showInHome: false,
+      source: knownSources.has(prefix) ? prefix : 'custom',
+      sort: 'default',
+      order: 'asc',
+      cacheTTL: 86400,
+      genreSelection: 'standard',
+      enableRatingPosters: true,
+      displayType: type === 'all' ? 'movie' : type,
+    };
+  }
+
+  function filterAioCatalogs(allCatalogs, wantedRefs) {
+    const source = Array.isArray(allCatalogs) ? allCatalogs : [];
+    const selected = new Map();
+
+    for (const ref of wantedRefs || []) {
+      const ids = [ref.manifestId];
+      const base = manifestBaseCatalogId(ref.manifestId);
+      if (base && base !== ref.manifestId) ids.push(base);
+
+      let found = null;
+      for (const id of ids) {
+        found = source.find(catalog =>
+          catalog?.id === id && normalizeAioCatalogType(catalog?.type) === ref.type
+        ) || source.find(catalog =>
+          catalog?.id === id && catalog?.displayType && normalizeAioCatalogType(catalog.displayType) === ref.type
+        );
+        if (found) break;
+      }
+
+      const baseId = found?.id || manifestBaseCatalogId(ref.manifestId) || ref.manifestId;
+      const catalog = found ? cloneJson(found) : synthesizeCatalog(baseId, ref.type);
+      selected.set(aioCatalogRouteKey(catalog.id, catalog.type), catalog);
+    }
+
+    return [...selected.values()];
+  }
+
+  function prepareLegacyAioConfig(baseConfig, catalogs, index, savedConfig, secrets) {
+    const config = cloneJson(baseConfig || {});
+    config.catalogs = catalogs;
+
+    if (savedConfig?.betterPostersEnabled && window.KollectionBetterPostersSettings) {
+      window.KollectionBetterPostersSettings.applyToAioConfig(
+        config,
+        savedConfig.betterPostersSettings || {}
+      );
+    }
+
+    if (!config.apiKeys || typeof config.apiKeys !== 'object') config.apiKeys = {};
+    if (secrets?.mdblistKey) config.apiKeys.mdblist = secrets.mdblistKey;
+    else if (!('mdblist' in config.apiKeys)) config.apiKeys.mdblist = '';
+    if (secrets?.tmdbKey) config.apiKeys.tmdb = secrets.tmdbKey;
+    else if (!('tmdb' in config.apiKeys)) config.apiKeys.tmdb = '';
+    config.apiKeys.traktTokenId = '';
+    config.apiKeys.simklTokenId = '';
+    config.apiKeys.anilistTokenId = '';
+    delete config.sessionId;
+    delete config.configHash;
+
+    try {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (timezone) config.timezone = timezone;
+    } catch {}
+
+    config.searchEnabled = index === 0 ? (config.searchEnabled !== false) : false;
+    if (config.search && typeof config.search === 'object') config.search.enabled = index === 0;
+    const now = Date.now();
+    if ('lastModified' in config) config.lastModified = now;
+    if ('configVersion' in config) config.configVersion = now + index + 1;
+    return config;
+  }
+
+  function redactExportConfig(config) {
+    const copy = cloneJson(config || {});
+    if (copy.apiKeys && typeof copy.apiKeys === 'object') {
+      for (const key of Object.keys(copy.apiKeys)) copy.apiKeys[key] = '';
+    }
+    return copy;
+  }
+
+  async function rebuildLegacyAioExports(collection) {
+    const savedConfig = collection?.config && typeof collection.config === 'object' ? collection.config : {};
+    if (savedConfig.aiSetupMode === 'custom') {
+      throw new Error('This older setup used a custom AIOMetadata file that was not stored. Open Edit, re-upload that JSON once, then export it from Review. Future saved exports will be available here.');
+    }
+
+    const [databaseText, catalogResponse, baseResponse] = await Promise.all([
+      fetch('/runtime/database.kaoxt.js', { cache: 'no-store' }).then(response => {
+        if (!response.ok) throw new Error('Could not load The Kollection database.');
+        return response.text();
+      }),
+      fetch('/runtime/kaoxt-aio-catalogs.json', { cache: 'no-store' }).then(response => {
+        if (!response.ok) throw new Error('Could not load AIOMetadata catalogs.');
+        return response.json();
+      }),
+      fetch('/runtime/kaoxt-aio-base-config.json', { cache: 'no-store' }).then(response => {
+        if (!response.ok) throw new Error('Could not load the AIOMetadata base configuration.');
+        return response.json();
+      }),
+    ]);
+
+    const pack = filterSavedCollectionPack(parseKollectionDatabase(databaseText), savedConfig);
+    const refs = collectAioCatalogRefs(pack);
+    const library = Array.isArray(catalogResponse) ? catalogResponse : (catalogResponse?.catalogs || []);
+    const catalogs = filterAioCatalogs(library, refs);
+    const chunks = [];
+    const remaining = catalogs.slice();
+    while (remaining.length) chunks.push(remaining.splice(0, 500));
+
+    const secrets = collection?.secrets && typeof collection.secrets === 'object' ? collection.secrets : {};
+    const configs = chunks.map((chunk, index) => prepareLegacyAioConfig(baseResponse, chunk, index, savedConfig, secrets));
+    if (!configs.length) throw new Error('No AIOMetadata catalogs were found in this saved setup.');
+
+    const slug = exportSlug(collection?.name);
+    const stored = configs.map((config, index) => ({
+      index: index + 1,
+      host: savedConfig.aiHostPreference && /^https?:/i.test(savedConfig.aiHostPreference)
+        ? savedConfig.aiHostPreference
+        : LEGACY_AIO_HOST,
+      fileName: `AIOMetadata-${slug}${configs.length > 1 ? `-${index + 1}` : ''}.json`,
+      config: redactExportConfig(config),
+    }));
+
+    try {
+      await readJson(await fetch(`/api/account/collections/${encodeURIComponent(collection.id)}`, {
+        method: 'PATCH',
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ config: { ...savedConfig, aiometadataExports: stored, version: Math.max(6, Number(savedConfig.version) || 0) } }),
+      }));
+    } catch (error) {
+      console.warn('[The Kollection] AIOMetadata legacy export migration could not be saved.', error);
+    }
+
+    return configs;
+  }
+
   async function exportSavedAiMetadata(item, button) {
     const status = document.getElementById('accountSavedStatus');
     const id = String(item?.id || '').trim();
@@ -50,28 +281,30 @@
         ? collection.config.aiometadataExports.filter(entry => entry?.config && typeof entry.config === 'object')
         : [];
 
-      if (!exports.length) {
-        const next = new URL('/set-up-collection/review', window.location.origin);
-        next.searchParams.set('saved', id);
-        next.searchParams.set('edit', '1');
-        next.searchParams.set('exportAio', '1');
-        window.location.href = next.toString();
-        return;
-      }
-
       const secrets = collection?.secrets && typeof collection.secrets === 'object' ? collection.secrets : {};
       const slug = exportSlug(collection?.name || item?.name);
-      exports.forEach((entry, index) => {
-        const config = JSON.parse(JSON.stringify(entry.config));
-        if (!config.apiKeys || typeof config.apiKeys !== 'object') config.apiKeys = {};
-        if (secrets.mdblistKey) config.apiKeys.mdblist = secrets.mdblistKey;
-        if (secrets.tmdbKey) config.apiKeys.tmdb = secrets.tmdbKey;
-        const suffix = exports.length > 1 ? `-${index + 1}` : '';
+      let configs = [];
+
+      if (exports.length) {
+        configs = exports.map(entry => {
+          const config = cloneJson(entry.config);
+          if (!config.apiKeys || typeof config.apiKeys !== 'object') config.apiKeys = {};
+          if (secrets.mdblistKey) config.apiKeys.mdblist = secrets.mdblistKey;
+          if (secrets.tmdbKey) config.apiKeys.tmdb = secrets.tmdbKey;
+          return config;
+        });
+      } else {
+        if (status) status.textContent = 'Preparing AIOMetadata export from this older saved setup…';
+        configs = await rebuildLegacyAioExports(collection);
+      }
+
+      configs.forEach((config, index) => {
+        const suffix = configs.length > 1 ? `-${index + 1}` : '';
         downloadJson(`AIOMetadata-${slug}${suffix}.json`, config);
       });
 
       if (status) {
-        status.textContent = `Exported ${exports.length} AIOMetadata configuration${exports.length === 1 ? '' : 's'} for “${collection?.name || item?.name || 'My Kollection'}”.`;
+        status.textContent = `Exported ${configs.length} AIOMetadata configuration${configs.length === 1 ? '' : 's'} for “${collection?.name || item?.name || 'My Kollection'}”.`;
       }
     } catch (error) {
       if (status) status.textContent = error?.message || 'Could not export AIOMetadata.';
