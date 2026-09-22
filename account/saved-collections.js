@@ -558,8 +558,8 @@
     }
 
     return {
-      state: 'invalid',
-      message: 'This saved setup could not be matched to The Kollection currently installed on its Nuvio profile. Editing is disabled.',
+      state: 'saved',
+      message: 'This configuration is saved, but no matching installation was found. Choose Use setup to select an available Nuvio profile.',
     };
   }
 
@@ -680,6 +680,15 @@
               if (item.updatedAt) parts.push(`Last synced ${formatDate(item.updatedAt)}`);
               ui.meta.textContent = parts.join(' · ') || 'Setup complete';
             }
+          } else if (result.state === 'saved') {
+            ui.badge.textContent = 'Saved';
+            ui.badge.dataset.state = 'saved';
+            ui.resume.textContent = 'Use setup';
+            ui.resume.href = `/set-up-collection/nuvio?saved=${encodeURIComponent(item.id)}&clone=1&step=nuvio`;
+            ui.resume.setAttribute('aria-label', `Choose a profile for ${item.name || 'saved setup'}`);
+            ui.originMessage.textContent = result.message;
+            ui.originMessage.hidden = false;
+            ui.originMessage.classList.add('account-origin-message-info');
           } else {
             ui.badge.textContent = 'Invalid';
             ui.badge.dataset.state = 'invalid';
@@ -729,7 +738,7 @@
       const activeKollection = await getActiveKollectionContext(session.user?.id || '');
       await render(collections, activeKollection);
       if (status) status.textContent = collections.length
-        ? `${collections.length} saved setup${collections.length === 1 ? '' : 's'}. Completed setups can be edited when their linked profile or your active Nuvio profile currently has The Kollection installed.`
+        ? `${collections.length} saved setup${collections.length === 1 ? '' : 's'}. Edit installed setups, or choose Use setup to reuse a saved configuration on an available Nuvio profile.`
         : '';
     } catch (error) {
       empty(container, 'Saved collection storage needs the Cloudflare D1 database binding before it can be used.');
