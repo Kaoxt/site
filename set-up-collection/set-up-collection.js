@@ -3,7 +3,18 @@
 
   const CFG = window.KOLLECTION_CONFIG;
   const $ = (sel, root = document) => root.querySelector(sel);
-  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const $ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+  function storedBoolean(value, fallback = false) {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value !== 0;
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase();
+      if (['false', '0', 'off', 'no', 'disabled', ''].includes(normalized)) return false;
+      if (['true', '1', 'on', 'yes', 'enabled'].includes(normalized)) return true;
+    }
+    return value == null ? fallback : Boolean(value);
+  }
 
   const steps = [
     ['Overview', 'What Set Up Collection does'],
@@ -332,7 +343,7 @@
     state.aiCustomFileName = String(config.aiCustomFileName || state.aiCustomFileName || '');
     state.mdblistKey = String(secrets.mdblistKey || state.mdblistKey || '');
     state.tmdbKey = String(secrets.tmdbKey || state.tmdbKey || '');
-    state.betterPostersEnabled = Boolean(config.betterPostersEnabled);
+    state.betterPostersEnabled = storedBoolean(config.betterPostersEnabled, false);
     if (config.betterPostersSettings && typeof config.betterPostersSettings === 'object') {
       state.betterPostersSettings = window.KollectionBetterPostersSettings
         ? window.KollectionBetterPostersSettings.normalize(config.betterPostersSettings)
