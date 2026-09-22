@@ -43,6 +43,11 @@
   }
 
   async function pullCollections(profileId, accessToken) {
+    if (window.KollectionProfileState) {
+      const rows = await window.KollectionProfileState.rpc('sync_pull_collections', { p_profile_id: Number(profileId) });
+      const raw = rows[0]?.collections_json ?? [];
+      return typeof raw === 'string' ? JSON.parse(raw) : raw;
+    }
     const { apiBase, publishableKey } = cfg();
     const response = await fetch(`${apiBase}/rest/v1/rpc/sync_pull_collections`, {
       method: 'POST',

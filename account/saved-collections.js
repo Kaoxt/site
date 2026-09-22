@@ -356,6 +356,10 @@
   }
 
   async function pullProfileCollections(profileId) {
+    if (window.KollectionProfileState) {
+      const rows = await window.KollectionProfileState.rpc('sync_pull_collections', { p_profile_id: Number(profileId) });
+      return rows.length ? parseCollections(rows[0]?.collections_json) : [];
+    }
     const tokenResult = await window.KollectionNuvioAuth?.getAccessToken?.();
     const accessToken = tokenResult?.accessToken;
     if (!accessToken) throw new Error('Nuvio session unavailable.');
@@ -378,6 +382,7 @@
   }
 
   async function pullProfiles() {
+    if (window.KollectionProfileState) return window.KollectionProfileState.rpc('sync_pull_profiles');
     const tokenResult = await window.KollectionNuvioAuth?.getAccessToken?.();
     const accessToken = tokenResult?.accessToken;
     if (!accessToken) throw new Error('Nuvio session unavailable.');

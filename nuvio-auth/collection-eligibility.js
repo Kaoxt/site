@@ -69,6 +69,9 @@
   }
 
   async function rpc(name, body, accessToken) {
+    if (window.KollectionProfileState && ['sync_pull_profiles', 'sync_pull_collections'].includes(name)) {
+      return window.KollectionProfileState.rpc(name, body);
+    }
     const { apiBase, publishableKey } = config();
     const response = await fetch(`${apiBase}/rest/v1/rpc/${name}`, {
       method: 'POST',
