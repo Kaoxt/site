@@ -157,7 +157,7 @@
       const params = new URLSearchParams(window.location.search);
       const index = SETUP_ROUTE_NAMES.indexOf(params.get('step') || '');
       if (index >= 0) return index;
-      return params.get('saved') && params.get('update') === '1' ? 4 : 0;
+      return params.get('saved') && params.get('update') === '1' ? 2 : 0;
     }
     const match = path.match(/^\/set-up-collection\/([^/]+)$/);
     if (!match) return 0;
@@ -1682,7 +1682,7 @@
     }
 
     host.innerHTML = panel('SET UP COLLECTION', 'Update Existing', 
-      'Choose one of your saved Kollection setups. It will open directly at Step 5 so you can change the collection sections and folders before updating Nuvio.',
+      'Choose one of your saved Kollection setups. It will open directly at Step 3 so you can review AIOMetadata before continuing through the update.',
       `<div class="card">
         <div class="existing-setup-loading">Loading your saved setups…</div>
       </div>`);
@@ -1698,7 +1698,7 @@
 
       const setups = Array.isArray(data?.collections) ? data.collections : [];
       host.innerHTML = panel('SET UP COLLECTION', 'Update Existing',
-        'Choose one of your saved Kollection setups. It will open directly at Step 5 so you can change the collection sections and folders before updating Nuvio.',
+        'Choose one of your saved Kollection setups. It will open directly at Step 3 so you can review AIOMetadata before continuing through the update.',
         `<div class="card">
           ${setups.length ? `
             <div class="existing-setup-list">
@@ -1795,11 +1795,11 @@
             }
           }
           const next = new URL(window.location.href);
-          next.pathname = '/set-up-collection/customize';
+          next.pathname = '/set-up-collection/aiometadata';
           next.search = '';
           next.searchParams.set('saved', id);
           next.searchParams.set('update', '1');
-          next.searchParams.set('step', 'customize');
+          next.searchParams.set('step', 'aiometadata');
           if (Number.isFinite(targetId) && targetId >= 1) next.searchParams.set('targetProfile', String(targetId));
           window.location.href = next.toString();
         };
@@ -3065,9 +3065,9 @@
 
   async function initialize() {
     if (setupUpdatesExisting) {
-      // The initial Update Existing link opens on Customize, but once the user
-      // navigates backward the requested route remains authoritative. Reloading
-      // AIOMetadata/Bingecat must not force the update back to Step 5.
+      // Update Existing opens at AIOMetadata (Step 3), and the requested route
+      // remains authoritative as the user moves backward or forward through
+      // the rest of the update flow.
       state.step = routeStepFromLocation();
       renderNav();
       loading('Loading your saved setup…');
