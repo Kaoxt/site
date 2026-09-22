@@ -33,7 +33,18 @@
   let verifiedBingecatOnce = false;
 
   const $ = (selector, root = document) => root.querySelector(selector);
-  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+  const $ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
+  function storedBoolean(value, fallback = false) {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value !== 0;
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase();
+      if (['false', '0', 'off', 'no', 'disabled', ''].includes(normalized)) return false;
+      if (['true', '1', 'on', 'yes', 'enabled'].includes(normalized)) return true;
+    }
+    return value == null ? fallback : Boolean(value);
+  }
   const status = () => $('#saveSetupStatus');
   const saveButton = () => $('#saveSetupBtn');
 
@@ -120,7 +131,7 @@
       aiSelfHostUrl: snapshot.aiSelfHostUrl || '',
       aiCustomFileName: snapshot.aiCustomFileName || '',
       aiometadataExports: JSON.parse(JSON.stringify(aiometadataExports)),
-      betterPostersEnabled: Boolean(snapshot.betterPostersEnabled),
+      betterPostersEnabled: storedBoolean(snapshot.betterPostersEnabled, false),
       betterPostersSettings: snapshot.betterPostersSettings && typeof snapshot.betterPostersSettings === 'object'
         ? JSON.parse(JSON.stringify(snapshot.betterPostersSettings))
         : null,
@@ -352,7 +363,7 @@
     if (step === 2) {
       const posterToggle = $('#betterPostersEnabled');
       if (posterToggle) {
-        const desiredEnabled = Boolean(snapshot.betterPostersEnabled);
+        const desiredEnabled = storedBoolean(snapshot.betterPostersEnabled, false);
         let currentSettings = null;
         try { currentSettings = JSON.parse($('#betterPostersSettingsJson')?.value || 'null'); } catch {}
         const settingsChanged = desiredEnabled && snapshot.betterPostersSettings &&
@@ -490,6 +501,8 @@
         profileId: targetProfileId ?? item?.nuvioProfileId ?? snapshot.profileId,
         profileName: targetProfileId ? snapshot.profileName : (item?.nuvioProfileName || snapshot.profileName),
       };
+      // Preserve the saved on/off value exactly, including older string values like "false".
+      snapshot.betterPostersEnabled = storedBoolean(snapshot.betterPostersEnabled, false);
       collectionRestoreApplied = false;
 
       if (updateExistingSetup) {
