@@ -478,7 +478,7 @@
       savedName = item?.name || 'My Kollection';
       const routedStep = Number(window.KollectionSetupRoute?.getStep?.() ?? 0);
       targetStep = updateExistingSetup
-        ? 4
+        ? 2
         : routedStep > 0
           ? Math.max(0, Math.min(7, routedStep))
           : cloneSavedSetup
