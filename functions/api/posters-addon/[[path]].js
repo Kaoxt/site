@@ -40,7 +40,7 @@ function parseConfig(token) {
   } catch (_) {
     throw new Error('Invalid Posters addon configuration.');
   }
-  if (!config || ![1, 2, 3, 4, 5].includes(config.v) || typeof config.upstream !== 'string') {
+  if (!config || ![1, 2, 3, 4, 5, 6].includes(config.v) || typeof config.upstream !== 'string') {
     throw new Error('Invalid Posters addon configuration.');
   }
   const upstream = new URL(config.upstream);
@@ -55,7 +55,7 @@ function parseConfig(token) {
     ? String(config.betterPostersConfigId).toLowerCase()
     : '';
   return {
-    v: 5,
+    v: config.v,
     upstream: upstream.toString(),
     source: ['smart', 'tmdb', 'inherit'].includes(config.source) ? config.source : 'smart',
     tags: Array.isArray(config.tags) ? config.tags.filter((x) => typeof x === 'string') : ['trend', 'genre', 'rating'],
@@ -221,7 +221,11 @@ async function prewarmPassthroughPosters(payload) {
   }
 }
 
-function mergedManifest(upstream, token, origin, config) {
+async function mergedManifest(upstream, token, origin, config) {
+  // Keep legacy identities stable; new installs hash the entire configuration.
+  const identity = config.v >= 6
+    ? Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token))), byte => byte.toString(16).padStart(2, '0')).join('')
+    : token.slice(0, 24);
   const catalogs = (Array.isArray(upstream.catalogs) ? upstream.catalogs : [])
     .filter((catalog) => catalog && typeof catalog.id === 'string' && typeof catalog.type === 'string')
     .map((catalog) => ({
@@ -236,7 +240,7 @@ function mergedManifest(upstream, token, origin, config) {
   if (hasMeta) resources.push('meta');
   const types = [...new Set([...(Array.isArray(upstream.types) ? upstream.types : []), ...catalogs.map((c) => c.type)])];
   return {
-    id: `tv.kollection.posters.${token.slice(0, 24)}`,
+    id: `tv.kollection.posters.${identity}`,
     version: '2.0.0',
     name: `Posters • ${upstream.name || 'Wrapped Addon'}`,
     description: config.passthroughPosters
@@ -266,7 +270,7 @@ export async function onRequest(context) {
     const resource = parts[3] || '';
 
     if (resource === 'manifest.json') {
-      return json(mergedManifest(upstreamManifest, token, url.origin, config), 200, { 'cache-control': 'public, max-age=300, s-maxage=1800' });
+      return json(await mergedManifest(upstreamManifest, token, url.origin, config), 200, { 'cache-control': 'public, max-age=300, s-maxage=1800' });
     }
 
     if (resource === 'catalog') {

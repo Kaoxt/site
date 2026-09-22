@@ -105,12 +105,12 @@ test('collection folders use unique bridge addon IDs while preserving AIOMetadat
   const block = source.slice(start, end);
   assert.match(block, /posterBridgeManifestUrl\(upstream\.url\)/);
   assert.match(source, /betterPostersConfigId/);
-  assert.match(source, /v: 5/);
+  assert.match(source, /v: 6/);
   assert.match(block, /fetchAddonManifest\(url\)/);
   assert.match(block, /bridgeByInstallUrl/);
   assert.match(block, /posterBridgeCatalogId\(upstreamRoute\.catalogId\)/);
   assert.match(block, /state\.posterBridgeInstalls = installs/);
-  assert.match(source, /aioCatalogRouteKey\(source\.catalogId, source\.type\)/);
+  assert.match(source, /aioCatalogRouteKey\(catalogId, source\.type\)/);
   assert.match(source, /source\.provider = 'addon'/);
   assert.match(source, /manifestCatalogs = manifest\.catalogs/);
   assert.match(source, /routeMatch\(catalog, manifestCatalogs\)/);
@@ -164,14 +164,14 @@ test('token poster route is importable and wired to the v2 engine', async () => 
 
 test('poster bridge passthrough mode preserves upstream overlay poster URLs', async () => {
   const source = await readFile(new URL('../functions/api/posters-addon/[[path]].js', import.meta.url), 'utf8');
-  assert.match(source, /\[1, 2, 3, 4, 5\]\.includes\(config\.v\)/);
+  assert.match(source, /\[1, 2, 3, 4, 5, 6\]\.includes\(config\.v\)/);
   assert.match(source, /passthroughPosters: config\.passthroughPosters === true/);
   assert.match(source, /prewarmPassthroughPosters/);
   assert.match(source, /x-kollection-poster-prewarm/);
   assert.match(source, /context\.waitUntil\(prewarmPassthroughPosters/);
   assert.match(source, /rewritePassthroughPayload/);
   assert.match(source, /betterPostersPosterUrl/);
-  assert.match(source, /id: `tv\.kollection\.posters\.\$\{token\.slice\(0, 24\)\}`/);
+  assert.match(source, /id: `tv\.kollection\.posters\.\$\{identity\}`/);
 });
 
 test('k1 and k2 tokens both use the reliable TMDB artwork path', () => {

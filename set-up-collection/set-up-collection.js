@@ -871,6 +871,15 @@
     return rows.length ? (rows[0].collections_json ?? []) : [];
   }
 
+  function stableCollectionJson(value) {
+    if (typeof value === 'string') value = JSON.parse(value);
+    const normalize = item => Array.isArray(item) ? item.map(normalize)
+      : item && typeof item === 'object'
+        ? Object.fromEntries(Object.keys(item).sort().map(key => [key, normalize(item[key])]))
+        : item;
+    return JSON.stringify(normalize(value));
+  }
+
   async function pushCollections(collections) {
     const rawCollections = Array.isArray(collections) ? collections : [];
     const normalizedCollections = window.KollectionArtworkUrls?.normalizeDeep
@@ -1134,6 +1143,13 @@
         state.betterPostersSettings || window.KollectionBetterPostersSettings.readLocal() || {}
       );
       window.KollectionBetterPostersSettings.applyToAioConfig(config, state.betterPostersSettings);
+    } else if (!state.betterPostersEnabled) {
+      config.posterRatingProvider = 'none';
+      config.customPosterUrlPattern = '';
+      config.enableRatingPostersForLibrary = false;
+      config.catalogs = config.catalogs.map(catalog => ({ ...catalog, enableRatingPosters: false }));
+      delete config.kollectionBetterPosters;
+      delete config.kollectionPosters;
     }
     if (!config.apiKeys) config.apiKeys = {};
     if (state.mdblistKey) config.apiKeys.mdblist = state.mdblistKey;
@@ -1358,7 +1374,7 @@
       ? helper.configId(helper.normalize(state.betterPostersSettings || helper.readLocal() || {}))
       : '';
     const token = encodePosterBridgeValue(JSON.stringify({
-      v: 5,
+      v: 6,
       upstream,
       collectionOnly: true,
       passthroughPosters: true,
@@ -1634,6 +1650,10 @@
 
     loading('Adding The Kollection to Nuvio…');
     await pushCollections(state.finalCollections);
+    const confirmedCollections = await pullCollections();
+    if (stableCollectionJson(confirmedCollections) !== stableCollectionJson(window.KollectionArtworkUrls?.normalizeDeep ? window.KollectionArtworkUrls.normalizeDeep(state.finalCollections) : state.finalCollections)) {
+      throw new Error('Nuvio has not confirmed the replacement collection. Previous add-ons were kept. Please retry after Nuvio finishes syncing.');
+    }
     if (setupUpdatesExisting) {
       loading('Removing previous Kollection metadata routes…');
       await removePreviousAiMetadataAddons(ai.installs);

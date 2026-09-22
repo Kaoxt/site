@@ -57,3 +57,11 @@ test('clear does not report success while Nuvio still returns the old collection
   );
   assert.equal(h.events.some((event) => event.type === 'kollection:profile-collection-cleared'), false);
 });
+
+test('malformed cloud data is never treated as a successful clear', async () => {
+  for (const value of ['broken json', {}, undefined]) {
+    const h = harness(value);
+    await assert.rejects(h.api.clear(4, { accessToken: 'token', verifyAttempts: 1 }), /collection data/);
+    assert.equal(h.events.length, 0);
+  }
+});

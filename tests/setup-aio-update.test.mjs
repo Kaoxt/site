@@ -49,3 +49,31 @@ test('zero-install updates stop before any collection or add-on mutations', asyn
   await assert.rejects(vm.runInContext('installEverything()', c), /No AIOMetadata configuration was created/);
   assert.equal(mutations, 0);
 });
+
+test('Better Posters off clears inherited configuration without altering the source config', () => {
+  const base = { posterRatingProvider: 'custom', customPosterUrlPattern: 'https://btttr.cc/old', enableRatingPostersForLibrary: true, kollectionBetterPosters: { enabled: true }, kollectionPosters: {}, catalogs: [] };
+  const c = vm.createContext({ state: { betterPostersEnabled: false, aiCustomConfig: base }, jsonClone: value => structuredClone(value), window: {} });
+  vm.runInContext(fn(source, 'prepareAiConfig', 'aioExportSlug'), c);
+  const config = vm.runInContext('prepareAiConfig({}, [{ id: "movies", enableRatingPosters: true }], 0)', c);
+  assert.equal(config.posterRatingProvider, 'none');
+  assert.equal(config.customPosterUrlPattern, '');
+  assert.equal(config.enableRatingPostersForLibrary, false);
+  assert.equal(config.catalogs[0].enableRatingPosters, false);
+  assert.equal(config.kollectionBetterPosters, undefined);
+  assert.equal(config.kollectionPosters, undefined);
+  assert.equal(base.posterRatingProvider, 'custom');
+});
+
+test('a fresh setup replaces matching collection sources and removes deselected Kollection groups', () => {
+  const c = vm.createContext({});
+  vm.runInContext(fn(source, 'mergeKey', 'bingecatDisplayCatalogs'), c);
+  const result = vm.runInContext('mergeCollections([{id:"movies",source:"old"},{id:"series"},{id:"personal"}], [{id:"movies",source:"new"}], [{id:"movies"},{id:"series"}])', c);
+  assert.deepEqual(JSON.parse(JSON.stringify(result)), [{ id: 'movies', source: 'new' }, { id: 'personal' }]);
+});
+
+test('replacement confirmation ignores object key order but detects stale sources', () => {
+  const c = vm.createContext({});
+  vm.runInContext(fn(source, 'stableCollectionJson', 'NOT_PRESENT').split('  async function pushCollections')[0], c);
+  assert.equal(vm.runInContext('stableCollectionJson([{id:"a",source:"new"}]) === stableCollectionJson([{source:"new",id:"a"}])', c), true);
+  assert.equal(vm.runInContext('stableCollectionJson([{id:"a",source:"new"}]) === stableCollectionJson([{id:"a",source:"old"}])', c), false);
+});

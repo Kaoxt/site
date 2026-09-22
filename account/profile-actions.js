@@ -462,6 +462,7 @@
     const status = document.getElementById('accountClearCollectionStatus');
     confirm?.addEventListener('click', async () => {
       confirm.disabled = true;
+      if (confirm.textContent === 'Done') { closeModal(); return; }
       status.textContent = 'Clearing collection…';
       try {
         const result = await window.KollectionCollectionEligibility?.clear?.(id);
@@ -482,10 +483,11 @@
         }
         row?.classList.remove('account-profile-ineligible');
         row?.querySelector('[data-clear-profile-collection]')?.remove();
-        status.textContent = 'Collection cleared. This profile is now available for Set Up Collection.';
+        status.textContent = 'Collection cleared on the Nuvio server. Nuvio TV may keep its local collection when the server is empty; remove it in Nuvio TV too, or install a replacement setup and sync the app.';
         window.KollectionProfileCollectionStatus?.refresh?.();
         window.KollectionSavedCollections?.load?.();
-        setTimeout(closeModal, 900);
+        confirm.textContent = 'Done';
+        confirm.disabled = false;
       } catch (error) {
         status.textContent = error?.message || 'Could not clear the collection.';
         confirm.disabled = false;

@@ -172,3 +172,28 @@ test('collection bridge preserves an upstream Better Posters URL already using t
     globalThis.fetch = originalFetch;
   }
 });
+
+test('new bridge identities distinguish poster settings and upstream installations while legacy IDs stay stable', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => Response.json({ id: 'aio-metadata', name: 'AIOMetadata', catalogs: [{ id: 'mdblist.123', type: 'movie' }], resources: ['catalog'] });
+  const config = { v: 6, upstream: 'https://aio.example/stremio/user-1/manifest.json', collectionOnly: true, passthroughPosters: true, betterPostersConfigId: 'b160001' };
+  async function manifest(cfg) {
+    const token = enc(JSON.stringify(cfg));
+    const response = await onRequest({ request: new Request(`https://kollection.tv/api/posters-addon/${token}/manifest.json`) });
+    assert.equal(response.status, 200);
+    return { token, manifest: await response.json() };
+  }
+  try {
+    const enabled = await manifest(config);
+    const disabled = await manifest({ ...config, betterPostersConfigId: '' });
+    const other = await manifest({ ...config, upstream: 'https://aio.example/stremio/user-2/manifest.json' });
+    assert.equal(enabled.token.slice(0, 24), disabled.token.slice(0, 24));
+    assert.equal(new Set([enabled.manifest.id, disabled.manifest.id, other.manifest.id]).size, 3);
+    assert.equal((await manifest(config)).manifest.id, enabled.manifest.id);
+    const legacy = await manifest({ ...config, v: 5 });
+    assert.equal(legacy.manifest.id, `tv.kollection.posters.${legacy.token.slice(0, 24)}`);
+    globalThis.fetch = async () => Response.json({ metas: [{ id: 'tt1234567', type: 'movie', poster: 'https://image.tmdb.org/plain.jpg' }] });
+    const response = await onRequest({ waitUntil() {}, request: new Request(`https://kollection.tv/api/posters-addon/${disabled.token}/catalog/movie/kp0_${enc('mdblist.123')}.json`) });
+    assert.equal((await response.json()).metas[0].poster, 'https://image.tmdb.org/plain.jpg');
+  } finally { globalThis.fetch = originalFetch; }
+});

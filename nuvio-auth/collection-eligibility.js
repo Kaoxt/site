@@ -53,16 +53,13 @@
   }
 
   function parseCollections(value) {
-    if (Array.isArray(value)) return value;
     if (typeof value === 'string') {
-      try {
-        const parsed = JSON.parse(value);
-        return Array.isArray(parsed) ? parsed : [];
-      } catch {
-        return [];
-      }
+      try { value = JSON.parse(value); }
+      catch { throw new Error('Nuvio returned unreadable collection data. Clearing could not be verified.'); }
     }
-    return [];
+    if (value === null) return [];
+    if (!Array.isArray(value)) throw new Error('Nuvio returned invalid collection data. Clearing could not be verified.');
+    return value;
   }
 
   async function auth() {
@@ -111,9 +108,11 @@
     return kollectionKeysPromise;
   }
 
-  async function pullCollections(profileId, accessToken) {
+  async function pullCollections(profileId, accessToken, requireStored = false) {
     const result = await rpc('sync_pull_collections', { p_profile_id: Number(profileId) }, accessToken);
-    const rows = Array.isArray(result) ? result : [];
+    if (!Array.isArray(result)) throw new Error('Nuvio did not return a valid collection response.');
+    const rows = result;
+    if (requireStored && !rows.length) throw new Error('Nuvio did not confirm a stored empty collection. Clearing could not be verified.');
     return rows.length ? parseCollections(rows[0]?.collections_json) : [];
   }
 
@@ -222,7 +221,7 @@
     const verifyDelayMs = Math.max(0, Number(options.verifyDelayMs) || 180);
     let remaining = [];
     for (let attempt = 0; attempt < attempts; attempt += 1) {
-      remaining = await pullCollections(id, accessToken);
+      remaining = await pullCollections(id, accessToken, true);
       if (!remaining.length) break;
       if (attempt < attempts - 1 && verifyDelayMs) {
         await new Promise((resolve) => setTimeout(resolve, verifyDelayMs));
@@ -234,6 +233,7 @@
       throw new Error(`Nuvio still reports ${remaining.length} collection group${remaining.length === 1 ? '' : 's'} on this profile. Nothing was marked as cleared. Please try again after Nuvio finishes syncing.`);
     }
 
+    try { sessionStorage.removeItem('kollection-setup-wizard:v1'); } catch {}
     const result = availableResult(id, { cleared: true });
     cache.set(id, result);
     window.dispatchEvent(new CustomEvent('kollection:profile-collection-cleared', {
