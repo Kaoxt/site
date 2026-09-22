@@ -151,7 +151,14 @@
 
   function routeStepFromLocation() {
     const path = window.location.pathname.replace(/\/+$/, '');
-    if (path === SETUP_ROUTE_BASE || path === SETUP_ROUTE_BASE + '.html') return 0;
+    if (path === SETUP_ROUTE_BASE || path === SETUP_ROUTE_BASE + '.html') {
+      // Hosting may canonicalize a rewritten step URL to the setup root.
+      // Keep an explicit step in the query so reloads and history retain it.
+      const params = new URLSearchParams(window.location.search);
+      const index = SETUP_ROUTE_NAMES.indexOf(params.get('step') || '');
+      if (index >= 0) return index;
+      return params.get('saved') && params.get('update') === '1' ? 4 : 0;
+    }
     const match = path.match(/^\/set-up-collection\/([^/]+)$/);
     if (!match) return 0;
     const index = SETUP_ROUTE_NAMES.indexOf(String(match[1] || '').toLowerCase());
@@ -162,6 +169,7 @@
     const index = Math.max(0, Math.min(SETUP_ROUTE_NAMES.length - 1, Number(step) || 0));
     const url = new URL(window.location.href);
     url.pathname = `${SETUP_ROUTE_BASE}/${SETUP_ROUTE_NAMES[index]}`;
+    url.searchParams.set('step', SETUP_ROUTE_NAMES[index]);
     return url;
   }
 
@@ -1749,6 +1757,7 @@
           next.search = '';
           next.searchParams.set('saved', id);
           next.searchParams.set('update', '1');
+          next.searchParams.set('step', 'customize');
           if (Number.isFinite(targetId) && targetId >= 1) next.searchParams.set('targetProfile', String(targetId));
           window.location.href = next.toString();
         };
