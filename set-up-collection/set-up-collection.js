@@ -1969,7 +1969,7 @@
         ? 'Choose the profile that should receive The Kollection. Your Kollection login can also be used by the private admin page when the account is authorized.'
         : 'Continue with Nuvio for the easiest sign-in. If you are already signed in on nuvio.tv, Nuvio can use that existing session when you approve The Kollection.',
       `<div class="nuvio-account-banner">
-        <div class="nuvio-account-art"><img src="set-up-collection/assets/nuvio-account.webp" alt="Nuvio logo"></div>
+        <div class="nuvio-account-art"><img src="/set-up-collection/assets/nuvio-account.webp" alt="Nuvio logo"></div>
         <div class="nuvio-account-copy"><span>NUVIO</span><h3>Your Nuvio Account</h3><p>${logged ? `Connected as ${accountLabel}.` : 'Connect once, then use the same Kollection session across Set Up Collection and the admin page.'}</p></div>
         ${logged ? `<button class="ghost nuvio-signout-btn" id="nuvioSignOutBtn" type="button">Sign out</button>` : ''}
       </div>
