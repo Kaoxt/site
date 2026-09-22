@@ -997,6 +997,23 @@
     return value.replace(/_(movie|series|anime|all)$/i, '');
   }
 
+  function aioSourceCatalogId(source) {
+    const id = String(source?.catalogId || '').trim();
+    if (String(source?.addonId || '').startsWith('tv.kollection.posters.')) {
+      const match = /^kp0_([A-Za-z0-9_-]+)$/.exec(id);
+      if (!match) throw new Error('A saved collection poster source is invalid. Reload the setup and try again.');
+      try {
+        const encoded = match[1].replace(/-/g, '+').replace(/_/g, '/');
+        return new TextDecoder('utf-8', { fatal: true }).decode(
+          Uint8Array.from(atob(encoded), char => char.charCodeAt(0))
+        );
+      } catch {
+        throw new Error('A saved collection poster source could not be restored. Reload the setup and try again.');
+      }
+    }
+    return source?.addonId === 'aio-metadata' || id.startsWith('mdblist.') ? id : '';
+  }
+
   function collectAioCatalogRefs(collections) {
     const refs = new Map();
     (collections || []).forEach(group => {
@@ -1005,9 +1022,8 @@
           (list || []).forEach(source => {
             if (!source || source.provider && source.provider !== 'addon') return;
             if (isBingecatSource(source)) return;
-            const manifestId = String(source.catalogId || '').trim();
+            const manifestId = aioSourceCatalogId(source);
             if (!manifestId) return;
-            if (source.addonId !== 'aio-metadata' && !manifestId.startsWith('mdblist.')) return;
             const type = normalizeAioCatalogType(source.type);
             refs.set(aioCatalogRouteKey(manifestId, type), { manifestId, type });
           });
@@ -1418,8 +1434,10 @@
         for (const list of [folder.sources, folder.catalogSources]) {
           (list || []).forEach(source => {
             if (!source || isBingecatSource(source)) return;
-            if (source.addonId !== 'aio-metadata') return;
-            const key = aioCatalogRouteKey(source.catalogId, source.type);
+            if (source.provider && source.provider !== 'addon') return;
+            const catalogId = aioSourceCatalogId(source);
+            if (!catalogId) return;
+            const key = aioCatalogRouteKey(catalogId, source.type);
             const route = routes?.[key];
             if (route) {
               source.addonId = route.addonId;
@@ -1428,6 +1446,7 @@
               if (list === folder.sources) source.provider = 'addon';
             } else {
               source.addonId = defaultId;
+              source.catalogId = catalogId;
               if (list === folder.sources) source.provider = 'addon';
             }
           });
@@ -1587,6 +1606,9 @@
     // Provision everything first. No collection is pushed until every generated
     // manifest is ready, matching the proven friend-pack provisioning flow.
     const ai = await provisionAiMetadata();
+    if (!ai.installs.length && (state.aiNeededCatalogs.length || state.previousAiMetadataAddons.length)) {
+      throw new Error('No AIOMetadata configuration was created. Your existing collection and add-ons have not been changed. Reload the setup and try again.');
+    }
     const posterBridge = await provisionPosterBridges(ai);
 
     const bcNeeded = shouldInstallBingecat(selectedCollectionPack());

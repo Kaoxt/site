@@ -117,8 +117,10 @@
     const existing = findExistingFolder(state, gk, fk, groupKey, folderKey);
     const baseline = existing || folder;
     state.collectionFolderDefaults[mapKey] = {
-      sources: clone(baseline?.sources || folder?.sources || []),
-      catalogSources: clone(baseline?.catalogSources || folder?.catalogSources || []),
+      // Installed sources contain profile-specific bridge routes. Defaults
+      // must use the runtime catalog IDs so updates can provision fresh AIO.
+      sources: clone(folder?.sources || []),
+      catalogSources: clone(folder?.catalogSources || []),
       artwork: artworkFrom(baseline),
     };
     return state.collectionFolderDefaults[mapKey];
