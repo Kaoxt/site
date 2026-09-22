@@ -99,7 +99,7 @@
     if (/Bingecat is skipped/i.test(panelText)) snapshot.bingecatSkipped = true;
     if (/personal Bingecat manifest is ready/i.test(panelText)) snapshot.bingecatSkipped = false;
 
-    const checks = $('.section-checkbox');
+    const checks = $$('.section-checkbox');
     if (checks.length) {
       snapshot.knownCollectionGroupIds = checks.map((input) => input.value);
       snapshot.selectedCollectionGroupIds = checks.filter((input) => input.checked).map((input) => input.value);
