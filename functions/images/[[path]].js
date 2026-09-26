@@ -78,6 +78,11 @@ export async function onRequest(context) {
     const cached = await cache.match(cacheKey);
     if (cached) {
       const headers = new Headers(cached.headers);
+      // Do not let browsers or Cloudflare's outer HTTP cache pin a stale image
+      // at the public URL. The Worker Cache API above is the only cache layer.
+      headers.set("Cache-Control", "no-store, max-age=0");
+      headers.set("CDN-Cache-Control", "no-store");
+      headers.set("Cloudflare-CDN-Cache-Control", "no-store");
       headers.set("X-Kollection-Cache", "HIT");
       return new Response(cached.body, {
         status: cached.status,
@@ -99,23 +104,32 @@ export async function onRequest(context) {
       });
     }
 
-    const headers = new Headers();
-    object.writeHttpMetadata(headers);
-    headers.set("etag", object.httpEtag);
-    headers.set("Access-Control-Allow-Origin", "*");
-    headers.set(
-      "Cache-Control",
-      "public, max-age=0, must-revalidate, s-maxage=3600, stale-while-revalidate=86400"
-    );
-    headers.set("X-Kollection-Cache", "MISS");
+    const cacheHeaders = new Headers();
+    object.writeHttpMetadata(cacheHeaders);
+    cacheHeaders.set("etag", object.httpEtag);
+    cacheHeaders.set("Access-Control-Allow-Origin", "*");
+    cacheHeaders.set("Cache-Control", "public, max-age=0, s-maxage=3600");
+    cacheHeaders.set("X-Kollection-Cache", "MISS");
 
-    const response = new Response(object.body, {
+    const cacheResponse = new Response(object.body, {
       status: 200,
-      headers,
+      headers: cacheHeaders,
     });
 
-    context.waitUntil(cache.put(cacheKey, response.clone()));
-    return response;
+    // Store a fast edge copy under the ETag-versioned internal cache key.
+    context.waitUntil(cache.put(cacheKey, cacheResponse.clone()));
+
+    // But never cache the public URL in the browser or Cloudflare's outer cache,
+    // otherwise replacing backdrop.webp can keep returning the previous image.
+    const publicHeaders = new Headers(cacheHeaders);
+    publicHeaders.set("Cache-Control", "no-store, max-age=0");
+    publicHeaders.set("CDN-Cache-Control", "no-store");
+    publicHeaders.set("Cloudflare-CDN-Cache-Control", "no-store");
+
+    return new Response(cacheResponse.body, {
+      status: 200,
+      headers: publicHeaders,
+    });
   }
 
   // HEAD requests: return metadata without downloading the object body.
@@ -135,10 +149,9 @@ export async function onRequest(context) {
   object.writeHttpMetadata(headers);
   headers.set("etag", object.httpEtag);
   headers.set("Access-Control-Allow-Origin", "*");
-  headers.set(
-    "Cache-Control",
-    "public, max-age=0, must-revalidate, s-maxage=3600, stale-while-revalidate=86400"
-  );
+  headers.set("Cache-Control", "no-store, max-age=0");
+  headers.set("CDN-Cache-Control", "no-store");
+  headers.set("Cloudflare-CDN-Cache-Control", "no-store");
 
   return new Response(null, {
     status: 200,
