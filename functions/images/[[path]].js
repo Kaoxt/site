@@ -50,11 +50,30 @@ export async function onRequest(context) {
     .replace(/^images\/Based On\/True Events\//i, "images/Based On/True Stories/");
 
   // Cache GET responses at the Cloudflare edge.
-  // The full URL (including ?v=...) is the cache key, which means query
-  // parameters can be used to immediately bypass an older cached copy.
+  // Build the internal cache key from the current R2 ETag so replacing an
+  // image at the same public URL is visible immediately without requiring
+  // callers to add a ?v= cache-buster.
   if (request.method === "GET") {
+    const objectHead = await env.IMAGES.head(key);
+
+    if (objectHead === null) {
+      return new Response("Image not found", {
+        status: 404,
+        headers: {
+          "Cache-Control": "no-store",
+          "Access-Control-Allow-Origin": "*",
+          "X-Kollection-Cache": "MISS",
+        },
+      });
+    }
+
     const cache = caches.default;
-    const cacheKey = new Request(url.toString(), { method: "GET" });
+    const cacheUrl = new URL(url.toString());
+    cacheUrl.searchParams.set(
+      "__r2etag",
+      objectHead.httpEtag || objectHead.etag || "current"
+    );
+    const cacheKey = new Request(cacheUrl.toString(), { method: "GET" });
 
     const cached = await cache.match(cacheKey);
     if (cached) {
@@ -73,7 +92,7 @@ export async function onRequest(context) {
       return new Response("Image not found", {
         status: 404,
         headers: {
-          "Cache-Control": "public, max-age=30, s-maxage=60",
+          "Cache-Control": "no-store",
           "Access-Control-Allow-Origin": "*",
           "X-Kollection-Cache": "MISS",
         },
