@@ -63,7 +63,7 @@ test('Set Up Collection offers Better Posters instead of Kollection Smart Overla
 
 test('saved collection setups persist Better Posters preferences', async () => {
   const source = await readFile(new URL('../set-up-collection/saved-setup.js', import.meta.url), 'utf8');
-  assert.match(source, /betterPostersEnabled: Boolean\(snapshot\.betterPostersEnabled\)/);
+  assert.match(source, /betterPostersEnabled: storedBoolean\(snapshot\.betterPostersEnabled, false\)/);
   assert.match(source, /kollection:restore-better-posters-settings/);
   assert.match(source, /betterPostersSettingsJson/);
 });

@@ -108,6 +108,9 @@
   const setupUpdatesExisting = setupHasSavedId && setupQuery.get('update') === '1';
   const requestedProfileId = Number(setupQuery.get('targetProfile')) || null;
   let linkedSavedSetupPromise = null;
+  let assetsPromise = null;
+  let pendingNewGroupSelection = null;
+  let persistTimer = null;
 
   async function linkedSavedSetupEligibility(profileId) {
     if (!setupHasSavedId) return null;
@@ -185,6 +188,8 @@
   }
 
   function persistWizardSession() {
+    clearTimeout(persistTimer);
+    persistTimer = null;
     try {
       const payload = {
         savedAt: Date.now(),
@@ -230,6 +235,29 @@
       };
       sessionStorage.setItem(SETUP_SESSION_KEY, JSON.stringify(payload));
     } catch {}
+  }
+
+  function scheduleWizardSession() {
+    clearTimeout(persistTimer);
+    persistTimer = setTimeout(persistWizardSession, 150);
+  }
+
+  function selectNewCollectionGroups(knownValues) {
+    pendingNewGroupSelection = Array.isArray(knownValues) ? knownValues : [];
+    applyPendingNewGroups();
+  }
+
+  function applyPendingNewGroups() {
+    if (pendingNewGroupSelection === null || !Array.isArray(state.collectionPack)) return;
+    const values = pendingNewGroupSelection.map(mergeKey).filter(Boolean);
+    const known = new Set(values.length ? values : LEGACY_KNOWN_COLLECTION_GROUP_IDS);
+    const selected = new Set(state.selectedCollectionGroupIds);
+    for (const group of state.collectionPack) {
+      const key = collectionGroupKey(group);
+      if (key && !known.has(key)) selected.add(key);
+    }
+    state.selectedCollectionGroupIds = [...selected];
+    pendingNewGroupSelection = null;
   }
 
   function restoreWizardSession() {
@@ -360,17 +388,8 @@
         ? config.selectedCollectionGroupIds.map(mergeKey).filter(Boolean)
         : []
     );
-    if (Array.isArray(state.collectionPack)) {
-      const knownValues = Array.isArray(config.knownCollectionGroupIds)
-        ? config.knownCollectionGroupIds.map(mergeKey).filter(Boolean)
-        : [];
-      const known = new Set(knownValues.length ? knownValues : LEGACY_KNOWN_COLLECTION_GROUP_IDS);
-      for (const group of state.collectionPack) {
-        const key = collectionGroupKey(group);
-        if (key && !known.has(key)) selected.add(key);
-      }
-    }
     state.selectedCollectionGroupIds = [...selected];
+    selectNewCollectionGroups(config.knownCollectionGroupIds);
     state.selectedCollectionFolderIds = config.selectedCollectionFolderIds && typeof config.selectedCollectionFolderIds === 'object'
       ? jsonClone(config.selectedCollectionFolderIds)
       : {};
@@ -458,7 +477,6 @@
     clearAlert();
     persistWizardSession();
     if (!options.fromPopState) syncSetupRoute(state.step, options.replaceRoute ? 'replace' : 'push');
-    renderNav();
     render();
     window.dispatchEvent(new CustomEvent('kollection:setup-step-changed', {
       detail: {
@@ -929,17 +947,23 @@
 
   async function loadKaoxtAssets() {
     if (state.collectionPack && state.aiBaseConfig && state.aiCatalogLibrary.length) return;
-    const [dbText, catalogRaw, base] = await Promise.all([
-      fetchText(CFG.kaoxtDatabaseUrl, { cache: 'no-store' }),
-      fetchJson(CFG.kaoxtAioCatalogsUrl, { cache: 'no-store' }),
-      fetchJson(CFG.kaoxtAioBaseConfigUrl, { cache: 'no-store' }),
-    ]);
-    const parsedCollectionPack = parseKaoxtDatabase(dbText);
-    state.collectionPack = window.KollectionArtworkUrls?.normalizeDeep
-      ? window.KollectionArtworkUrls.normalizeDeep(parsedCollectionPack)
-      : parsedCollectionPack;
-    state.aiCatalogLibrary = Array.isArray(catalogRaw) ? catalogRaw : (catalogRaw?.catalogs || []);
-    state.aiBaseConfig = base && typeof base === 'object' ? base : {};
+    if (!assetsPromise) {
+      assetsPromise = (async () => {
+        const [dbText, catalogRaw, base] = await Promise.all([
+          fetchText(CFG.kaoxtDatabaseUrl, { cache: 'no-store' }),
+          fetchJson(CFG.kaoxtAioCatalogsUrl, { cache: 'no-store' }),
+          fetchJson(CFG.kaoxtAioBaseConfigUrl, { cache: 'no-store' }),
+        ]);
+        const parsedCollectionPack = parseKaoxtDatabase(dbText);
+        state.collectionPack = window.KollectionArtworkUrls?.normalizeDeep
+          ? window.KollectionArtworkUrls.normalizeDeep(parsedCollectionPack)
+          : parsedCollectionPack;
+        state.aiCatalogLibrary = Array.isArray(catalogRaw) ? catalogRaw : (catalogRaw?.catalogs || []);
+        state.aiBaseConfig = base && typeof base === 'object' ? base : {};
+        applyPendingNewGroups();
+      })().finally(() => { assetsPromise = null; });
+    }
+    await assetsPromise;
   }
 
   function isBingecatSource(s) {
@@ -1590,14 +1614,15 @@
     const selectedPack = selectedCollectionPack();
     if (!selectedPack.length) throw new Error('Choose at least one collection section before continuing.');
 
-    state.addons = await listAddons();
+    const [addons, existingCollections] = await Promise.all([listAddons(), pullCollections()]);
+    state.addons = addons;
     state.previousAiMetadataAddons = setupUpdatesExisting
       ? state.addons.filter(isKollectionAiMetadataAddon)
       : [];
     state.previousPosterBridgeAddons = setupUpdatesExisting
       ? state.addons.filter(isKollectionPosterBridgeAddon)
       : [];
-    state.existingCollections = await pullCollections();
+    state.existingCollections = existingCollections;
 
     const catalogRefs = collectAioCatalogRefs(selectedPack);
     const catalogLibrary = state.aiCustomCatalogLibrary.length
@@ -3057,7 +3082,6 @@
     state.step = nextStep;
     clearAlert();
     persistWizardSession();
-    renderNav();
     render();
     window.dispatchEvent(new CustomEvent('kollection:setup-step-changed', {
       detail: {
@@ -3071,8 +3095,8 @@
   });
 
   window.addEventListener('beforeunload', persistWizardSession);
-  document.addEventListener('change', () => setTimeout(persistWizardSession, 0), true);
-  document.addEventListener('input', () => setTimeout(persistWizardSession, 120), true);
+  document.addEventListener('change', scheduleWizardSession, true);
+  document.addEventListener('input', scheduleWizardSession, true);
 
   async function initialize() {
     if (setupUpdatesExisting) {
