@@ -33,7 +33,7 @@
   let verifiedBingecatOnce = false;
 
   const $ = (selector, root = document) => root.querySelector(selector);
-  const $ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
   function storedBoolean(value, fallback = false) {
     if (typeof value === 'boolean') return value;

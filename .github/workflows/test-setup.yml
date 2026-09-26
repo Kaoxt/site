@@ -1,0 +1,20 @@
+name: Collection setup regression checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Check setup scripts, saved choices, profile safety, and addon routing
+        run: node --test tests/setup-*.test.mjs tests/saved-*.test.mjs tests/account-nuvio-state.test.mjs tests/collection-clear.test.mjs tests/poster-addon-bridge.test.mjs

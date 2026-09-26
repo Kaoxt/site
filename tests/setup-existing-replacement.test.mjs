@@ -13,7 +13,7 @@ test('ineligible profiles stay blocked and offer a clear-current-collection acti
   assert.match(setupSource, /if \(next\) next\.disabled = true/);
   assert.match(setupSource, /KollectionCollectionEligibility\.clear\(state\.profileId\)/);
   assert.match(setupSource, /does not delete the profile, add-ons, plugins, or saved Kollection setups/);
-  assert.match(eligibilitySource, /remaining = await pullCollections\(id, accessToken\)/);
+  assert.match(eligibilitySource, /remaining = await pullCollections\(id, accessToken, true\)/);
   assert.match(eligibilitySource, /Nuvio still reports \$\{remaining\.length\} collection group/);
   assert.match(profileActionsSource, /result\?\.cleared \|\| result\?\.state !== 'available' \|\| result\?\.existingCount !== 0/);
 });
@@ -39,7 +39,7 @@ test('Update Existing targets the profile linked to the selected saved setup', (
 test('new runtime categories are selected automatically during Update Existing', () => {
   assert.match(savedSetupSource, /knownCollectionGroupIds/);
   assert.match(savedSetupSource, /autoSelectNewCollectionGroups: updateExistingSetup/);
-  assert.match(savedSetupSource, /version: 4/);
+  assert.match(savedSetupSource, /version: 6/);
   assert.match(setupSource, /LEGACY_KNOWN_COLLECTION_GROUP_IDS/);
   assert.match(setupSource, /if \(key && !known\.has\(key\)\) selected\.add\(key\)/);
 });

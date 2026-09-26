@@ -12,10 +12,10 @@ function route(url) {
   return { step: () => vm.runInContext('routeStepFromLocation()', context), url: step => vm.runInContext(`setupRouteUrl(${step}).toString()`, context) };
 }
 
-test('saved Update opens at step 5 after hosting redirects to setup root', () => {
-  assert.equal(route('/set-up-collection?saved=latest&update=1').step(), 4);
+test('saved Update defaults to AIOMetadata and honors an explicit Customize route', () => {
+  assert.equal(route('/set-up-collection?saved=latest&update=1').step(), 2);
   assert.equal(route('/set-up-collection?saved=latest&update=1&step=customize').step(), 4);
-  assert.equal(route('/set-up-collection.html?saved=latest&update=1').step(), 4);
+  assert.equal(route('/set-up-collection.html?saved=latest&update=1').step(), 2);
 });
 
 test('each explicit step survives canonicalization, including backward navigation', () => {
