@@ -105,7 +105,7 @@ export async function onRequest(context) {
     headers.set("Access-Control-Allow-Origin", "*");
     headers.set(
       "Cache-Control",
-      "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400"
+      "public, max-age=0, must-revalidate, s-maxage=3600, stale-while-revalidate=86400"
     );
     headers.set("X-Kollection-Cache", "MISS");
 
@@ -137,7 +137,7 @@ export async function onRequest(context) {
   headers.set("Access-Control-Allow-Origin", "*");
   headers.set(
     "Cache-Control",
-    "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400"
+    "public, max-age=0, must-revalidate, s-maxage=3600, stale-while-revalidate=86400"
   );
 
   return new Response(null, {
