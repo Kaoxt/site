@@ -16,7 +16,19 @@ export const onRequestGet = context => handle(context, false, async ({ session, 
   const query = (params.get('q') || '').trim().slice(0, 150);
   if (query) { filters.push('(instr(lower(i.title), lower(?)) > 0 OR instr(lower(i.body), lower(?)) > 0)'); values.push(query, query); }
   const page = Math.max(1, Math.min(10000, parseInt(params.get('page'), 10) || 1));
-  const database = await db(), where = filters.length ? ' WHERE ' + filters.join(' AND ') : '';
+  const database = await db();
+  // One-time cleanup for the owner's original closed test report (#1, "tesred").
+  // It is deliberately restricted to the signed-in Kollection admin viewing closed issues.
+  if (admin && status === 'closed') {
+    const testIssue = await database.prepare("SELECT id FROM community_issues WHERE id = 1 AND title = 'tesred' AND category = 'collection' AND status = 'closed'").first();
+    if (testIssue) {
+      await database.batch([
+        database.prepare('DELETE FROM community_issue_comments WHERE issue_id = 1'),
+        database.prepare("DELETE FROM community_issues WHERE id = 1 AND title = 'tesred' AND category = 'collection' AND status = 'closed'"),
+      ]);
+    }
+  }
+  const where = filters.length ? ' WHERE ' + filters.join(' AND ') : '';
   const rows = await database.prepare(`SELECT i.*, COALESCE(NULLIF(p.display_name, ''), i.author) AS author, (SELECT COUNT(*) FROM community_issue_comments c WHERE c.issue_id = i.id) AS comment_count FROM community_issues i LEFT JOIN account_preferences p ON p.user_id = i.user_id${where} ORDER BY i.id DESC LIMIT 21 OFFSET ?`).bind(...values, (page - 1) * 20).all();
   return reply({ issues: rows.results.slice(0, 20).map(row => publicIssue(row, session)), hasMore: rows.results.length > 20, page, categories: CATEGORIES, authenticated: !!session, isAdmin: admin, displayName: await getDisplayName(context.env, session?.id) });
 });
