@@ -200,6 +200,16 @@
         setup.before(link);
       }
     }
+    const accountLink = popover.querySelector('[data-kollection-account-link]');
+    if (accountLink && !popover.querySelector('[data-kollection-issues-link]')) {
+      const link = document.createElement('a');
+      link.className = 'nuvio-desktop-menu-row nuvio-account-link-row';
+      link.href = '/issues';
+      link.dataset.kollectionIssuesLink = 'true';
+      link.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true" class="nuvio-row-icon"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5v5M12 16h.01"></path></svg><span class="nuvio-row-copy"><strong>Report issues</strong><small>Collection & website support</small></span>`;
+      accountLink.after(link);
+    }
+
   }
 
   function syncMobile() {
