@@ -1,4 +1,4 @@
-import { assertSameOrigin, isAdminUser, readSession, refreshSessionIfNeeded } from './nuvio-session.js';
+import { assertSameOrigin, nuvioConfig, isAdminUser, readSession, refreshSessionIfNeeded } from './nuvio-session.js';
 import { requireDb } from './saved-collections.js';
 
 export const CATEGORIES = {
@@ -67,4 +67,22 @@ export async function handle(context, write, run) {
     if (!(error instanceof IssueError)) console.error('Issues request failed:', error);
     return reply({ error: error instanceof IssueError ? error.message : 'Could not load or save this report. Please try again.' }, error.status || 503);
   }
+}
+
+export async function profileAuthor(profileId, session, env) {
+  if (!Number.isSafeInteger(profileId) || profileId < 1) throw new IssueError('Select a Nuvio profile before posting.');
+  const { apiBase, publishableKey } = nuvioConfig(env);
+  let response;
+  try {
+    response = await fetch(`${apiBase}/rest/v1/rpc/sync_pull_profiles`, {
+      method: 'POST', headers: { apikey: publishableKey, Authorization: `Bearer ${session.accessToken}`, 'Content-Type': 'application/json' },
+      body: '{}', signal: AbortSignal.timeout(15000),
+    });
+  } catch { throw new IssueError('Could not verify your Nuvio profile. Please try again.', 502); }
+  if (!response.ok) throw new IssueError('Could not verify your Nuvio profile. Sign in again or retry.', 502);
+  const data = await response.json();
+  const profiles = Array.isArray(data) ? data : data?.profiles;
+  const profile = Array.isArray(profiles) && profiles.find(p => Number(p.profile_index ?? p.id) === profileId);
+  if (!profile) throw new IssueError('Your selected Nuvio profile is no longer available. Choose a profile in Account and retry.');
+  return String(profile.name || `Profile ${profileId}`).trim().slice(0, 120) || `Profile ${profileId}`;
 }

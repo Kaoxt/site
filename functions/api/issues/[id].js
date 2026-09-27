@@ -1,4 +1,4 @@
-import { handle, input, IssueError, issueId, publicIssue, STATUSES, textField } from '../../_lib/issues.js';
+import { handle, input, IssueError, issueId, publicIssue, profileAuthor, STATUSES, textField } from '../../_lib/issues.js';
 export const onRequestGet = context => handle(context, false, async ({ session, admin, reply, db }) => {
   const database = await db(), id = issueId(context.params.id);
   const row = await database.prepare('SELECT * FROM community_issues WHERE id = ?').bind(id).first();
@@ -19,7 +19,7 @@ export const onRequestPatch = context => handle(context, true, async ({ admin, r
 });
 export const onRequestPost = context => handle(context, true, async ({ session, admin, reply, db }) => {
   const id = issueId(context.params.id), data = await input(context.request);
-  const body = textField(data.body, 'Comment', 2, 5000), author = textField(data.author, 'Display name', 2, 50);
+  const body = textField(data.body, 'Comment', 2, 5000), author = await profileAuthor(data.profileId, session, context.env);
   const database = await db();
   const row = await database.prepare('SELECT status FROM community_issues WHERE id = ?').bind(id).first();
   if (!row) throw new IssueError('Issue not found.', 404);

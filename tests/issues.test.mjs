@@ -1,5 +1,10 @@
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
+import { test, after } from 'node:test';
+import { readFile } from 'node:fs/promises';
+import vm from 'node:vm';
+const realFetch = globalThis.fetch;
+globalThis.fetch = async () => Response.json([{ profile_index: 1, name: 'Selected profile' }, { profile_index: 2, name: 'Other profile' }]);
+after(() => { globalThis.fetch = realFetch; });
 import { DatabaseSync } from 'node:sqlite';
 import { createSessionCookie } from '../functions/_lib/nuvio-session.js';
 import { onRequestGet as list, onRequestPost as create } from '../functions/api/issues.js';
@@ -16,7 +21,7 @@ const env = { KOLLECTION_SESSION_SECRET: 'issues-test-secret', NUVIO_ADMIN_USER_
 async function ctx(user, method = 'GET', data, id, query = '', origin = 'https://kollection.tv') {
   const headers = { 'Content-Type': 'application/json', Origin: origin };
   if (user) headers.Cookie = (await createSessionCookie({ user: { id: user, email: user + '@private.test' }, accessToken: 'private-token', expiresIn: 3600 }, env)).split(';')[0];
-  return { env, params: { id }, request: new Request('https://kollection.tv/api/issues' + (id ? '/' + id : '') + query, { method, headers, ...(data ? { body: JSON.stringify(data) } : {}) }) };
+  return { env, params: { id }, request: new Request('https://kollection.tv/api/issues' + (id ? '/' + id : '') + query, { method, headers, ...(data ? { body: JSON.stringify({ profileId: 1, ...data }) } : {}) }) };
 }
 const report = { author: 'Test member', category: 'collection', title: 'Missing network folder', body: 'The network folder does not appear after installing the collection.' };
 test('issue lifecycle enforces sign-in, privacy, admin permissions, filters, and closed discussions', async () => {
@@ -28,11 +33,14 @@ test('issue lifecycle enforces sign-in, privacy, admin permissions, filters, and
   let response = await detail(await ctx(null, 'GET', null, id));
   const text = await response.text(); assert.doesNotMatch(text, /private.test|private-token|user_id/);
   assert.equal(JSON.parse(text).issue.status, 'open');
+  assert.equal(JSON.parse(text).issue.author, 'Selected profile');
+  assert.equal((await create(await ctx('alice', 'POST', { ...report, profileId: 99 }))).status, 400);
+  assert.equal((await create(await ctx('alice', 'POST', { ...report, profileId: null }))).status, 400);
   assert.equal((await update(await ctx('alice', 'PATCH', { status: 'closed' }, id))).status, 403);
   assert.equal((await comment(await ctx(null, 'POST', { author: 'Someone', body: 'Same problem' }, id))).status, 401);
   assert.equal((await comment(await ctx('bob', 'POST', { author: 'Bob', body: '<script>alert(1)</script>', is_admin: 1 }, id))).status, 201);
   let data = await (await detail(await ctx('alice', 'GET', null, id))).json();
-  assert.equal(data.issue.isMine, true); assert.equal(data.comments[0].is_admin, 0);
+  assert.equal(data.issue.isMine, true); assert.equal(data.comments[0].is_admin, 0); assert.equal(data.comments[0].author, 'Selected profile');
   assert.equal((await list(await ctx(null, 'GET', null, null, '?mine=1'))).status, 401);
   assert.equal((await (await list(await ctx('bob', 'GET', null, null, '?mine=1'))).json()).issues.length, 0);
   assert.equal((await (await list(await ctx('alice', 'GET', null, null, '?mine=1&category=collection&q=network'))).json()).issues.length, 1);
@@ -56,4 +64,23 @@ test('submission quota is enforced and paginated searches preserve literal wildc
   const second = await (await list(await ctx(null, 'GET', null, null, '?page=2'))).json(); assert.equal(second.issues.length, 1); assert.equal(second.hasMore, false);
   for (let i = 0; i < 30; i++) assert.equal((await comment(await ctx('quota', 'POST', { author: 'Member', body: 'More information.' }, 1))).status, 201);
   assert.equal((await comment(await ctx('quota', 'POST', { author: 'Member', body: 'More information.' }, 1))).status, 429);
+});
+
+test('forms explain every missing or short field and accept valid submissions', async () => {
+  const window = {};
+  vm.runInNewContext(await readFile(new URL('../issues/form-validation.js', import.meta.url), 'utf8'), { window });
+  const validate = window.KollectionIssueForm.validate;
+  const problems = validate({ category: '', title: 'issue', body: 'Rkeke' }, 'report-form');
+  assert.equal(problems.length, 2);
+  assert.match(problems[0].message, /choose a category/);
+  assert.match(problems[1].message, /at least 15 characters \(currently 5\)/);
+  assert.equal(validate({}, 'report-form').length, 3);
+  assert.equal(validate(report, 'report-form').length, 0);
+  assert.equal(validate({ body: '  ' }, 'comment-form').length, 1);
+  assert.equal(validate({ body: 'More details' }, 'comment-form').length, 0);
+});
+test('profile author is resolved from the selected account profile, never a supplied display name', async () => {
+  const { profileAuthor } = await import('../functions/_lib/issues.js');
+  assert.equal(await profileAuthor(2, { accessToken: 'test' }, env), 'Other profile');
+  await assert.rejects(profileAuthor(999, { accessToken: 'test' }, env), /no longer available/);
 });

@@ -1,4 +1,4 @@
-import { CATEGORIES, category, handle, input, IssueError, publicIssue, textField } from '../_lib/issues.js';
+import { CATEGORIES, category, handle, input, IssueError, publicIssue, profileAuthor, textField } from '../_lib/issues.js';
 
 export const onRequestGet = context => handle(context, false, async ({ session, admin, reply, db }) => {
   const params = new URL(context.request.url).searchParams;
@@ -23,7 +23,7 @@ export const onRequestGet = context => handle(context, false, async ({ session, 
 export const onRequestPost = context => handle(context, true, async ({ session, reply, db }) => {
   const data = await input(context.request);
   const title = textField(data.title, 'Title', 5, 160), body = textField(data.body, 'Description', 15, 10000);
-  const author = textField(data.author, 'Display name', 2, 50), kind = category(data.category);
+  const author = await profileAuthor(data.profileId, session, context.env), kind = category(data.category);
   const database = await db(), now = new Date().toISOString(), since = new Date(Date.now() - 86400000).toISOString();
   // The quota check and insert are one statement so concurrent requests cannot bypass it.
   const result = await database.prepare(`INSERT INTO community_issues (user_id, author, title, body, category, created_at, updated_at)
