@@ -1,0 +1,34 @@
+import { handle, input, IssueError, issueId, publicIssue, STATUSES, textField } from '../../_lib/issues.js';
+export const onRequestGet = context => handle(context, false, async ({ session, admin, reply, db }) => {
+  const database = await db(), id = issueId(context.params.id);
+  const row = await database.prepare('SELECT * FROM community_issues WHERE id = ?').bind(id).first();
+  if (!row) throw new IssueError('Issue not found.', 404);
+  const params = new URL(context.request.url).searchParams;
+  const after = Math.max(0, parseInt(params.get('after'), 10) || 0);
+  const comments = await database.prepare('SELECT id, author, body, is_admin, created_at FROM community_issue_comments WHERE issue_id = ? AND id > ? ORDER BY id LIMIT 51').bind(id, after).all();
+  return reply({ issue: publicIssue(row, session), comments: comments.results.slice(0, 50), hasMore: comments.results.length > 50, authenticated: !!session, isAdmin: admin });
+});
+export const onRequestPatch = context => handle(context, true, async ({ admin, reply, db }) => {
+  if (!admin) throw new IssueError('Only the Kollection admin can change issue status.', 403);
+  const id = issueId(context.params.id), data = await input(context.request);
+  if (!STATUSES.includes(data.status)) throw new IssueError('Invalid status.');
+  const database = await db();
+  const result = await database.prepare('UPDATE community_issues SET status = ?, updated_at = ? WHERE id = ?').bind(data.status, new Date().toISOString(), id).run();
+  if (!result.meta.changes) throw new IssueError('Issue not found.', 404);
+  return reply({ ok: true });
+});
+export const onRequestPost = context => handle(context, true, async ({ session, admin, reply, db }) => {
+  const id = issueId(context.params.id), data = await input(context.request);
+  const body = textField(data.body, 'Comment', 2, 5000), author = textField(data.author, 'Display name', 2, 50);
+  const database = await db();
+  const row = await database.prepare('SELECT status FROM community_issues WHERE id = ?').bind(id).first();
+  if (!row) throw new IssueError('Issue not found.', 404);
+  if (row.status === 'closed' && !admin) throw new IssueError('This issue is closed.', 409);
+  const now = new Date().toISOString(), since = new Date(Date.now() - 3600000).toISOString();
+  const result = await database.prepare(`INSERT INTO community_issue_comments (issue_id, user_id, author, body, is_admin, created_at)
+    SELECT ?, ?, ?, ?, ?, ? WHERE (SELECT COUNT(*) FROM community_issue_comments WHERE user_id = ? AND created_at > ?) < 30
+    AND EXISTS (SELECT 1 FROM community_issues WHERE id = ? AND (status != 'closed' OR ? = 1))`)
+    .bind(id, session.id, author, body, admin ? 1 : 0, now, session.id, since, id, admin ? 1 : 0).run();
+  if (!result.meta.changes) throw new IssueError('Comment could not be added. This issue may be closed, or you have reached the hourly limit.', 429);
+  return reply({ ok: true }, 201);
+});

@@ -402,6 +402,8 @@
       els.loginPassword.value = '';
       window.dispatchEvent(new CustomEvent('kollection:nuvio-signed-in'));
       await refreshAccount();
+      const next = new URLSearchParams(location.search).get('next');
+      if (next && /^\/issues(?:#[1-9]\d*)?$/.test(next)) location.assign(next);
     } catch (error) {
       els.signInStatus.textContent = error?.message || 'Could not sign in with Nuvio.';
     } finally {

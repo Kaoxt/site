@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Issues | The Kollection</title>
+  <meta name="description" content="Report an issue with The Kollection, follow updates, and help improve the Nuvio collection and website.">
+  <meta name="theme-color" content="#050608"><link rel="icon" href="/favicon.ico?v=3">
+  <link rel="stylesheet" href="/shared.css?v=20260906-1"><link rel="stylesheet" href="/secondary-pages.css?v=20260909-2">
+  <link rel="stylesheet" href="/issues/issues.css?v=1">
+  <script src="/components.js?v=20260909-1" defer></script><script src="/issues/issues.js?v=1" defer></script>
+</head>
+<body>
+<main class="page secondary-page">
+  <div id="site-nav"></div>
+  <header class="secondary-page-header"><div class="secondary-page-chip">Community support</div><h1 class="secondary-page-title">Issues</h1><p class="secondary-page-subtitle">Something not working? Report it here and follow its progress.</p></header>
+  <section class="issues-shell secondary-page-content" aria-label="Kollection issues">
+    <div id="issues-list-view">
+      <div class="issues-heading"><div><h2>Help improve The Kollection</h2><p>Check existing reports before opening a new issue.</p></div><button id="new-issue" class="issue-primary" disabled>New issue</button></div>
+      <p id="signin-note" class="issue-note" hidden><a href="/account?next=%2Fissues">Sign in with your Nuvio account</a> to report an issue or join a discussion.</p>
+      <form id="issue-filters" class="issue-filters">
+        <label class="issue-search">Search issues<input id="issue-search" type="search" placeholder="Search titles and descriptions" maxlength="150"></label>
+        <label>Category<select id="issue-category"><option value="">All categories</option></select></label>
+        <label>Status<select id="issue-status"><option value="open">Open</option><option value="in_progress">In progress</option><option value="closed">Closed</option><option value="all">All statuses</option></select></label>
+        <label>View<select id="issue-scope"><option value="all">All reports</option><option value="mine">My reports</option></select></label>
+        <button type="submit">Search</button>
+      </form>
+      <div id="issue-results" class="issue-results" aria-live="polite"></div>
+      <div class="issue-pagination"><button id="previous-page" hidden>Previous</button><span id="page-label"></span><button id="next-page" hidden>Next</button></div>
+    </div>
+    <div id="issue-detail-view" hidden><a href="/issues" id="back-issues">← All issues</a><div id="issue-detail"></div></div>
+    <p id="issue-error" class="issue-error" role="alert"></p>
+  </section>
+  <div id="site-footer"></div>
+</main>
+<dialog id="issue-dialog" aria-labelledby="report-title">
+  <form id="report-form" class="issue-form">
+    <div class="issues-heading"><h2 id="report-title">Report an issue</h2><button type="button" id="close-report" aria-label="Close report form">✕</button></div>
+    <p>For problems with The Kollection in Nuvio or this website.</p>
+    <label>Display name<input name="author" required minlength="2" maxlength="50" autocomplete="nickname" placeholder="How you’d like to appear"></label>
+    <label>Category<select name="category" id="report-category" required><option value="">Choose a category</option></select></label>
+    <label>Title<input name="title" required minlength="5" maxlength="160" placeholder="Briefly describe what isn’t working"></label>
+    <label>Description<textarea name="body" required minlength="15" maxlength="10000" rows="8" placeholder="What happened?&#10;What did you expect?&#10;Steps to reproduce the issue&#10;Device, browser, or Nuvio version"></textarea></label>
+    <p class="issue-note">Reports and display names are public. Do not include passwords, API keys, private configuration links, or other personal information.</p>
+    <p id="report-error" class="issue-error" role="alert"></p>
+    <div class="issue-form-actions"><button type="button" id="cancel-report">Cancel</button><button type="submit" class="issue-primary">Submit issue</button></div>
+  </form>
+</dialog>
+</body></html>
