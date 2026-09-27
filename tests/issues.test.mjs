@@ -84,3 +84,25 @@ test('profile author is resolved from the selected account profile, never a supp
   assert.equal(await profileAuthor(2, { accessToken: 'test' }, env), 'Other profile');
   await assert.rejects(profileAuthor(999, { accessToken: 'test' }, env), /no longer available/);
 });
+
+test('display names are account-scoped, authenticated, persistent, and override profile names across issues', async () => {
+  const { onRequestGet: preferences, onRequestPost: save } = await import('../functions/api/account/preferences.js');
+  const { profileAuthor } = await import('../functions/_lib/issues.js');
+  assert.equal((await preferences(await ctx(null))).status, 401);
+  assert.equal((await save(await ctx(null, 'POST', { displayName: 'Name' }))).status, 401);
+  assert.equal((await save(await ctx('alice', 'POST', { displayName: 'Name' }, null, '', 'https://other.test'))).status, 403);
+  assert.equal((await save(await ctx('alice', 'POST', { displayName: 'x'.repeat(51) }))).status, 400);
+  assert.equal((await save(await ctx('alice', 'POST', { displayName: ' Site  Name ', user_id: 'bob' }))).status, 200);
+  assert.equal((await (await preferences(await ctx('alice'))).json()).displayName, 'Site Name');
+  assert.equal((await (await preferences(await ctx('bob'))).json()).displayName, '');
+  assert.equal(await profileAuthor(2, { id: 'alice' }, env), 'Site Name');
+  assert.equal(await profileAuthor(null, { id: 'alice' }, env), 'Site Name');
+  assert.equal((await (await detail(await ctx(null, 'GET', null, 1))).json()).issue.author, 'Site Name');
+  assert.equal((await (await list(await ctx('alice'))).json()).displayName, 'Site Name');
+  assert.equal((await save(await ctx('bob', 'POST', { displayName: 'Comment Name' }))).status, 200);
+  assert.equal((await (await detail(await ctx(null, 'GET', null, 1))).json()).comments[0].author, 'Comment Name');
+  const { onRequestGet: session } = await import('../functions/api/auth/session.js');
+  assert.equal((await (await session(await ctx('alice'))).json()).user.displayName, 'Site Name');
+  assert.equal((await save(await ctx('alice', 'POST', { displayName: '' }))).status, 200);
+  assert.equal(await profileAuthor(2, { id: 'alice', accessToken: 'test' }, env), 'Other profile');
+});

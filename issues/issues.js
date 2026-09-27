@@ -5,13 +5,13 @@
   const statuses = { open: 'Open', in_progress: 'In progress', closed: 'Closed' };
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const date = value => new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-  let page = 1, authenticated = false, loadVersion = 0;
+  let page = 1, authenticated = false, loadVersion = 0, displayName = '';
   const loginUrl = () => '/account?next=' + encodeURIComponent('/issues' + location.hash);
   function selectedProfile() { return window.KollectionNavAccount?.getSelectedProfile?.(); }
   function updatePostingProfile() {
     const profile = selectedProfile();
     document.querySelectorAll('[data-posting-profile]').forEach(node => {
-      node.textContent = profile ? `Posting as ${profile.name}` : 'Your selected Nuvio profile will be used.';
+      node.textContent = displayName || profile ? `Posting as ${displayName || profile.name}` : 'Your selected Nuvio profile will be used.';
     });
   }
   const badge = issue => `<span class="issue-badge">${esc(statuses[issue.status])}</span><span class="issue-badge">${esc(categories[issue.category])}</span>`;
@@ -23,6 +23,8 @@
   }
   function authState(result) {
     authenticated = result.authenticated;
+    displayName = result.displayName || '';
+    updatePostingProfile();
     $('new-issue').disabled = false;
     $('signin-note').hidden = authenticated;
   }
@@ -93,8 +95,8 @@
       if (method === 'POST') {
         let profile = selectedProfile();
         if (!profile) { await window.KollectionNavAccount?.refresh?.(); profile = selectedProfile(); }
-        if (!profile) throw new Error('Your Nuvio profile could not be loaded. Refresh the page or select a profile in Account, then try again.');
-        data.profileId = profile.id;
+        if (!profile && !displayName) throw new Error('Your Nuvio profile could not be loaded. Refresh the page or select a profile in Account, then try again.');
+        data.profileId = profile?.id || null;
       }
       const result = await api(path, { method, body: JSON.stringify(data) });
       if (reporting) { $('issue-dialog').close(); form.reset(); location.hash = result.id; }
@@ -114,6 +116,7 @@
   $('next-page').onclick = () => { page++; load(); }; $('previous-page').onclick = () => { page--; load(); };
   $('back-issues').onclick = event => { event.preventDefault(); location.hash = ''; };
   window.addEventListener('hashchange', load);
+  window.addEventListener('kollection:display-name-changed', load);
   window.addEventListener('kollection:nuvio-profile-changed', updatePostingProfile);
   ['kollection:nuvio-signed-in', 'kollection:nuvio-signed-out', 'kollection:nuvio-session-changed'].forEach(event => window.addEventListener(event, () => { $('issue-dialog').close(); load(); }));
   load();

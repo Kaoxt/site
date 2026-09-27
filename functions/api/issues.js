@@ -1,3 +1,4 @@
+import { getDisplayName } from '../_lib/account-preferences.js';
 import { CATEGORIES, category, handle, input, IssueError, publicIssue, profileAuthor, textField } from '../_lib/issues.js';
 
 export const onRequestGet = context => handle(context, false, async ({ session, admin, reply, db }) => {
@@ -16,8 +17,8 @@ export const onRequestGet = context => handle(context, false, async ({ session, 
   if (query) { filters.push('(instr(lower(i.title), lower(?)) > 0 OR instr(lower(i.body), lower(?)) > 0)'); values.push(query, query); }
   const page = Math.max(1, Math.min(10000, parseInt(params.get('page'), 10) || 1));
   const database = await db(), where = filters.length ? ' WHERE ' + filters.join(' AND ') : '';
-  const rows = await database.prepare(`SELECT i.*, (SELECT COUNT(*) FROM community_issue_comments c WHERE c.issue_id = i.id) AS comment_count FROM community_issues i${where} ORDER BY i.id DESC LIMIT 21 OFFSET ?`).bind(...values, (page - 1) * 20).all();
-  return reply({ issues: rows.results.slice(0, 20).map(row => publicIssue(row, session)), hasMore: rows.results.length > 20, page, categories: CATEGORIES, authenticated: !!session, isAdmin: admin });
+  const rows = await database.prepare(`SELECT i.*, COALESCE(NULLIF(p.display_name, ''), i.author) AS author, (SELECT COUNT(*) FROM community_issue_comments c WHERE c.issue_id = i.id) AS comment_count FROM community_issues i LEFT JOIN account_preferences p ON p.user_id = i.user_id${where} ORDER BY i.id DESC LIMIT 21 OFFSET ?`).bind(...values, (page - 1) * 20).all();
+  return reply({ issues: rows.results.slice(0, 20).map(row => publicIssue(row, session)), hasMore: rows.results.length > 20, page, categories: CATEGORIES, authenticated: !!session, isAdmin: admin, displayName: await getDisplayName(context.env, session?.id) });
 });
 
 export const onRequestPost = context => handle(context, true, async ({ session, reply, db }) => {

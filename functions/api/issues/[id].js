@@ -1,12 +1,13 @@
+import { getDisplayName } from '../../_lib/account-preferences.js';
 import { handle, input, IssueError, issueId, publicIssue, profileAuthor, STATUSES, textField } from '../../_lib/issues.js';
 export const onRequestGet = context => handle(context, false, async ({ session, admin, reply, db }) => {
   const database = await db(), id = issueId(context.params.id);
-  const row = await database.prepare('SELECT * FROM community_issues WHERE id = ?').bind(id).first();
+  const row = await database.prepare("SELECT i.*, COALESCE(NULLIF(p.display_name, ''), i.author) AS author FROM community_issues i LEFT JOIN account_preferences p ON p.user_id = i.user_id WHERE i.id = ?").bind(id).first();
   if (!row) throw new IssueError('Issue not found.', 404);
   const params = new URL(context.request.url).searchParams;
   const after = Math.max(0, parseInt(params.get('after'), 10) || 0);
-  const comments = await database.prepare('SELECT id, author, body, is_admin, created_at FROM community_issue_comments WHERE issue_id = ? AND id > ? ORDER BY id LIMIT 51').bind(id, after).all();
-  return reply({ issue: publicIssue(row, session), comments: comments.results.slice(0, 50), hasMore: comments.results.length > 50, authenticated: !!session, isAdmin: admin });
+  const comments = await database.prepare("SELECT c.id, COALESCE(NULLIF(p.display_name, ''), c.author) AS author, c.body, c.is_admin, c.created_at FROM community_issue_comments c LEFT JOIN account_preferences p ON p.user_id = c.user_id WHERE c.issue_id = ? AND c.id > ? ORDER BY c.id LIMIT 51").bind(id, after).all();
+  return reply({ issue: publicIssue(row, session), comments: comments.results.slice(0, 50), hasMore: comments.results.length > 50, authenticated: !!session, isAdmin: admin, displayName: await getDisplayName(context.env, session?.id) });
 });
 export const onRequestPatch = context => handle(context, true, async ({ admin, reply, db }) => {
   if (!admin) throw new IssueError('Only the Kollection admin can change issue status.', 403);

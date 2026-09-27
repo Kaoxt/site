@@ -1,3 +1,4 @@
+import { getDisplayName, preferencesDb } from './account-preferences.js';
 import { assertSameOrigin, nuvioConfig, isAdminUser, readSession, refreshSessionIfNeeded } from './nuvio-session.js';
 import { requireDb } from './saved-collections.js';
 
@@ -27,6 +28,7 @@ export async function input(request) {
 const schemas = new WeakMap();
 export async function issuesDb(env) {
   const db = requireDb(env);
+  await preferencesDb(env);
   if (!schemas.has(db)) schemas.set(db, db.batch([
     db.prepare(`CREATE TABLE IF NOT EXISTS community_issues (
       id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL, author TEXT NOT NULL,
@@ -70,6 +72,8 @@ export async function handle(context, write, run) {
 }
 
 export async function profileAuthor(profileId, session, env) {
+  const displayName = await getDisplayName(env, session.id);
+  if (displayName) return displayName;
   if (!Number.isSafeInteger(profileId) || profileId < 1) throw new IssueError('Select a Nuvio profile before posting.');
   const { apiBase, publishableKey } = nuvioConfig(env);
   let response;

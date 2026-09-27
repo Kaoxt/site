@@ -285,6 +285,7 @@
     ]));
     const avatars = new Map(avatarPairs);
     const activeAvatar = avatars.get(activeProfile.id) || '';
+    const displayName = session.user?.displayName || activeProfile.name;
 
     const desktopProfileRows = profiles.map((profile) => {
       const active = profile.id === activeProfile.id;
@@ -303,7 +304,7 @@
         <div class="nuvio-desktop-account-wrap">
           <button class="nuvio-desktop-profile-button" type="button" aria-haspopup="true" aria-expanded="false">
             ${avatarMarkup(activeProfile, activeAvatar, 'desktop')}
-            <span class="nuvio-desktop-profile-name">${esc(activeProfile.name)}</span>
+            <span class="nuvio-desktop-profile-name">${esc(displayName)}</span>
             <svg class="nuvio-profile-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"></path></svg>
           </button>
 
@@ -311,8 +312,8 @@
             <div class="nuvio-desktop-popover-user">
               ${avatarMarkup(activeProfile, activeAvatar, 'popover')}
               <div>
-                <strong>${esc(activeProfile.name)}</strong>
-                <small>Active profile</small>
+                <strong>${esc(displayName)}</strong>
+                <small>${session.user?.displayName ? `Profile: ${esc(activeProfile.name)}` : 'Active profile'}</small>
               </div>
             </div>
 
@@ -376,8 +377,8 @@
           <div class="nuvio-mobile-current-profile">
             ${avatarMarkup(activeProfile, activeAvatar, 'mobile')}
             <div>
-              <strong>${esc(activeProfile.name)}</strong>
-              <small>Active profile</small>
+              <strong>${esc(displayName)}</strong>
+              <small>${session.user?.displayName ? `Profile: ${esc(activeProfile.name)}` : 'Active profile'}</small>
             </div>
           </div>
 
@@ -471,6 +472,7 @@
       });
 
       window.addEventListener('kollection:nuvio-signed-in', refresh);
+      window.addEventListener('kollection:display-name-changed', refresh);
       window.addEventListener('kollection:nuvio-session-changed', refresh);
     }
 

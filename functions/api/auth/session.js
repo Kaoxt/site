@@ -1,3 +1,4 @@
+import { getDisplayName } from '../../_lib/account-preferences.js';
 import {
   authServerReady,
   isAdminUser,
@@ -24,7 +25,7 @@ export async function onRequestGet(context) {
     return json({ authenticated: false, isAdmin: false, user: null });
   }
 
-  const user = { id: session.id, email: session.email };
+  const user = { id: session.id, email: session.email, displayName: await getDisplayName(env, session.id) };
   return json({
     authenticated: true,
     isAdmin: isAdminUser(user, env),
