@@ -4,9 +4,17 @@
   if (!form) return;
   const field = form.elements.displayName, button = form.querySelector('button'), status = document.getElementById('accountDisplayNameStatus');
   let loaded = false;
+  function showQuota(data) {
+    if (typeof data.changesRemaining !== 'number') return;
+    const remaining = data.changesRemaining;
+    document.getElementById('accountDisplayNameLimit').textContent = remaining > 0
+      ? `${remaining} of 2 changes remaining in a rolling 60-day period. Setting or clearing a name counts as a change.`
+      : `You have used both changes in the last 60 days. You can change your name again on ${new Date(data.nextChangeAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}.`;
+  }
   async function request(options) {
     const response = await fetch('/api/account/preferences', { credentials: 'same-origin', cache: 'no-store', ...options });
     const data = await response.json();
+    showQuota(data);
     if (!response.ok) throw new Error(data.error || 'Could not save your display name. Please try again.');
     return data;
   }
