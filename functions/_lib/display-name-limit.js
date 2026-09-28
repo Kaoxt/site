@@ -19,7 +19,7 @@ export async function displayNameLimitDb(env) {
     db.prepare('DROP TRIGGER IF EXISTS display_name_history_after_insert'),
     // The earliest history row is the free initial display name. Only later rows
     // inside the rolling window count toward the two-change limit.
-    db.prepare(`CREATE TRIGGER display_name_limit_before_update
+    db.prepare(`CREATE TRIGGER IF NOT EXISTS display_name_limit_before_update
       BEFORE UPDATE OF display_name ON account_preferences
       WHEN NEW.display_name != OLD.display_name AND
         (SELECT COUNT(*) FROM display_name_changes c
@@ -27,10 +27,10 @@ export async function displayNameLimitDb(env) {
             AND c.id != COALESCE((SELECT MIN(first.id) FROM display_name_changes first WHERE first.user_id = OLD.user_id), -1)
             AND julianday(c.changed_at) > julianday('now', '-60 days')) >= 2
       BEGIN SELECT RAISE(ABORT, 'display_name_change_limit'); END`),
-    db.prepare(`CREATE TRIGGER display_name_history_after_update
+    db.prepare(`CREATE TRIGGER IF NOT EXISTS display_name_history_after_update
       AFTER UPDATE OF display_name ON account_preferences WHEN NEW.display_name != OLD.display_name
       BEGIN INSERT INTO display_name_changes (user_id, changed_at) VALUES (NEW.user_id, NEW.updated_at); END`),
-    db.prepare(`CREATE TRIGGER display_name_history_after_insert
+    db.prepare(`CREATE TRIGGER IF NOT EXISTS display_name_history_after_insert
       AFTER INSERT ON account_preferences WHEN NEW.display_name != ''
       BEGIN INSERT INTO display_name_changes (user_id, changed_at) VALUES (NEW.user_id, NEW.updated_at); END`),
   ]).catch(error => { ready.delete(db); throw error; }));
