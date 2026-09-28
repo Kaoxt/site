@@ -107,33 +107,36 @@ test('display names are account-scoped, authenticated, persistent, and override 
   assert.equal(await profileAuthor(2, { id: 'alice', accessToken: 'test' }, env), 'Other profile');
 });
 
-test('display name limit blocks a third change, ignores identical saves, counts clearing, and expires on a rolling window', async () => {
+test('initial display name is free, then a third later change is blocked while identical saves are ignored', async () => {
   const { onRequestGet: preferences, onRequestPost: save } = await import('../functions/api/account/preferences.js');
   const user = 'limited-names';
   const change = name => ctx(user, 'POST', { displayName: name }).then(save);
-  assert.equal((await (await change('First name')).json()).changesRemaining, 1);
-  assert.equal((await (await change(' First   name ')).json()).changesRemaining, 1);
-  assert.equal((await (await change('')).json()).changesRemaining, 0);
-  const blocked = await change('Third name'); assert.equal(blocked.status, 429);
+  assert.equal((await (await change('First name')).json()).changesRemaining, 2);
+  assert.equal((await (await change(' First   name ')).json()).changesRemaining, 2);
+  assert.equal((await (await change('')).json()).changesRemaining, 1);
+  assert.equal((await (await change('Third name')).json()).changesRemaining, 0);
+  const blocked = await change('Fourth name'); assert.equal(blocked.status, 429);
   const blockedBody = await blocked.json(); assert.ok(Date.parse(blockedBody.nextChangeAt) > Date.now());
-  assert.equal((await (await preferences(await ctx(user))).json()).displayName, '');
-  assert.equal((await change('')).status, 200, 'unchanged values do not consume changes or fail');
-  await env.DB.prepare("UPDATE display_name_changes SET changed_at = ? WHERE id = (SELECT MIN(id) FROM display_name_changes WHERE user_id = ?)").bind(new Date(Date.now() - 61 * 86400000).toISOString(), user).run();
+  assert.equal((await (await preferences(await ctx(user))).json()).displayName, 'Third name');
+  assert.equal((await change('Third name')).status, 200, 'unchanged values do not consume changes or fail');
+  await env.DB.prepare(`UPDATE display_name_changes SET changed_at = ? WHERE id = (
+    SELECT id FROM display_name_changes WHERE user_id = ? ORDER BY id LIMIT 1 OFFSET 1
+  )`).bind(new Date(Date.now() - 61 * 86400000).toISOString(), user).run();
   assert.equal((await (await preferences(await ctx(user))).json()).changesRemaining, 1);
   assert.equal((await change('Now allowed')).status, 200);
   assert.equal((await change('Blocked again')).status, 429);
-  const concurrent = await Promise.all(['One', 'Two', 'Three'].map(async displayName => save(await ctx('concurrent-names', 'POST', { displayName }))));
-  assert.equal(concurrent.filter(r => r.status === 200).length, 2);
+  const concurrent = await Promise.all(['One', 'Two', 'Three', 'Four'].map(async displayName => save(await ctx('concurrent-names', 'POST', { displayName }))));
+  assert.equal(concurrent.filter(r => r.status === 200).length, 3);
   assert.equal(concurrent.filter(r => r.status === 429).length, 1);
 });
 
-test('existing accounts retain their most recent known name change when the limit is introduced', async () => {
+test('existing accounts receive the same free initial display name allowance', async () => {
   const { preferencesDb } = await import('../functions/_lib/account-preferences.js');
   const { displayNameLimitDb, displayNameQuota } = await import('../functions/_lib/display-name-limit.js');
   const freshEnv = { DB: database() }, db = await preferencesDb(freshEnv);
   await db.prepare('INSERT INTO account_preferences (user_id, display_name, updated_at) VALUES (?, ?, ?)').bind('existing', 'Existing name', new Date().toISOString()).run();
   await displayNameLimitDb(freshEnv);
-  assert.equal((await displayNameQuota(db, 'existing')).changesRemaining, 1);
+  assert.equal((await displayNameQuota(db, 'existing')).changesRemaining, 2);
   await displayNameLimitDb(freshEnv);
-  assert.equal((await displayNameQuota(db, 'existing')).changesRemaining, 1);
+  assert.equal((await displayNameQuota(db, 'existing')).changesRemaining, 2);
 });
