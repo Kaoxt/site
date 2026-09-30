@@ -194,7 +194,7 @@ export async function onRequestPost(context) {
       }, 500);
     }
 
-    if (!env.assertSameOrigin && !assertSameOrigin(context.request)) {
+    if (!assertSameOrigin(context.request)) {
       return response({ error: 'Cross-origin image uploads are not allowed.' }, 403);
     }
 
