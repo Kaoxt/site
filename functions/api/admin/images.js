@@ -3,6 +3,7 @@ import {
   isAdminUser,
   readSession,
 } from '../../_lib/nuvio-session.js';
+import { artworkUploadedAt, readArtworkHistory } from '../../_lib/artwork-history.js';
 
 const JSON_HEADERS = {
   'content-type': 'application/json; charset=utf-8',
@@ -26,7 +27,7 @@ function publicUrl(origin, key, version = '') {
   return `${origin}/${encoded}${suffix}`;
 }
 
-function metadataFor(object, origin) {
+function metadataFor(object, origin, history) {
   const key = String(object.key || '');
   const parts = key.split('/').filter(Boolean);
 
@@ -44,7 +45,7 @@ function metadataFor(object, origin) {
     category,
     folder,
     size: Number(object.size || 0),
-    uploaded: object.uploaded ? new Date(object.uploaded).toISOString() : null,
+    uploaded: artworkUploadedAt(object, history),
     etag: object.httpEtag || object.etag || null,
   };
 }
@@ -78,15 +79,19 @@ export async function onRequestGet(context) {
     const url = new URL(context.request.url);
     const cursor = url.searchParams.get('cursor') || undefined;
 
-    const listing = await env.IMAGES.list({
-      prefix: 'images/',
-      limit: 1000,
-      ...(cursor ? { cursor } : {}),
-    });
+    const [listing, history] = await Promise.all([
+      env.IMAGES.list({
+        prefix: 'images/',
+        limit: 1000,
+        include: ['customMetadata'],
+        ...(cursor ? { cursor } : {}),
+      }),
+      readArtworkHistory(env.IMAGES),
+    ]);
 
     const images = (listing.objects || [])
       .filter((object) => /\.(?:webp|png|jpe?g|gif|avif)$/i.test(object.key || ''))
-      .map((object) => metadataFor(object, url.origin));
+      .map((object) => metadataFor(object, url.origin, history));
 
     return response({
       images,
