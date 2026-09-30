@@ -85,14 +85,15 @@ function bytesBase64(bytes) {
   return btoa(binary);
 }
 
-function publicUrl(origin, key, version = '') {
+function publicUrl(origin, key) {
   const encoded = key
     .split('/')
     .map((part) => encodeURIComponent(part))
     .join('/');
 
-  const suffix = version ? `?v=${encodeURIComponent(version)}` : '';
-  return `${origin}/${encoded}${suffix}`;
+  // Replacements keep the same public link; cache freshness is handled by
+  // the image route rather than by adding a version to the URL.
+  return `${origin}/${encoded}`;
 }
 
 async function commitBinaryFiles({ token, files, message }) {
@@ -256,6 +257,8 @@ export async function onRequestPost(context) {
       }
 
       const bytes = new Uint8Array(await file.arrayBuffer());
+      // Use the exact destination in both GitHub and R2: uploading this
+      // filename again overwrites it, without creating a numbered copy.
       const key = `images/${category}/${folder}/${filename}`;
 
       selected.push({
@@ -304,11 +307,10 @@ export async function onRequestPost(context) {
     );
 
     const url = new URL(context.request.url);
-    const versionToken = Date.now().toString(36);
     const files = selected.map((item) => ({
       key: item.key,
       path: item.key.replace(/^images\//, ''),
-      url: publicUrl(url.origin, item.key, versionToken),
+      url: publicUrl(url.origin, item.key),
       filename: item.filename,
       category,
       folder,
