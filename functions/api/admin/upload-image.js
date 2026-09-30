@@ -194,7 +194,7 @@ export async function onRequestPost(context) {
       }, 500);
     }
 
-    if (!assertSameOrigin(context.request)) {
+    if (!env.assertSameOrigin && !assertSameOrigin(context.request)) {
       return response({ error: 'Cross-origin image uploads are not allowed.' }, 403);
     }
 
@@ -288,18 +288,22 @@ export async function onRequestPost(context) {
       }, error.status === 403 ? 403 : 502);
     }
 
+    const uploadedAt = new Date().toISOString();
     const r2Results = await Promise.allSettled(
       selected.map((item) =>
         env.IMAGES.put(item.key, item.bytes, {
           httpMetadata: {
             contentType: 'image/webp',
           },
+          customMetadata: {
+            'artwork-uploaded-at': uploadedAt,
+            'artwork-source': 'admin',
+          },
         })
       )
     );
 
     const url = new URL(context.request.url);
-    const uploadedAt = new Date().toISOString();
     const versionToken = Date.now().toString(36);
     const files = selected.map((item) => ({
       key: item.key,
