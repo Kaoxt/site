@@ -17,14 +17,15 @@ function response(body, status = 200) {
   });
 }
 
-function publicUrl(origin, key, version = '') {
+function publicUrl(origin, key) {
   const encoded = key
     .split('/')
     .map((part) => encodeURIComponent(part))
     .join('/');
 
-  const suffix = version ? `?v=${encodeURIComponent(version)}` : '';
-  return `${origin}/${encoded}${suffix}`;
+  // Artwork keeps a permanent public URL. The image route handles freshness
+  // internally, so copied links never need an ETag or version query string.
+  return `${origin}/${encoded}`;
 }
 
 function metadataFor(object, origin, history) {
@@ -40,7 +41,7 @@ function metadataFor(object, origin, history) {
   return {
     key,
     path: key.replace(/^images\//, ''),
-    url: publicUrl(origin, key, object.httpEtag || object.etag || ''),
+    url: publicUrl(origin, key),
     filename,
     category,
     folder,
