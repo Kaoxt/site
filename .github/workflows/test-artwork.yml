@@ -1,0 +1,34 @@
+name: Artwork upload regression tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'functions/api/admin/images.js'
+      - 'functions/api/admin/upload-image.js'
+      - 'functions/_lib/artwork-history.js'
+      - 'tests/artwork-*.test.mjs'
+      - '.github/workflows/test-artwork.yml'
+  pull_request:
+    paths:
+      - 'functions/api/admin/images.js'
+      - 'functions/api/admin/upload-image.js'
+      - 'functions/_lib/artwork-history.js'
+      - 'tests/artwork-*.test.mjs'
+      - '.github/workflows/test-artwork.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test single-file uploads and real upload dates
+        run: node --experimental-default-type=module --test tests/artwork-*.test.mjs
