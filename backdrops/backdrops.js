@@ -4,7 +4,7 @@
   const STATE_KEY = 'kollection-backdrops-title-state-v1';
   const TMDB_KEY = 'kollection-backdrops-tmdb-key-v1';
   const API_BASE = 'https://api.themoviedb.org/3';
-  const IMAGE_BASE = 'https://image.tmdb.org/t/p/original';
+  const IMAGE_BASE = 'https://image.tmdb.org/t/p/';
 
   const defaults = {
     mode: 'original',
@@ -26,6 +26,8 @@
 
   let state = loadState();
   let renderToken = 0;
+  let searchToken = 0;
+  let renderFrame = 0;
   const imageCache = new Map();
   const $ = id => document.getElementById(id);
   const els = {};
@@ -103,19 +105,22 @@
   }
 
   async function searchTitles() {
+    const token = ++searchToken;
+    const media = state.mediaType;
     const query = els.titleSearch.value.trim();
     if (!query) return setStatus(els.titleSearchStatus, 'Type a movie or TV title first.', 'error');
     if (!String(els.tmdbKey.value || getSavedKey()).trim()) return setStatus(els.titleSearchStatus, 'Add your TMDB key first.', 'error');
     els.searchTitle.disabled = true;
     setStatus(els.titleSearchStatus, 'Searching TMDB…');
     try {
-      const data = await tmdbFetch(`/search/${state.mediaType}`, { query, include_adult: false, language: 'en-US', page: 1 });
-      const results = (data.results || []).filter(item => item.backdrop_path).slice(0, 8).map(item => normalizeSearchItem(item, state.mediaType));
+      const data = await tmdbFetch(`/search/${media}`, { query, include_adult: false, language: 'en-US', page: 1 });
+      const results = (data.results || []).filter(item => item.backdrop_path).slice(0, 8).map(item => normalizeSearchItem(item, media));
+      if (token !== searchToken) return;
       renderResults(results);
       setStatus(els.titleSearchStatus, results.length ? `Choose a title below. Each result has its own backdrop.` : 'No matching titles with backdrops were found.', results.length ? 'ok' : '');
     } catch (error) {
-      setStatus(els.titleSearchStatus, error.message || 'Could not search TMDB.', 'error');
-    } finally { els.searchTitle.disabled = false; }
+      if (token === searchToken) setStatus(els.titleSearchStatus, error.message || 'Could not search TMDB.', 'error');
+    } finally { if (token === searchToken) els.searchTitle.disabled = false; }
   }
 
   function renderResults(results) {
@@ -144,10 +149,11 @@
       const image = new Image();
       image.crossOrigin = 'anonymous';
       image.onload = () => resolve(image);
-      image.onerror = () => reject(new Error('Could not load this TMDB backdrop.'));
+      image.onerror = () => { imageCache.delete(url); reject(new Error('Could not load this TMDB backdrop. Try selecting it again.')); };
       image.src = url;
     });
     imageCache.set(url, promise);
+    if (imageCache.size > 24) imageCache.delete(imageCache.keys().next().value);
     return promise;
   }
 
@@ -208,49 +214,84 @@
     ctx.restore();
   }
 
+  async function artwork(item, size) {
+    if (!item?.items) return loadImage(`${IMAGE_BASE}${size}${item.backdropPath}`);
+    const images = await Promise.all(item.items.map(entry => loadImage(`${IMAGE_BASE}w780${entry.backdropPath}`)));
+    const surface = document.createElement('canvas');
+    surface.width = 1920; surface.height = 1080;
+    const ctx = surface.getContext('2d');
+    const cols = Math.min(images.length, images.length <= 6 ? 3 : 4);
+    const rows = Math.ceil(images.length / cols);
+    images.forEach((image, index) => {
+      const row = Math.floor(index / cols);
+      const rowCount = Math.min(cols, images.length - row * cols);
+      const w = surface.width / rowCount, h = surface.height / rows;
+      const scale = Math.max(w / image.width, h / image.height);
+      const sw = w / scale, sh = h / scale;
+      ctx.drawImage(image, (image.width-sw)/2, (image.height-sh)/2, sw, sh, (index%cols)*w, row*h, w, h);
+    });
+    return surface;
+  }
+
+  function canRender() { return !!(state.selected?.backdropPath || state.selected?.items?.length); }
+  function queuePreview() {
+    cancelAnimationFrame(renderFrame);
+    renderFrame = requestAnimationFrame(renderPreview);
+  }
   async function renderPreview() {
+    const token = ++renderToken;
     const item = state.selected;
-    if (!item?.backdropPath) {
+    els.downloadBackdrop.disabled = true;
+    if (!canRender()) {
+      els.renderBusy.hidden = true;
       els.emptyState.hidden = false;
-      els.downloadBackdrop.disabled = true;
-      els.previewTitle.textContent = 'Search for a movie or TV show';
+      els.backdropCanvas.getContext('2d').clearRect(0,0,1280,720);
+      els.previewTitle.textContent = 'Choose artwork to begin';
       els.previewMeta.textContent = '';
       return;
     }
-    const token = ++renderToken;
     els.renderBusy.hidden = false;
     try {
-      const image = await loadImage(`${IMAGE_BASE}${item.backdropPath}`);
+      const image = await artwork(item, 'w1280');
       if (token !== renderToken) return;
       const canvas = els.backdropCanvas;
       canvas.width = 1280; canvas.height = 720;
       const ctx = canvas.getContext('2d');
-      ctx.clearRect(0,0,canvas.width,canvas.height);
       drawCover(ctx, image, canvas.width, canvas.height);
       applyOverlay(ctx, canvas.width, canvas.height);
       drawTitle(ctx, canvas.width, canvas.height);
       els.emptyState.hidden = true;
       els.downloadBackdrop.disabled = false;
       els.previewTitle.textContent = item.title;
-      els.previewMeta.textContent = `${item.year || ''}${item.year ? ' · ' : ''}${item.media === 'movie' ? 'Movie' : 'TV Show'} · ${state.mode === 'custom' ? 'Custom style' : 'Original backdrop'}`;
+      els.previewMeta.textContent = item.items ? `${item.items.length} titles · Folder backdrop` : `${item.year || ''} · ${item.media === 'movie' ? 'Movie' : 'TV Show'}`;
     } catch (error) {
+      if (token !== renderToken) return;
+      els.backdropCanvas.getContext('2d').clearRect(0,0,1280,720);
+      els.emptyState.hidden = false;
       setStatus(els.titleSearchStatus, error.message || 'Could not render backdrop.', 'error');
     } finally { if (token === renderToken) els.renderBusy.hidden = true; }
   }
 
   async function downloadPreview() {
-    if (!state.selected?.backdropPath) return;
-    const [width,height] = els.resolution.value.split('x').map(Number);
-    const image = await loadImage(`${IMAGE_BASE}${state.selected.backdropPath}`);
-    const canvas = document.createElement('canvas'); canvas.width=width; canvas.height=height;
-    const ctx = canvas.getContext('2d');
-    drawCover(ctx,image,width,height); applyOverlay(ctx,width,height); drawTitle(ctx,width,height);
-    canvas.toBlob(blob => {
-      if (!blob) return;
+    if (!canRender()) return;
+    const item = state.selected;
+    const token = renderToken;
+    els.downloadBackdrop.disabled = true;
+    try {
+      const [width,height] = els.resolution.value.split('x').map(Number);
+      const image = await artwork(item, 'original');
+      if (token !== renderToken) throw new Error('Artwork changed. Download the updated preview again.');
+      const canvas = document.createElement('canvas'); canvas.width=width; canvas.height=height;
+      const ctx = canvas.getContext('2d');
+      drawCover(ctx,image,width,height); applyOverlay(ctx,width,height); drawTitle(ctx,width,height);
+      const blob = await new Promise(resolve => canvas.toBlob(resolve,'image/png'));
+      if (!blob) throw new Error('Could not create the download. Try again.');
       const url = URL.createObjectURL(blob); const a=document.createElement('a');
-      const slug = state.selected.title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'backdrop';
+      const slug = item.title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'backdrop';
       a.href=url; a.download=`${slug}-backdrop.png`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1500);
-    },'image/png');
+    } catch (error) {
+      setStatus(els.titleSearchStatus, error.message || 'Could not download backdrop.', 'error');
+    } finally { els.downloadBackdrop.disabled = !canRender(); }
   }
 
   function applyMode() {
@@ -260,7 +301,7 @@
     setStatus(els.backdropModeStatus, state.mode === 'custom'
       ? 'Custom styling is selected. Every title still uses its own TMDB backdrop image.'
       : 'Original is selected. Each title uses its own TMDB backdrop.', 'ok');
-    saveState(); renderPreview();
+    saveState(); queuePreview();
   }
 
   function syncState() {
@@ -282,7 +323,7 @@
     els.positionXValue.value = `${state.positionX}%`;
     els.fontSizeValue.value = state.fontSize;
     els.textControls.hidden = !state.showTitle;
-    saveState(); renderPreview();
+    saveState(); queuePreview();
   }
 
   function hydrate() {
@@ -316,6 +357,9 @@
   els.backdropSourceMode.addEventListener('change', applyMode);
   els.mediaType.addEventListener('click', event => {
     const button = event.target.closest('button[data-value]'); if (!button) return;
+    ++searchToken;
+    els.searchTitle.disabled = false;
+    els.titleResults.innerHTML = '';
     state.mediaType = button.dataset.value;
     els.mediaType.querySelectorAll('button').forEach(btn => btn.classList.toggle('active', btn === button));
     saveState();
@@ -326,7 +370,7 @@
     .forEach(el => el.addEventListener('input', syncState));
   els.downloadBackdrop.addEventListener('click', downloadPreview);
 
-  window.KollectionBackdrops = Object.freeze({ selectTitle, tmdbFetch });
+  window.KollectionBackdrops = Object.freeze({ selectTitle, tmdbFetch, getState: () => JSON.parse(JSON.stringify(state)), restore: value => { ++renderToken; state = { ...defaults, ...value }; hydrate(); applyMode(); } });
   window.dispatchEvent(new CustomEvent('kollection:backdrops-ready'));
 
   hydrate();

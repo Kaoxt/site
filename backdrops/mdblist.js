@@ -217,6 +217,7 @@
         const results = await Promise.allSettled(batch.map(resolveTmdbItem));
         results.forEach(result => { if (result.status === 'fulfilled' && result.value.backdropPath) resolved.push(result.value); });
       }
+      if (!resolved.length) throw new Error('No backdrop artwork could be loaded. Check your TMDB key and try again.');
       renderTitleResults(resolved);
       status(els.mdblistStatus, `Loaded ${resolved.length} title${resolved.length === 1 ? '' : 's'} with backdrops from this list. Choose one to preview.`, 'ok');
     } catch (error) {
@@ -232,6 +233,7 @@
         <span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.year || (item.media === 'movie' ? 'Movie' : 'TV Show'))}</small></span>
       </button>`).join('');
     els.mdblistTitleResults.querySelectorAll('.title-result').forEach((button,index) => {
+      button.backdropItem = items[index];
       button.addEventListener('click', () => window.KollectionBackdrops?.selectTitle?.(items[index]));
     });
   }

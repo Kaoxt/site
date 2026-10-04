@@ -96,7 +96,9 @@
 }
 .text-input:focus,
 .select-input:focus { border-color: rgba(99,102,241,.8); box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
-.select-input option { color:#111; }
+.backdrop-page .select-input option, .backdrop-page .select-input optgroup { color:#f5f5f7; background:#171923; }
+html[data-theme="light"] .backdrop-page .select-input { color-scheme:light; }
+html[data-theme="light"] .backdrop-page .select-input option, html[data-theme="light"] .backdrop-page .select-input optgroup { color:#111827; background:#fff; }
 .key-row { display:grid; grid-template-columns:minmax(0,1fr) 38px; gap:7px; }
 .icon-button,
 .secondary-button,
@@ -340,3 +342,26 @@ html[data-theme="light"] .empty-state { color:rgba(15,23,42,.42); }
   .toolbar-actions { gap:5px; }
   .privacy-note small { font-size:8.5px; }
 }
+
+/* Keep native visibility and form controls consistent across the builder. */
+.backdrop-page [hidden] { display:none !important; }
+.backdrop-page .select-input { color-scheme:dark; }
+.backdrop-app { width:100%; }
+.backdrop-page .text-input, .backdrop-page .select-input { min-height:44px; height:auto; padding:10px 12px; font-size:14px; }
+.backdrop-page button { font-family:inherit; }
+.backdrop-page .primary-button, .backdrop-page .secondary-button, .backdrop-page .ghost-button, .backdrop-page .icon-button { min-height:42px; font-size:13px; }
+.backdrop-page .field-label, .backdrop-page .control-help, .backdrop-page .status-line { font-size:12px; color:#aeb5c6; }
+.backdrop-page .status-line.ok { color:#86efac; }
+.backdrop-page .status-line.error { color:#fca5a5; }
+.backdrop-page button:focus-visible { outline:2px solid #a5b4fc; outline-offset:3px; }
+.backdrop-page button:disabled { opacity:.5; cursor:not-allowed; }
+.backdrop-page .export-panel { grid-template-columns:112px minmax(0,1fr); }
+.backdrop-page .workspace-footer { flex-wrap:wrap; }
+html[data-theme="light"] .backdrop-page .secondary-button,
+html[data-theme="light"] .backdrop-page .ghost-button,
+html[data-theme="light"] .backdrop-page .icon-button { color:#3730a3; }
+html[data-theme="light"] .backdrop-page .field-label,
+html[data-theme="light"] .backdrop-page .control-help,
+html[data-theme="light"] .backdrop-page .status-line { color:#475569; }
+html[data-theme="light"] .backdrop-page .status-line.ok { color:#166534; }
+html[data-theme="light"] .backdrop-page .status-line.error { color:#b91c1c; }
