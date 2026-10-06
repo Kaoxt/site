@@ -33,6 +33,8 @@
 }
 
 .control-card {
+  flex: 0 0 auto;
+  min-width: 0;
   border: 1px solid rgba(255,255,255,.075);
   border-radius: 14px;
   background: rgba(255,255,255,.025);
@@ -308,7 +310,7 @@ html[data-theme="light"] .empty-state { color:rgba(15,23,42,.42); }
   .export-panel .primary-button { width:100%; }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1100px) {
   .backdrop-app {
     width:100%;
     margin:18px 0 48px;
@@ -318,6 +320,7 @@ html[data-theme="light"] .empty-state { color:rgba(15,23,42,.42); }
     border-right:0;
     border-radius:0;
     overflow:visible;
+    min-height:0;
   }
   .backdrop-workspace { order:-1; }
   .preview-toolbar { min-height:58px; padding:11px 14px; }
@@ -333,6 +336,12 @@ html[data-theme="light"] .empty-state { color:rgba(15,23,42,.42); }
   .field-grid.two-col { grid-template-columns:1fr; }
   .export-panel { display:grid; grid-template-columns:104px minmax(0,1fr); }
   .resolution-select { width:104px; }
+  .preview-toolbar { flex-wrap:wrap; }
+  .preview-toolbar > div { min-width:0; overflow-wrap:anywhere; }
+  .segmented button { min-height:44px; height:auto; }
+  .inline-actions { flex-wrap:wrap; }
+  .inline-actions > * { flex:1 1 120px; min-width:0; }
+  .status-line, .control-help, .backdrop-source-note { overflow-wrap:anywhere; }
 }
 
 @media (max-width: 430px) {
@@ -365,3 +374,12 @@ html[data-theme="light"] .backdrop-page .control-help,
 html[data-theme="light"] .backdrop-page .status-line { color:#475569; }
 html[data-theme="light"] .backdrop-page .status-line.ok { color:#166534; }
 html[data-theme="light"] .backdrop-page .status-line.error { color:#b91c1c; }
+
+/* Keep touch controls readable after the shared form defaults above. */
+@media (max-width: 1100px) {
+  .backdrop-page .text-input, .backdrop-page .select-input { font-size:16px; min-width:0; }
+  .backdrop-page .primary-button, .backdrop-page .secondary-button,
+  .backdrop-page .ghost-button, .backdrop-page .icon-button { min-height:44px; padding-top:8px; padding-bottom:8px; }
+  .folder-builder-actions { width:100%; display:grid; grid-template-columns:1fr; }
+  .folder-builder-actions .primary-button, .folder-builder-actions .secondary-button { width:100%; }
+}
