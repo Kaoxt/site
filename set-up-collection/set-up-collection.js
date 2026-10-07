@@ -2498,7 +2498,7 @@
             <div>
               <span class="badge">Optional</span>
               <h3>Better Posters</h3>
-              <p>Use Better Posters for the base poster and let The Kollection add only your selected top Trend Tag.</p>
+              <p>Choose ratings and overlays for the posters in this collection.</p>
             </div>
           </div>
           <div class="smart-overlay-control-row">
@@ -2509,9 +2509,21 @@
                 <small id="betterPostersSummary">${state.betterPostersEnabled ? esc(betterPostersSummary) : 'Off by default. Titles where AIOMetadata cannot resolve an IMDb ID keep their normal poster.'}</small>
               </span>
             </label>
-            <button class="ghost small smart-overlay-configure-btn" id="configureBetterPostersBtn" type="button">Configure</button>
+
           </div>
           <input id="betterPostersSettingsJson" type="hidden" value="${esc(JSON.stringify(betterPostersSettings))}">
+          <fieldset id="betterPostersInlineOptions" class="better-posters-inline" ${state.betterPostersEnabled ? '' : 'hidden disabled'}>
+            <legend class="sr-only">Better Posters options</legend>
+            <label class="better-posters-rating" for="betterPostersInlineRating">Rating source
+              <select id="betterPostersInlineRating">
+                ${[['average','Average (all sources)'],['imdb','IMDb (/10)'],['tmdb','TMDB (/10)'],['rottentomatoes','Rotten Tomatoes (%)'],['metacritic','Metacritic (/100)'],['trakt','Trakt (/10)'],['letterboxd','Letterboxd (/5)'],['rogerebert','Roger Ebert (/4)'],['none','No rating']].map(([value,label]) => `<option value="${value}" ${(betterPostersSettings.rating ? betterPostersSettings.ratingSource : 'none') === value ? 'selected' : ''}>${label}</option>`).join('')}
+              </select>
+            </label>
+            <div class="better-posters-overlay-grid">
+              ${[['trendTags','Trend Tags','Trending, new releases, and more'],['qualityTags','Quality Tags','4K, Dolby Vision, Atmos'],['genre','Genre','Genre label on the poster'],['ageRating','Age Rating','PG-13, TV-MA, R']].map(([key,label,copy]) => `<label class="better-posters-overlay"><input type="checkbox" data-better-inline="${key}" ${betterPostersSettings[key] ? 'checked' : ''}><span><b>${label}</b><small>${copy}</small></span></label>`).join('')}
+            </div>
+            <details class="better-posters-url"><summary>Poster URL & preview</summary><code id="betterPostersInlineUrl">${esc(betterPostersHelper ? betterPostersHelper.pattern(betterPostersSettings) : '')}</code><a id="betterPostersInlinePreview" class="ghost small" href="${esc(betterPostersHelper ? betterPostersHelper.directPattern(betterPostersSettings).replace('{imdb_id}','tt0133093') : '#')}" target="_blank" rel="noopener noreferrer">Preview poster ↗</a></details>
+          </fieldset>
         </div>
         ${custom ? `<div class="callout">The uploaded file supplies your AIOMetadata preferences and matching catalog definitions. Any required The Kollection catalog missing from your file falls back to the built-in catalog definition.</div>` : ''}
         <div class="actions"><button class="ghost" id="backBtn">Back</button><button class="btn" id="nextBtn">Continue to Bingecat</button></div>
@@ -2534,9 +2546,27 @@
           ? window.KollectionBetterPostersSettings.label(state.betterPostersSettings)
           : 'Off by default. Titles where AIOMetadata cannot resolve an IMDb ID keep their normal poster.';
       }
+      const options = $('#betterPostersInlineOptions');
+      options.hidden = !state.betterPostersEnabled;
+      options.disabled = !state.betterPostersEnabled;
       state.backup = null;
     };
-    $('#configureBetterPostersBtn').onclick = openBetterPostersConfigurator;
+    $('#betterPostersInlineOptions').addEventListener('change', () => {
+      const helper = window.KollectionBetterPostersSettings;
+      if (!helper) return;
+      const source = $('#betterPostersInlineRating').value;
+      const values = Object.fromEntries([...document.querySelectorAll('[data-better-inline]')].map(input => [input.dataset.betterInline, input.checked]));
+      state.betterPostersSettings = helper.normalize({
+        ...betterPostersSettings, ...state.betterPostersSettings, ...values,
+        rating: source !== 'none', ratingSource: source === 'none' ? 'average' : source,
+      });
+      $('#betterPostersSettingsJson').value = JSON.stringify(state.betterPostersSettings);
+      $('#betterPostersSummary').textContent = helper.label(state.betterPostersSettings);
+      $('#betterPostersInlineUrl').textContent = helper.pattern(state.betterPostersSettings);
+      $('#betterPostersInlinePreview').href = helper.directPattern(state.betterPostersSettings).replace('{imdb_id}', 'tt0133093');
+      try { localStorage.setItem(helper.STORAGE_KEY, JSON.stringify(state.betterPostersSettings)); } catch {}
+      state.backup = null;
+    });
     $$('.key-visibility-toggle').forEach(button => {
       button.onclick = () => {
         const input = document.getElementById(button.dataset.target);

@@ -79,7 +79,7 @@
       if (title?.textContent.trim() !== 'Better Posters') return;
 
       const copy = title.parentElement?.querySelector('p');
-      const desiredCopy = 'Include your saved Better Posters configuration when this collection is installed to Nuvio.';
+      const desiredCopy = 'Choose ratings and overlays for the posters in this collection.';
       if (copy && copy.textContent !== desiredCopy) {
         copy.textContent = desiredCopy;
       }
