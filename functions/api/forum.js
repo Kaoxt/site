@@ -10,6 +10,7 @@ const categoryOverview = async db => (await db.prepare(`SELECT c.*,
  (SELECT t.title FROM forum_topics t WHERE t.category_id=c.id AND t.hidden=0 ORDER BY t.updated_at DESC,t.id DESC LIMIT 1) AS latest_title,
  (SELECT t.updated_at FROM forum_topics t WHERE t.category_id=c.id AND t.hidden=0 ORDER BY t.updated_at DESC,t.id DESC LIMIT 1) AS latest_at
  FROM forum_categories c ORDER BY c.position,c.id`).all()).results.map(protectCategory);
+const unreadSql=`(SELECT COUNT(*) FROM forum_replies ur WHERE ur.topic_id=t.id AND ur.hidden=0 AND ur.id>f.last_read_reply AND ur.member_id!=f.member_id)`;
 const topicSelect = `SELECT t.*,c.name AS category_name,${memberSelect},((SELECT COUNT(*) FROM forum_topics ft WHERE ft.member_id=m.id AND ft.hidden=0)+(SELECT COUNT(*) FROM forum_replies fr JOIN forum_topics ft ON ft.id=fr.topic_id WHERE fr.member_id=m.id AND fr.hidden=0 AND ft.hidden=0)) AS post_count,(SELECT COUNT(*) FROM forum_replies r WHERE r.topic_id=t.id AND r.hidden=0) AS reply_count FROM forum_topics t JOIN forum_categories c ON c.id=t.category_id ${memberJoin}`;
 export const onRequestGet = context => forumHandle(context,false,async({db,session,admin,reply})=>{
   const q=new URL(context.request.url).searchParams,view=q.get('view')||'list',current=page(q.get('page')),offset=(current-1)*20;
@@ -25,7 +26,7 @@ export const onRequestGet = context => forumHandle(context,false,async({db,sessi
     return reply({...common,categories:await categories(db),articles:articles.slice(0,10),hasMore:articles.length>10,page:current});
   }
   if(view==='categories')return reply({...common,categories:await categoryOverview(db)});
-  if(view==='self'){const stats=me?await db.prepare(`SELECT ${counts} FROM forum_members m WHERE m.id=?`).bind(me.id).first():{topic_count:0,reply_count:0,likes_received:0};return reply({...common,about:me?.about||'',stats});}
+  if(view==='self'){const stats=me?await db.prepare(`SELECT ${counts} FROM forum_members m WHERE m.id=?`).bind(me.id).first():{topic_count:0,reply_count:0,likes_received:0};const follows=me?await db.prepare(`SELECT COUNT(*) AS total,COALESCE(SUM(CASE WHEN ${unreadSql}>0 THEN 1 ELSE 0 END),0) AS unread FROM forum_follows f JOIN forum_topics t ON t.id=f.topic_id WHERE f.member_id=? AND t.hidden=0`).bind(me.id).first():{total:0,unread:0};return reply({...common,about:me?.about||'',stats,follows});}
   if(view==='member'){
     const member=await db.prepare(`SELECT ${memberSelect},m.about,m.created_at,${counts} FROM forum_members m LEFT JOIN account_preferences p ON p.user_id=m.user_id LEFT JOIN account_avatars a ON a.user_id=m.user_id WHERE m.id=?`).bind(q.get('id')||'').first();
     if(!member)throw new IssueError('Member not found.',404);
@@ -38,15 +39,24 @@ export const onRequestGet = context => forumHandle(context,false,async({db,sessi
     const after=q.get('reply')?id(q.get('reply'))-1:Math.max(0,Number(q.get('after'))||0);
     const rows=(await db.prepare(`SELECT t.id,t.body,t.created_at,t.hidden,${memberSelect},((SELECT COUNT(*) FROM forum_topics ft WHERE ft.member_id=m.id AND ft.hidden=0)+(SELECT COUNT(*) FROM forum_replies fr JOIN forum_topics ft ON ft.id=fr.topic_id WHERE fr.member_id=m.id AND fr.hidden=0 AND ft.hidden=0)) AS post_count FROM forum_replies t ${memberJoin} WHERE t.topic_id=? AND t.id>? ${admin?'':'AND t.hidden=0'} ORDER BY t.id LIMIT 21`).bind(topic.id,after).all()).results;
     const visible=rows.slice(0,20);
+    const follow=await db.prepare('SELECT COUNT(*) AS follower_count,COALESCE(MAX(CASE WHEN member_id=? THEN 1 ELSE 0 END),0) AS following FROM forum_follows WHERE topic_id=?').bind(me?.id||'',topic.id).first();
+    if(me&&follow.following&&visible.length)await db.prepare('UPDATE forum_follows SET last_read_reply=MAX(last_read_reply,?) WHERE topic_id=? AND member_id=?').bind(visible.at(-1).id,topic.id,me.id).run();
+
     const likes=(await db.prepare(`SELECT kind,post_id,COUNT(*) AS n,MAX(CASE WHEN member_id=? THEN 1 ELSE 0 END) AS liked FROM forum_likes WHERE (kind='topic' AND post_id=?) OR (kind='reply' AND post_id IN (${visible.length?visible.map(()=>'?').join(','):'NULL'})) GROUP BY kind,post_id`).bind(me?.id||'',topic.id,...visible.map(r=>r.id)).all()).results;
     const reaction=(p,kind)=>{const l=likes.find(l=>l.kind===kind&&l.post_id===p.id);return {...p,like_count:l?.n||0,liked:!!l?.liked};};
-    return reply({...common,topic:{...reaction(topic,'topic'),can_edit:canEdit(topic,me,admin)},replies:visible.map(r=>({...reaction(r,'reply'),can_edit:!topic.hidden&&canEdit(r,me,admin)||admin})),hasMore:rows.length>20,categories:await categories(db)});
+    return reply({...common,topic:{...reaction(topic,'topic'),...follow,can_edit:canEdit(topic,me,admin)},replies:visible.map(r=>({...reaction(r,'reply'),can_edit:!topic.hidden&&canEdit(r,me,admin)||admin})),hasMore:rows.length>20,categories:await categories(db)});
   }
   if(view==='admin'){
     requireAdmin(admin);
     const members=(await db.prepare(`SELECT ${memberSelect},m.about,m.banned,m.created_at,${counts} FROM forum_members m LEFT JOIN account_preferences p ON p.user_id=m.user_id LEFT JOIN account_avatars a ON a.user_id=m.user_id WHERE instr(lower(COALESCE(NULLIF(p.display_name,''),m.author)),lower(?))>0 ORDER BY m.created_at DESC LIMIT 21 OFFSET ?`).bind((q.get('q')||'').slice(0,80),offset).all()).results;
     const stats=await db.prepare(`SELECT (SELECT COUNT(*) FROM forum_topics WHERE hidden=0) AS topics,(SELECT COUNT(*) FROM forum_replies r JOIN forum_topics t ON t.id=r.topic_id WHERE r.hidden=0 AND t.hidden=0) AS replies,(SELECT COUNT(*) FROM forum_members) AS members`).first();
     return reply({...common,stats,categories:await categories(db),members:members.slice(0,20),hasMore:members.length>20,page:current});
+  }
+  if(view==='followed'){
+    if(!session)throw new IssueError('Sign in to view followed topics.',401);
+    const topics=(await db.prepare(`${topicSelect} JOIN forum_follows f ON f.topic_id=t.id WHERE f.member_id=? AND t.hidden=0 ORDER BY t.updated_at DESC,t.id DESC LIMIT 21 OFFSET ?`).bind(me?.id||'',offset).all()).results;
+    const unread=(await db.prepare(`SELECT t.id,${unreadSql} AS unread_count,(SELECT MIN(ur.id) FROM forum_replies ur WHERE ur.topic_id=t.id AND ur.hidden=0 AND ur.id>f.last_read_reply AND ur.member_id!=f.member_id) AS first_unread FROM forum_follows f JOIN forum_topics t ON t.id=f.topic_id WHERE f.member_id=? AND t.hidden=0 ORDER BY t.updated_at DESC,t.id DESC LIMIT 21 OFFSET ?`).bind(me?.id||'',offset).all()).results;
+    return reply({...common,followingView:true,categories:await categories(db),topics:topics.slice(0,20).map(({body,...t})=>({...t,...unread.find(r=>r.id===t.id)})),hasMore:topics.length>20,page:current});
   }
   if(view!=='list')throw new IssueError('Not found.',404);
   const moderation=q.get('moderation')==='1';if(moderation)requireAdmin(admin);
@@ -63,6 +73,17 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
   const data=await forumInput(context.request);
   if(data.action==='news'){requireAdmin(admin);data.categoryId=ANNOUNCEMENTS_ID;}
   const action=data.action==='news'?'topic':data.action;
+  if(action==='follow'){
+    if(typeof data.following!=='boolean')throw new IssueError('Invalid follow setting.');
+    const topicId=id(data.id),target=await db.prepare('SELECT hidden FROM forum_topics WHERE id=?').bind(topicId).first();
+    if(!target||target.hidden)throw new IssueError('Discussion not found.',404);
+    const member=await ensureMember(db,session,context.env,data.profileId);
+    if(member.banned&&!admin)throw new IssueError('Posting is disabled for this account.',403);
+    if(data.following)await db.prepare('INSERT OR IGNORE INTO forum_follows(topic_id,member_id,last_read_reply) SELECT ?,?,COALESCE(MAX(id),0) FROM forum_replies WHERE topic_id=?').bind(topicId,member.id,topicId).run();
+    else await db.prepare('DELETE FROM forum_follows WHERE topic_id=? AND member_id=?').bind(topicId,member.id).run();
+    const count=await db.prepare('SELECT COUNT(*) AS n FROM forum_follows WHERE topic_id=?').bind(topicId).first();
+    return reply({following:data.following,follower_count:count.n});
+  }
   if(action==='like'){
     if(!['topic','reply'].includes(data.kind)||typeof data.liked!=='boolean')throw new IssueError('Invalid like.');
     const postId=id(data.id),target=await db.prepare(data.kind==='topic'?'SELECT member_id,hidden FROM forum_topics WHERE id=?':'SELECT r.member_id,MAX(r.hidden,t.hidden) AS hidden FROM forum_replies r JOIN forum_topics t ON t.id=r.topic_id WHERE r.id=?').bind(postId).first();
@@ -101,7 +122,7 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
     const member=await selfMember(db,session);
     if(!admin&&(!member||member.id!==target.member_id))throw new IssueError('You can only delete your own posts.',403);
     if(isTopic){
-      await db.batch([db.prepare("DELETE FROM forum_likes WHERE (kind='topic' AND post_id=?) OR (kind='reply' AND post_id IN (SELECT id FROM forum_replies WHERE topic_id=?))").bind(targetId,targetId),db.prepare('DELETE FROM forum_replies WHERE topic_id=?').bind(targetId),db.prepare('DELETE FROM forum_topics WHERE id=?').bind(targetId)]);
+      await db.batch([db.prepare("DELETE FROM forum_follows WHERE topic_id=?").bind(targetId),db.prepare("DELETE FROM forum_likes WHERE (kind='topic' AND post_id=?) OR (kind='reply' AND post_id IN (SELECT id FROM forum_replies WHERE topic_id=?))").bind(targetId,targetId),db.prepare('DELETE FROM forum_replies WHERE topic_id=?').bind(targetId),db.prepare('DELETE FROM forum_topics WHERE id=?').bind(targetId)]);
     }else{
       await db.batch([db.prepare("DELETE FROM forum_likes WHERE kind='reply' AND post_id=?").bind(targetId),db.prepare('DELETE FROM forum_replies WHERE id=?').bind(targetId),db.prepare('UPDATE forum_topics SET updated_at=MAX(created_at,COALESCE((SELECT MAX(created_at) FROM forum_replies WHERE topic_id=? AND hidden=0),created_at)) WHERE id=?').bind(target.topic_id,target.topic_id)]);
     }

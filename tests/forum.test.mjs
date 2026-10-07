@@ -215,3 +215,19 @@ test('shared reply links load the requested reply beyond the first page',async()
  assert.notEqual((await f.call(null,null,{view:'topic',id})).data.replies.at(-1).id,rid);
  assert.equal((await f.call(null,null,{view:'topic',id,reply:rid})).data.replies[0].id,rid);
 });
+test('follow persists uniquely, tracks new replies, stays private and clears on unfollow or deletion',async()=>{
+ const f=fixture(),id=(await f.call('alice',topic)).data.id,follow={action:'follow',id,following:true};
+ assert.equal((await f.call(null,follow)).status,401);assert.equal((await f.call('bob',follow,{},'https://evil.test')).status,403);
+ assert.equal((await f.call('bob',follow)).data.follower_count,1);assert.equal((await f.call('bob',follow)).data.follower_count,1);
+ assert.equal((await f.call('bob',null,{view:'topic',id})).data.topic.following,1);
+ assert.equal((await f.call('alice',null,{view:'topic',id})).data.topic.following,0);
+ const rid=(await f.call('alice',{action:'reply',id,body:'New reply for followers'})).data.id;
+ let list=(await f.call('bob',null,{view:'followed'})).data;assert.equal(list.topics[0].unread_count,1);assert.equal(list.topics[0].first_unread,rid);
+ assert.equal((await f.call('bob',null,{view:'self'})).data.follows.unread,1);
+ assert.equal((await f.call('carol',null,{view:'followed'})).data.topics.length,0);assert.equal((await f.call(null,null,{view:'followed'})).status,401);
+ await f.call('bob',null,{view:'topic',id,reply:rid});assert.equal((await f.call('bob',null,{view:'self'})).data.follows.unread,0);
+ await f.call('admin',{action:'topicModerate',id,categoryId:1,pinned:false,locked:false,hidden:true});assert.equal((await f.call('bob',follow)).status,404);assert.equal((await f.call('bob',null,{view:'followed'})).data.topics.length,0);
+ await f.call('admin',{action:'topicModerate',id,categoryId:1,pinned:false,locked:false,hidden:false});
+ assert.equal((await f.call('bob',{...follow,following:false})).data.follower_count,0);assert.equal((await f.call('bob',null,{view:'followed'})).data.topics.length,0);
+ await f.call('bob',follow);await f.call('admin',{action:'topicDelete',id});const db=await forumDb(f.env);assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM forum_follows').first()).n,0);
+});
