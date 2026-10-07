@@ -47,3 +47,30 @@ test('quotas, pagination, validation and literal searches',async()=>{
  for(let i=0;i<50;i++)assert.equal((await f.call('alice',{action:'reply',id:1,body:'Test reply'})).status,201);assert.equal((await f.call('alice',{action:'reply',id:1,body:'Over quota'})).status,429);
  const replies=(await f.call(null,null,{view:'topic',id:1})).data;assert.equal(replies.replies.length,20);assert.equal(replies.hasMore,true);const next=(await f.call(null,null,{view:'topic',id:1,after:replies.replies.at(-1).id})).data;assert.equal(next.replies.length,20);assert.notEqual(next.replies[0].id,replies.replies[0].id);
 });
+test('category overview totals omit hidden content and include empty categories',async()=>{
+ const f=fixture(),id=(await f.call('alice',topic)).data.id;
+ await f.call('bob',{action:'reply',id,body:'A visible reply'});
+ let overview=(await f.call(null,null,{view:'categories'})).data;
+ let c=overview.categories.find(c=>c.id===1);assert.equal(c.topic_count,1);assert.equal(c.reply_count,1);assert.equal(c.latest_id,id);
+ assert.equal(overview.categories.find(c=>c.id===2).topic_count,0);
+ const detail=(await f.call(null,null,{view:'topic',id})).data;assert.equal(detail.topic.post_count,1);assert.equal(detail.replies[0].post_count,1);
+ await f.call('admin',{action:'topicModerate',id,categoryId:1,pinned:false,locked:false,hidden:true});
+ overview=(await f.call(null,null,{view:'categories'})).data;c=overview.categories.find(c=>c.id===1);assert.equal(c.topic_count,0);assert.equal(c.reply_count,0);assert.equal(c.latest_id,null);
+});
+test('deletion enforces ownership and origin; admins can delete any post and topics remove replies',async()=>{
+ const f=fixture(),id=(await f.call('alice',topic)).data.id;
+ const replyId=(await f.call('bob',{action:'reply',id,body:'Reply to delete'})).data.id;
+ assert.equal((await f.call(null,{action:'topicDelete',id})).status,401);
+ assert.equal((await f.call('alice',{action:'topicDelete',id},{},'https://evil.test')).status,403);
+ assert.equal((await f.call('bob',{action:'topicDelete',id})).status,403);
+ assert.equal((await f.call('alice',{action:'replyDelete',id:replyId})).status,403);
+ assert.equal((await f.call('bob',{action:'replyDelete',id:replyId})).status,200);
+ assert.equal((await f.call(null,null,{view:'topic',id})).data.topic.reply_count,0);
+ const second=(await f.call('bob',{action:'reply',id,body:'Another reply'})).data.id;
+ assert.equal((await f.call('admin',{action:'replyDelete',id:second})).status,200);
+ await f.call('bob',{action:'reply',id,body:'Reply removed with topic'});
+ assert.equal((await f.call('alice',{action:'topicDelete',id})).status,200);
+ assert.equal((await f.call('admin',null,{view:'topic',id})).status,404);
+ const db=await forumDb(f.env);assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM forum_replies WHERE topic_id=?').bind(id).first()).n,0);
+ const another=(await f.call('alice',topic)).data.id;assert.equal((await f.call('admin',{action:'topicDelete',id:another})).status,200);
+});

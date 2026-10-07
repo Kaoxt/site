@@ -1,10 +1,18 @@
 import { forumHandle, forumInput, IssueError, textField, id, page, requireAdmin, memberSelect, memberJoin, counts, selfMember, ensureMember, mayPost, validCategory } from '../_lib/forum.js';
 const categories = async db => (await db.prepare('SELECT * FROM forum_categories ORDER BY position,id').all()).results;
-const topicSelect = `SELECT t.*,c.name AS category_name,${memberSelect},(SELECT COUNT(*) FROM forum_replies r WHERE r.topic_id=t.id AND r.hidden=0) AS reply_count FROM forum_topics t JOIN forum_categories c ON c.id=t.category_id ${memberJoin}`;
+const categoryOverview = async db => (await db.prepare(`SELECT c.*,
+ (SELECT COUNT(*) FROM forum_topics t WHERE t.category_id=c.id AND t.hidden=0) AS topic_count,
+ (SELECT COUNT(*) FROM forum_replies r JOIN forum_topics t ON t.id=r.topic_id WHERE t.category_id=c.id AND t.hidden=0 AND r.hidden=0) AS reply_count,
+ (SELECT t.id FROM forum_topics t WHERE t.category_id=c.id AND t.hidden=0 ORDER BY t.updated_at DESC,t.id DESC LIMIT 1) AS latest_id,
+ (SELECT t.title FROM forum_topics t WHERE t.category_id=c.id AND t.hidden=0 ORDER BY t.updated_at DESC,t.id DESC LIMIT 1) AS latest_title,
+ (SELECT t.updated_at FROM forum_topics t WHERE t.category_id=c.id AND t.hidden=0 ORDER BY t.updated_at DESC,t.id DESC LIMIT 1) AS latest_at
+ FROM forum_categories c ORDER BY c.position,c.id`).all()).results;
+const topicSelect = `SELECT t.*,c.name AS category_name,${memberSelect},((SELECT COUNT(*) FROM forum_topics ft WHERE ft.member_id=m.id AND ft.hidden=0)+(SELECT COUNT(*) FROM forum_replies fr JOIN forum_topics ft ON ft.id=fr.topic_id WHERE fr.member_id=m.id AND fr.hidden=0 AND ft.hidden=0)) AS post_count,(SELECT COUNT(*) FROM forum_replies r WHERE r.topic_id=t.id AND r.hidden=0) AS reply_count FROM forum_topics t JOIN forum_categories c ON c.id=t.category_id ${memberJoin}`;
 export const onRequestGet = context => forumHandle(context,false,async({db,session,admin,reply})=>{
   const q=new URL(context.request.url).searchParams,view=q.get('view')||'list',current=page(q.get('page')),offset=(current-1)*20;
   const me=await selfMember(db,session);
   const common={authenticated:!!session,isAdmin:admin,myMemberId:me?.id||null,canPost:!!session&&(!me?.banned||admin),postingOpen:!!(await db.prepare('SELECT posting_open FROM forum_settings WHERE id=1').first()).posting_open};
+  if(view==='categories')return reply({...common,categories:await categoryOverview(db)});
   if(view==='self')return reply({...common,about:me?.about||''});
   if(view==='member'){
     const member=await db.prepare(`SELECT ${memberSelect},m.about,m.created_at,${counts} FROM forum_members m LEFT JOIN account_preferences p ON p.user_id=m.user_id LEFT JOIN account_avatars a ON a.user_id=m.user_id WHERE m.id=?`).bind(q.get('id')||'').first();
@@ -16,7 +24,7 @@ export const onRequestGet = context => forumHandle(context,false,async({db,sessi
     const topic=await db.prepare(`${topicSelect} WHERE t.id=? ${admin?'':'AND t.hidden=0'}`).bind(id(q.get('id'))).first();
     if(!topic)throw new IssueError('Discussion not found.',404);
     const after=Math.max(0,Number(q.get('after'))||0);
-    const rows=(await db.prepare(`SELECT t.id,t.body,t.created_at,t.hidden,${memberSelect} FROM forum_replies t ${memberJoin} WHERE t.topic_id=? AND t.id>? ${admin?'':'AND t.hidden=0'} ORDER BY t.id LIMIT 21`).bind(topic.id,after).all()).results;
+    const rows=(await db.prepare(`SELECT t.id,t.body,t.created_at,t.hidden,${memberSelect},((SELECT COUNT(*) FROM forum_topics ft WHERE ft.member_id=m.id AND ft.hidden=0)+(SELECT COUNT(*) FROM forum_replies fr JOIN forum_topics ft ON ft.id=fr.topic_id WHERE fr.member_id=m.id AND fr.hidden=0 AND ft.hidden=0)) AS post_count FROM forum_replies t ${memberJoin} WHERE t.topic_id=? AND t.id>? ${admin?'':'AND t.hidden=0'} ORDER BY t.id LIMIT 21`).bind(topic.id,after).all()).results;
     return reply({...common,topic,replies:rows.slice(0,20),hasMore:rows.length>20,categories:await categories(db)});
   }
   if(view==='admin'){
@@ -38,6 +46,19 @@ export const onRequestGet = context => forumHandle(context,false,async({db,sessi
 });
 export const onRequestPost = context => forumHandle(context,true,async({db,session,admin,reply})=>{
   const data=await forumInput(context.request),action=data.action;
+  if(action==='topicDelete'||action==='replyDelete'){
+    const targetId=id(data.id),isTopic=action==='topicDelete';
+    const target=await db.prepare(isTopic?'SELECT * FROM forum_topics WHERE id=?':'SELECT * FROM forum_replies WHERE id=?').bind(targetId).first();
+    if(!target)throw new IssueError(isTopic?'Discussion not found.':'Reply not found.',404);
+    const member=await selfMember(db,session);
+    if(!admin&&(!member||member.id!==target.member_id))throw new IssueError('You can only delete your own posts.',403);
+    if(isTopic){
+      await db.batch([db.prepare('DELETE FROM forum_replies WHERE topic_id=?').bind(targetId),db.prepare('DELETE FROM forum_topics WHERE id=?').bind(targetId)]);
+    }else{
+      await db.batch([db.prepare('DELETE FROM forum_replies WHERE id=?').bind(targetId),db.prepare('UPDATE forum_topics SET updated_at=MAX(created_at,COALESCE((SELECT MAX(created_at) FROM forum_replies WHERE topic_id=? AND hidden=0),created_at)) WHERE id=?').bind(target.topic_id,target.topic_id)]);
+    }
+    return reply({ok:true});
+  }
   if(['category','topicModerate','replyModerate','memberModerate','settings'].includes(action)){
     requireAdmin(admin);
     if(action==='settings'){
