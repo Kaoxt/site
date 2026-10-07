@@ -4,6 +4,13 @@
   if (window.KollectionNuvioAuth) return;
 
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  const pendingReads = new Map();
+  let sessionGeneration = 0;
+
+  function invalidateReads() {
+    sessionGeneration += 1;
+    pendingReads.clear();
+  }
 
   async function readBody(res) {
     const text = await res.text();
@@ -40,12 +47,38 @@
     }
   }
 
-  async function getSession() {
-    return request('/api/auth/session');
+  function readAuth(url) {
+    if (pendingReads.has(url)) return pendingReads.get(url);
+    const generation = sessionGeneration;
+    const pending = request(url).then((result) => {
+      if (generation !== sessionGeneration) {
+        const error = new Error('The Nuvio session changed. Please try again.');
+        error.code = 'SESSION_CHANGED';
+        throw error;
+      }
+      return result;
+    }).finally(() => {
+      if (pendingReads.get(url) === pending) pendingReads.delete(url);
+    });
+    pendingReads.set(url, pending);
+    return pending;
   }
 
-  async function getAccessToken() {
-    return request('/api/auth/token');
+  function getSession() {
+    return readAuth('/api/auth/session');
+  }
+
+  function getAccessToken() {
+    return readAuth('/api/auth/token');
+  }
+
+  async function changeSession(url, options) {
+    invalidateReads();
+    try {
+      return await request(url, options);
+    } finally {
+      invalidateReads();
+    }
   }
 
   async function connectTokenResponse(tokenResponse) {
@@ -53,7 +86,7 @@
       throw new Error('Nuvio did not return an access token.');
     }
 
-    return request('/api/auth/nuvio-connect', {
+    return changeSession('/api/auth/nuvio-connect', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -66,7 +99,7 @@
   }
 
   async function signOut() {
-    return request('/api/auth/logout', {
+    return changeSession('/api/auth/logout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: '{}',
@@ -145,6 +178,7 @@
       const status = String(result?.status || '').toLowerCase();
 
       if (result?.authenticated) {
+        invalidateReads();
         try { popup?.close(); } catch {}
         onStatus('Signed in with Nuvio.');
         return result;
@@ -164,6 +198,13 @@
     try { popup?.close(); } catch {}
     throw new Error('The Nuvio sign-in request expired. Please try again.');
   }
+
+  // Share in-flight reads only; completed session and credential checks stay fresh.
+  ['kollection:nuvio-signed-in', 'kollection:nuvio-signed-out',
+    'kollection:nuvio-session-changed', 'kollection:display-name-changed',
+    'kollection:avatar-changed'].forEach((event) => {
+    window.addEventListener(event, invalidateReads);
+  });
 
   window.KollectionNuvioAuth = Object.freeze({
     getSession,

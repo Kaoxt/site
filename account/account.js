@@ -12,6 +12,7 @@
   let currentUserId = '';
   let selectedProfileId = null;
   let currentAccessToken = '';
+  let accountLoadVersion = 0;
 
   const config = () => {
     const cfg = window.KOLLECTION_CONFIG || {};
@@ -22,7 +23,10 @@
   };
 
   const setState = (state) => {
-    els.loading.hidden = true;
+    els.loading.hidden = state !== 'loading' && state !== 'error';
+    els.loadingSpinner.hidden = state !== 'loading';
+    els.retry.hidden = state !== 'error';
+    if (state === 'loading') els.loadingMessage.textContent = 'Loading your account…';
     els.signedOut.hidden = state !== 'signedOut';
     els.signedIn.hidden = state !== 'signedIn';
   };
@@ -307,13 +311,17 @@
     return row;
   }
 
-  async function loadProfiles() {
+  async function loadProfiles(version) {
     els.profiles.innerHTML = '';
+    els.profiles.setAttribute('aria-busy', 'true');
+    els.activeProfile.textContent = 'Loading…';
     els.profilesStatus.textContent = 'Loading Nuvio profiles…';
     try {
       const token = await window.KollectionNuvioAuth.getAccessToken();
+      if (version !== accountLoadVersion) return;
       currentAccessToken = token.accessToken;
       const result = await rpc('sync_pull_profiles', {}, currentAccessToken);
+      if (version !== accountLoadVersion) return;
       currentProfiles = Array.isArray(result) ? result : (result?.profiles || []);
       if (!currentProfiles.length) {
         els.activeProfile.textContent = '—';
@@ -337,18 +345,23 @@
       setLastSync(now);
       els.profilesStatus.textContent = `${currentProfiles.length} profile${currentProfiles.length === 1 ? '' : 's'} available.`;
     } catch (error) {
+      if (version !== accountLoadVersion) return;
       currentProfiles = [];
       selectedProfileId = null;
       els.activeProfile.textContent = '—';
       setLastSync(readLastSync());
       els.profilesStatus.textContent = error?.message || 'Could not load Nuvio profiles.';
+    } finally {
+      if (version === accountLoadVersion) els.profiles.removeAttribute('aria-busy');
     }
   }
 
   async function refreshAccount() {
+    const version = ++accountLoadVersion;
     setState('loading');
     try {
       const session = await window.KollectionNuvioAuth.getSession();
+      if (version !== accountLoadVersion) return;
       if (!session?.authenticated) {
         setState('signedOut');
         return;
@@ -358,10 +371,11 @@
       if (els.expires) els.expires.textContent = formatDate(session.expiresAt);
       setLastSync(readLastSync());
       setState('signedIn');
-      await loadProfiles();
+      await loadProfiles(version);
     } catch (error) {
-      setState('signedOut');
-      els.signInStatus.textContent = error?.message || 'Could not read your Kollection session.';
+      if (version !== accountLoadVersion) return;
+      setState('error');
+      els.loadingMessage.textContent = error?.message || 'Could not load your account. Please try again.';
     }
   }
 
@@ -413,19 +427,25 @@
     }
   }
 
+  function clearAccount() {
+    // A late profile response must not repopulate the account after logging out.
+    accountLoadVersion++;
+    currentProfiles = [];
+    currentUserId = '';
+    selectedProfileId = null;
+    currentAccessToken = '';
+    els.profiles.innerHTML = '';
+    els.profiles.removeAttribute('aria-busy');
+    els.profilesStatus.textContent = '';
+    els.activeProfile.textContent = '—';
+    setState('signedOut');
+  }
+
   async function signOut() {
     els.signOut.disabled = true;
     try {
       await window.KollectionNuvioAuth.signOut();
       window.dispatchEvent(new CustomEvent('kollection:nuvio-signed-out'));
-      currentProfiles = [];
-      currentUserId = '';
-      selectedProfileId = null;
-      currentAccessToken = '';
-      els.profiles.innerHTML = '';
-      els.profilesStatus.textContent = '';
-      els.activeProfile.textContent = '—';
-      setState('signedOut');
     } catch (error) {
       els.profilesStatus.textContent = error?.message || 'Could not log out.';
     } finally {
@@ -435,6 +455,9 @@
 
   function init() {
     els.loading = document.getElementById('accountLoading');
+    els.loadingSpinner = document.getElementById('accountLoadingSpinner');
+    els.loadingMessage = document.getElementById('accountLoadingMessage');
+    els.retry = document.getElementById('accountRetry');
     els.signedOut = document.getElementById('accountSignedOut');
     els.signedIn = document.getElementById('accountSignedIn');
     els.loginForm = document.getElementById('accountLoginForm');
@@ -452,6 +475,8 @@
 
     els.loginForm?.addEventListener('submit', signIn);
     els.signOut?.addEventListener('click', signOut);
+    els.retry?.addEventListener('click', refreshAccount);
+    window.addEventListener('kollection:nuvio-signed-out', clearAccount);
     refreshAccount();
   }
 

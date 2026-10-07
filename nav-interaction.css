@@ -1,4 +1,19 @@
 /* Prevent Android/iOS long-press/tap highlight from painting across the shared nav. */
+html.kollection-navigating::after {
+  content: '';
+  position: fixed;
+  inset: 0 0 auto;
+  height: 3px;
+  z-index: 10001;
+  background: #818cf8;
+  pointer-events: none;
+}
+
+#site-nav a[data-navigation-pending] {
+  background: rgba(129, 140, 248, .16) !important;
+  color: #fff !important;
+}
+
 #site-nav,
 #site-nav * {
   -webkit-tap-highlight-color: transparent !important;

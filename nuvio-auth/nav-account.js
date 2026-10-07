@@ -8,11 +8,13 @@
   const PROFILE_KEY_PREFIX = 'kollection-nuvio-profile-id:';
   const GITHUB_URL = 'https://github.com/Kaoxt/The-Kollection';
   const COFFEE_URL = 'https://ko-fi.com/kaoxt';
-  const FAQ_URL = '/faq.html';
+  const FAQ_URL = '/faq';
   const SETUP_URL = '/set-up-collection';
 
   let initialized = false;
-  let refreshing = false;
+  let pendingRefresh = null;
+  let refreshGeneration = 0;
+  let renderGeneration = 0;
   let currentSession = null;
   let currentProfile = null;
   let currentProfiles = [];
@@ -145,19 +147,56 @@
     return normalizeAvatarUrl(match?.storage_path || match?.storagePath || '');
   }
 
-  function fallbackAvatar(profile, sizeClass = '') {
+  function fallbackAvatar(profile, sizeClass = '', attributes = '') {
     const name = String(profile?.name || 'Nuvio').trim();
     const initial = (name[0] || 'N').toUpperCase();
     const color = /^#[0-9a-f]{3,8}$/i.test(String(profile?.avatarColor || ''))
       ? profile.avatarColor
       : '#1E88E5';
 
-    return `<span class="nuvio-nav-avatar-fallback ${sizeClass}" style="--nuvio-avatar-color:${esc(color)}">${esc(initial)}</span>`;
+    return `<span class="nuvio-nav-avatar-fallback ${sizeClass}" style="--nuvio-avatar-color:${esc(color)}" ${attributes}>${esc(initial)}</span>`;
   }
 
-  function avatarMarkup(profile, avatarUrl, sizeClass = '') {
-    if (!avatarUrl) return fallbackAvatar(profile, sizeClass);
-    return `<span class="nuvio-nav-avatar ${sizeClass}"><img src="${esc(avatarUrl)}" alt="" referrerpolicy="no-referrer"></span>`;
+  function avatarMarkup(profile, avatarUrl, sizeClass = '', active = false) {
+    const attributes = `data-nuvio-avatar="${active ? 'active' : 'profile'}" data-nuvio-avatar-size="${esc(sizeClass)}" data-nuvio-avatar-profile="${Number(profile?.id) || ''}"`;
+    if (!avatarUrl) return fallbackAvatar(profile, sizeClass, attributes);
+    return `<span class="nuvio-nav-avatar ${sizeClass}" ${attributes}><img src="${esc(avatarUrl)}" alt="" referrerpolicy="no-referrer"></span>`;
+  }
+
+  function paintAvatar(node, profile, url) {
+    const size = node.dataset.nuvioAvatarSize || '';
+    node.dataset.nuvioAvatarProfile = String(profile?.id || '');
+    node.className = `${url ? 'nuvio-nav-avatar' : 'nuvio-nav-avatar-fallback'} ${size}`;
+    if (url) {
+      node.style.removeProperty('--nuvio-avatar-color');
+      if (node.querySelector('img')?.getAttribute('src') !== url) {
+        node.innerHTML = `<img src="${esc(url)}" alt="" referrerpolicy="no-referrer">`;
+      }
+    } else {
+      const color = /^#[0-9a-f]{3,8}$/i.test(String(profile?.avatarColor || '')) ? profile.avatarColor : '#1E88E5';
+      node.style.setProperty('--nuvio-avatar-color', color);
+      const initial = (String(profile?.name || 'Nuvio').trim()[0] || 'N').toUpperCase();
+      if (node.textContent !== initial || node.querySelector('img')) node.textContent = initial;
+    }
+  }
+
+  function enhanceAvatars(session, profiles, activeProfile) {
+    const generation = renderGeneration;
+    // Account links are already usable. Only replace avatar contents as images resolve.
+    queueMicrotask(() => {
+      if (generation !== renderGeneration) return;
+      const { desktop, mobile } = slots();
+      for (const slot of [desktop, mobile]) {
+        slot?.querySelectorAll('[data-nuvio-avatar]').forEach(async (node) => {
+          const active = node.dataset.nuvioAvatar === 'active';
+          const profile = active ? activeProfile : profiles.find((item) => item.id === Number(node.dataset.nuvioAvatarProfile));
+          if (!profile) return;
+          const url = (active && session.user?.avatarUrl) || await resolveAvatar(profile).catch(() => '');
+          if (generation !== renderGeneration || !node.isConnected) return;
+          paintAvatar(node, profile, url);
+        });
+      }
+    });
   }
 
   const closeMobileMenu = () => {
@@ -205,14 +244,19 @@
 
   async function signOut() {
     const userId = currentSession?.user?.id;
-    try { await window.KollectionNuvioAuth?.signOut?.(); } catch {}
+    invalidateRefresh();
+    try {
+      await window.KollectionNuvioAuth?.signOut?.();
+    } catch {
+      await refresh();
+      return;
+    }
     if (userId) clearStoredProfileId(userId);
     currentSession = null;
     currentProfile = null;
     currentProfiles = [];
     closeDesktopPopover();
     window.dispatchEvent(new CustomEvent('kollection:nuvio-signed-out'));
-    await refresh();
   }
 
   async function selectProfile(profileId, keepDesktopOpen = false) {
@@ -222,7 +266,7 @@
     currentProfile = profile;
     writeStoredProfileId(currentSession.user?.id, profile.id);
 
-    await renderSignedIn(currentSession, currentProfiles, profile);
+    updateSignedIn(currentSession, currentProfiles, profile);
 
     if (keepDesktopOpen) {
       const { desktop } = slots();
@@ -242,7 +286,8 @@
     return `<a class="nuvio-social-link ${compact ? 'compact' : ''}" href="${url}"${target} aria-label="${esc(label)}">${icon}<span>${esc(label)}</span></a>`;
   }
 
-  async function renderSignedOut() {
+  function renderSignedOut() {
+    renderGeneration += 1;
     const { desktop, mobile } = slots();
 
     if (desktop) {
@@ -277,15 +322,13 @@
     }
   }
 
-  async function renderSignedIn(session, profiles, activeProfile) {
+  function renderSignedIn(session, profiles, activeProfile, loadingProfile = false) {
+    renderGeneration += 1;
     const { desktop, mobile } = slots();
-    const avatarPairs = await Promise.all(profiles.map(async (profile) => [
-      profile.id,
-      await resolveAvatar(profile).catch(() => ''),
-    ]));
-    const avatars = new Map(avatarPairs);
+    const avatars = new Map(profiles.map((profile) => [profile.id, normalizeAvatarUrl(profile.avatarUrl)]));
     const activeAvatar = session.user?.avatarUrl || avatars.get(activeProfile.id) || '';
     const displayName = session.user?.displayName || activeProfile.name;
+    const profileLabel = loadingProfile ? 'Loading profile…' : !activeProfile.id ? 'Nuvio account' : session.user?.displayName ? `Profile: ${activeProfile.name}` : 'Active profile';
 
     const desktopProfileRows = profiles.map((profile) => {
       const active = profile.id === activeProfile.id;
@@ -303,17 +346,17 @@
       desktop.innerHTML = `
         <div class="nuvio-desktop-account-wrap">
           <button class="nuvio-desktop-profile-button" type="button" aria-haspopup="true" aria-expanded="false">
-            ${avatarMarkup(activeProfile, activeAvatar, 'desktop')}
+            ${avatarMarkup(activeProfile, activeAvatar, 'desktop', true)}
             <span class="nuvio-desktop-profile-name">${esc(displayName)}</span>
             <svg class="nuvio-profile-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"></path></svg>
           </button>
 
           <div class="nuvio-desktop-account-popover">
             <div class="nuvio-desktop-popover-user">
-              ${avatarMarkup(activeProfile, activeAvatar, 'popover')}
+              ${avatarMarkup(activeProfile, activeAvatar, 'popover', true)}
               <div>
                 <strong>${esc(displayName)}</strong>
-                <small>${session.user?.displayName ? `Profile: ${esc(activeProfile.name)}` : 'Active profile'}</small>
+                <small>${esc(profileLabel)}</small>
               </div>
             </div>
 
@@ -375,10 +418,10 @@
       mobile.innerHTML = `
         <section class="nuvio-mobile-account signed-in" aria-label="Nuvio account">
           <div class="nuvio-mobile-current-profile">
-            ${avatarMarkup(activeProfile, activeAvatar, 'mobile')}
+            ${avatarMarkup(activeProfile, activeAvatar, 'mobile', true)}
             <div>
               <strong>${esc(displayName)}</strong>
-              <small>${session.user?.displayName ? `Profile: ${esc(activeProfile.name)}` : 'Active profile'}</small>
+              <small>${esc(profileLabel)}</small>
             </div>
           </div>
 
@@ -404,54 +447,116 @@
 
       mobile.querySelector('[data-nuvio-signout-mobile]')?.addEventListener('click', signOut);
     }
+
+    enhanceAvatars(session, profiles, activeProfile);
   }
 
-  async function refresh() {
-    if (refreshing) return;
-    refreshing = true;
+  function accountPlaceholder() {
+    return { id: null, name: 'Nuvio', avatarColor: '#1E88E5', avatarId: null, avatarUrl: null };
+  }
 
-    try {
-      const { desktop, mobile } = slots();
-      if (!desktop && !mobile) return;
-
-      const session = await window.KollectionNuvioAuth?.getSession?.().catch(() => null);
-      currentSession = session?.authenticated ? session : null;
-
-      if (!currentSession) {
-        currentProfile = null;
-        currentProfiles = [];
-        await renderSignedOut();
-        return;
-      }
-
-      const tokenData = await window.KollectionNuvioAuth?.getAccessToken?.().catch(() => null);
-      if (!tokenData?.authenticated || !tokenData?.accessToken) {
-        currentSession = null;
-        currentProfile = null;
-        currentProfiles = [];
-        await renderSignedOut();
-        return;
-      }
-
-      currentProfiles = await getProfiles(tokenData.accessToken).catch(() => []);
-      if (!currentProfiles.length) {
-        currentProfiles = [{
-          id: 1,
-          name: 'Nuvio',
-          avatarColor: '#1E88E5',
-          avatarId: null,
-          avatarUrl: null,
-        }];
-      }
-
-      const storedId = readStoredProfileId(currentSession.user?.id);
-      currentProfile = currentProfiles.find((profile) => profile.id === storedId) || currentProfiles[0];
-      writeStoredProfileId(currentSession.user?.id, currentProfile.id);
-
-      await renderSignedIn(currentSession, currentProfiles, currentProfile);
-    } finally {
-      refreshing = false;
+  function updateSignedIn(session, profiles, activeProfile, loadingProfile = false) {
+    const { desktop, mobile } = slots();
+    if (!desktop?.querySelector('.nuvio-desktop-account-wrap') && !mobile?.querySelector('.nuvio-mobile-account.signed-in')) {
+      renderSignedIn(session, profiles, activeProfile, loadingProfile);
+      return;
     }
+
+    renderGeneration += 1;
+    const displayName = session.user?.displayName || activeProfile.name;
+    const profileLabel = loadingProfile ? 'Loading profile…' : !activeProfile.id ? 'Nuvio account' : session.user?.displayName ? `Profile: ${activeProfile.name}` : 'Active profile';
+    const setText = (node, value) => { if (node && node.textContent !== value) node.textContent = value; };
+    setText(desktop?.querySelector('.nuvio-desktop-profile-name'), displayName);
+    for (const current of [desktop?.querySelector('.nuvio-desktop-popover-user'), mobile?.querySelector('.nuvio-mobile-current-profile')]) {
+      setText(current?.querySelector('strong'), displayName);
+      setText(current?.querySelector('small'), profileLabel);
+    }
+
+    for (const slot of [desktop, mobile]) {
+      slot?.querySelectorAll('[data-profile-id], [data-mobile-profile-id]').forEach((button) => {
+        const active = Number(button.dataset.profileId || button.dataset.mobileProfileId) === activeProfile.id;
+        button.classList.toggle('active', active);
+        button.setAttribute('aria-current', String(active));
+      });
+      slot?.querySelectorAll('[data-nuvio-avatar="active"]').forEach((node) => {
+        const direct = session.user?.avatarUrl || normalizeAvatarUrl(activeProfile.avatarUrl);
+        // Keep an already resolved image for this profile while its catalog is reused.
+        const existing = Number(node.dataset.nuvioAvatarProfile) === activeProfile.id && !session.user?.avatarUrl
+          ? node.querySelector('img')?.getAttribute('src') : '';
+        paintAvatar(node, activeProfile, direct || existing || '');
+      });
+    }
+
+    enhanceAvatars(session, profiles, activeProfile);
+  }
+
+  function invalidateRefresh() {
+    refreshGeneration += 1;
+    renderGeneration += 1;
+    pendingRefresh = null;
+  }
+
+  function signedOut() {
+    invalidateRefresh();
+    currentSession = null;
+    currentProfile = null;
+    currentProfiles = [];
+    renderSignedOut();
+  }
+
+  function sessionChanged(event) {
+    if (event?.type === 'kollection:nuvio-signed-in' || event?.type === 'kollection:nuvio-session-changed') {
+      signedOut();
+    } else {
+      invalidateRefresh();
+    }
+    return refresh();
+  }
+
+  async function loadAccount(generation) {
+    const { desktop, mobile } = slots();
+    if (!desktop && !mobile) return;
+
+    const session = await window.KollectionNuvioAuth?.getSession?.().catch(() => null);
+    if (generation !== refreshGeneration) return;
+    if (!session?.authenticated) {
+      signedOut();
+      return;
+    }
+
+    const sameUser = currentSession?.user?.id === session.user?.id;
+    currentSession = session;
+    if (!sameUser) {
+      currentProfile = null;
+      currentProfiles = [];
+      renderSignedIn(session, [], accountPlaceholder(), true);
+    } else {
+      updateSignedIn(session, currentProfiles, currentProfile || accountPlaceholder(), !currentProfile);
+    }
+
+    const tokenData = await window.KollectionNuvioAuth?.getAccessToken?.().catch(() => null);
+    if (generation !== refreshGeneration) return;
+    if (!tokenData?.authenticated || !tokenData?.accessToken || (tokenData.user?.id && tokenData.user.id !== session.user?.id)) {
+      signedOut();
+      return;
+    }
+
+    const profiles = await getProfiles(tokenData.accessToken).catch(() => []);
+    if (generation !== refreshGeneration) return;
+    currentProfiles = profiles;
+    const storedId = readStoredProfileId(session.user?.id);
+    currentProfile = profiles.find((profile) => profile.id === storedId) || profiles[0] || null;
+    if (currentProfile) writeStoredProfileId(session.user?.id, currentProfile.id);
+    updateSignedIn(session, profiles, currentProfile || accountPlaceholder());
+  }
+
+  function refresh() {
+    if (pendingRefresh) return pendingRefresh;
+    const pending = loadAccount(refreshGeneration).finally(() => {
+      if (pendingRefresh === pending) pendingRefresh = null;
+    });
+    pendingRefresh = pending;
+    return pending;
   }
 
   async function init() {
@@ -471,10 +576,11 @@
         if (event.key?.startsWith(PROFILE_KEY_PREFIX)) refresh();
       });
 
-      window.addEventListener('kollection:nuvio-signed-in', refresh);
-      window.addEventListener('kollection:display-name-changed', refresh);
-      window.addEventListener('kollection:avatar-changed', refresh);
-      window.addEventListener('kollection:nuvio-session-changed', refresh);
+      window.addEventListener('kollection:nuvio-signed-in', sessionChanged);
+      window.addEventListener('kollection:nuvio-signed-out', signedOut);
+      window.addEventListener('kollection:display-name-changed', sessionChanged);
+      window.addEventListener('kollection:avatar-changed', sessionChanged);
+      window.addEventListener('kollection:nuvio-session-changed', sessionChanged);
     }
 
     await refresh();

@@ -26,7 +26,11 @@ export async function onRequestGet(context) {
     return json({ authenticated: false, isAdmin: false, user: null });
   }
 
-  const user = { id: session.id, email: session.email, displayName: await getDisplayName(env, session.id), avatarUrl: await getAccountAvatar(env, session.id) };
+  const [displayName, avatarUrl] = await Promise.all([
+    getDisplayName(env, session.id),
+    getAccountAvatar(env, session.id),
+  ]);
+  const user = { id: session.id, email: session.email, displayName, avatarUrl };
   return json({
     authenticated: true,
     isAdmin: isAdminUser(user, env),
