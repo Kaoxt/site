@@ -122,3 +122,44 @@ test('Historical release imports once, keeps its date and legacy link, and is no
  assert.equal((await f.call(null,null,{view:'latestNews'})).data.article,null);
  assert.equal((await f.call(null,null,{view:'newsLegacy'})).status,404);
 });
+test('editing enforces ownership, origin and the exact 24-hour cutoff without resetting dates',async()=>{
+ const f=fixture(),id=(await f.call('alice',topic)).data.id;
+ const rid=(await f.call('alice',{action:'reply',id,body:'Original reply'})).data.id;
+ const db=await forumDb(f.env),realNow=Date.now,fixed=realNow();
+ Date.now=()=>fixed;
+ try{
+  const original=new Date(fixed-86400000+1).toISOString();
+  await db.prepare('UPDATE forum_topics SET created_at=?,updated_at=? WHERE id=?').bind(original,original,id).run();
+  await db.prepare('UPDATE forum_replies SET created_at=? WHERE id=?').bind(original,rid).run();
+  const edit={action:'topicEdit',id,title:'Edited title',body:'Edited **body**'};
+  assert.equal((await f.call(null,edit)).status,401);
+  assert.equal((await f.call('alice',edit,{},'https://evil.test')).status,403);
+  assert.equal((await f.call('bob',edit)).status,403);
+  assert.equal((await f.call('bob',{action:'replyEdit',id:rid,body:'Stolen reply'})).status,403);
+  assert.equal((await f.call('alice',{...edit,title:'x'})).status,400);
+  assert.equal((await f.call('alice',edit)).status,200);
+  assert.equal((await f.call('alice',{action:'replyEdit',id:rid,body:'Edited reply'})).status,200);
+  let d=(await f.call('alice',null,{view:'topic',id})).data;
+  assert.equal(d.topic.can_edit,true);assert.equal(d.replies[0].can_edit,true);
+  assert.equal(d.topic.created_at,original);assert.equal(d.topic.updated_at,original);
+  assert.equal(d.topic.title,'Edited title');assert.equal(d.replies[0].body,'Edited reply');
+  assert.equal((await f.call('bob',null,{view:'topic',id})).data.topic.can_edit,false);
+  Date.now=()=>fixed+1;
+  assert.equal((await f.call('alice',edit)).status,403);
+  assert.equal((await f.call('alice',{action:'replyEdit',id:rid,body:'Too late'})).status,403);
+  d=(await f.call('alice',null,{view:'topic',id})).data;assert.equal(d.topic.can_edit,false);assert.equal(d.replies[0].can_edit,false);
+  assert.equal((await f.call('admin',edit)).status,200);
+  assert.equal((await f.call('admin',{action:'replyEdit',id:rid,body:'Admin edit'})).status,200);
+ }finally{Date.now=realNow;}
+});
+test('admin edits legacy News and all shared views reflect the same title and body',async()=>{
+ const f=fixture(),legacy=(await f.call('admin',null,{view:'newsLegacy'})).data.topic;
+ assert.equal(legacy.can_edit,true);
+ assert.equal((await f.call('admin',{action:'topicEdit',id:legacy.id,title:'Updated release article',body:'Updated **release** details'})).status,200);
+ for(const view of ['topic','newsTopic']){const d=(await f.call(null,null,{view,id:legacy.id})).data.topic;assert.equal(d.title,'Updated release article');assert.equal(d.body,'Updated **release** details');assert.equal(d.created_at,legacy.created_at);}
+ assert.equal((await f.call(null,null,{view:'latestNews'})).data.article.title,'Updated release article');
+ assert.equal((await f.call(null,null,{view:'news'})).data.articles[0].body,'Updated **release** details');
+ const id=(await f.call('alice',topic)).data.id,member=(await f.call('alice',null,{view:'self'})).data.myMemberId;
+ await f.call('admin',{action:'memberModerate',id:member,banned:true,clearAbout:false});
+ assert.equal((await f.call('alice',{action:'topicEdit',id,title:'Banned update',body:'Not allowed'})).status,403);
+});

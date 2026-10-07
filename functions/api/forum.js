@@ -1,5 +1,6 @@
 import { ANNOUNCEMENTS_ID, importLegacyNews } from '../_lib/forum-news.js';
 import { forumHandle, forumInput, IssueError, textField, id, page, requireAdmin, memberSelect, memberJoin, counts, selfMember, ensureMember, mayPost, validCategory } from '../_lib/forum.js';
+const canEdit=(post,member,admin,now=Date.now())=>admin||!!member&&!member.banned&&!post.hidden&&member.id===post.member_id&&now-Date.parse(post.created_at)>=0&&now-Date.parse(post.created_at)<86400000;
 const protectCategory=c=>({...c,read_only:c.id===ANNOUNCEMENTS_ID?1:c.read_only});
 const categories = async db => (await db.prepare('SELECT * FROM forum_categories ORDER BY position,id').all()).results.map(protectCategory);
 const categoryOverview = async db => (await db.prepare(`SELECT c.*,
@@ -36,7 +37,7 @@ export const onRequestGet = context => forumHandle(context,false,async({db,sessi
     if(!topic)throw new IssueError('Discussion not found.',404);
     const after=Math.max(0,Number(q.get('after'))||0);
     const rows=(await db.prepare(`SELECT t.id,t.body,t.created_at,t.hidden,${memberSelect},((SELECT COUNT(*) FROM forum_topics ft WHERE ft.member_id=m.id AND ft.hidden=0)+(SELECT COUNT(*) FROM forum_replies fr JOIN forum_topics ft ON ft.id=fr.topic_id WHERE fr.member_id=m.id AND fr.hidden=0 AND ft.hidden=0)) AS post_count FROM forum_replies t ${memberJoin} WHERE t.topic_id=? AND t.id>? ${admin?'':'AND t.hidden=0'} ORDER BY t.id LIMIT 21`).bind(topic.id,after).all()).results;
-    return reply({...common,topic,replies:rows.slice(0,20),hasMore:rows.length>20,categories:await categories(db)});
+    return reply({...common,topic:{...topic,can_edit:canEdit(topic,me,admin)},replies:rows.slice(0,20).map(r=>({...r,can_edit:!topic.hidden&&canEdit(r,me,admin)||admin})),hasMore:rows.length>20,categories:await categories(db)});
   }
   if(view==='admin'){
     requireAdmin(admin);
@@ -59,6 +60,19 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
   const data=await forumInput(context.request);
   if(data.action==='news'){requireAdmin(admin);data.categoryId=ANNOUNCEMENTS_ID;}
   const action=data.action==='news'?'topic':data.action;
+  if(action==='topicEdit'||action==='replyEdit'){
+    const targetId=id(data.id),isTopic=action==='topicEdit';
+    const target=await db.prepare(isTopic?'SELECT * FROM forum_topics WHERE id=?':'SELECT * FROM forum_replies WHERE id=?').bind(targetId).first();
+    if(!target)throw new IssueError(isTopic?'Discussion not found.':'Reply not found.',404);
+    const member=await selfMember(db,session),now=Date.now();
+    if(!canEdit(target,member,admin,now))throw new IssueError('You can edit your own posts for 24 hours after posting.',403);
+    if(!isTopic&&!admin){const parent=await db.prepare('SELECT hidden FROM forum_topics WHERE id=?').bind(target.topic_id).first();if(!parent||parent.hidden)throw new IssueError('Discussion not found.',404);}
+    const body=textField(data.body,'Message',2,10000);
+    // Keep the original publication/activity dates: edits never restart the window or reorder News.
+    if(isTopic){const title=textField(data.title,'Title',5,160);await db.prepare('UPDATE forum_topics SET title=?,body=? WHERE id=?').bind(title,body,targetId).run();}
+    else await db.prepare('UPDATE forum_replies SET body=? WHERE id=?').bind(body,targetId).run();
+    return reply({ok:true});
+  }
   if(action==='topicDelete'||action==='replyDelete'){
     const targetId=id(data.id),isTopic=action==='topicDelete';
     const target=await db.prepare(isTopic?'SELECT * FROM forum_topics WHERE id=?':'SELECT * FROM forum_replies WHERE id=?').bind(targetId).first();
