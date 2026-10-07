@@ -405,3 +405,6 @@ html[data-theme="light"] .edit-images-help { color:#991b1b; }
 .backdrop-page .preview-toolbar { flex-wrap:wrap; }
 
 .tile-editor.is-editing { display:block; }
+
+.backdrop-page .toolbar-actions { flex-wrap:wrap; }
+.backdrop-page .toolbar-actions .toolbar-button { min-height:44px; }

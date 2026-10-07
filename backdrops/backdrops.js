@@ -560,6 +560,7 @@
   els.downloadBackdrop.addEventListener('click', downloadPreview);
 
   function updateTileEditor() {
+    els.shuffleCollage.disabled = selectedItems().length < 2 || !previewRegions.length;
     els.editImages.textContent = editMode ? 'Done' : 'Edit images';
     els.editImages.setAttribute('aria-pressed',String(editMode));
     els.editImages.disabled = !editMode && !previewRegions.length;
@@ -640,10 +641,17 @@
     queuePreview();
   });
   els.clearCollage.addEventListener('click', () => selectTitle(null));
-  els.shuffleCollage.addEventListener('click', () => {
-    const items=[...selectedItems()];
+  els.shuffleCollage.addEventListener('click', async () => {
+    const original=selectedItems();
+    if (original.length < 2 || !previewRegions.length) return;
+    const items=[...original];
     for(let i=items.length-1;i>0;i--) {const j=Math.floor(Math.random()*(i+1));[items[i],items[j]]=[items[j],items[i]];}
-    selectTitle({title:state.selected?.title || 'Movie collage',items});
+    // Always show a changed arrangement, even if the random shuffle repeats the order.
+    if (items.every((item,index)=>titleKey(item)===titleKey(original[index]))) items.push(items.shift());
+    state.selected={title:state.selected?.title || 'Movie collage',items};
+    // Preserve pending red marks and removal undo while changing only tile order.
+    saveState(); updateSelection();
+    await renderPreview();
   });
   window.KollectionBackdrops = Object.freeze({ selectTitle, addTitle, tmdbFetch, getState: () => JSON.parse(JSON.stringify(state)), restore: value => { ++renderToken; state = { ...defaults, ...value }; hydrate(); applyMode(); } });
   window.dispatchEvent(new CustomEvent('kollection:backdrops-ready'));
