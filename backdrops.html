@@ -10,7 +10,7 @@
   <meta name="description" content="Choose original or custom movie, TV, and folder backdrops for The Kollection, Nuvio, and compatible metadata setups." />
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/secondary-pages.css?v=20260909-3" />
-  <link rel="stylesheet" href="/backdrops/styles.css?v=20261007-2" />
+  <link rel="stylesheet" href="/backdrops/styles.css?v=20261007-3" />
   <link rel="stylesheet" href="/backdrops/title-mode.css?v=20261004-1" />
   <link rel="stylesheet" href="/backdrops/folder-builder.css?v=20261004-1" />
   <script src="/components.js?v=20260908-3" defer></script>
@@ -159,6 +159,7 @@
               <select id="collageLayout" class="select-input"><option value="tilted">Angled movie wall</option><option value="grid">Full-width grid</option></select>
               <label class="field-label" for="artworkSource">Tile artwork source</label>
               <select id="artworkSource" class="select-input"><option value="fanart">Fanart.tv preferred (TMDB fallback)</option><option value="tmdb">TMDB only</option></select>
+              <p id="tileTypeHelp" class="control-help">Landscape artwork with optional movie titles. Downloads remain widescreen.</p>
               <div id="artworkStatus" class="status-line" aria-live="polite"></div>
               <label class="toggle-row"><span><strong>Movie titles on tiles</strong><small>Prefer artwork with the title built in</small></span><input id="showMovieLogos" type="checkbox" checked /></label>
               <p class="control-help">Prefers English Fanart.tv title artwork, then original-language artwork. Falls back to TMDB title artwork, or a backdrop with a logo or readable title. Already-titled artwork never gets a second logo. Angled walls repeat tiles to fill the design.</p>
@@ -210,6 +211,10 @@
             <span class="section-kicker">BACKDROP PREVIEW</span>
             <strong id="previewTitle">Add at least two titles to begin</strong>
           </div>
+          <div id="tileType" class="segmented two artwork-type-switch" role="group" aria-label="Collage artwork type">
+            <button type="button" data-value="backdrops" class="active" aria-pressed="true">Backdrops</button>
+            <button type="button" data-value="posters" aria-pressed="false">Posters</button>
+          </div>
           <div class="title-meta" id="previewMeta"></div>
         </div>
 
@@ -247,8 +252,8 @@
 
     <div id="site-footer"></div>
   </main>
-  <script src="/backdrops/backdrops.js?v=20261007-2"></script>
-  <script src="/backdrops/mdblist.js?v=20261007-2"></script>
+  <script src="/backdrops/backdrops.js?v=20261007-3"></script>
+  <script src="/backdrops/mdblist.js?v=20261007-3"></script>
   <script src="/backdrops/folder-builder.js?v=20261004-1"></script>
 </body>
 </html>

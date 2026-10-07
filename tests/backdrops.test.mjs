@@ -97,3 +97,34 @@ test('disabling movie titles avoids Fanart thumbs and title artwork requests',as
  assert.equal(h.requests.length,0);
  assert.ok(!h.calls.some(c=>c.key==='fillText'));
 });
+test('poster mode loads portrait covers, keeps titles, and survives saved-state restore',async()=>{
+ const h=harness();h.api.restore({...h.api.getState(),tileType:'posters'});
+ const items=pair.items.map((item,i)=>({...item,posterPath:`/poster${i}.jpg`}));
+ await h.api.selectTitle({title:'Posters',items});
+ assert.ok(h.loads.every(url=>url.includes('/w500/poster')));
+ assert.ok(!h.calls.some(c=>c.key==='fillText'));
+ assert.equal(h.nodes.get('showMovieLogos').disabled,true);
+ const saved=h.api.getState();h.api.restore(saved);
+ assert.equal(h.api.getState().tileType,'posters');
+ const tiles=h.calls.filter(c=>c.key==='roundRect');
+ assert.ok(tiles.every(c=>Math.abs(c.args[3]/c.args[2]-1.5)<.001));
+});
+test('poster mode uses Fanart poster categories rather than landscape thumbnails',async()=>{
+ const h=harness([],url=>url.includes('external_ids') ? {tvdb_id:99} : {
+   movieposter:[{url:'https://assets.fanart.tv/movieposter.jpg',lang:'en'}],
+   tvposter:[{url:'https://assets.fanart.tv/tvposter.jpg',lang:'en'}],
+   moviethumb:[{url:'https://assets.fanart.tv/thumb.jpg',lang:'en'}]
+ });
+ h.api.restore({...h.api.getState(),tileType:'posters'});
+ h.nodes.get('fanartKey').value='test';h.nodes.get('tmdbKey').value='test';
+ await h.api.selectTitle(pair);
+ assert.deepEqual(h.loads,['https://assets.fanart.tv/movieposter.jpg','https://assets.fanart.tv/tvposter.jpg']);
+});
+test('poster-only titles can be selected and missing posters use uncropped backdrop fallback',async()=>{
+ const h=harness();h.api.restore({...h.api.getState(),tileType:'posters'});
+ await h.api.addTitle({title:'Poster only',posterPath:'/poster.jpg'});
+ await h.api.addTitle({title:'Backdrop only',backdropPath:'/backdrop.jpg'});
+ assert.equal(h.api.getState().selected.items.length,2);
+ assert.equal(h.nodes.get('downloadBackdrop').disabled,false);
+ assert.ok(h.calls.some(c=>c.key==='drawImage' && c.args.length===5));
+});

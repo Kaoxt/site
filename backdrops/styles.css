@@ -386,3 +386,6 @@ html[data-theme="light"] .backdrop-page .status-line.error { color:#b91c1c; }
 
 .collage-titles { display:flex; flex-wrap:wrap; gap:6px; }
 .collage-titles button { max-width:100%; height:auto; padding:8px 10px; overflow-wrap:anywhere; text-align:left; }
+
+.artwork-type-switch { flex:0 0 220px; max-width:100%; }
+@media (max-width:520px) { .artwork-type-switch { flex-basis:100%; width:100%; } }

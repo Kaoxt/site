@@ -20,6 +20,7 @@
     showMovieLogos: true,
     collageLayout: 'tilted',
     artworkSource: 'fanart',
+    tileType: 'backdrops',
     fontFamily: 'Inter, Arial, sans-serif',
     textPosition: 'left-center',
     fontSize: 72,
@@ -40,7 +41,7 @@
   [
     'backdropSourceMode','backdropModeStatus','tmdbKey','toggleKey','saveKey','validateKey','keyStatus','mediaType','titleSearch','searchTitle','titleSearchStatus','titleResults',
     'overlayPreset','overlayOpacity','overlayOpacityValue','gradientCoverage','coverageValue','backdropZoom','zoomValue','positionX','positionXValue','showTitle','textControls','fontFamily','textPosition','fontSize','fontSizeValue','textColor','textShadow',
-    'fanartKey','saveFanartKey','toggleFanartKey','fanartKeyStatus','artworkSource','artworkStatus','showMovieLogos','collageLayout','collageTitles','collageStatus','clearCollage','shuffleCollage','backdropCanvas','emptyState','renderBusy','previewTitle','previewMeta','resolution','downloadBackdrop'
+    'tileType','tileTypeHelp','fanartKey','saveFanartKey','toggleFanartKey','fanartKeyStatus','artworkSource','artworkStatus','showMovieLogos','collageLayout','collageTitles','collageStatus','clearCollage','shuffleCollage','backdropCanvas','emptyState','renderBusy','previewTitle','previewMeta','resolution','downloadBackdrop'
   ].forEach(id => { els[id] = $(id); });
 
   function loadState() {
@@ -121,7 +122,7 @@
     setStatus(els.titleSearchStatus, 'Searching TMDB…');
     try {
       const data = await tmdbFetch(`/search/${media}`, { query, include_adult: false, language: 'en-US', page: 1 });
-      const results = (data.results || []).filter(item => item.backdrop_path).slice(0, 8).map(item => normalizeSearchItem(item, media));
+      const results = (data.results || []).filter(item => item.backdrop_path || item.poster_path).slice(0, 8).map(item => normalizeSearchItem(item, media));
       if (token !== searchToken) return;
       renderResults(results);
       setStatus(els.titleSearchStatus, results.length ? `Tap titles to add them to your collage. Search again to add more.` : 'No matching titles with backdrops were found.', results.length ? 'ok' : '');
@@ -141,9 +142,9 @@
     });
   }
 
-  const titleKey = item => `${item.media || 'movie'}:${item.id || item.backdropPath}`;
+  const titleKey = item => `${item.media || 'movie'}:${item.id || item.backdropPath || item.posterPath}`;
   function selectedItems() {
-    return state.selected?.items || (state.selected?.backdropPath ? [state.selected] : []);
+    return state.selected?.items || ((state.selected?.backdropPath || state.selected?.posterPath) ? [state.selected] : []);
   }
   function updateSelection() {
     const items = selectedItems();
@@ -159,7 +160,7 @@
   }
   async function selectTitle(item) {
     if (item?.items) {
-      const unique = new Map(item.items.filter(entry => entry.backdropPath).map(entry => [titleKey(entry), entry]));
+      const unique = new Map(item.items.filter(entry => entry.backdropPath || entry.posterPath).map(entry => [titleKey(entry), entry]));
       item = {...item, items:[...unique.values()].slice(0,18)};
     }
     state.selected = item;
@@ -167,7 +168,7 @@
     await renderPreview();
   }
   async function addTitle(item) {
-    if (!item?.backdropPath) return;
+    if (!item?.backdropPath && !item?.posterPath) return;
     const items = selectedItems();
     if (items.some(entry => titleKey(entry) === titleKey(item))) return;
     if (items.length >= 18) return setStatus(els.collageStatus, 'Your collage has 18 titles. Remove one before adding another.', 'error');
@@ -264,9 +265,9 @@
       .sort((a,b) => (Number(b.iso_639_1 === 'en') - Number(a.iso_639_1 === 'en')) || (b.vote_average || 0) - (a.vote_average || 0))[0];
     return logo ? loadImage(`${IMAGE_BASE}w500${logo.file_path}`).catch(() => null) : null;
   }
-  async function fanartCandidates(item, key) {
+  async function fanartCandidates(item, key, tileType='backdrops') {
     if (!key || !item.id || !['movie','tv'].includes(item.media)) return [];
-    const cacheKey = `${key}:${titleKey(item)}:${item.originalLanguage || ''}`;
+    const cacheKey = `${key}:${titleKey(item)}:${item.originalLanguage || ''}:${tileType}`;
     if (!fanartCache.has(cacheKey)) {
       const request = (async () => {
         let id = item.id;
@@ -281,8 +282,8 @@
         if (response.status === 404) return [];
         if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? 'Fanart.tv rejected the key.' : 'Fanart.tv is unavailable.');
         const data = await response.json();
-        const thumbs = item.media === 'tv' ? data.tvthumb : data.moviethumb;
-        const backgrounds = item.media === 'tv' ? data.showbackground : data.moviebackground;
+        const thumbs = tileType === 'posters' ? (item.media === 'tv' ? data.tvposter : data.movieposter) : (item.media === 'tv' ? data.tvthumb : data.moviethumb);
+        const backgrounds = tileType === 'posters' ? [] : (item.media === 'tv' ? data.showbackground : data.moviebackground);
         return [ ...(thumbs || []).map(x=>({...x,thumb:true})), ...(backgrounds || []).map(x=>({...x,thumb:false})) ]
           .filter(x => { try { const u=new URL(x.url); return u.protocol==='https:' && (u.hostname==='assets.fanart.tv' || u.hostname.endsWith('.fanart.tv')); } catch { return false; } })
           .map(x => ({...x,rank:x.lang==='en'?0:item.originalLanguage && x.lang===item.originalLanguage?1:2}))
@@ -294,18 +295,29 @@
     }
     return fanartCache.get(cacheKey);
   }
-  async function tileArtwork(entry, width, useTitles, source, key) {
+  async function tileArtwork(entry, width, useTitles, source, key, tileType) {
     let fanartFailed = false;
-    if (useTitles && source === 'fanart' && key) {
+    if ((useTitles || tileType === 'posters') && source === 'fanart' && key) {
       try {
-        const candidates = await fanartCandidates(entry,key);
+        const candidates = await fanartCandidates(entry,key,tileType);
         for (const candidate of candidates.slice(0,2)) {
           try { return {entry,image:await loadImage(candidate.url),logo:null,embeddedTitle:true,source:'fanart'}; }
           catch { fanartFailed = true; }
         }
       } catch { fanartFailed = true; }
     }
-    const data = useTitles ? await tmdbImages(entry) : {};
+    const data = useTitles || tileType === 'posters' ? await tmdbImages(entry) : {};
+    if (tileType === 'posters') {
+      const posters = (data.posters || []).filter(x=>x.file_path && x.iso_639_1==='en')
+        .sort((a,b)=>(b.vote_average||0)-(a.vote_average||0));
+      const paths = [...new Set([...posters.slice(0,2).map(x=>x.file_path),entry.posterPath].filter(Boolean))];
+      for (const path of paths) {
+        try { return {entry,image:await loadImage(`${IMAGE_BASE}${width > 1920 ? 'w780' : 'w500'}${path}`),logo:null,embeddedTitle:true,source:'tmdb-poster',fanartFailed}; }
+        catch {}
+      }
+      if (!entry.backdropPath) throw new Error(`No poster artwork could be loaded for ${entry.title || 'this title'}. Remove it or try Backdrops.`);
+      return {entry,image:await loadImage(`${IMAGE_BASE}w780${entry.backdropPath}`),logo:null,embeddedTitle:false,contain:true,source:'tmdb',fanartFailed};
+    }
     const titled = (data.backdrops || []).filter(x=>x.iso_639_1==='en' && x.file_path)
       .sort((a,b)=>(b.vote_average||0)-(a.vote_average||0) || (b.width||0)-(a.width||0));
     const size = width > 1920 ? 'w1280' : 'w780';
@@ -313,40 +325,45 @@
       try { return {entry,image:await loadImage(`${IMAGE_BASE}${size}${candidate.file_path}`),logo:null,embeddedTitle:true,source:'tmdb-title',fanartFailed}; }
       catch {}
     }
-    return {entry,image:await loadImage(`${IMAGE_BASE}${size}${entry.backdropPath}`),logo:useTitles ? await titleLogo(entry,data) : null,embeddedTitle:false,source:'tmdb',fanartFailed};
+    return {entry,contain:!entry.backdropPath,image:await loadImage(`${IMAGE_BASE}${entry.backdropPath ? size : 'w500'}${entry.backdropPath || entry.posterPath}`),logo:useTitles && entry.backdropPath ? await titleLogo(entry,data) : null,embeddedTitle:!entry.backdropPath,source:'tmdb',fanartFailed};
   }
   async function artwork(item, size, width=1280, height=720) {
     const entries = item.items || [item];
     const useLogos = state.showMovieLogos;
     const layout = state.collageLayout;
+    const tileType = state.tileType;
+    const posterMode = tileType === 'posters';
     const source = state.artworkSource;
     const key = fanartKey();
     const assets = [];
     // Limit concurrent image/metadata requests and reuse them for slider changes.
     for (let i=0; i<entries.length; i+=4) {
-      assets.push(...await Promise.all(entries.slice(i,i+4).map(entry => tileArtwork(entry,width,useLogos,source,key))));
+      assets.push(...await Promise.all(entries.slice(i,i+4).map(entry => tileArtwork(entry,width,useLogos,source,key,tileType))));
     }
     const surface = document.createElement('canvas');
     surface.width = width; surface.height = height;
     const ctx = surface.getContext('2d');
     ctx.fillStyle = '#050608'; ctx.fillRect(0,0,width,height);
     const tilted = layout === 'tilted';
-    const cols = tilted ? 4 : Math.min(4, Math.ceil(Math.sqrt(assets.length * 16/9)));
-    const rows = tilted ? 6 : Math.ceil(assets.length / cols);
+    const cols = posterMode ? (tilted ? 5 : Math.ceil(Math.sqrt(assets.length * (width/height) / (2/3)))) : (tilted ? 4 : Math.min(4, Math.ceil(Math.sqrt(assets.length * 16/9))));
+    const rows = tilted ? (posterMode ? 4 : 6) : Math.ceil(assets.length / cols);
     const gap = width * .008;
-    const w = tilted ? width * .24 : width / cols;
-    const h = tilted ? w * 9/16 : height / rows;
+    const w = posterMode ? (tilted ? width*.17 : Math.min(width/cols,height/rows*2/3)) : (tilted ? width*.24 : width/cols);
+    const h = posterMode ? w*3/2 : (tilted ? w*9/16 : height/rows);
     ctx.save();
     if (tilted) { ctx.translate(width*.22, -height*.13); ctx.rotate(-12*Math.PI/180); }
     for (let index=0; index<(tilted ? cols*rows : assets.length); index++) {
-      const {image,logo,entry,embeddedTitle} = assets[index % assets.length];
+      const {image,logo,entry,embeddedTitle,contain} = assets[index % assets.length];
       const row = Math.floor(index/cols), col=index%cols;
       const rowCount = tilted ? cols : Math.min(cols, assets.length-row*cols);
-      const tw = (tilted ? w : width/rowCount)-gap, th=h-gap;
-      ctx.save();ctx.translate(tilted ? col*w : col*width/rowCount, row*h);
+      const tw = (tilted || posterMode ? w : width/rowCount)-gap, th=posterMode ? tw*3/2 : h-gap;
+      ctx.save();ctx.translate(tilted ? col*w : posterMode ? (width-rowCount*w)/2+col*w : col*width/rowCount, row*h);
       ctx.beginPath();ctx.roundRect(0,0,tw,th,width*.004);ctx.clip();
       const scale=Math.max(tw/image.width,th/image.height),sw=tw/scale,sh=th/scale;
-      ctx.drawImage(image,(image.width-sw)/2,(image.height-sh)/2,sw,sh,0,0,tw,th);
+      if (contain) {
+        const fit = Math.min(tw/image.width,th/image.height);
+        ctx.drawImage(image,(tw-image.width*fit)/2,(th-image.height*fit)/2,image.width*fit,image.height*fit);
+      } else ctx.drawImage(image,(image.width-sw)/2,(image.height-sh)/2,sw,sh,0,0,tw,th);
       if (useLogos && !embeddedTitle) {
         const fade=ctx.createLinearGradient(0,th*.45,0,th);
         fade.addColorStop(0,'rgba(0,0,0,0)');fade.addColorStop(1,'rgba(0,0,0,.8)');
@@ -365,10 +382,10 @@
     }
     ctx.restore();
     const fanartCount = assets.filter(x=>x.source==='fanart').length;
-    const titledCount = assets.filter(x=>x.source==='tmdb-title').length;
+    const titledCount = assets.filter(x=>x.source===(posterMode ? 'tmdb-poster' : 'tmdb-title')).length;
     const fallbackCount = assets.length-fanartCount-titledCount;
-    surface.artworkSummary = `${fanartCount} Fanart.tv · ${titledCount} TMDB title artwork · ${fallbackCount} TMDB backdrops`;
-    if (useLogos && source === 'fanart' && !key) surface.artworkSummary += '. Add a Fanart.tv key in API Keys to use its title artwork.';
+    surface.artworkSummary = `${fanartCount} Fanart.tv · ${titledCount} TMDB ${posterMode ? 'posters' : 'title artwork'} · ${fallbackCount} TMDB backdrops`;
+    if ((useLogos || posterMode) && source === 'fanart' && !key) surface.artworkSummary += '. Add a Fanart.tv key in API Keys to use its title artwork.';
     if (assets.some(x=>x.fanartFailed)) surface.artworkSummary += '. Some Fanart.tv artwork could not load; TMDB was used instead. Check your key or try again.';
     return surface;
   }
@@ -484,6 +501,7 @@
     els.showMovieLogos.checked = state.showMovieLogos;
     els.collageLayout.value = state.collageLayout;
     els.artworkSource.value = state.artworkSource;
+    syncTileType();
     els.fanartKey.value = savedFanartKey();
     setStatus(els.fanartKeyStatus, els.fanartKey.value ? 'Fanart.tv key is saved in this browser.' : 'Without a Fanart.tv key, TMDB artwork is used.');
     updateSelection();
@@ -521,6 +539,23 @@
     .forEach(el => el.addEventListener('input', syncState));
   els.downloadBackdrop.addEventListener('click', downloadPreview);
 
+  function syncTileType() {
+    els.tileType.querySelectorAll('button').forEach(button => {
+      const active = button.dataset.value === state.tileType;
+      button.classList.toggle('active',active);
+      button.setAttribute('aria-pressed',String(active));
+    });
+    els.showMovieLogos.disabled = state.tileType === 'posters';
+    els.tileTypeHelp.textContent = state.tileType === 'posters'
+      ? 'Portrait movie covers. Titles printed on posters stay as part of the artwork; no extra logo is added. Downloads remain widescreen.'
+      : 'Landscape artwork with optional movie titles. Downloads remain widescreen.';
+  }
+  els.tileType.addEventListener('click', event => {
+    const button = event.target.closest('button[data-value]');
+    if (!button || !['backdrops','posters'].includes(button.dataset.value)) return;
+    state.tileType = button.dataset.value;
+    syncTileType(); saveState(); queuePreview();
+  });
   els.toggleFanartKey.addEventListener('click', () => {
     els.fanartKey.type = els.fanartKey.type === 'password' ? 'text' : 'password';
     els.toggleFanartKey.setAttribute('aria-label', els.fanartKey.type === 'password' ? 'Show Fanart.tv key' : 'Hide Fanart.tv key');

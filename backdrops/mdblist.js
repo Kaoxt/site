@@ -216,7 +216,7 @@
       for (let i=0; i<previewItems.length; i += 8) {
         const batch = previewItems.slice(i, i+8);
         const results = await Promise.allSettled(batch.map(resolveTmdbItem));
-        results.forEach(result => { if (result.status === 'fulfilled' && result.value.backdropPath) resolved.push(result.value); });
+        results.forEach(result => { if (result.status === 'fulfilled' && (result.value.backdropPath || result.value.posterPath)) resolved.push(result.value); });
       }
       if (!resolved.length) throw new Error('No backdrop artwork could be loaded. Check your TMDB key and try again.');
       renderTitleResults(resolved);
