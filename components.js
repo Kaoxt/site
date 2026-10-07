@@ -212,7 +212,7 @@
     const footerTarget = document.getElementById('site-footer');
     const tasks = [];
     if (navTarget) tasks.push(loadFragment('nav.html?v=20261007-forum1', navTarget));
-    if (footerTarget) tasks.push(loadFragment('footer.html?v=20260909-1', footerTarget));
+    if (footerTarget) tasks.push(loadFragment('footer.html?v=20261007-forum1', footerTarget));
     if (tasks.length) await Promise.allSettled(tasks);
     setActiveNav();
     bindThemeButtons();
