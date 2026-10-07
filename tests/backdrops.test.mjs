@@ -11,6 +11,7 @@ function harness(logos = [], responder = null, options = {}) {
  class Image {width=1280;height=720;set src(url){loads.push(url);if (!options.stallImages) queueMicrotask(()=>this.onload?.())}}
  const window={dispatchEvent(){}};
  vm.runInNewContext(source,{document,window,Image,Map,URL,AbortSignal,CustomEvent:class{},localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},requestAnimationFrame:()=>1,cancelAnimationFrame(){},fetch:async url=>{requests.push(url);return {ok:true,json:async()=>responder ? responder(url) : ({logos})}},setTimeout:(fn,ms)=>setTimeout(fn,options.stallImages && ms===12000 ? 0 : ms),clearTimeout});
+ window.KollectionBackdrops.restore({artworkSource:'fanart'});
  return {api:window.KollectionBackdrops,nodes,loads,requests,calls};
 }
 test('search selections accumulate unique titles and require at least two',async()=>{
@@ -37,7 +38,7 @@ test('clearing selection invalidates an in-flight image',async()=>{
  assert.equal(h.nodes.get('emptyState').hidden,false);
 });
 
-test('logos prefer English, use image cache, and fall back to movie text',async()=>{
+test('logos prefer English, use image cache, and leave unavailable logos off',async()=>{
  const h=harness([{file_path:'/neutral.png',iso_639_1:null,vote_average:10},{file_path:'/english.png',iso_639_1:'en',vote_average:1}]);
  h.nodes.get('tmdbKey').value='test-key';
  const item={title:'Folder',items:[{id:1,media:'movie',title:'One',backdropPath:'/a.jpg'},{title:'No logo',backdropPath:'/b.jpg'}]};
@@ -46,7 +47,7 @@ test('logos prefer English, use image cache, and fall back to movie text',async(
  assert.ok(h.requests[0].includes('/movie/1/images'));
  assert.equal(h.loads.filter(u=>u.endsWith('/english.png')).length,1);
  assert.ok(!h.loads.some(u=>u.endsWith('/neutral.png')));
- assert.ok(h.calls.some(c=>c.key==='fillText' && c.args[0]==='No logo'));
+ assert.ok(!h.calls.some(c=>c.key==='fillText' && c.args[0]==='No logo'));
  const saved=h.api.getState();saved.showMovieLogos=false;h.api.restore(saved);
  h.calls.length=0;await h.api.selectTitle(item);
  assert.equal(h.requests.length,1);
@@ -160,4 +161,13 @@ test('Fanart clear logos are used when TMDB has no title artwork',async()=>{
  assert.ok(h.loads.includes('https://assets.fanart.tv/movie-logo.png'));
  assert.ok(h.loads.includes('https://assets.fanart.tv/tv-logo.png'));
  assert.ok(!h.calls.some(c=>c.key==='fillText'));
+});
+
+test('original TMDB source uses supplied artwork without metadata calls or added labels',async()=>{
+ const h=harness();h.api.restore({artworkSource:'tmdb-original'});
+ await h.api.selectTitle(pair);
+ assert.equal(h.requests.length,0);
+ assert.equal(h.loads.length,2);
+ assert.ok(!h.calls.some(c=>c.key==='fillText'));
+ assert.equal(h.nodes.get('showMovieLogos').disabled,true);
 });

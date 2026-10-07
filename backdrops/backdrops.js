@@ -19,7 +19,8 @@
     showTitle: false,
     showMovieLogos: true,
     collageLayout: 'tilted',
-    artworkSource: 'fanart',
+    artworkSource: 'tmdb-original',
+    artworkVersion: 2,
     tileType: 'backdrops',
     fontFamily: 'Inter, Arial, sans-serif',
     textPosition: 'left-center',
@@ -49,7 +50,11 @@
   ].forEach(id => { els[id] = $(id); });
 
   function loadState() {
-    try { return { ...defaults, ...JSON.parse(localStorage.getItem(STATE_KEY) || '{}') }; }
+    try {
+      const saved = JSON.parse(localStorage.getItem(STATE_KEY) || '{}');
+      if (saved.artworkVersion !== 2) { saved.artworkSource = 'tmdb-original'; saved.artworkVersion = 2; }
+      return { ...defaults, ...saved };
+    }
     catch { return { ...defaults }; }
   }
   function saveState() { try { localStorage.setItem(STATE_KEY, JSON.stringify(state)); } catch {} }
@@ -337,6 +342,13 @@
     return fanartCache.get(cacheKey);
   }
   async function tileArtwork(entry, width, useTitles, source, key, tileType) {
+    if (source === 'tmdb-original') {
+      const path = tileType === 'posters' ? entry.posterPath || entry.backdropPath : entry.backdropPath || entry.posterPath;
+      if (!path) throw new Error('No TMDB artwork is available for this title.');
+      const size = tileType === 'posters' ? (width > 1920 ? 'w780' : 'w500') : (width > 1920 ? 'w1280' : 'w780');
+      return {entry,image:await loadImage(`${IMAGE_BASE}${size}${path}`),logo:null,embeddedTitle:true,
+        contain:tileType === 'posters' ? !entry.posterPath : !entry.backdropPath,source:'tmdb-original'};
+    }
     let fanartFailed = false;
     if ((useTitles || tileType === 'posters') && source === 'fanart' && key) {
       try {
@@ -420,7 +432,7 @@
         const fit = Math.min(tw/image.width,th/image.height);
         ctx.drawImage(image,(tw-image.width*fit)/2,(th-image.height*fit)/2,image.width*fit,image.height*fit);
       } else ctx.drawImage(image,(image.width-sw)/2,(image.height-sh)/2,sw,sh,0,0,tw,th);
-      if (useLogos && !embeddedTitle) {
+      if (useLogos && !embeddedTitle && logo) {
         const fade=ctx.createLinearGradient(0,th*.45,0,th);
         fade.addColorStop(0,'rgba(0,0,0,0)');fade.addColorStop(1,'rgba(0,0,0,.8)');
         ctx.fillStyle=fade;ctx.fillRect(0,0,tw,th);
@@ -428,10 +440,6 @@
           const factor=Math.min(tw*.72/logo.width,th*.29/logo.height);
           const lw=logo.width*factor,lh=logo.height*factor;
           ctx.drawImage(logo,(tw-lw)/2,th-lh-th*.07,lw,lh);
-        } else {
-          ctx.fillStyle='#fff';ctx.font=`700 ${Math.max(12,th*.105)}px Arial, sans-serif`;
-          ctx.textAlign='center';ctx.textBaseline='middle';
-          ctx.fillText(entry.title || 'Untitled',tw/2,th*.84,tw*.88);
         }
       }
       ctx.restore();
@@ -441,6 +449,7 @@
     const titledCount = assets.filter(x=>x.source===(posterMode ? 'tmdb-poster' : 'tmdb-title')).length;
     const fallbackCount = assets.length-fanartCount-titledCount;
     surface.artworkSummary = `${fanartCount} Fanart.tv · ${titledCount} TMDB ${posterMode ? 'posters' : 'title artwork'} · ${fallbackCount} TMDB backdrops`;
+    if (source === 'tmdb-original') surface.artworkSummary = `${assets.length} original TMDB ${posterMode ? 'posters' : 'images'}. Titles are shown only when included in the artwork.`;
     if ((useLogos || posterMode) && source === 'fanart' && !key) surface.artworkSummary += '. Add a Fanart.tv key in API Keys to use its title artwork.';
     if (assets.some(x=>x.fanartFailed)) surface.artworkSummary += '. Some Fanart.tv artwork could not load; TMDB was used instead. Check your key or try again.';
     return surface;
@@ -538,6 +547,7 @@
     state.showMovieLogos = els.showMovieLogos.checked;
     state.collageLayout = els.collageLayout.value;
     state.artworkSource = els.artworkSource.value;
+    syncTileType();
     state.fontFamily = els.fontFamily.value;
     state.textPosition = els.textPosition.value;
     state.fontSize = Number(els.fontSize.value);
@@ -663,7 +673,7 @@
       button.classList.toggle('active',active);
       button.setAttribute('aria-pressed',String(active));
     });
-    els.showMovieLogos.disabled = state.tileType === 'posters';
+    els.showMovieLogos.disabled = state.tileType === 'posters' || state.artworkSource === 'tmdb-original';
     els.tileTypeHelp.textContent = state.tileType === 'posters'
       ? 'Portrait movie covers. Titles printed on posters stay as part of the artwork; no extra logo is added. Downloads remain widescreen.'
       : 'Landscape artwork with optional movie titles. Downloads remain widescreen.';
