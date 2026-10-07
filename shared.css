@@ -13,6 +13,7 @@ body {
 /* Keep the navigation dock dark in both modes so the existing white logo remains readable. */
 #site-nav {
   position: sticky;
+  min-height: 58px;
   top: 14px;
   z-index: 1000;
   width: 100%;

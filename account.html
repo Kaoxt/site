@@ -8,26 +8,31 @@
   <meta name="theme-color" content="#050608" />
   <title>Account | The Kollection</title>
   <meta name="description" content="Manage your Kollection account, Nuvio profile connection, and saved collection setups." />
-  <style>html,body{background:#050608}#accountBootLoader{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:#050608;opacity:1;visibility:visible;transition:opacity .22s ease,visibility .22s ease}#accountBootLoader.is-ready{opacity:0;visibility:hidden;pointer-events:none}.account-boot-spinner{width:54px;height:54px;border-radius:50%;border:5px solid rgba(99,102,241,.18);border-top-color:#7c83ff;border-right-color:#6366f1;animation:accountBootSpin .72s linear infinite;box-sizing:border-box}@keyframes accountBootSpin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.account-boot-spinner{animation-duration:1.35s}}</style>
-  <link rel="stylesheet" href="/shared.css?v=20260906-1" />
+  <link rel="stylesheet" href="/shared.css?v=20261007-nav1" />
   <link rel="stylesheet" href="/account/account.css?v=20260909-5" />
   <link rel="stylesheet" href="/account/profile-actions.css?v=20260914-savedsetup1" />
-  <link rel="stylesheet" href="/secondary-pages.css?v=20260909-2" />
+  <link rel="stylesheet" href="/secondary-pages.css?v=20261007-nav1" />
   <link rel="stylesheet" href="/account/login-form.css?v=20260908-1" />
   <link rel="stylesheet" href="/account/saved-collections.css?v=20260919-aioexport1" />
   <link rel="stylesheet" href="/account/default-avatar.css?v=20261007-layout3" />
+  <script src="/components.js?v=20261007-nav1" defer></script>
   <script src="/account/default-avatar.js?v=20261007-500kb" defer></script>
   <link rel="stylesheet" href="/account/display-name.css?v=1" />
   <script src="/account/display-name.js?v=20260928-initial-free1" defer></script>
-  <script src="/components.js?v=20260909-1" defer></script>
+  <style>
+    .account-loading-state:not([hidden]) { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; min-height: 96px; color: var(--account-muted); }
+    #accountLoading[hidden], #accountLoading [hidden] { display: none; }
+    .account-loading-spinner { width: 22px; height: 22px; flex: 0 0 22px; border: 3px solid var(--account-border); border-top-color: var(--account-accent); border-radius: 50%; box-sizing: border-box; animation: accountLoadingSpin .8s linear infinite; }
+    @keyframes accountLoadingSpin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .account-loading-spinner { animation: none; } }
+  </style>
 <script src="/account/community-profile.js?v=20261007-follow1" defer></script><style>#community-profile{grid-column:1/-1;scroll-margin-top:110px}#communityProfileForm{display:grid;gap:14px;margin-top:18px}#communityProfileForm label{font-weight:600}#communityProfileForm textarea{box-sizing:border-box;width:100%;resize:vertical;min-height:130px;padding:14px;border:1px solid var(--account-border);border-radius:13px;background:var(--account-panel);color:var(--account-text);font:inherit}#communityProfileForm .account-actions{margin:0}</style></head>
 <body>
-  <div id="accountBootLoader" role="status" aria-label="Loading account"><div class="account-boot-spinner" aria-hidden="true"></div></div>
   <main class="page account-page secondary-page">
     <div id="site-nav" aria-label="Site navigation"></div>
     <section class="account-hero secondary-page-header"><div class="account-eyebrow secondary-page-chip">Your Kollection</div><h1 class="secondary-page-title">Account</h1><p class="secondary-page-subtitle">Use your Nuvio account to sign in to The Kollection. Your Nuvio password is never stored by The Kollection.</p></section>
     <section class="account-shell secondary-page-content" aria-live="polite">
-      <div id="accountLoading" class="account-loading" hidden></div>
+      <div id="accountLoading" class="account-card account-loading-state" role="status"><span id="accountLoadingSpinner" class="account-loading-spinner" aria-hidden="true"></span><span id="accountLoadingMessage">Loading your account…</span><button id="accountRetry" class="account-secondary-button" type="button" hidden>Try again</button></div>
       <div id="accountSignedOut" class="account-state" hidden><div class="account-card account-signin-card"><div class="account-nuvio-logo" aria-hidden="true"><img src="/set-up-collection/assets/nuvio-account.webp" alt="" /></div><div class="account-signin-copy"><span class="account-kicker">NUVIO AUTHENTICATION</span><h2>Sign in with Nuvio</h2><p>Enter the same email and password you use for Nuvio. The Kollection sends them directly to Nuvio for authentication and does not save your password.</p></div><form id="accountLoginForm" class="account-login-form" autocomplete="on"><label><span>Email</span><input id="accountLoginEmail" type="email" autocomplete="username" required placeholder="you@example.com" /></label><label><span>Password</span><input id="accountLoginPassword" type="password" autocomplete="current-password" required placeholder="Your Nuvio password" /></label><button id="accountSignIn" class="account-primary-button" type="submit">Sign in with Nuvio</button></form><p id="accountSignInStatus" class="account-status" role="status"></p><div class="account-security-note"><strong>Your password stays with Nuvio.</strong><span>The password is used only for the Nuvio sign-in request and is never written to D1, local storage, or the Kollection session cookie.</span></div></div></div>
       <div id="accountSignedIn" class="account-state" hidden><div class="account-grid">
         <section class="account-card account-profile-card"><div class="account-section-head"><div><span class="account-kicker">SIGNED IN</span><h2>Your account</h2></div><span id="accountLastSync" class="account-session-pill">Last sync · —</span></div><dl class="account-details"><div><dt>Email</dt><dd id="accountEmail">—</dd></div><div><dt>Active profile</dt><dd id="accountActiveProfile">—</dd></div></dl><section class="account-collection-cta" aria-labelledby="accountCollectionHeading"><div><h3 id="accountCollectionHeading">Your collection</h3><p>Build a collection for your Nuvio profile.</p></div><a class="account-primary-button" href="/set-up-collection">Set Up Collection <span aria-hidden="true">→</span></a></section><div class="account-identity-settings"><form id="accountDisplayNameForm" class="account-display-name" novalidate><label for="accountDisplayName">Display name</label><p id="accountDisplayNameHelp">Your name across The Kollection, including reports and comments. This overrides your selected Nuvio profile name. Leave blank to use the profile name.</p><p id="accountDisplayNameLimit" aria-live="polite">Your initial display name does not count as a change. After that, you can change or clear it twice in any rolling 60-day period.</p><div class="account-display-name-row"><input id="accountDisplayName" name="displayName" type="text" maxlength="50" autocomplete="nickname" aria-describedby="accountDisplayNameHelp accountDisplayNameLimit accountDisplayNameStatus" placeholder="Your display name" disabled /><button class="account-primary-button" type="submit" disabled>Save display name</button></div><p id="accountDisplayNameStatus" class="account-status" role="status"></p></form><form id="accountAvatarForm" class="account-display-name" novalidate><label for="accountAvatarUrl">Default account avatar</label><p>Used throughout The Kollection, including reports and comments, whichever Nuvio profile you select.</p><div id="accountAvatarPreview" class="account-avatar-preview">N</div><input id="accountAvatarUrl" type="url" placeholder="https://example.com/avatar.jpg" aria-label="Avatar image URL" disabled><label for="accountAvatarFile">Or upload an image</label><input id="accountAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" disabled><p>Uploads are cropped to a square and compressed to a maximum of 500 KB. Your avatar is public.</p><div class="account-avatar-actions"><button class="account-primary-button" type="submit" disabled>Save avatar</button><button class="account-secondary-button" type="button" id="accountAvatarRemove" disabled>Use Nuvio avatar</button></div><p id="accountAvatarStatus" class="account-status" role="status"></p></form></div><span id="accountExpires" hidden>—</span><div class="account-actions"><button id="accountSignOut" class="account-secondary-button" type="button">Log out</button></div></section>
@@ -38,14 +43,13 @@
     </section>
     <div id="site-footer"></div>
   </main>
-  <script src="/nuvio-auth/nuvio-auth.js?v=20260906-1"></script>
-  <script src="/nuvio-auth/profile-state.js?v=20260922-network1"></script>
-  <script src="/nuvio-auth/collection-eligibility.js?v=20260922-network1"></script>
-  <script src="/account/account.js?v=20260927-issues1"></script>
-  <script src="/account/profile-actions.js?v=20260922-network1"></script>
-  <script src="/account/avatar-edit.js?v=20260909-3"></script>
-  <script src="/set-up-collection/better-posters-settings.js?v=20260917-native1"></script>
-  <script src="/account/saved-collections.js?v=20260922-saved-reuse1"></script>
-  <script>(()=>{const loader=document.getElementById('accountBootLoader'),signedIn=document.getElementById('accountSignedIn'),signedOut=document.getElementById('accountSignedOut'),profiles=document.getElementById('accountProfiles'),profilesStatus=document.getElementById('accountProfilesStatus');if(!loader)return;let finished=false;const finish=()=>{if(finished)return;finished=true;loader.classList.add('is-ready');setTimeout(()=>loader.remove(),260);observer.disconnect()},ready=()=>{if(signedOut&&!signedOut.hidden)return true;if(signedIn&&!signedIn.hidden){if(profiles&&profiles.children.length>0)return true;const status=String(profilesStatus?.textContent||'').trim();if(status&&!/^Loading Nuvio profiles/i.test(status))return true}return false},observer=new MutationObserver(()=>{if(ready())requestAnimationFrame(()=>requestAnimationFrame(finish))});[signedIn,signedOut,profiles,profilesStatus].filter(Boolean).forEach(node=>observer.observe(node,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']}));if(ready())finish();window.addEventListener('load',()=>{if(ready())requestAnimationFrame(()=>requestAnimationFrame(finish))},{once:true});setTimeout(finish,8000)})();</script>
+  <script src="/nuvio-auth/nuvio-auth.js?v=20261007-nav1" defer></script>
+  <script src="/nuvio-auth/profile-state.js?v=20260922-network1" defer></script>
+  <script src="/nuvio-auth/collection-eligibility.js?v=20260922-network1" defer></script>
+  <script src="/account/account.js?v=20261007-nav1" defer></script>
+  <script src="/account/profile-actions.js?v=20260922-network1" defer></script>
+  <script src="/account/avatar-edit.js?v=20260909-3" defer></script>
+  <script src="/set-up-collection/better-posters-settings.js?v=20260917-native1" defer></script>
+  <script src="/account/saved-collections.js?v=20260922-saved-reuse1" defer></script>
 </body>
 </html>

@@ -4,6 +4,8 @@
   const THEME_KEY = 'kollection-theme';
   const DARK_COLOR = '#050608';
   const LIGHT_COLOR = '#f4f5f7';
+  const NAV_VERSION = '20261007-nav1';
+  const FRAGMENT_TTL = 5 * 60 * 1000;
 
   const currentScript = document.currentScript || [...document.scripts].find((script) => /(?:^|\/)components\.js(?:\?|$)/.test(script.src));
   const baseUrl = currentScript && currentScript.src
@@ -49,12 +51,32 @@
   };
   const loadFragment = async (filename, target) => {
     if (!target) return false;
+    // Only public, versioned markup is cached here. Account data stays in the auth client.
+    const key = `kollection:fragment:${assetUrl(filename)}`;
+    let cached = null;
+    try { cached = JSON.parse(sessionStorage.getItem(key)); } catch (_) {}
+    if (cached?.html && cached.expiresAt > Date.now()) {
+      target.innerHTML = cached.html;
+      return true;
+    }
     try {
-      const response = await fetch(assetUrl(filename), { cache: 'no-cache' });
+      const url = new URL(assetUrl(filename));
+      let response = await fetch(url.href);
+      // Plain local static servers may not provide Cloudflare's extensionless routes.
+      if (response.status === 404 && !url.pathname.endsWith('.html')) {
+        url.pathname += '.html';
+        response = await fetch(url.href);
+      }
       if (!response.ok) throw new Error(`${filename}: ${response.status}`);
-      target.innerHTML = await response.text();
+      const html = await response.text();
+      target.innerHTML = html;
+      try { sessionStorage.setItem(key, JSON.stringify({ html, expiresAt: Date.now() + FRAGMENT_TTL })); } catch (_) {}
       return true;
     } catch (error) {
+      if (cached?.html) {
+        target.innerHTML = cached.html;
+        return true;
+      }
       console.warn(`[The Kollection] Could not load ${filename}.`, error);
       return false;
     }
@@ -70,66 +92,74 @@
     link.href = href;
     document.head.appendChild(link);
   };
-  const loadScriptOnce = (filename, globalCheck) => new Promise((resolve, reject) => {
-    if (typeof globalCheck === 'function' && globalCheck()) { resolve(true); return; }
+  const scriptLoads = new Map();
+  const loadScriptOnce = (filename, globalCheck) => {
+    if (typeof globalCheck === 'function' && globalCheck()) return Promise.resolve(true);
     const src = assetUrl(filename);
-    const existing = [...document.scripts].find((script) => script.src === src);
-    if (existing) {
+    if (scriptLoads.has(src)) return scriptLoads.get(src);
+    const task = new Promise((resolve, reject) => {
+      const existing = [...document.scripts].find((script) => script.src === src);
+      const script = existing || document.createElement('script');
+      const cleanup = () => {
+        clearTimeout(timeout);
+        script.removeEventListener('load', done);
+        script.removeEventListener('error', failed);
+      };
       const done = () => {
+        cleanup();
+        script.dataset.kollectionLoaded = 'true';
         if (!globalCheck || globalCheck()) resolve(true);
         else reject(new Error(`${filename} loaded without its expected global.`));
       };
-      if (existing.dataset.kollectionLoaded === 'true') { done(); return; }
-      existing.addEventListener('load', done, { once: true });
-      existing.addEventListener('error', () => reject(new Error(`Could not load ${filename}.`)), { once: true });
-      setTimeout(() => { if (typeof globalCheck === 'function' && globalCheck()) resolve(true); }, 0);
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = src;
-    script.async = false;
-    script.addEventListener('load', () => {
-      script.dataset.kollectionLoaded = 'true';
-      if (!globalCheck || globalCheck()) resolve(true);
-      else reject(new Error(`${filename} loaded without its expected global.`));
-    }, { once: true });
-    script.addEventListener('error', () => reject(new Error(`Could not load ${filename}.`)), { once: true });
-    document.head.appendChild(script);
-  });
+      const failed = () => {
+        cleanup();
+        reject(new Error(`Could not load ${filename}.`));
+      };
+      const timeout = setTimeout(failed, 15000);
+      if (existing?.dataset.kollectionLoaded === 'true') { done(); return; }
+      script.addEventListener('load', done, { once: true });
+      script.addEventListener('error', failed, { once: true });
+      if (!existing) {
+        script.src = src;
+        script.async = true;
+        document.head.appendChild(script);
+      }
+    });
+    scriptLoads.set(src, task);
+    task.catch(() => scriptLoads.delete(src));
+    return task;
+  };
 
-  const prepareNuvioNavigation = async () => {
-    ensureStylesheet('nuvio-auth/nav-account.css');
+  const loadNavigationAssets = () => {
+    ensureStylesheet(`nuvio-auth/nav-account.css?v=${NAV_VERSION}`);
     ensureStylesheet('nuvio-auth/admin-nav.css?v=20260909-2');
-
-    if (!window.KollectionNuvioAuth) {
-      await loadScriptOnce('nuvio-auth/nuvio-auth.js', () => Boolean(window.KollectionNuvioAuth));
-    }
-    if (!window.KollectionNavAccount) {
-      await loadScriptOnce('nuvio-auth/nav-account.js?v=20261007-account-avatar1', () => Boolean(window.KollectionNavAccount));
-    }
-    if (!window.KollectionNavLoginRedirect) {
-      await loadScriptOnce('nuvio-auth/nav-login-redirect.js?v=20260908-1', () => Boolean(window.KollectionNavLoginRedirect));
-    }
-    window.KollectionNavLoginRedirect?.init?.();
-
-    try { await window.KollectionNavAccount?.init?.(); }
-    catch (error) { console.warn('[The Kollection] Nuvio navigation could not initialize.', error); }
-
-    if (!window.KollectionAccountLink) {
-      await loadScriptOnce('nuvio-auth/account-link.js?v=20261007-social1', () => Boolean(window.KollectionAccountLink));
-    }
-    window.KollectionAccountLink?.init?.();
-
-    if (!window.KollectionAdminNav) {
-      await loadScriptOnce('nuvio-auth/admin-nav.js?v=20260907-1', () => Boolean(window.KollectionAdminNav));
-    }
-    window.KollectionAdminNav?.init?.().catch?.((error) => {
-      console.warn('[The Kollection] Admin navigation shortcut could not initialize.', error);
+    // These helpers only define their APIs at load time, so their downloads can overlap.
+    return Object.fromEntries([
+      ['nuvio-auth', 'KollectionNuvioAuth'],
+      ['nav-account', 'KollectionNavAccount'],
+      ['nav-login-redirect', 'KollectionNavLoginRedirect'],
+      ['account-link', 'KollectionAccountLink'],
+      ['admin-nav', 'KollectionAdminNav'],
+    ].map(([file, global]) => [global, loadScriptOnce(`nuvio-auth/${file}.js?v=${NAV_VERSION}`, () => Boolean(window[global])).catch((error) => {
+      console.warn(`[The Kollection] ${global} could not load.`, error);
+      return false;
+    })]));
+  };
+  const prepareNuvioNavigation = (assets) => {
+    ['KollectionNavLoginRedirect', 'KollectionAccountLink', 'KollectionAdminNav', 'KollectionNavAccount'].forEach((name) => {
+      const dependencies = [assets[name]];
+      if (name === 'KollectionAdminNav' || name === 'KollectionNavAccount') dependencies.push(assets.KollectionNuvioAuth);
+      Promise.all(dependencies).then((loaded) => {
+        if (loaded.every(Boolean)) return window[name]?.init?.();
+      }).catch((error) => {
+        console.warn(`[The Kollection] ${name} could not initialize.`, error);
+      });
     });
   };
 
   const resolvePage = () => {
     const path = window.location.pathname.replace(/\/+$/, '');
+    if (/^\/set-up-collection(?:\/|$)/i.test(path)) return 'set-up-collection.html';
     const last = (path.split('/').pop() || '').toLowerCase();
     if (!last || last === 'index.html') return 'index.html';
     if (last === 'news' || last === 'news.html') return 'news.html';
@@ -179,6 +209,33 @@
       }
     });
   };
+  const bindNavigationFeedback = () => {
+    let resetTimer;
+    const reset = () => {
+      clearTimeout(resetTimer);
+      document.documentElement.classList.remove('kollection-navigating');
+      document.querySelectorAll('[data-navigation-pending]').forEach((link) => {
+        link.removeAttribute('data-navigation-pending');
+        link.removeAttribute('aria-busy');
+      });
+    };
+    document.addEventListener('click', (event) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = event.target.closest?.('#site-nav a[href], #site-footer a[href]');
+      if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+      const url = new URL(link.href, window.location.href);
+      if (url.origin !== window.location.origin || !/^https?:$/.test(url.protocol)) return;
+      if (url.pathname === location.pathname && url.search === location.search && url.hash) return;
+      reset();
+      link.setAttribute('data-navigation-pending', 'true');
+      link.setAttribute('aria-busy', 'true');
+      document.documentElement.classList.add('kollection-navigating');
+      // Native navigation keeps downloads, history, modifier keys and unsaved-form prompts intact.
+      resetTimer = setTimeout(reset, 10000);
+    });
+    window.addEventListener('pageshow', reset);
+    window.addEventListener('pagehide', reset);
+  };
   const COMPACT_NAV_QUERY = '(max-width: 900px)';
   let compactNavMedia = null;
   const clearResponsiveInlineDisplays = () => {
@@ -205,24 +262,24 @@
     window.addEventListener('orientationchange', syncResponsiveNav, { passive: true });
   };
   const init = async () => {
-    ensureStylesheet('secondary-pages.css?v=20260909-2');
-    ensureStylesheet('nav-interaction.css?v=20260911-1');
+    ensureStylesheet(`secondary-pages.css?v=${NAV_VERSION}`);
+    ensureStylesheet(`nav-interaction.css?v=${NAV_VERSION}`);
     applyTheme(readTheme(), false);
     const navTarget = document.getElementById('site-nav');
     const footerTarget = document.getElementById('site-footer');
-    const tasks = [];
-    if (navTarget) tasks.push(loadFragment('nav.html?v=20261007-social1', navTarget));
-    if (footerTarget) tasks.push(loadFragment('footer.html?v=20261007-social1', footerTarget));
-    if (tasks.length) await Promise.allSettled(tasks);
+    const navigation = navTarget ? loadFragment(`nav?v=${NAV_VERSION}`, navTarget) : Promise.resolve();
+    const navigationAssets = navTarget ? loadNavigationAssets() : null;
+    // Footer and account requests must never hold the primary links or menu button.
+    if (footerTarget) loadFragment(`footer?v=${NAV_VERSION}`, footerTarget);
+    await navigation;
     setActiveNav();
     bindThemeButtons();
     bindMenu();
+    bindNavigationFeedback();
     bindResponsiveNav();
     syncResponsiveNav();
     applyTheme(readTheme(), false);
-    prepareNuvioNavigation().catch((error) => {
-      console.warn('[The Kollection] Nuvio account navigation unavailable.', error);
-    });
+    if (navigationAssets) prepareNuvioNavigation(navigationAssets);
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();

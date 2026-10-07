@@ -6,8 +6,11 @@
   let initialized = false;
   let observer = null;
   let scheduled = false;
+  let currentSession = null;
+  let pendingRefresh = null;
+  let sessionGeneration = 0;
 
-  const ADMIN_URL = '/admin.html';
+  const ADMIN_URL = '/admin';
 
   function adminLink(className) {
     const link = document.createElement('a');
@@ -78,11 +81,9 @@
     }
   }
 
-  async function apply() {
+  function apply() {
     scheduled = false;
-
-    const session = await window.KollectionNuvioAuth?.getSession?.().catch(() => null);
-    const isAdmin = Boolean(session?.authenticated && session?.isAdmin);
+    const isAdmin = Boolean(currentSession?.authenticated && currentSession?.isAdmin);
 
     if (!isAdmin) {
       restoreNonAdminLayout();
@@ -96,12 +97,34 @@
   function scheduleApply() {
     if (scheduled) return;
     scheduled = true;
-    queueMicrotask(() => {
-      apply().catch((error) => {
-        scheduled = false;
-        console.warn('[The Kollection] Could not update the Admin account shortcut.', error);
-      });
+    queueMicrotask(apply);
+  }
+
+  function refresh() {
+    if (pendingRefresh) return pendingRefresh;
+    const generation = sessionGeneration;
+    const pending = (async () => {
+      const session = await window.KollectionNuvioAuth?.getSession?.().catch(() => null);
+      if (generation !== sessionGeneration) return;
+      currentSession = session;
+      apply();
+    })().finally(() => {
+      if (pendingRefresh === pending) pendingRefresh = null;
     });
+    pendingRefresh = pending;
+    return pending;
+  }
+
+  function resetSession() {
+    sessionGeneration += 1;
+    pendingRefresh = null;
+    currentSession = null;
+    apply();
+  }
+
+  function sessionChanged() {
+    resetSession();
+    void refresh();
   }
 
   async function init() {
@@ -114,17 +137,19 @@
         observer.observe(nav, { childList: true, subtree: true });
       }
 
-      window.addEventListener('kollection:nuvio-signed-in', scheduleApply);
-      window.addEventListener('kollection:nuvio-signed-out', scheduleApply);
-      window.addEventListener('kollection:nuvio-session-changed', scheduleApply);
+      window.addEventListener('kollection:nuvio-signed-in', sessionChanged);
+      window.addEventListener('kollection:nuvio-signed-out', resetSession);
+      window.addEventListener('kollection:nuvio-session-changed', sessionChanged);
+      window.addEventListener('kollection:display-name-changed', sessionChanged);
+      window.addEventListener('kollection:avatar-changed', sessionChanged);
       window.addEventListener('kollection:nuvio-profile-changed', scheduleApply);
     }
 
-    await apply();
+    await refresh();
   }
 
   window.KollectionAdminNav = Object.freeze({
     init,
-    refresh: apply,
+    refresh,
   });
 })();
