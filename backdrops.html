@@ -10,7 +10,7 @@
   <meta name="description" content="Choose original or custom movie, TV, and folder backdrops for The Kollection, Nuvio, and compatible metadata setups." />
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/secondary-pages.css?v=20260909-3" />
-  <link rel="stylesheet" href="/backdrops/styles.css?v=20261007-1" />
+  <link rel="stylesheet" href="/backdrops/styles.css?v=20261007-2" />
   <link rel="stylesheet" href="/backdrops/title-mode.css?v=20261004-1" />
   <link rel="stylesheet" href="/backdrops/folder-builder.css?v=20261004-1" />
   <script src="/components.js?v=20260908-3" defer></script>
@@ -49,7 +49,7 @@
           <details class="control-card api-card" open>
             <summary><span><small>SETUP</small><strong>API Keys</strong></span><i aria-hidden="true">⌄</i></summary>
             <div class="control-card-body">
-              <p class="control-help">Keys stay in this browser and are sent directly to TMDB or MDBList. The Kollection does not proxy these requests.</p>
+              <p class="control-help">Keys stay in this browser and are sent directly to TMDB, MDBList, or Fanart.tv. The Kollection does not proxy these requests.</p>
               <label class="field-label" for="tmdbKey">TMDB Read Access Token / API key</label>
               <div class="key-row">
                 <input id="tmdbKey" class="text-input" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your TMDB token" />
@@ -61,6 +61,15 @@
               </div>
               <div id="keyStatus" class="status-line" aria-live="polite">No TMDB key saved.</div>
 
+              <div class="api-divider"></div>
+              <label class="field-label" for="fanartKey">Fanart.tv API key (optional)</label>
+              <div class="key-row">
+                <input id="fanartKey" class="text-input" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your Fanart.tv key" />
+                <button id="toggleFanartKey" class="icon-button" type="button" aria-label="Show Fanart.tv key">👁</button>
+              </div>
+              <button id="saveFanartKey" class="secondary-button" type="button">Save Fanart.tv key</button>
+              <p class="control-help">Enables movie and TV artwork with the title already designed into the image. <a href="https://fanart.tv/get-an-api-key/" target="_blank" rel="noopener noreferrer">Get a Fanart.tv API key</a>.</p>
+              <div id="fanartKeyStatus" class="status-line" aria-live="polite">Without a Fanart.tv key, TMDB artwork is used.</div>
               <div class="api-divider"></div>
               <label class="field-label" for="mdblistKey">MDBList API key</label>
               <div class="key-row">
@@ -148,8 +157,11 @@
               <div class="inline-actions"><button id="shuffleCollage" class="secondary-button" type="button">Shuffle tiles</button><button id="clearCollage" class="ghost-button" type="button">Clear titles</button></div>
               <label class="field-label" for="collageLayout">Collage layout</label>
               <select id="collageLayout" class="select-input"><option value="tilted">Angled movie wall</option><option value="grid">Full-width grid</option></select>
-              <label class="toggle-row"><span><strong>Movie title logos</strong><small>Official title artwork on each movie tile</small></span><input id="showMovieLogos" type="checkbox" checked /></label>
-              <p class="control-help">Uses English title logos from TMDB where available, with readable title text as a fallback. Angled walls repeat tiles to fill the design.</p>
+              <label class="field-label" for="artworkSource">Tile artwork source</label>
+              <select id="artworkSource" class="select-input"><option value="fanart">Fanart.tv preferred (TMDB fallback)</option><option value="tmdb">TMDB only</option></select>
+              <div id="artworkStatus" class="status-line" aria-live="polite"></div>
+              <label class="toggle-row"><span><strong>Movie titles on tiles</strong><small>Prefer artwork with the title built in</small></span><input id="showMovieLogos" type="checkbox" checked /></label>
+              <p class="control-help">Prefers English Fanart.tv title artwork, then original-language artwork. Falls back to TMDB title artwork, or a backdrop with a logo or readable title. Already-titled artwork never gets a second logo. Angled walls repeat tiles to fill the design.</p>
             </div>
           </section>
 
@@ -223,7 +235,7 @@
         </div>
 
         <div class="workspace-footer">
-          <div class="privacy-note"><span class="privacy-dot"></span><div><strong>Browser-only image pipeline</strong><small>TMDB and MDBList requests are made by the user's browser. The Kollection does not pre-render every possible backdrop.</small></div></div>
+          <div class="privacy-note"><span class="privacy-dot"></span><div><strong>Browser-only image pipeline</strong><small>TMDB, MDBList, and Fanart.tv requests are made by the user's browser. The Kollection does not pre-render every possible backdrop.</small></div></div>
           <div class="export-panel">
             <label for="resolution">Download resolution</label>
             <select id="resolution" class="select-input resolution-select"><option value="1280x720">720p</option><option value="1920x1080" selected>1080p</option><option value="2560x1440">1440p</option><option value="3840x2160">4K</option></select>
@@ -235,8 +247,8 @@
 
     <div id="site-footer"></div>
   </main>
-  <script src="/backdrops/backdrops.js?v=20261007-1"></script>
-  <script src="/backdrops/mdblist.js?v=20261007-1"></script>
+  <script src="/backdrops/backdrops.js?v=20261007-2"></script>
+  <script src="/backdrops/mdblist.js?v=20261007-2"></script>
   <script src="/backdrops/folder-builder.js?v=20261004-1"></script>
 </body>
 </html>

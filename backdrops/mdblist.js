@@ -180,6 +180,7 @@
     const data = await window.KollectionBackdrops.tmdbFetch(`/${item.media}/${item.id}`, { language:'en-US' });
     return {
       id: data.id,
+      originalLanguage: data.original_language || '',
       media: item.media,
       title: data.title || data.name || item.title || 'Untitled',
       year: String(data.release_date || data.first_air_date || '').slice(0,4),
