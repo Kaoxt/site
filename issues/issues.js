@@ -1,5 +1,6 @@
 (() => {
   'use strict';
+  const media = window.KollectionIssueMedia;
   const $ = id => document.getElementById(id);
   const categories = { collection: 'Kollection in Nuvio', setup: 'Setup & updates', artwork: 'Artwork & posters', account: 'Account & profiles', website: 'Website', other: 'Other' };
   const statuses = { open: 'Open', in_progress: 'In progress', closed: 'Closed' };
@@ -11,7 +12,9 @@
   function updatePostingProfile() {
     const profile = selectedProfile();
     document.querySelectorAll('[data-posting-profile]').forEach(node => {
-      node.textContent = displayName || profile ? `Posting as ${displayName || profile.name}` : 'Your selected Nuvio profile will be used.';
+      const name = displayName || profile?.name;
+      const avatar = document.querySelector('.nuvio-desktop-profile-button img')?.src || profile?.avatarUrl || '';
+      node.innerHTML = name ? `${media.avatar(name, avatar, profile?.avatarColor)}<span>Posting as ${esc(name)}</span>` : 'Your selected Nuvio profile will be used.';
     });
   }
   const badge = issue => `<span class="issue-badge">${esc(statuses[issue.status])}</span><span class="issue-badge">${esc(categories[issue.category])}</span>`;
@@ -46,7 +49,7 @@
         const result = await api('?' + params);
         if (version !== loadVersion) return;
         authState(result);
-        $('issue-results').innerHTML = result.issues.length ? result.issues.map(issue => `<article class="issue-row"><span class="issue-dot ${esc(issue.status)}" aria-hidden="true">${issue.status === 'closed' ? '✓' : '◉'}</span><div class="issue-row-main"><h3><a href="#${issue.id}">${esc(issue.title)}</a></h3><div class="issue-meta">${badge(issue)}<span>#${issue.id} · ${esc(issue.author)} · ${esc(date(issue.created_at))}</span>${issue.isMine ? '<span>Your report</span>' : ''}</div></div><span class="issue-row-count issue-meta">${issue.comment_count} ${issue.comment_count === 1 ? 'comment' : 'comments'}</span></article>`).join('') : '<div class="issue-empty"><h3>No issues found</h3><p>Try another filter or be the first to report an issue.</p></div>';
+        $('issue-results').innerHTML = result.issues.length ? result.issues.map(issue => `<article class="issue-row"><span class="issue-dot ${esc(issue.status)}" aria-hidden="true">${issue.status === 'closed' ? '✓' : '◉'}</span><div class="issue-row-main"><h3><a href="#${issue.id}">${esc(issue.title)}</a></h3><div class="issue-meta">${badge(issue)}${media.avatar(issue.author, issue.avatar_url, issue.avatar_color)}<span>#${issue.id} · ${esc(issue.author)} · ${esc(date(issue.created_at))}</span>${issue.isMine ? '<span>Your report</span>' : ''}</div></div><span class="issue-row-count issue-meta">${issue.comment_count} ${issue.comment_count === 1 ? 'comment' : 'comments'}</span></article>`).join('') : '<div class="issue-empty"><h3>No issues found</h3><p>Try another filter or be the first to report an issue.</p></div>';
         $('previous-page').hidden = page === 1; $('next-page').hidden = !result.hasMore;
         $('page-label').textContent = result.issues.length || page > 1 ? `Page ${page}` : '';
       }
@@ -59,11 +62,12 @@
       $('previous-page').hidden = $('next-page').hidden = true; $('page-label').textContent = '';
     }
   }
-  const commentHtml = c => `<article class="issue-card"><div class="issue-meta"><strong>${esc(c.author)}</strong>${c.is_admin ? '<span class="issue-badge">Admin</span>' : ''}<span>${esc(date(c.created_at))}</span></div><p class="issue-body">${esc(c.body)}</p></article>`;
+  const commentHtml = c => `<article class="issue-card"><div class="issue-meta">${media.avatar(c.author, c.avatar_url, c.avatar_color)}<strong>${esc(c.author)}</strong>${c.is_admin ? '<span class="issue-badge">Admin</span>' : ''}<span>${esc(date(c.created_at))}</span></div><p class="issue-body">${esc(c.body)}</p>${media.gallery(c.attachments)}</article>`;
   function renderDetail(result) {
     const { issue, comments, isAdmin } = result;
-    $('issue-detail').innerHTML = `<article class="issue-card"><div class="issue-meta">#${issue.id} ${badge(issue)}</div><h2 class="issue-detail-title">${esc(issue.title)}</h2><div class="issue-meta">Reported by ${esc(issue.author)} · ${esc(date(issue.created_at))}</div><p class="issue-body">${esc(issue.body)}</p>${isAdmin ? `<form id="status-form" class="issue-admin"><label for="admin-status">Status</label><select id="admin-status">${Object.entries(statuses).map(([key, label]) => `<option value="${key}" ${key === issue.status ? 'selected' : ''}>${label}</option>`).join('')}</select><button>Update status</button></form>` : ''}</article><h2>Discussion</h2><div id="issue-comments">${comments.map(commentHtml).join('')}</div><button id="more-comments" ${result.hasMore ? '' : 'hidden'}>Load more comments</button>${authenticated && (issue.status !== 'closed' || isAdmin) ? `<form id="comment-form" class="issue-form issue-card" novalidate><p class="issue-note" data-posting-profile>Your selected Nuvio profile will be used.</p><label>Add a comment<textarea name="body" required minlength="2" maxlength="5000" rows="4" placeholder="Share more details or an update"></textarea></label><p class="issue-note">Comments are public. Keep passwords, API keys, and personal information private.</p><p id="comment-error" class="issue-error" role="alert" tabindex="-1"></p><div class="issue-form-actions"><button class="issue-primary">Post comment</button></div></form>` : `<p class="issue-note">${issue.status === 'closed' ? 'This issue is closed.' : `<a href="${esc(loginUrl())}">Sign in with Nuvio</a> to add a comment.`}</p>`}`;
+    $('issue-detail').innerHTML = `<article class="issue-card"><div class="issue-meta">#${issue.id} ${badge(issue)}</div><h2 class="issue-detail-title">${esc(issue.title)}</h2><div class="issue-meta">${media.avatar(issue.author, issue.avatar_url, issue.avatar_color)}Reported by ${esc(issue.author)} · ${esc(date(issue.created_at))}</div><p class="issue-body">${esc(issue.body)}</p>${media.gallery(issue.attachments)}${isAdmin ? `<form id="status-form" class="issue-admin"><label for="admin-status">Status</label><select id="admin-status">${Object.entries(statuses).map(([key, label]) => `<option value="${key}" ${key === issue.status ? 'selected' : ''}>${label}</option>`).join('')}</select><button>Update status</button></form>` : ''}</article><h2>Discussion</h2><div id="issue-comments">${comments.map(commentHtml).join('')}</div><button id="more-comments" ${result.hasMore ? '' : 'hidden'}>Load more comments</button>${authenticated && (issue.status !== 'closed' || isAdmin) ? `<form id="comment-form" class="issue-form issue-card" novalidate><p class="issue-note" data-posting-profile>Your selected Nuvio profile will be used.</p><label>Add a comment<textarea name="body" required minlength="2" maxlength="5000" rows="4" placeholder="Share more details or an update"></textarea></label><p class="issue-note">Comments are public. Keep passwords, API keys, and personal information private.</p><p id="comment-error" class="issue-error" role="alert" tabindex="-1"></p><div class="issue-form-actions"><button class="issue-primary">Post comment</button></div></form>` : `<p class="issue-note">${issue.status === 'closed' ? 'This issue is closed.' : `<a href="${esc(loginUrl())}">Sign in with Nuvio</a> to add a comment.`}</p>`}`;
     updatePostingProfile();
+    media.attach($('comment-form'));
     let after = comments.at(-1)?.id || 0;
     $('more-comments').onclick = async event => {
       const button = event.currentTarget; button.disabled = true;
@@ -97,6 +101,7 @@
         if (!profile) { await window.KollectionNavAccount?.refresh?.(); profile = selectedProfile(); }
         if (!profile && !displayName) throw new Error('Your Nuvio profile could not be loaded. Refresh the page or select a profile in Account, then try again.');
         data.profileId = profile?.id || null;
+        data.attachments = media.collect(form);
       }
       const result = await api(path, { method, body: JSON.stringify(data) });
       if (reporting) { $('issue-dialog').close(); form.reset(); location.hash = result.id; }
@@ -119,5 +124,6 @@
   window.addEventListener('kollection:display-name-changed', load);
   window.addEventListener('kollection:nuvio-profile-changed', updatePostingProfile);
   ['kollection:nuvio-signed-in', 'kollection:nuvio-signed-out', 'kollection:nuvio-session-changed'].forEach(event => window.addEventListener(event, () => { $('issue-dialog').close(); load(); }));
+  media.attach($('report-form'));
   load();
 })();

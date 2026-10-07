@@ -140,3 +140,34 @@ test('existing accounts receive the same free initial display name allowance', a
   await displayNameLimitDb(freshEnv);
   assert.equal((await displayNameQuota(db, 'existing')).changesRemaining, 2);
 });
+test('reports and comments preserve image attachments and serve only matching image records', async () => {
+  const { onRequestGet: image } = await import('../functions/api/issues/[id]/images/[image].js');
+  const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=';
+  let response = await create(await ctx('images', 'POST', { ...report, attachments: [png] }));
+  assert.equal(response.status, 201);const { id } = await response.json();
+  const result = await (await detail(await ctx(null, 'GET', null, id))).json();
+  assert.deepEqual(result.issue.attachments, [`/api/issues/${id}/images/0`]);
+  assert.ok(!JSON.stringify(result).includes('base64'));
+  let context = await ctx(null, 'GET', null, id);context.params.image = '0';
+  response = await image(context);assert.equal(response.status, 200);assert.equal(response.headers.get('content-type'), 'image/png');assert.equal(new Uint8Array(await response.arrayBuffer())[0],137);
+  context.params.image='3';assert.equal((await image(context)).status,404);
+  assert.equal((await create(await ctx('images','POST',{...report,attachments:[png,png,png,png]}))).status,400);
+  assert.equal((await create(await ctx('images','POST',{...report,attachments:['data:image/svg+xml;base64,PHN2Zz4=']}))).status,400);
+  assert.equal((await create(await ctx('images','POST',{...report,attachments:['data:image/png;base64,YmFk']}))).status,400);
+  assert.equal((await comment(await ctx('images','POST',{body:'Here is the error',attachments:[png]},id))).status,201);
+  const updated=await (await detail(await ctx(null,'GET',null,id))).json();
+  const commentId=updated.comments[0].id;
+  context=await ctx(null,'GET',null,id,`?comment=${commentId}`);context.params.image='0';assert.equal((await image(context)).status,200);
+  context=await ctx(null,'GET',null,1,`?comment=${commentId}`);context.params.image='0';assert.equal((await image(context)).status,404);
+});
+
+test('avatar identity is resolved from Nuvio profile and catalog, not submitted by the client', async () => {
+  const {profileIdentity}=await import('../functions/_lib/issues.js');const previous=globalThis.fetch;
+  globalThis.fetch=async url=>Response.json(url.endsWith('get_avatar_catalog')?[{id:'fox',storage_path:'fox.png'}]:[{profile_index:1,name:'Fox',avatar_id:'fox',avatar_color_hex:'#123456'}]);
+  try {
+    const identity=await profileIdentity(1,{id:'avatar-member',accessToken:'test'},env);
+    assert.equal(identity.author,'Fox');assert.match(identity.avatar_url,/\/storage\/v1\/object\/public\/avatars\/fox.png$/);assert.equal(identity.avatar_color,'#123456');
+    const created=await create(await ctx('avatar-member','POST',{...report,avatar_url:'https://evil.test/pretend.png'}));const {id}=await created.json();
+    const result=await (await detail(await ctx(null,'GET',null,id))).json();assert.equal(result.issue.avatar_url,identity.avatar_url);
+  } finally {globalThis.fetch=previous;}
+});

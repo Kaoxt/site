@@ -21,7 +21,7 @@ export function category(value) {
 export async function input(request) {
   if (!request.headers.get('content-type')?.includes('application/json')) throw new IssueError('Send JSON.', 415);
   const raw = await request.text();
-  if (raw.length > 20000) throw new IssueError('Report is too large.', 413);
+  if (raw.length > 1700000) throw new IssueError('Report is too large.', 413);
   try { const data = JSON.parse(raw); if (!data || Array.isArray(data) || typeof data !== 'object') throw new Error(); return data; }
   catch { throw new IssueError('Invalid JSON.'); }
 }
@@ -43,11 +43,12 @@ export async function issuesDb(env) {
     db.prepare('CREATE INDEX IF NOT EXISTS community_comments_user ON community_issue_comments(user_id, created_at)'),
   ]).catch(error => { schemas.delete(db); throw error; }));
   await schemas.get(db);
+  await issueMediaSchema(db);
   return db;
 }
 export function publicIssue(row, session) {
-  const { user_id, ...safe } = row;
-  return { ...safe, isMine: user_id === session?.id };
+  const { user_id, attachments, ...safe } = row;
+  return { ...safe, attachments: attachmentLinks(attachments, row.issue_id || row.id, row.issue_id ? row.id : null), isMine: user_id === session?.id };
 }
 export function issueId(value) {
   if (!/^[1-9]\d{0,14}$/.test(String(value))) throw new IssueError('Issue not found.', 404);
@@ -89,4 +90,70 @@ export async function profileAuthor(profileId, session, env) {
   const profile = Array.isArray(profiles) && profiles.find(p => Number(p.profile_index ?? p.id) === profileId);
   if (!profile) throw new IssueError('Your selected Nuvio profile is no longer available. Choose a profile in Account and retry.');
   return String(profile.name || `Profile ${profileId}`).trim().slice(0, 120) || `Profile ${profileId}`;
+}
+
+const mediaSchemas = new WeakMap();
+async function issueMediaSchema(db) {
+  if (!mediaSchemas.has(db)) mediaSchemas.set(db, (async () => {
+    for (const table of ['community_issues', 'community_issue_comments']) {
+      const columns = (await db.prepare(`PRAGMA table_info(${table})`).all()).results;
+      for (const column of ['avatar_url', 'avatar_color', 'attachments']) {
+        if (!columns.some(c => c.name === column)) {
+          try { await db.prepare(`ALTER TABLE ${table} ADD COLUMN ${column} TEXT NOT NULL DEFAULT ''`).run(); }
+          catch (error) { if (!String(error.message).includes('duplicate column')) throw error; }
+        }
+      }
+    }
+  })().catch(error => { mediaSchemas.delete(db); throw error; }));
+  await mediaSchemas.get(db);
+}
+export function imageAttachments(value) {
+  if (value == null) return '';
+  if (!Array.isArray(value) || value.length > 3) throw new IssueError('Attach up to 3 images.');
+  return JSON.stringify(value.map(image => {
+    if (typeof image !== 'string' || image.length > 540000) throw new IssueError('Each image must be smaller than 400 KB after compression.');
+    const match = image.match(/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/);
+    if (!match) throw new IssueError('Use JPG, PNG, or WebP images.');
+    let bytes; try { bytes = atob(match[2]); } catch { throw new IssueError('Invalid image data.'); }
+    const valid = match[1] === 'jpeg' ? bytes.startsWith('\xff\xd8\xff') : match[1] === 'png' ? bytes.startsWith('\x89PNG\r\n\x1a\n') : bytes.startsWith('RIFF') && bytes.slice(8,12) === 'WEBP';
+    if (!valid || bytes.length > 400000) throw new IssueError('Invalid or oversized image.');
+    return image;
+  }));
+}
+export function attachmentLinks(raw, issue, comment = null) {
+  let images; try { images = JSON.parse(raw || '[]'); } catch { images = []; }
+  return images.map((_, index) => `/api/issues/${issue}/images/${index}${comment ? '?comment=' + comment : ''}`);
+}
+function avatarUrl(value, apiBase) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  try {
+    const url = new URL(raw.startsWith('/') || /^https:\/\//i.test(raw) ? raw : '/storage/v1/object/public/avatars/' + raw, apiBase);
+    return url.protocol === 'https:' && !url.username && !url.password ? url.href : '';
+  } catch { return ''; }
+}
+export async function profileIdentity(profileId, session, env) {
+  const author = await profileAuthor(profileId, session, env);
+  const fallback = { author, avatar_url: '', avatar_color: '#6568e8' };
+  if (!Number.isSafeInteger(profileId) || profileId < 1) return fallback;
+  const { apiBase, publishableKey } = nuvioConfig(env);
+  try {
+    const call = async (name, token) => {
+      const response = await fetch(`${apiBase}/rest/v1/rpc/${name}`, {method:'POST', headers:{apikey:publishableKey,Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(10000)});
+      if (!response.ok) throw new Error('Profile unavailable');
+      return response.json();
+    };
+    const data = await call('sync_pull_profiles', session.accessToken);
+    const p = (Array.isArray(data) ? data : data?.profiles || []).find(p => Number(p.profile_index ?? p.id) === profileId);
+    if (!p) return fallback;
+    let url = avatarUrl(p.avatar_url || p.avatarUrl, apiBase);
+    const avatarId = p.avatar_id ?? p.avatarId;
+    if (!url && avatarId) {
+      const catalog = await call('get_avatar_catalog', publishableKey);
+      const item = (Array.isArray(catalog) ? catalog : []).find(a => String(a.id) === String(avatarId));
+      url = avatarUrl(item?.storage_path || item?.storagePath, apiBase);
+    }
+    const color = p.avatar_color_hex || p.avatarColorHex;
+    return { author, avatar_url: url, avatar_color: /^#[0-9a-f]{6}$/i.test(color || '') ? color : fallback.avatar_color };
+  } catch { return fallback; }
 }
