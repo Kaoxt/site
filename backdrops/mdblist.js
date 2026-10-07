@@ -268,8 +268,12 @@
   if (els.mdblistKey.value) status(els.mdblistKeyStatus, 'MDBList key is saved in this browser.', 'ok');
 
   els.toggleMdblistKey.addEventListener('click', () => {
-    els.mdblistKey.type = els.mdblistKey.type === 'password' ? 'text' : 'password';
-    els.toggleMdblistKey.setAttribute('aria-label', els.mdblistKey.type === 'password' ? 'Show MDBList key' : 'Hide MDBList key');
+    const revealed = els.mdblistKey.type === 'password';
+    els.mdblistKey.type = revealed ? 'text' : 'password';
+    const label = revealed ? 'Hide MDBList key' : 'Show MDBList key';
+    els.toggleMdblistKey.setAttribute('aria-label', label);
+    els.toggleMdblistKey.setAttribute('title', label);
+    els.toggleMdblistKey.setAttribute('aria-pressed', String(revealed));
   });
   els.saveMdblistKey.addEventListener('click', () => {
     const key = els.mdblistKey.value.trim();

@@ -1,0 +1,62 @@
+/* Keep key visibility controls inside the input without a separate button surface. */
+.backdrop-page .key-row {
+  --key-toggle-color: #929aaa;
+  --key-toggle-hover: #e2e5ed;
+  position: relative;
+  display: block;
+}
+
+.backdrop-page .key-row > .text-input {
+  display: block;
+  padding-right: 52px;
+}
+
+.backdrop-page .key-row .icon-button.key-visibility-button {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 1px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-width: 44px;
+  height: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--key-toggle-color);
+  transition: color .15s ease;
+}
+
+.backdrop-page .key-row .key-visibility-button:is(:hover, :focus-visible):not(:disabled) {
+  background: transparent;
+  color: var(--key-toggle-hover);
+}
+
+.backdrop-page .key-row .key-visibility-button:focus-visible {
+  outline-offset: -7px;
+}
+
+.backdrop-page .key-visibility-button svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.backdrop-page .key-visibility-button .eye-slash { display: none; }
+.backdrop-page .key-visibility-button[aria-pressed="true"] .eye-slash { display: block; }
+
+html[data-theme="light"] .backdrop-page .key-row,
+body.light .backdrop-page .key-row {
+  --key-toggle-color: #68707e;
+  --key-toggle-hover: #202630;
+}

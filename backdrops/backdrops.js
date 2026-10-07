@@ -626,8 +626,12 @@
   }
 
   els.toggleKey.addEventListener('click', () => {
-    els.tmdbKey.type = els.tmdbKey.type === 'password' ? 'text' : 'password';
-    els.toggleKey.setAttribute('aria-label', els.tmdbKey.type === 'password' ? 'Show API key' : 'Hide API key');
+    const revealed = els.tmdbKey.type === 'password';
+    els.tmdbKey.type = revealed ? 'text' : 'password';
+    const label = revealed ? 'Hide TMDB key' : 'Show TMDB key';
+    els.toggleKey.setAttribute('aria-label', label);
+    els.toggleKey.setAttribute('title', label);
+    els.toggleKey.setAttribute('aria-pressed', String(revealed));
   });
   els.saveKey.addEventListener('click', () => {
     const key = els.tmdbKey.value.trim(); saveApiKey(key); setStatus(els.keyStatus, key ? 'Saved in this browser.' : 'Saved key removed.', key ? 'ok' : '');
@@ -722,8 +726,12 @@
     syncTileType(); saveState(); queuePreview();
   });
   els.toggleFanartKey.addEventListener('click', () => {
-    els.fanartKey.type = els.fanartKey.type === 'password' ? 'text' : 'password';
-    els.toggleFanartKey.setAttribute('aria-label', els.fanartKey.type === 'password' ? 'Show Fanart.tv key' : 'Hide Fanart.tv key');
+    const revealed = els.fanartKey.type === 'password';
+    els.fanartKey.type = revealed ? 'text' : 'password';
+    const label = revealed ? 'Hide Fanart.tv key' : 'Show Fanart.tv key';
+    els.toggleFanartKey.setAttribute('aria-label', label);
+    els.toggleFanartKey.setAttribute('title', label);
+    els.toggleFanartKey.setAttribute('aria-pressed', String(revealed));
   });
   els.saveFanartKey.addEventListener('click', () => {
     const key = els.fanartKey.value.trim();
