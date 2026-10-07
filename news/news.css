@@ -9,16 +9,18 @@
 #post-news{position:absolute;right:0;top:50%;transform:translateY(-50%);font:600 14px Inter,system-ui,sans-serif;padding:11px 18px;min-height:44px;border:1px solid #777af1;border-radius:12px;background:#6568e8;color:#fff;cursor:pointer}
 #post-news[hidden]{display:none}
 #post-news:focus-visible{outline:2px solid #9699ff;outline-offset:3px}
-.news-community .news-article{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:32px;align-items:start;padding:36px 0 42px}
+.news-community .news-article{display:grid;grid-template-columns:minmax(0,1fr) 176px;gap:32px;align-items:start;padding:36px 0 42px}
 .news-community .news-entry-content{min-width:0}
 .news-community .release-actions{display:flex;flex-direction:column;align-items:stretch;gap:10px;margin-top:0}
-.news-community .release-actions [data-expand]{border-radius:999px;min-height:46px;background:var(--button);color:var(--button-text);border-color:transparent;font-weight:650}
-.news-community .news-github-link{display:flex;align-items:center;justify-content:center;border:1px solid var(--issue-line);border-radius:999px;min-height:46px;padding:10px 16px;color:inherit;font-size:14px;font-weight:600;text-align:center;box-sizing:border-box}
+/* Nuvio's release controls: 176px wide, 42px tall, with 14px labels. */
+.news-community .release-actions [data-expand],.news-community .news-github-link{display:flex;align-items:center;justify-content:center;border-radius:9999px;min-height:42px;padding:0 18px;font-size:14px;font-weight:600;line-height:1;box-sizing:border-box}
+.news-community .release-actions [data-expand]{background:var(--button);color:var(--button-text);border-color:transparent}
+.news-community .news-github-link{border:1px solid var(--issue-line);color:inherit;text-align:center}
 .news-community .news-github-link:hover{background:var(--issue-field)}
 .news-community .news-comment-link{align-self:flex-end;min-width:52px}
 .news-community .release-tag{margin-bottom:16px}
 .news-community .release-summary{margin-top:20px}
-@media(max-width:600px){.news-community .news-article{grid-template-columns:minmax(0,1fr);gap:20px}.news-community .release-actions{display:grid;grid-template-columns:minmax(0,190px) 1fr;align-items:center}.news-community .release-actions [data-expand]{grid-column:1;grid-row:1}.news-community .news-github-link{grid-column:1;grid-row:2}.news-community .news-comment-link{grid-column:2;grid-row:1;justify-self:end}#post-news{padding-inline:14px;font-size:13px}}
+@media(max-width:600px){.news-community .news-article{grid-template-columns:minmax(0,1fr);gap:20px}.news-community .release-actions{display:grid;grid-template-columns:minmax(0,176px) 1fr;align-items:center}.news-community .release-actions [data-expand]{grid-column:1;grid-row:1}.news-community .news-github-link{grid-column:1;grid-row:2}.news-community .news-comment-link{grid-column:2;grid-row:1;justify-self:end}#post-news{padding-inline:14px;font-size:13px}}
 html[data-theme=light] .news-community .release-actions [data-expand]{background:#20212b;color:#fff}
 
 /* Match the release button's subtle color feedback for either expand label. */

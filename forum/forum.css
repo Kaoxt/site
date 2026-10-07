@@ -1,7 +1,8 @@
 .forum-shell{padding-bottom:60px}.forum-author{display:inline-flex;align-items:center;gap:9px;min-width:0}.forum-author span:last-child{overflow-wrap:anywhere}.forum-toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:22px}.forum-links{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.forum-shell .issue-row h3{margin:10px 0}.forum-shell .issue-meta{margin:4px 0}.forum-shell .issue-form label:has(input[type=checkbox]){flex-direction:row;align-items:center}.forum-shell input[type=checkbox]{width:18px;min-height:18px;height:18px;accent-color:#777af1}.forum-shell select{color-scheme:dark}.forum-shell select option{background:#17181f;color:#f1f1f5}html[data-theme=light] .forum-shell select{color-scheme:light}html[data-theme=light] .forum-shell select option{background:#fff;color:#20212b}.forum-profile-head{display:flex;align-items:center;gap:20px}.forum-profile-head .issue-avatar{width:72px;height:72px;flex-basis:72px;font-size:28px}.forum-stats{display:flex;flex-wrap:wrap;gap:24px;margin:24px 0}.forum-stats div{display:grid;gap:6px}.forum-stats dt{color:var(--issue-muted);font-size:13px}.forum-stats dd{margin:0;font-weight:700;font-size:24px}.forum-admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.forum-admin-grid .issue-card{margin:0}.forum-shell details>summary{cursor:pointer;padding:12px 0;font-weight:600}.forum-shell details .issue-form{margin-top:14px}.forum-shell .forum-controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.forum-shell .forum-controls label{display:flex;align-items:center;gap:6px}.forum-shell textarea{min-height:120px}.forum-shell .forum-admin-nav{margin:24px 0}.forum-shell .forum-admin-nav a{border:1px solid var(--issue-line);padding:10px 16px;border-radius:999px}.forum-shell .forum-admin-nav [aria-current=page]{background:#6568e8;color:white}.forum-shell .issue-form-actions{flex-wrap:wrap}.forum-shell [data-status]{margin:0}.forum-shell a:focus-visible{outline:2px solid #9699ff;outline-offset:4px}@media(max-width:700px){.forum-admin-grid{grid-template-columns:minmax(0,1fr)}.forum-toolbar{align-items:flex-start}.forum-shell .issues-heading{flex-wrap:wrap}.forum-profile-head{gap:14px}.forum-stats{gap:18px}}
 
-/* Match the site's compact primary actions in both forum listing views. */
-.forum-shell #new-topic {
+/* Match the site's compact actions and align the complete forum search row. */
+.forum-shell #new-topic,
+.forum-shell .issue-filters > button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -16,11 +17,31 @@
   border-color: transparent;
   color: #151517;
 }
-.forum-shell #new-topic:hover:not(:disabled) { background: #e2e3e7; }
-html[data-theme="light"] .forum-shell #new-topic { background: #20212b; color: #fff; }
-html[data-theme="light"] .forum-shell #new-topic:hover:not(:disabled) { background: #2a2b30; }
+.forum-shell #new-topic:hover:not(:disabled),
+.forum-shell .issue-filters > button:hover:not(:disabled) { background: #e2e3e7; }
+html[data-theme="light"] .forum-shell #new-topic,
+html[data-theme="light"] .forum-shell .issue-filters > button { background: #20212b; color: #fff; }
+html[data-theme="light"] .forum-shell #new-topic:hover:not(:disabled),
+html[data-theme="light"] .forum-shell .issue-filters > button:hover:not(:disabled) { background: #2a2b30; }
+.forum-shell .issue-filters { align-items: flex-end; gap: 12px; }
+.forum-shell .issue-filters label { min-width: 0; }
+.forum-shell .issue-filters input,
+.forum-shell .issue-filters select {
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding-block: 8px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+.forum-shell .issue-filters > button { width: auto; margin-left: auto; }
 @media (max-width: 700px), (pointer: coarse) {
-  .forum-shell #new-topic { min-height: 44px; }
+  .forum-shell #new-topic,
+  .forum-shell .issue-filters input,
+  .forum-shell .issue-filters select,
+  .forum-shell .issue-filters > button { min-height: 44px; }
 }
 
 /* Category index, topic navigation and conversation layout. */
