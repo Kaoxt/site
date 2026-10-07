@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="/backdrops/styles.css?v=20261007-14" />
   <link rel="stylesheet" href="/backdrops/title-mode.css?v=20261004-1" />
   <link rel="stylesheet" href="/backdrops/folder-builder.css?v=20261004-1" />
+  <link rel="stylesheet" href="/backdrops/sources.css?v=20261007-15" />
   <script src="/components.js?v=20260908-3" defer></script>
 </head>
 <body>
@@ -22,10 +23,10 @@
     <header data-page-header class="backdrop-page-header">
       <div data-page-chip>Backdrop Configurator</div>
       <h1 data-page-title>Backdrops</h1>
-      <p data-page-subtitle>Create multi-movie collages from TMDB or MDBList. Preview and download artwork, or save a separate design for each collection folder in this browser.</p>
+      <p data-page-subtitle>Create multi-movie collages from MDBList, AIOmetadata, or TMDB. Preview and download artwork, or save a separate design for each collection folder in this browser.</p>
       <div class="hero-pills">
         <span>Per-folder setup</span>
-        <span>TMDB + MDBList</span>
+        <span>MDBList · AIOmetadata · TMDB</span>
         <span>Browser rendered</span>
       </div>
     </header>
@@ -90,13 +91,34 @@
           <section class="control-card">
             <div class="control-card-heading"><span><small>01</small><strong>Choose artwork source</strong></span></div>
             <div class="control-card-body">
-              <label class="field-label" for="titleSource">Source</label>
-              <select id="titleSource" class="select-input">
-                <option value="tmdb" selected>Search TMDB</option>
-                <option value="mdblist">Browse MDBList</option>
-              </select>
+              <div id="sourceTabs" class="source-switcher" role="tablist" aria-label="Image source">
+                <button id="source-mdblist" type="button" role="tab" aria-selected="false" aria-controls="mdblistTitleSource" data-source="mdblist" tabindex="-1">MDBlist</button>
+                <button id="source-aio" type="button" role="tab" aria-selected="false" aria-controls="aioTitleSource" data-source="aio" tabindex="-1">AIOmetadata</button>
+                <button id="source-tmdb" type="button" role="tab" aria-selected="true" aria-controls="tmdbTitleSource" data-source="tmdb">TMDB</button>
+              </div>
+              <input id="titleSource" type="hidden" value="tmdb" />
 
-              <div id="tmdbTitleSource">
+              <div id="tmdbTitleSource" role="tabpanel" aria-labelledby="source-tmdb">
+                <label class="field-label" for="browseType">Content type</label>
+                <select id="browseType" class="select-input"><option value="both">Movies &amp; Shows</option><option value="movie">Movies</option><option value="tv">TV Shows</option></select>
+                <label class="field-label" for="browseSort">Source</label>
+                <select id="browseSort" class="select-input"><option value="popular">Popular</option><option value="top_rated">Top rated</option><option value="trending">Trending this week</option></select>
+                <div id="browseFilters">
+                  <label class="field-label" for="browseProvider">Streaming service (optional)</label>
+                  <select id="browseProvider" class="select-input"><option value="">Any service</option></select>
+                  <p class="control-help">Streaming availability: United States · powered by JustWatch via TMDB.</p>
+                  <label class="field-label" for="browseGenre">Genre (optional)</label>
+                  <select id="browseGenre" class="select-input"><option value="">Any genre</option></select>
+                  <label class="field-label" for="browseLanguage">Language (optional)</label>
+                  <select id="browseLanguage" class="select-input"><option value="">Any language</option></select>
+                  <label class="field-label" for="browseDecade">Decade (optional)</label>
+                  <select id="browseDecade" class="select-input"><option value="">Any era</option></select>
+                </div>
+                <p id="trendingHelp" class="control-help" hidden>Trending uses TMDB’s weekly ranking. Choose Popular or Top rated to apply filters.</p>
+                <button id="loadTmdbBrowse" type="button" class="primary-button full">Load titles</button>
+                <div id="tmdbBrowseStatus" class="status-line" aria-live="polite"></div>
+                <div id="tmdbBrowseResults" class="title-results" aria-live="polite"></div>
+                <details class="source-search"><summary>Search for a specific title</summary>
                 <div id="mediaType" class="segmented two" role="group" aria-label="Media type">
                   <button type="button" data-value="movie" class="active">Movies</button>
                   <button type="button" data-value="tv">TV Shows</button>
@@ -108,9 +130,32 @@
                 </div>
                 <div id="titleSearchStatus" class="status-line">Search and tap titles to add them to your collage.</div>
                 <div id="titleResults" class="title-results" aria-live="polite"></div>
+                </details>
               </div>
 
-              <div id="mdblistTitleSource" hidden>
+              <div id="aioTitleSource" role="tabpanel" aria-labelledby="source-aio" hidden>
+                <div class="aio-import">
+                  <p class="control-help">Import your AIOmetadata catalog JSON to choose catalogs for your collage.</p>
+                  <button id="importAioFile" class="secondary-button full" type="button">Import Catalog JSON</button>
+                  <input id="aioFile" type="file" accept=".json,application/json" hidden />
+                  <label class="field-label" for="aioJson">Or paste JSON below</label>
+                  <textarea id="aioJson" class="text-input" rows="5" spellcheck="false" placeholder='{ "catalogs": [ … ] }'></textarea>
+                  <button id="importAioJson" class="secondary-button full" type="button">Load JSON</button>
+                  <details><summary>Where do I get the JSON?</summary><p class="control-help">In AIOmetadata, open Catalogs → Share Setup, then copy the JSON or download the .json file.</p></details>
+                </div>
+                <div id="aioStatus" class="status-line" aria-live="polite"></div>
+                <div id="aioCatalogControls" hidden>
+                  <label class="field-label" for="aioFilter">Find a catalog</label>
+                  <input id="aioFilter" class="text-input" type="search" placeholder="Filter catalogs…" />
+                  <p class="control-help">Choose up to four catalogs. TMDB and MDBList catalogs are supported; other catalog types are marked unavailable.</p>
+                  <div id="aioCatalogs" class="aio-catalogs"></div>
+                  <div id="aioCount" class="status-line" aria-live="polite"></div>
+                  <div class="inline-actions"><button id="clearAio" class="ghost-button" type="button">Clear selection</button><button id="resetAio" class="ghost-button" type="button">Remove import</button></div>
+                  <button id="loadAioTitles" class="primary-button full" type="button">Load selected catalogs</button>
+                </div>
+                <div id="aioTitleResults" class="title-results" aria-live="polite"></div>
+              </div>
+              <div id="mdblistTitleSource" role="tabpanel" aria-labelledby="source-mdblist" hidden>
                 <label class="field-label" for="mdblistMode">MDBList source</label>
                 <select id="mdblistMode" class="select-input">
                   <option value="my-lists">My lists</option>
@@ -154,7 +199,7 @@
           <section class="control-card">
             <div class="control-card-heading"><span><small>COLLAGE</small><strong>Movies in your backdrop</strong></span></div>
             <div class="control-card-body">
-              <p class="control-help">Add 2–18 movies or shows. Loading an MDBList replaces the selection with a collage from that list.</p>
+              <p class="control-help">Add 2–18 movies or shows. Loading a list or catalogs replaces the selection with up to 18 unique titles.</p>
               <div id="collageStatus" class="status-line" aria-live="polite"></div>
               <div id="collageTitles" class="collage-titles"></div>
               <div class="inline-actions"><button id="clearCollage" class="ghost-button" type="button">Clear titles</button></div>
@@ -266,7 +311,9 @@
     <div id="site-footer"></div>
   </main>
   <script src="/backdrops/backdrops.js?v=20261007-14"></script>
-  <script src="/backdrops/mdblist.js?v=20261007-14"></script>
+  <script src="/backdrops/mdblist.js?v=20261007-15"></script>
+  <script src="/backdrops/source-data.js?v=20261007-15"></script>
+  <script src="/backdrops/sources.js?v=20261007-15"></script>
   <script src="/backdrops/folder-builder.js?v=20261004-1"></script>
 </body>
 </html>

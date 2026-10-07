@@ -17,6 +17,8 @@
 
   if (!els.titleSource || !els.mdblistTitleSource) return;
 
+  let listToken = 0, titlesToken = 0;
+
   function saved(key) { try { return localStorage.getItem(key) || ''; } catch { return ''; } }
   function save(key, value) { try { value ? localStorage.setItem(key, value) : localStorage.removeItem(key); } catch {} }
   function status(el, message, type='') {
@@ -36,7 +38,7 @@
     const key = mdblistKey();
     if (key) url.searchParams.set('apikey', key);
     Object.entries(params).forEach(([k,v]) => { if (v !== '' && v != null) url.searchParams.set(k, String(v)); });
-    const response = await fetch(url.toString(), { headers: { Accept: 'application/json' }, cache: 'default' });
+    const response = await fetch(url.toString(), { headers: { Accept: 'application/json' }, cache: 'default', signal: AbortSignal.timeout(12000) });
     if (!response.ok) {
       if (response.status === 401 || response.status === 403) throw new Error('MDBList rejected this API key.');
       if (response.status === 429) throw new Error('MDBList rate limit reached. Try again shortly.');
@@ -83,6 +85,9 @@
   }
 
   async function refreshLists() {
+    const token = ++listToken;
+    ++titlesToken;
+    els.loadMdblistTitles.disabled = false;
     const mode = els.mdblistMode.value;
     els.mdblistUsernameRow.hidden = mode !== 'user';
     els.mdblistUrlRow.hidden = mode !== 'url';
@@ -108,16 +113,19 @@
     status(els.mdblistStatus, 'Loading MDBList lists…');
     try {
       const data = await mdblistFetch(endpoint, mode === 'top' ? { limit: 25 } : {});
+      if (token !== listToken) return;
       const lists = Array.isArray(data) ? data : (data.lists || data.data || []);
       populateLists(lists);
       status(els.mdblistStatus, lists.length ? `Loaded ${lists.length} list${lists.length === 1 ? '' : 's'}. Choose one below.` : 'No lists found.', lists.length ? 'ok' : '');
     } catch (error) {
+      if (token !== listToken) return;
       populateLists([]);
       status(els.mdblistStatus, error.message || 'Could not load MDBList lists.', 'error');
     }
   }
 
   async function searchUserLists() {
+    const token = ++listToken;
     const username = els.mdblistUsername.value.trim();
     if (!username) return status(els.mdblistStatus, 'Enter an MDBList username first.', 'error');
     if (!mdblistKey()) return status(els.mdblistStatus, 'Add your MDBList API key first.', 'error');
@@ -125,11 +133,13 @@
     status(els.mdblistStatus, `Loading ${username}'s lists…`);
     try {
       const data = await mdblistFetch(`lists/user/${encodeURIComponent(username)}`);
+      if (token !== listToken) return;
       const lists = Array.isArray(data) ? data : (data.lists || data.data || []);
       populateLists(lists);
       els.mdblistListRow.hidden = false;
       status(els.mdblistStatus, lists.length ? `Found ${lists.length} list${lists.length === 1 ? '' : 's'} for ${username}.` : 'No lists found for that username.', lists.length ? 'ok' : '');
     } catch (error) {
+      if (token !== listToken) return;
       status(els.mdblistStatus, error.message || 'Could not search this MDBList user.', 'error');
     } finally { els.searchMdblistUser.disabled = false; }
   }
@@ -190,6 +200,7 @@
   }
 
   async function loadListTitles(forcedPath='') {
+    const token = ++titlesToken;
     if (!tmdbKey()) return status(els.mdblistStatus, 'Add your TMDB key first so list titles can resolve to their TMDB backdrops.', 'error');
     let listPath = forcedPath;
     if (!listPath) {
@@ -211,21 +222,26 @@
       }
       if (!baseItems.length) throw new Error('This MDBList list does not contain any TMDB-linked movies or shows.');
 
-      const previewItems = baseItems.slice(0, 60);
+      if (token !== titlesToken) return;
+      const previewItems = [...new Map(baseItems.map(item => [`${item.media}:${item.id}`, item])).values()].slice(0, 60);
       const resolved = [];
       for (let i=0; i<previewItems.length; i += 8) {
+        if (token !== titlesToken) return;
         const batch = previewItems.slice(i, i+8);
         const results = await Promise.allSettled(batch.map(resolveTmdbItem));
         results.forEach(result => { if (result.status === 'fulfilled' && (result.value.backdropPath || result.value.posterPath)) resolved.push(result.value); });
       }
+      if (token !== titlesToken) return;
       if (!resolved.length) throw new Error('No backdrop artwork could be loaded. Check your TMDB key and try again.');
       renderTitleResults(resolved);
       await window.KollectionBackdrops.selectTitle({title:'Movie collage', items:resolved.slice(0,18)});
+      if (token !== titlesToken) return;
       status(els.mdblistStatus, `Loaded ${resolved.length} title${resolved.length === 1 ? '' : 's'} with backdrops from this list. The first 18 titles are used in your collage. Tap others to add them after removing a title.`, 'ok');
     } catch (error) {
+      if (token !== titlesToken) return;
       els.mdblistTitleResults.innerHTML = '';
       status(els.mdblistStatus, error.message || 'Could not load titles from this MDBList list.', 'error');
-    } finally { els.loadMdblistTitles.disabled = false; }
+    } finally { if (token === titlesToken) els.loadMdblistTitles.disabled = false; }
   }
 
   function renderTitleResults(items) {
@@ -241,8 +257,9 @@
   }
 
   function syncSource() {
+    ++titlesToken; ++listToken; els.loadMdblistTitles.disabled = false;
     const isMDBList = els.titleSource.value === 'mdblist';
-    els.tmdbTitleSource.hidden = isMDBList;
+    els.tmdbTitleSource.hidden = els.titleSource.value !== 'tmdb';
     els.mdblistTitleSource.hidden = !isMDBList;
     if (isMDBList) refreshLists();
   }
@@ -268,5 +285,6 @@
   els.mdblistUrl.addEventListener('keydown', event => { if (event.key === 'Enter') loadListTitles(); });
   els.loadMdblistTitles.addEventListener('click', () => loadListTitles());
 
+  window.KollectionMDBList = Object.freeze({ mdblistFetch, listItemsFromResponse, resolveTmdbItem });
   syncSource();
 })();
