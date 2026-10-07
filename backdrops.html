@@ -10,10 +10,10 @@
   <meta name="description" content="Choose original or custom movie, TV, and folder backdrops for The Kollection, Nuvio, and compatible metadata setups." />
   <link rel="stylesheet" href="/shared.css?v=20261007-nav1" />
   <link rel="stylesheet" href="/secondary-pages.css?v=20261007-nav1" />
-  <link rel="stylesheet" href="/backdrops/styles.css?v=20261007-14" />
+  <link rel="stylesheet" href="/backdrops/styles.css?v=20261007-landscape1" />
   <link rel="stylesheet" href="/backdrops/title-mode.css?v=20261004-1" />
   <link rel="stylesheet" href="/backdrops/folder-builder.css?v=20261004-1" />
-  <link rel="stylesheet" href="/backdrops/sources.css?v=20261007-15" />
+  <link rel="stylesheet" href="/backdrops/sources.css?v=20261007-landscape1" />
   <script src="/components.js?v=20261007-nav1" defer></script>
 </head>
 <body>
@@ -97,20 +97,36 @@
               <input id="titleSource" type="hidden" value="tmdb" />
 
               <div id="tmdbTitleSource" role="tabpanel" aria-labelledby="source-tmdb">
-                <label class="field-label" for="browseType">Content type</label>
-                <select id="browseType" class="select-input"><option value="both">Movies &amp; Shows</option><option value="movie">Movies</option><option value="tv">TV Shows</option></select>
-                <label class="field-label" for="browseSort">Source</label>
-                <select id="browseSort" class="select-input"><option value="popular">Popular</option><option value="top_rated">Top rated</option><option value="trending">Trending this week</option></select>
+                <div class="source-fields">
+                  <div class="source-field">
+                    <label class="field-label" for="browseType">Content type</label>
+                    <select id="browseType" class="select-input"><option value="both">Movies &amp; Shows</option><option value="movie">Movies</option><option value="tv">TV Shows</option></select>
+                  </div>
+                  <div class="source-field">
+                    <label class="field-label" for="browseSort">Source</label>
+                    <select id="browseSort" class="select-input"><option value="popular">Popular</option><option value="top_rated">Top rated</option><option value="trending">Trending this week</option></select>
+                  </div>
+                </div>
                 <div id="browseFilters">
-                  <label class="field-label" for="browseProvider">Streaming service (optional)</label>
-                  <select id="browseProvider" class="select-input"><option value="">Any service</option></select>
-                  <p class="control-help">Streaming availability: United States · powered by JustWatch via TMDB.</p>
-                  <label class="field-label" for="browseGenre">Genre (optional)</label>
-                  <select id="browseGenre" class="select-input"><option value="">Any genre</option></select>
-                  <label class="field-label" for="browseLanguage">Language (optional)</label>
-                  <select id="browseLanguage" class="select-input"><option value="">Any language</option></select>
-                  <label class="field-label" for="browseDecade">Decade (optional)</label>
-                  <select id="browseDecade" class="select-input"><option value="">Any era</option></select>
+                  <div class="source-fields">
+                    <div class="source-field">
+                      <label class="field-label" for="browseProvider">Streaming service (optional)</label>
+                      <select id="browseProvider" class="select-input" aria-describedby="browseProviderHelp"><option value="">Any service</option></select>
+                    </div>
+                    <div class="source-field">
+                      <label class="field-label" for="browseGenre">Genre (optional)</label>
+                      <select id="browseGenre" class="select-input"><option value="">Any genre</option></select>
+                    </div>
+                    <div class="source-field">
+                      <label class="field-label" for="browseLanguage">Language (optional)</label>
+                      <select id="browseLanguage" class="select-input"><option value="">Any language</option></select>
+                    </div>
+                    <div class="source-field">
+                      <label class="field-label" for="browseDecade">Decade (optional)</label>
+                      <select id="browseDecade" class="select-input"><option value="">Any era</option></select>
+                    </div>
+                  </div>
+                  <p id="browseProviderHelp" class="control-help source-field-note">Streaming availability: United States · powered by JustWatch via TMDB.</p>
                 </div>
                 <p id="trendingHelp" class="control-help" hidden>Trending uses TMDB’s weekly ranking. Choose Popular or Top rated to apply filters.</p>
                 <button id="loadTmdbBrowse" type="button" class="primary-button full">Load titles</button>
@@ -201,10 +217,16 @@
               <div id="collageStatus" class="status-line" aria-live="polite"></div>
               <div id="collageTitles" class="collage-titles"></div>
               <div class="inline-actions"><button id="clearCollage" class="ghost-button" type="button">Clear titles</button></div>
-              <label class="field-label" for="collageLayout">Collage layout</label>
-              <select id="collageLayout" class="select-input"><option value="tilted">Angled movie wall</option><option value="grid">Full-width grid</option></select>
-              <label class="field-label" for="artworkSource">Tile artwork source</label>
-              <select id="artworkSource" class="select-input"><option value="fanart">Official title artwork (default)</option><option value="tmdb">TMDB with title artwork</option><option value="tmdb-original">TMDB original images only</option></select>
+              <div class="source-fields">
+                <div class="source-field">
+                  <label class="field-label" for="collageLayout">Collage layout</label>
+                  <select id="collageLayout" class="select-input"><option value="tilted">Angled movie wall</option><option value="grid">Full-width grid</option></select>
+                </div>
+                <div class="source-field">
+                  <label class="field-label" for="artworkSource">Tile artwork source</label>
+                  <select id="artworkSource" class="select-input"><option value="fanart">Official title artwork (default)</option><option value="tmdb">TMDB with title artwork</option><option value="tmdb-original">TMDB original images only</option></select>
+                </div>
+              </div>
               <p id="tileTypeHelp" class="control-help">Landscape artwork with optional movie titles. Downloads remain widescreen.</p>
               <div id="artworkStatus" class="status-line" aria-live="polite"></div>
               <label class="toggle-row"><span><strong>Movie titles on tiles</strong><small>Prefer artwork with the title built in</small></span><input id="showMovieLogos" type="checkbox" checked /></label>

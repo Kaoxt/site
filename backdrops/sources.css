@@ -5,6 +5,12 @@
 #browseFilters[hidden], [role="tabpanel"][hidden] {display:none!important;}
 #tmdbTitleSource .field-label {margin-top:14px;}
 #loadTmdbBrowse, #loadAioTitles {margin-top:14px;}
+.backdrop-page .source-fields {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));align-items:end;gap:14px 12px;}
+.backdrop-page .source-field {display:flex;flex-direction:column;gap:7px;min-width:0;}
+.backdrop-page .source-field .field-label, #tmdbTitleSource .source-field .field-label {margin:0;}
+.backdrop-page .source-field .select-input {min-width:0;}
+.backdrop-page .source-field-note {margin:12px 0 0;}
+.backdrop-page #loadTmdbBrowse, .backdrop-page #loadAioTitles, .backdrop-page #loadMdblistTitles {align-self:flex-start;width:auto;max-width:100%;min-width:160px;padding-inline:20px;}
 .source-search {margin-top:18px;border-top:1px solid #7774;padding-top:14px;}
 .source-search summary, .aio-import summary {cursor:pointer;font-weight:650;}
 .source-search #mediaType {margin-top:14px;}
@@ -21,3 +27,9 @@ html[data-theme="light"] .source-switcher, body.light .source-switcher {backgrou
 html[data-theme="light"] .source-switcher button, body.light .source-switcher button {color:#53535f;}
 html[data-theme="light"] .source-switcher button[aria-selected="true"], body.light .source-switcher button[aria-selected="true"] {background:#fff;color:#15151a;}
 html[data-theme="light"] .aio-catalog small, body.light .aio-catalog small {color:#565665;}
+
+/* Landscape has room for the query field and its action on one line. */
+@media (min-width:600px) and (orientation:landscape) {
+  .backdrop-page .search-row, .backdrop-page .source-inline {grid-template-columns:minmax(0,1fr) auto;}
+  .backdrop-page .search-row .primary-button, .backdrop-page .source-inline .secondary-button {width:auto;}
+}
