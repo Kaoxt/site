@@ -1,5 +1,5 @@
 import { ANNOUNCEMENTS_ID, importLegacyNews } from '../_lib/forum-news.js';
-import { forumHandle, forumInput, IssueError, textField, id, page, requireAdmin, memberSelect, memberJoin, counts, selfMember, ensureMember, mayPost, validCategory } from '../_lib/forum.js';
+import { forumHandle, forumInput, releaseUrl, IssueError, textField, id, page, requireAdmin, memberSelect, memberJoin, counts, selfMember, ensureMember, mayPost, validCategory } from '../_lib/forum.js';
 const canEdit=(post,member,admin,now=Date.now())=>admin||!!member&&!member.banned&&!post.hidden&&member.id===post.member_id&&now-Date.parse(post.created_at)>=0&&now-Date.parse(post.created_at)<86400000;
 const protectCategory=c=>({...c,read_only:c.id===ANNOUNCEMENTS_ID?1:c.read_only});
 const categories = async db => (await db.prepare('SELECT * FROM forum_categories ORDER BY position,id').all()).results.map(protectCategory);
@@ -69,7 +69,12 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
     if(!isTopic&&!admin){const parent=await db.prepare('SELECT hidden FROM forum_topics WHERE id=?').bind(target.topic_id).first();if(!parent||parent.hidden)throw new IssueError('Discussion not found.',404);}
     const body=textField(data.body,'Message',2,10000);
     // Keep the original publication/activity dates: edits never restart the window or reorder News.
-    if(isTopic){const title=textField(data.title,'Title',5,160);await db.prepare('UPDATE forum_topics SET title=?,body=? WHERE id=?').bind(title,body,targetId).run();}
+    if(isTopic){
+      const title=textField(data.title,'Title',5,160);
+      const url=data.releaseUrl===undefined?target.github_release_url:releaseUrl(data.releaseUrl);
+      if(data.releaseUrl!==undefined&&!admin)requireAdmin(admin);
+      await db.prepare('UPDATE forum_topics SET title=?,body=?,github_release_url=? WHERE id=?').bind(title,body,url,targetId).run();
+    }
     else await db.prepare('UPDATE forum_replies SET body=? WHERE id=?').bind(body,targetId).run();
     return reply({ok:true});
   }
@@ -123,6 +128,8 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
   // Validate before creating a member or contacting Nuvio.
   const body=action==='profile'?textField(data.about??'','About me',0,1000):textField(data.body,'Message',2,10000);
   const title=action==='topic'?textField(data.title,'Title',5,160):'';
+  const githubUrl=action==='topic'?releaseUrl(data.releaseUrl):'';
+  if(githubUrl&&!admin)requireAdmin(admin);
   const member=await ensureMember(db,session,context.env,data.profileId);
   if(member.banned&&!admin)throw new IssueError('Posting is disabled for this account.',403);
   if(action==='profile'){
@@ -132,7 +139,7 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
   const now=new Date().toISOString(),since=new Date(Date.now()-86400000).toISOString();
   if(action==='topic'){
     const category=await validCategory(db,data.categoryId,admin);
-    const result=await db.prepare(`INSERT INTO forum_topics(member_id,category_id,title,body,created_at,updated_at) SELECT ?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM forum_topics WHERE member_id=? AND created_at>?)<10 AND EXISTS(SELECT 1 FROM forum_members WHERE id=? AND (banned=0 OR ?=1)) AND EXISTS(SELECT 1 FROM forum_settings WHERE posting_open=1 OR ?=1) AND EXISTS(SELECT 1 FROM forum_categories WHERE id=? AND archived=0 AND ((read_only=0 AND id!=4) OR ?=1))`).bind(member.id,category,title,body,now,now,member.id,since,member.id,+admin,+admin,category,+admin).run();
+    const result=await db.prepare(`INSERT INTO forum_topics(member_id,category_id,title,body,created_at,updated_at,github_release_url) SELECT ?,?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM forum_topics WHERE member_id=? AND created_at>?)<10 AND EXISTS(SELECT 1 FROM forum_members WHERE id=? AND (banned=0 OR ?=1)) AND EXISTS(SELECT 1 FROM forum_settings WHERE posting_open=1 OR ?=1) AND EXISTS(SELECT 1 FROM forum_categories WHERE id=? AND archived=0 AND ((read_only=0 AND id!=4) OR ?=1))`).bind(member.id,category,title,body,now,now,githubUrl,member.id,since,member.id,+admin,+admin,category,+admin).run();
     if(!result.meta.changes)throw new IssueError('Unable to post: the forum settings changed or you reached the limit of 10 topics per day.',429);
     return reply({id:result.meta.last_row_id},201);
   }

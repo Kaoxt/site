@@ -7,7 +7,7 @@ export async function forumDb(env) {
   if (!schemas.has(db)) schemas.set(db, db.batch([
     db.prepare(`CREATE TABLE IF NOT EXISTS forum_members (id TEXT PRIMARY KEY, user_id TEXT UNIQUE NOT NULL, author TEXT NOT NULL, avatar_url TEXT NOT NULL DEFAULT '', avatar_color TEXT NOT NULL DEFAULT '#6568e8', about TEXT NOT NULL DEFAULT '', banned INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL)`),
     db.prepare(`CREATE TABLE IF NOT EXISTS forum_categories (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL COLLATE NOCASE UNIQUE, description TEXT NOT NULL DEFAULT '', position INTEGER NOT NULL DEFAULT 0, archived INTEGER NOT NULL DEFAULT 0, read_only INTEGER NOT NULL DEFAULT 0)`),
-    db.prepare(`CREATE TABLE IF NOT EXISTS forum_topics (id INTEGER PRIMARY KEY AUTOINCREMENT, member_id TEXT NOT NULL REFERENCES forum_members(id), category_id INTEGER NOT NULL REFERENCES forum_categories(id), title TEXT NOT NULL, body TEXT NOT NULL, pinned INTEGER NOT NULL DEFAULT 0, locked INTEGER NOT NULL DEFAULT 0, hidden INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS forum_topics (id INTEGER PRIMARY KEY AUTOINCREMENT, member_id TEXT NOT NULL REFERENCES forum_members(id), category_id INTEGER NOT NULL REFERENCES forum_categories(id), title TEXT NOT NULL, body TEXT NOT NULL, github_release_url TEXT NOT NULL DEFAULT '', pinned INTEGER NOT NULL DEFAULT 0, locked INTEGER NOT NULL DEFAULT 0, hidden INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`),
     db.prepare(`CREATE TABLE IF NOT EXISTS forum_replies (id INTEGER PRIMARY KEY AUTOINCREMENT, topic_id INTEGER NOT NULL REFERENCES forum_topics(id), member_id TEXT NOT NULL REFERENCES forum_members(id), body TEXT NOT NULL, hidden INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL)`),
     db.prepare('CREATE INDEX IF NOT EXISTS forum_topics_list ON forum_topics(hidden, pinned DESC, updated_at DESC, id DESC)'),
     db.prepare('CREATE INDEX IF NOT EXISTS forum_topics_category ON forum_topics(category_id, hidden, pinned DESC, updated_at DESC)'),
@@ -19,7 +19,13 @@ export async function forumDb(env) {
     db.prepare('INSERT OR IGNORE INTO forum_settings(id) VALUES(1)'),
     // Seed only once; category edits and archives survive future deployments.
     db.prepare(`INSERT OR IGNORE INTO forum_categories(id,name,description,position,read_only) VALUES (1,'General','Talk about The Kollection and Nuvio.',10,0),(2,'Ideas & feedback','Share suggestions and improvements.',20,0),(3,'Show & tell','Share your collections and artwork.',30,0),(4,'Announcements','Updates from The Kollection.',0,1)`),
-  ]).catch(e => { schemas.delete(db); throw e; }));
+  ]).then(async()=>{
+    const columns=await db.prepare('PRAGMA table_info(forum_topics)').all();
+    if(!columns.results.some(c=>c.name==='github_release_url')){
+      try{await db.prepare("ALTER TABLE forum_topics ADD COLUMN github_release_url TEXT NOT NULL DEFAULT ''").run();}
+      catch(e){if(!(await db.prepare('PRAGMA table_info(forum_topics)').all()).results.some(c=>c.name==='github_release_url'))throw e;}
+    }
+  }).catch(e => { schemas.delete(db); throw e; }));
   await schemas.get(db); return db;
 }
 export async function forumHandle(context, write, run) {
@@ -69,3 +75,10 @@ export async function validCategory(db,value,admin){
   return c.id;
 }
 export { IssueError, textField };
+
+export function releaseUrl(value){
+  const text=textField(value??'','GitHub release URL',0,2048);
+  if(!text)return '';
+  try{const url=new URL(text);if(url.protocol==='https:'&&url.hostname==='github.com'&&!url.username&&!url.password&&!url.port&&/^\/[^/]+\/[^/]+\/releases(?:\/latest\/?|\/tag\/[^\s]+|\/?)$/.test(url.pathname))return url.href;}catch{}
+  throw new IssueError('Enter a GitHub release URL such as https://github.com/owner/repo/releases/tag/v1.0.');
+}

@@ -163,3 +163,23 @@ test('admin edits legacy News and all shared views reflect the same title and bo
  await f.call('admin',{action:'memberModerate',id:member,banned:true,clearAbout:false});
  assert.equal((await f.call('alice',{action:'topicEdit',id,title:'Banned update',body:'Not allowed'})).status,403);
 });
+test('optional GitHub release URLs persist, validate, edit and clear across News and Announcements',async()=>{
+ const f=fixture(),url='https://github.com/Kaoxt/The-Kollection/releases/tag/v2.5.0';
+ for(const releaseUrl of ['javascript:alert(1)','https://github.com.evil.test/a/b/releases','https://github.com/a/b/issues/1','https://user@github.com/a/b/releases','http://github.com/a/b/releases'])assert.equal((await f.call('admin',{...topic,action:'news',releaseUrl})).status,400);
+ assert.equal((await f.call('alice',{...topic,releaseUrl:url})).status,403);
+ const created=await f.call('admin',{...topic,action:'news',releaseUrl:url});assert.equal(created.status,201);const id=created.data.id;
+ for(const view of ['topic','newsTopic'])assert.equal((await f.call(null,null,{view,id})).data.topic.github_release_url,url);
+ assert.equal((await f.call(null,null,{view:'news'})).data.articles.find(t=>t.id===id).github_release_url,url);
+ const edit={action:'topicEdit',id,title:'Updated release title',body:'Updated release notes'};
+ await f.call('admin',edit);assert.equal((await f.call(null,null,{view:'topic',id})).data.topic.github_release_url,url);
+ const next='https://github.com/Kaoxt/The-Kollection/releases/latest';await f.call('admin',{...edit,releaseUrl:next});assert.equal((await f.call(null,null,{view:'newsTopic',id})).data.topic.github_release_url,next);
+ assert.equal((await f.call('admin',{...edit,releaseUrl:'https://example.com'})).status,400);
+ await f.call('admin',{...edit,releaseUrl:''});assert.equal((await f.call(null,null,{view:'newsTopic',id})).data.topic.github_release_url,'');
+});
+test('existing forum table gains release URL without losing historical content',async()=>{
+ const f=fixture();
+ await f.env.DB.prepare("CREATE TABLE forum_topics (id INTEGER PRIMARY KEY AUTOINCREMENT,member_id TEXT,category_id INTEGER,title TEXT,body TEXT,pinned INTEGER DEFAULT 0,locked INTEGER DEFAULT 0,hidden INTEGER DEFAULT 0,created_at TEXT,updated_at TEXT)").run();
+ await f.env.DB.prepare("INSERT INTO forum_topics(member_id,category_id,title,body,created_at,updated_at) VALUES('old',4,'Existing news','Original body','2026-01-01','2026-01-01')").run();
+ const db=await forumDb(f.env),old=await db.prepare('SELECT * FROM forum_topics WHERE id=1').first();assert.equal(old.body,'Original body');assert.equal(old.github_release_url,'');
+ assert.equal((await f.call('admin',{...topic,action:'news',releaseUrl:'https://github.com/Kaoxt/site/releases'})).status,201);
+});
