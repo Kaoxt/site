@@ -278,16 +278,33 @@
     if (!item.id || !['movie','tv'].includes(item.media)) return {};
     const key = titleKey(item);
     if (!metadataCache.has(key)) {
-      metadataCache.set(key, tmdbFetch(`/${item.media}/${item.id}/images`, {include_image_language:'en,null'})
+      metadataCache.set(key, tmdbFetch(`/${item.media}/${item.id}/images`)
         .catch(() => { metadataCache.delete(key); return {}; }));
       if (metadataCache.size > 80) metadataCache.delete(metadataCache.keys().next().value);
     }
     return metadataCache.get(key);
   }
-  async function titleLogo(item, data) {
-    const logo = (data.logos || []).filter(logo => /\.png$/i.test(logo.file_path))
-      .sort((a,b) => (Number(b.iso_639_1 === 'en') - Number(a.iso_639_1 === 'en')) || (b.vote_average || 0) - (a.vote_average || 0))[0];
-    return logo ? loadImage(`${IMAGE_BASE}w500${logo.file_path}`).catch(() => null) : null;
+  function artworkLanguageRank(language, item) {
+    if (language === 'en') return 0;
+    if (item.originalLanguage && language === item.originalLanguage) return 1;
+    if (!language || language === '00') return 2;
+    return 3;
+  }
+  async function titleLogo(item, data, source, key) {
+    const logos = (data.logos || []).filter(logo => /\.(png|svg)$/i.test(logo.file_path))
+      .sort((a,b) => artworkLanguageRank(a.iso_639_1,item)-artworkLanguageRank(b.iso_639_1,item) || (b.vote_average || 0)-(a.vote_average || 0));
+    for (const logo of logos.slice(0,3)) {
+      try { return await loadImage(`${IMAGE_BASE}${/\.svg$/i.test(logo.file_path) ? 'original' : 'w500'}${logo.file_path}`); } catch {}
+    }
+    if (source === 'fanart' && key) {
+      try {
+        const candidates = await fanartCandidates(item,key,'logos');
+        for (const logo of candidates.slice(0,2)) {
+          try { return await loadImage(logo.url); } catch {}
+        }
+      } catch {}
+    }
+    return null;
   }
   async function fanartCandidates(item, key, tileType='backdrops') {
     if (!key || !item.id || !['movie','tv'].includes(item.media)) return [];
@@ -306,12 +323,12 @@
         if (response.status === 404) return [];
         if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? 'Fanart.tv rejected the key.' : 'Fanart.tv is unavailable.');
         const data = await response.json();
-        const thumbs = tileType === 'posters' ? (item.media === 'tv' ? data.tvposter : data.movieposter) : (item.media === 'tv' ? data.tvthumb : data.moviethumb);
-        const backgrounds = tileType === 'posters' ? [] : (item.media === 'tv' ? data.showbackground : data.moviebackground);
+        const thumbs = tileType === 'logos' ? (item.media === 'tv' ? [...(data.hdtvlogo || []), ...(data.clearlogo || [])] : [...(data.hdmovielogo || []), ...(data.movielogo || [])]) : tileType === 'posters' ? (item.media === 'tv' ? data.tvposter : data.movieposter) : (item.media === 'tv' ? data.tvthumb : data.moviethumb);
+        const backgrounds = tileType !== 'backdrops' ? [] : (item.media === 'tv' ? data.showbackground : data.moviebackground);
         return [ ...(thumbs || []).map(x=>({...x,thumb:true})), ...(backgrounds || []).map(x=>({...x,thumb:false})) ]
           .filter(x => { try { const u=new URL(x.url); return u.protocol==='https:' && (u.hostname==='assets.fanart.tv' || u.hostname.endsWith('.fanart.tv')); } catch { return false; } })
-          .map(x => ({...x,rank:x.lang==='en'?0:item.originalLanguage && x.lang===item.originalLanguage?1:2}))
-          .filter(x=>x.rank<2)
+          .map(x => ({...x,rank:artworkLanguageRank(x.lang,item)}))
+          .filter(x=>x.rank<2 || tileType==='logos')
           .sort((a,b)=>a.rank-b.rank || Number(b.thumb)-Number(a.thumb) || (Number(b.likes)||0)-(Number(a.likes)||0));
       })();
       fanartCache.set(cacheKey, request.catch(error => { fanartCache.delete(cacheKey); throw error; }));
@@ -342,14 +359,14 @@
       if (!entry.backdropPath) throw new Error(`No poster artwork could be loaded for ${entry.title || 'this title'}. Remove it or try Backdrops.`);
       return {entry,image:await loadImage(`${IMAGE_BASE}w780${entry.backdropPath}`),logo:null,embeddedTitle:false,contain:true,source:'tmdb',fanartFailed};
     }
-    const titled = (data.backdrops || []).filter(x=>x.iso_639_1==='en' && x.file_path)
-      .sort((a,b)=>(b.vote_average||0)-(a.vote_average||0) || (b.width||0)-(a.width||0));
+    const titled = (data.backdrops || []).filter(x=>x.file_path && artworkLanguageRank(x.iso_639_1,entry)<2)
+      .sort((a,b)=>artworkLanguageRank(a.iso_639_1,entry)-artworkLanguageRank(b.iso_639_1,entry) || (b.vote_average||0)-(a.vote_average||0) || (b.width||0)-(a.width||0));
     const size = width > 1920 ? 'w1280' : 'w780';
     for (const candidate of titled.slice(0,2)) {
       try { return {entry,image:await loadImage(`${IMAGE_BASE}${size}${candidate.file_path}`),logo:null,embeddedTitle:true,source:'tmdb-title',fanartFailed}; }
       catch {}
     }
-    return {entry,contain:!entry.backdropPath,image:await loadImage(`${IMAGE_BASE}${entry.backdropPath ? size : 'w500'}${entry.backdropPath || entry.posterPath}`),logo:useTitles && entry.backdropPath ? await titleLogo(entry,data) : null,embeddedTitle:!entry.backdropPath,source:'tmdb',fanartFailed};
+    return {entry,contain:!entry.backdropPath,image:await loadImage(`${IMAGE_BASE}${entry.backdropPath ? size : 'w500'}${entry.backdropPath || entry.posterPath}`),logo:useTitles && entry.backdropPath ? await titleLogo(entry,data,source,key) : null,embeddedTitle:!entry.backdropPath,source:'tmdb',fanartFailed};
   }
   async function artwork(item, size, width=1280, height=720) {
     const entries = item.items || [item];

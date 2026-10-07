@@ -143,3 +143,21 @@ test('stalled artwork releases the spinner and can be retried after the connecti
  assert.equal(h.nodes.get('retryRender').hidden,true);
  assert.equal(h.nodes.get('downloadBackdrop').disabled,false);
 });
+
+test('original-language title artwork and SVG logos avoid plain-text fallback',async()=>{
+ const h=harness([],url=>url.includes('/movie/1/') ? {backdrops:[{file_path:'/japanese.jpg',iso_639_1:'ja'}]} : {logos:[{file_path:'/logo.svg',iso_639_1:'ja'}]});
+ h.nodes.get('tmdbKey').value='test';
+ await h.api.selectTitle({title:'Anime',items:pair.items.map(x=>({...x,originalLanguage:'ja'}))});
+ assert.ok(h.loads.some(u=>u.endsWith('/japanese.jpg')));
+ assert.ok(h.loads.some(u=>u.endsWith('/original/logo.svg')));
+ assert.ok(!h.calls.some(c=>c.key==='fillText'));
+ assert.ok(h.requests.every(u=>!u.includes('include_image_language')));
+});
+test('Fanart clear logos are used when TMDB has no title artwork',async()=>{
+ const h=harness([],url=>url.includes('external_ids') ? {tvdb_id:99} : url.includes('fanart.tv') ? {hdmovielogo:[{url:'https://assets.fanart.tv/movie-logo.png',lang:'en'}],hdtvlogo:[{url:'https://assets.fanart.tv/tv-logo.png',lang:'en'}]} : {});
+ h.nodes.get('tmdbKey').value='test';h.nodes.get('fanartKey').value='test';
+ await h.api.selectTitle(pair);
+ assert.ok(h.loads.includes('https://assets.fanart.tv/movie-logo.png'));
+ assert.ok(h.loads.includes('https://assets.fanart.tv/tv-logo.png'));
+ assert.ok(!h.calls.some(c=>c.key==='fillText'));
+});
