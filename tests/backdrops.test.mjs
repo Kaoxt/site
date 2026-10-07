@@ -171,3 +171,14 @@ test('original TMDB source uses supplied artwork without metadata calls or added
  assert.ok(!h.calls.some(c=>c.key==='fillText'));
  assert.equal(h.nodes.get('showMovieLogos').disabled,true);
 });
+
+test('backdrops never substitute a poster when a landscape image is missing',async()=>{
+ for (const source of ['fanart','tmdb-original']) {
+  const h=harness();h.api.restore({artworkSource:source});
+  await h.api.selectTitle({title:'Mixed',items:[...pair.items,{title:'Poster only',posterPath:'/portrait.jpg'}]});
+  assert.ok(!h.loads.some(u=>u.endsWith('/portrait.jpg')));
+  assert.equal(h.nodes.get('downloadBackdrop').disabled,false);
+  assert.match(h.nodes.get('artworkStatus').textContent,/Skipped 1.*Poster only/);
+  assert.equal(h.api.getState().selected.items.length,3);
+ }
+});

@@ -346,7 +346,8 @@
   }
   async function tileArtwork(entry, width, useTitles, source, key, tileType) {
     if (source === 'tmdb-original') {
-      const path = tileType === 'posters' ? entry.posterPath || entry.backdropPath : entry.backdropPath || entry.posterPath;
+      const path = tileType === 'posters' ? entry.posterPath || entry.backdropPath : entry.backdropPath;
+      if (!path && tileType === 'backdrops') return null;
       if (!path) throw new Error('No TMDB artwork is available for this title.');
       const size = tileType === 'posters' ? (width > 1920 ? 'w780' : 'w500') : (width > 1920 ? 'w1280' : 'w780');
       return {entry,image:await loadImage(`${IMAGE_BASE}${size}${path}`),logo:null,embeddedTitle:true,
@@ -362,7 +363,7 @@
         }
       } catch { fanartFailed = true; }
     }
-    const data = useTitles || tileType === 'posters' ? await tmdbImages(entry) : {};
+    const data = useTitles || tileType === 'posters' || !entry.backdropPath ? await tmdbImages(entry) : {};
     if (tileType === 'posters') {
       const posters = (data.posters || []).filter(x=>x.file_path && x.iso_639_1==='en')
         .sort((a,b)=>(b.vote_average||0)-(a.vote_average||0));
@@ -381,7 +382,16 @@
       try { return {entry,image:await loadImage(`${IMAGE_BASE}${size}${candidate.file_path}`),logo:null,embeddedTitle:true,source:'tmdb-title',fanartFailed}; }
       catch {}
     }
-    return {entry,contain:!entry.backdropPath,image:await loadImage(`${IMAGE_BASE}${entry.backdropPath ? size : 'w500'}${entry.backdropPath || entry.posterPath}`),logo:useTitles && entry.backdropPath ? await titleLogo(entry,data,source,key) : null,embeddedTitle:!entry.backdropPath,source:'tmdb',fanartFailed};
+    const paths = [...new Set([entry.backdropPath, ...(data.backdrops || []).filter(x=>!x.aspect_ratio || x.aspect_ratio>1.2).map(x=>x.file_path)].filter(Boolean))];
+    for (const path of paths.slice(0,3)) {
+      try {
+        const image = await loadImage(`${IMAGE_BASE}${size}${path}`);
+        if (image.width <= image.height * 1.2) continue;
+        return {entry,image,logo:useTitles ? await titleLogo(entry,data,source,key) : null,embeddedTitle:false,source:'tmdb',fanartFailed};
+      } catch (error) { if (path === paths[paths.length-1]) throw error; }
+    }
+    return null;
+
   }
   async function artwork(item, size, width=1280, height=720) {
     const entries = item.items || [item];
@@ -392,12 +402,19 @@
     const source = state.artworkSource;
     const key = fanartKey();
     const assets = [];
+    const skipped = [];
     const deadline = Date.now() + 45000;
     // Limit concurrent image/metadata requests and reuse them for slider changes.
     for (let i=0; i<entries.length; i+=4) {
       if (Date.now() >= deadline) throw new Error('Artwork loading timed out. Please retry.');
-      assets.push(...await Promise.all(entries.slice(i,i+4).map(entry => tileArtwork(entry,width,useLogos,source,key,tileType))));
+      const batch = entries.slice(i,i+4);
+      const loaded = await Promise.all(batch.map(entry => tileArtwork(entry,width,useLogos,source,key,tileType)));
+      loaded.forEach((asset,index)=>{
+        if (!asset || (!posterMode && asset.image.width <= asset.image.height * 1.2)) skipped.push(batch[index].title || 'Untitled');
+        else assets.push(asset);
+      });
     }
+    if (assets.length < 2) throw new Error('At least two titles with landscape backdrops are needed. Try Posters or add other titles.');
     const surface = document.createElement('canvas');
     surface.width = width; surface.height = height;
     surface.tileRegions = [];
@@ -457,6 +474,7 @@
     if (missingTitles) surface.artworkSummary += `. Title artwork unavailable for ${missingTitles} of ${assets.length} titles; those tiles show the image only.`;
     if ((useLogos || posterMode) && source === 'fanart' && !key) surface.artworkSummary += '. Add a Fanart.tv key in API Keys to use its title artwork.';
     if (assets.some(x=>x.fanartFailed)) surface.artworkSummary += '. Some Fanart.tv artwork could not load; TMDB was used instead. Check your key or try again.';
+    if (skipped.length) surface.artworkSummary += ` Skipped ${skipped.length} without landscape artwork: ${skipped.join(', ')}. These titles remain available in Posters.`;
     return surface;
   }
 
