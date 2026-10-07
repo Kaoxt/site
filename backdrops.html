@@ -10,7 +10,7 @@
   <meta name="description" content="Choose original or custom movie, TV, and folder backdrops for The Kollection, Nuvio, and compatible metadata setups." />
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/secondary-pages.css?v=20260909-3" />
-  <link rel="stylesheet" href="/backdrops/styles.css?v=20261007-3" />
+  <link rel="stylesheet" href="/backdrops/styles.css?v=20261007-4" />
   <link rel="stylesheet" href="/backdrops/title-mode.css?v=20261004-1" />
   <link rel="stylesheet" href="/backdrops/folder-builder.css?v=20261004-1" />
   <script src="/components.js?v=20260908-3" defer></script>
@@ -215,9 +215,14 @@
             <button type="button" data-value="backdrops" class="active" aria-pressed="true">Backdrops</button>
             <button type="button" data-value="posters" aria-pressed="false">Posters</button>
           </div>
+          <div class="toolbar-actions">
+            <button id="editImages" class="toolbar-button" type="button" aria-pressed="false" disabled>Edit images</button>
+            <button id="undoRemoval" class="toolbar-button" type="button" hidden>Undo removal</button>
+          </div>
           <div class="title-meta" id="previewMeta"></div>
         </div>
 
+        <p id="editImagesHelp" class="edit-images-help" role="status" hidden></p>
         <div class="canvas-stage">
           <div id="emptyState" class="empty-state backdrop-empty-state">
             <div class="backdrop-empty-icon" aria-hidden="true">
@@ -230,7 +235,10 @@
             <strong>Your backdrop will appear here</strong>
             <span>Add movies individually or load an MDBList to build your collage.</span>
           </div>
-          <canvas id="backdropCanvas" width="1280" height="720" aria-label="Backdrop preview"></canvas>
+          <div class="canvas-preview-frame">
+            <canvas id="backdropCanvas" width="1280" height="720" aria-label="Backdrop preview"></canvas>
+            <svg id="tileEditor" class="tile-editor" viewBox="0 0 1280 720" aria-label="Select images to remove"></svg>
+          </div>
           <div id="renderBusy" class="render-busy" hidden><span></span>Rendering backdrop…</div>
         </div>
 
@@ -252,8 +260,8 @@
 
     <div id="site-footer"></div>
   </main>
-  <script src="/backdrops/backdrops.js?v=20261007-3"></script>
-  <script src="/backdrops/mdblist.js?v=20261007-3"></script>
+  <script src="/backdrops/backdrops.js?v=20261007-4"></script>
+  <script src="/backdrops/mdblist.js?v=20261007-4"></script>
   <script src="/backdrops/folder-builder.js?v=20261004-1"></script>
 </body>
 </html>

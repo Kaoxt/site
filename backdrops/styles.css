@@ -389,3 +389,19 @@ html[data-theme="light"] .backdrop-page .status-line.error { color:#b91c1c; }
 
 .artwork-type-switch { flex:0 0 220px; max-width:100%; }
 @media (max-width:520px) { .artwork-type-switch { flex-basis:100%; width:100%; } }
+
+.canvas-preview-frame { position:relative; width:min(100%,1040px); }
+.canvas-preview-frame #backdropCanvas { width:100%; }
+.tile-editor { display:none; position:absolute; inset:0; width:100%; height:100%; z-index:4; overflow:hidden; border-radius:12px; }
+.tile-edit-target { cursor:pointer; outline:none; }
+.tile-edit-target polygon { fill:transparent; stroke:transparent; stroke-width:3; }
+.tile-edit-target path { stroke:white; stroke-width:5; stroke-linecap:round; opacity:0; pointer-events:none; }
+.tile-edit-target:hover polygon, .tile-edit-target:focus polygon { fill:rgba(239,68,68,.22); stroke:#fca5a5; }
+.tile-edit-target.marked polygon { fill:rgba(220,38,38,.65); stroke:#f87171; }
+.tile-edit-target:hover path, .tile-edit-target:focus path, .tile-edit-target.marked path { opacity:1; }
+.edit-images-help { margin:0; padding:12px 18px; color:#fecaca; background:rgba(220,38,38,.12); font-size:13px; line-height:1.5; }
+html[data-theme="light"] .edit-images-help { color:#991b1b; }
+.backdrop-page #editImages[aria-pressed="true"] { color:#fecaca; background:#7f1d1d; }
+.backdrop-page .preview-toolbar { flex-wrap:wrap; }
+
+.tile-editor.is-editing { display:block; }

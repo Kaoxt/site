@@ -30,6 +30,10 @@
   };
 
   let state = loadState();
+  let editMode = false;
+  let previewRegions = [];
+  const excludedTiles = new Set();
+  let removalUndo = null;
   let renderToken = 0;
   let searchToken = 0;
   let renderFrame = 0;
@@ -41,7 +45,7 @@
   [
     'backdropSourceMode','backdropModeStatus','tmdbKey','toggleKey','saveKey','validateKey','keyStatus','mediaType','titleSearch','searchTitle','titleSearchStatus','titleResults',
     'overlayPreset','overlayOpacity','overlayOpacityValue','gradientCoverage','coverageValue','backdropZoom','zoomValue','positionX','positionXValue','showTitle','textControls','fontFamily','textPosition','fontSize','fontSizeValue','textColor','textShadow',
-    'tileType','tileTypeHelp','fanartKey','saveFanartKey','toggleFanartKey','fanartKeyStatus','artworkSource','artworkStatus','showMovieLogos','collageLayout','collageTitles','collageStatus','clearCollage','shuffleCollage','backdropCanvas','emptyState','renderBusy','previewTitle','previewMeta','resolution','downloadBackdrop'
+    'editImages','undoRemoval','editImagesHelp','tileEditor','tileType','tileTypeHelp','fanartKey','saveFanartKey','toggleFanartKey','fanartKeyStatus','artworkSource','artworkStatus','showMovieLogos','collageLayout','collageTitles','collageStatus','clearCollage','shuffleCollage','backdropCanvas','emptyState','renderBusy','previewTitle','previewMeta','resolution','downloadBackdrop'
   ].forEach(id => { els[id] = $(id); });
 
   function loadState() {
@@ -158,7 +162,9 @@
     }));
     setStatus(els.collageStatus, `${items.length}/18 titles selected. ${items.length < 2 ? 'Add at least two titles to create a collage.' : 'Ready to preview and download.'}`);
   }
-  async function selectTitle(item) {
+  async function selectTitle(item, keepUndo=false) {
+    if (!keepUndo) removalUndo = null;
+    excludedTiles.clear();
     if (item?.items) {
       const unique = new Map(item.items.filter(entry => entry.backdropPath || entry.posterPath).map(entry => [titleKey(entry), entry]));
       item = {...item, items:[...unique.values()].slice(0,18)};
@@ -342,6 +348,7 @@
     }
     const surface = document.createElement('canvas');
     surface.width = width; surface.height = height;
+    surface.tileRegions = [];
     const ctx = surface.getContext('2d');
     ctx.fillStyle = '#050608'; ctx.fillRect(0,0,width,height);
     const tilted = layout === 'tilted';
@@ -358,6 +365,15 @@
       const rowCount = tilted ? cols : Math.min(cols, assets.length-row*cols);
       const tw = (tilted || posterMode ? w : width/rowCount)-gap, th=posterMode ? tw*3/2 : h-gap;
       ctx.save();ctx.translate(tilted ? col*w : posterMode ? (width-rowCount*w)/2+col*w : col*width/rowCount, row*h);
+      // Keep the same tile geometry for the accessible preview editing layer.
+      const tx = tilted ? col*w : posterMode ? (width-rowCount*w)/2+col*w : col*width/rowCount;
+      const ty = row*h;
+      const angle = tilted ? -12*Math.PI/180 : 0;
+      const points = [[0,0],[tw,0],[tw,th],[0,th]].map(([x,y]) => ({
+        x:(tilted ? width*.22 : 0)+(tx+x)*Math.cos(angle)-(ty+y)*Math.sin(angle),
+        y:(tilted ? -height*.13 : 0)+(tx+x)*Math.sin(angle)+(ty+y)*Math.cos(angle)
+      }));
+      surface.tileRegions.push({key:titleKey(entry),title:entry.title || 'Untitled',points});
       ctx.beginPath();ctx.roundRect(0,0,tw,th,width*.004);ctx.clip();
       const scale=Math.max(tw/image.width,th/image.height),sw=tw/scale,sh=th/scale;
       if (contain) {
@@ -399,6 +415,8 @@
     const token = ++renderToken;
     const item = state.selected;
     els.downloadBackdrop.disabled = true;
+    previewRegions = [];
+    updateTileEditor();
     if (!canRender()) {
       els.renderBusy.hidden = true;
       els.emptyState.hidden = false;
@@ -419,7 +437,9 @@
       applyOverlay(ctx, canvas.width, canvas.height);
       drawTitle(ctx, canvas.width, canvas.height);
       els.emptyState.hidden = true;
-      els.downloadBackdrop.disabled = false;
+      els.downloadBackdrop.disabled = editMode;
+      previewRegions = image.tileRegions || [];
+      updateTileEditor();
       setStatus(els.artworkStatus, image.artworkSummary);
       els.previewTitle.textContent = item.title;
       els.previewMeta.textContent = item.items ? `${item.items.length} titles · Folder backdrop` : `${item.year || ''} · ${item.media === 'movie' ? 'Movie' : 'TV Show'}`;
@@ -428,11 +448,11 @@
       els.backdropCanvas.getContext('2d').clearRect(0,0,1280,720);
       els.emptyState.hidden = false;
       setStatus(els.titleSearchStatus, error.message || 'Could not render backdrop.', 'error');
-    } finally { if (token === renderToken) els.renderBusy.hidden = true; }
+    } finally { if (token === renderToken) { els.renderBusy.hidden = true; updateTileEditor(); } }
   }
 
   async function downloadPreview() {
-    if (!canRender()) return;
+    if (!canRender() || editMode) return;
     const item = state.selected;
     const token = renderToken;
     els.downloadBackdrop.disabled = true;
@@ -450,7 +470,7 @@
       a.href=url; a.download=`${slug}-backdrop.png`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1500);
     } catch (error) {
       setStatus(els.titleSearchStatus, error.message || 'Could not download backdrop.', 'error');
-    } finally { els.downloadBackdrop.disabled = !canRender(); }
+    } finally { els.downloadBackdrop.disabled = editMode || !canRender(); }
   }
 
   function applyMode() {
@@ -539,6 +559,57 @@
     .forEach(el => el.addEventListener('input', syncState));
   els.downloadBackdrop.addEventListener('click', downloadPreview);
 
+  function updateTileEditor() {
+    els.editImages.textContent = editMode ? 'Done' : 'Edit images';
+    els.editImages.setAttribute('aria-pressed',String(editMode));
+    els.editImages.disabled = !editMode && !previewRegions.length;
+    els.undoRemoval.hidden = !removalUndo;
+    els.undoRemoval.disabled = editMode;
+    els.editImagesHelp.hidden = !editMode;
+    els.editImagesHelp.textContent = excludedTiles.size
+      ? `${excludedTiles.size} title(s) marked for removal. Tap again to keep. Press Done to remove.`
+      : 'Tap a tile to mark it for removal, then press Done. All repeated tiles for that title will be removed.';
+    els.tileEditor.classList.toggle('is-editing', editMode && previewRegions.length > 0);
+    if (!editMode || !previewRegions.length) { els.tileEditor.innerHTML = ''; return; }
+    const zoom = state.mode === 'custom' ? state.backdropZoom/100 : 1;
+    const sx = (1280-1280/zoom)*(state.mode==='custom' ? state.positionX/100 : .5);
+    const sy = (720-720/zoom)/2;
+    els.tileEditor.innerHTML = previewRegions.map((region,index)=>{
+      const points=region.points.map(p=>({x:(p.x-sx)*zoom,y:(p.y-sy)*zoom}));
+      if (points.every(p=>p.x<0) || points.every(p=>p.x>1280) || points.every(p=>p.y<0) || points.every(p=>p.y>720)) return '';
+      const center={x:points.reduce((sum,p)=>sum+p.x,0)/4,y:points.reduce((sum,p)=>sum+p.y,0)/4};
+      const marked=excludedTiles.has(region.key);
+      return `<g class="tile-edit-target${marked ? ' marked' : ''}" data-region="${index}" role="button" tabindex="0" aria-label="${marked ? 'Keep' : 'Remove'} ${escapeHtml(region.title)}" aria-pressed="${marked}"><title>${escapeHtml(region.title)}</title><polygon points="${points.map(p=>`${p.x},${p.y}`).join(' ')}"/><path d="M${center.x-12} ${center.y-12}l24 24m0-24l-24 24"/></g>`;
+    }).join('');
+    els.tileEditor.querySelectorAll('[data-region]').forEach(target=>{
+      const toggle=()=>{
+        const region=previewRegions[Number(target.dataset.region)];
+        if (!region) return;
+        excludedTiles.has(region.key) ? excludedTiles.delete(region.key) : excludedTiles.add(region.key);
+        const index=target.dataset.region;
+        updateTileEditor();
+        els.tileEditor.querySelector(`[data-region="${index}"]`)?.focus({preventScroll:true});
+      };
+      target.addEventListener('click',toggle);
+      target.addEventListener('keydown',event=>{
+        if (event.key==='Enter' || event.key===' ') { event.preventDefault(); toggle(); }
+      });
+    });
+  }
+  els.editImages.addEventListener('click', async () => {
+    if (!editMode) { editMode=true; els.downloadBackdrop.disabled=true; updateTileEditor(); return; }
+    editMode=false;
+    if (excludedTiles.size) {
+      removalUndo=JSON.parse(JSON.stringify(state.selected));
+      const items=selectedItems().filter(item=>!excludedTiles.has(titleKey(item)));
+      await selectTitle({title:state.selected?.title || 'Movie collage',items},true);
+    } else { els.downloadBackdrop.disabled=!canRender(); updateTileEditor(); }
+  });
+  els.undoRemoval.addEventListener('click',async()=>{
+    if (!removalUndo || editMode) return;
+    const previous=removalUndo; removalUndo=null;
+    await selectTitle(previous);
+  });
   function syncTileType() {
     els.tileType.querySelectorAll('button').forEach(button => {
       const active = button.dataset.value === state.tileType;
