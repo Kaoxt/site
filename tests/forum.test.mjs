@@ -1,0 +1,49 @@
+import assert from 'node:assert/strict';
+import { test, after } from 'node:test';
+import { DatabaseSync } from 'node:sqlite';
+import { createSessionCookie } from '../functions/_lib/nuvio-session.js';
+import { onRequestGet as get, onRequestPost as post } from '../functions/api/forum.js';
+import { forumDb } from '../functions/_lib/forum.js';
+const realFetch=globalThis.fetch;
+globalThis.fetch=async()=>Response.json([{profile_index:1,name:'First profile'},{profile_index:2,name:'Second profile'}]);
+after(()=>{globalThis.fetch=realFetch;});
+function database(){const sqlite=new DatabaseSync(':memory:');return {prepare(sql){const build=args=>({bind:(...values)=>build(values),async run(){const r=sqlite.prepare(sql).run(...args);return {meta:{changes:Number(r.changes),last_row_id:Number(r.lastInsertRowid)}};},async first(){return sqlite.prepare(sql).get(...args);},async all(){return {results:sqlite.prepare(sql).all(...args)};}});return build([]);},async batch(items){return Promise.all(items.map(s=>s.run()));}};}
+function fixture(){const env={DB:database(),KOLLECTION_SESSION_SECRET:'forum-test-secret',NUVIO_ADMIN_USER_ID:'admin'};return {env,async call(user,data,params={},origin='https://kollection.tv'){const headers={'Content-Type':'application/json',Origin:origin};if(user)headers.Cookie=(await createSessionCookie({user:{id:user,email:user+'@private.test'},accessToken:'private-token',expiresIn:3600},env)).split(';')[0];const ctx={env,request:new Request('https://kollection.tv/api/forum?'+new URLSearchParams(params),{headers,method:data?'POST':'GET',...(data?{body:JSON.stringify({profileId:1,...data})}:{})})};const r=await(data?post:get)(ctx);return {status:r.status,data:await r.json()};}};}
+const topic={action:'topic',categoryId:1,title:'A new discussion',body:'A message for the community.'};
+test('one account identity, current avatar/name, counts and private data protection',async()=>{
+ const f=fixture();assert.equal((await f.call(null,topic)).status,401);assert.equal((await f.call('alice',topic,{},'https://evil.test')).status,403);
+ const created=await f.call('alice',{...topic,author:'Impersonator',user_id:'admin'});assert.equal(created.status,201);const id=created.data.id;
+ const detail=await f.call(null,null,{view:'topic',id});assert.equal(detail.data.topic.author,'First profile');assert.doesNotMatch(JSON.stringify(detail),/private.test|private-token|user_id|Impersonator/);
+ const member=detail.data.topic.member_id;assert.equal((await f.call('alice',{action:'reply',id,body:'Another reply',profileId:2})).status,201);
+ assert.equal((await f.call('alice',{action:'profile',about:'About me text',profileId:2})).data.memberId,member);
+ let profile=await f.call(null,null,{view:'member',id:member});assert.equal(profile.data.member.topic_count,1);assert.equal(profile.data.member.reply_count,1);assert.equal(profile.data.member.about,'About me text');
+ const db=await forumDb(f.env);await db.prepare("INSERT INTO account_preferences(user_id,display_name,updated_at) VALUES('alice','Account name','now')").run();await db.prepare("INSERT INTO account_avatars(user_id,id,url,image,updated_at) VALUES('alice','avatar-id','https://example.com/a.jpg','','now')").run();
+ profile=await f.call(null,null,{view:'member',id:member});assert.equal(profile.data.member.author,'Account name');assert.equal(profile.data.member.avatar_url,'https://example.com/a.jpg');assert.equal((await f.call('bob',null,{view:'self'})).data.myMemberId,null);
+});
+test('category management, admin permissions, locking, hiding, restoration and counts',async()=>{
+ const f=fixture();assert.equal((await f.call('member',null,{view:'admin'})).status,403);assert.equal((await f.call(null,null,{moderation:1})).status,403);
+ const cat={action:'category',name:'Custom',description:'Custom category',position:5,archived:false,readOnly:false};assert.equal((await f.call('member',cat)).status,403);assert.equal((await f.call('admin',cat)).status,200);assert.equal((await f.call('admin',cat)).status,400);
+ const c=(await f.call('admin',null,{view:'admin'})).data.categories.find(x=>x.name==='Custom');assert.equal((await f.call('alice',{...topic,categoryId:4})).status,403);
+ const id=(await f.call('alice',{...topic,categoryId:c.id})).data.id;const mod={action:'topicModerate',id,categoryId:1,pinned:true,locked:true,hidden:false};assert.equal((await f.call('alice',mod)).status,403);assert.equal((await f.call('admin',mod)).status,200);
+ assert.equal((await f.call('bob',{action:'reply',id,body:'Reply'})).status,409);assert.equal((await f.call('admin',{action:'reply',id,body:'Admin reply'})).status,201);
+ let d=(await f.call('admin',null,{view:'topic',id})).data;const replyId=d.replies[0].id;assert.equal((await f.call('bob',{action:'replyModerate',id:replyId,hidden:true})).status,403);
+ await f.call('admin',{action:'replyModerate',id:replyId,hidden:true});d=(await f.call(null,null,{view:'topic',id})).data;assert.equal(d.replies.length,0);assert.equal(d.topic.reply_count,0);
+ await f.call('admin',{...mod,hidden:true});assert.equal((await f.call(null,null,{view:'topic',id})).status,404);assert.equal((await f.call(null)).data.topics.length,0);assert.equal((await f.call('admin',null,{moderation:1})).data.topics.length,1);assert.equal((await f.call(null,null,{view:'member',id:d.topic.member_id})).data.member.topic_count,0);
+ await f.call('admin',{...mod,hidden:false,locked:false});assert.equal((await f.call(null,null,{view:'topic',id})).status,200);await f.call('admin',{action:'replyModerate',id:replyId,hidden:false});assert.equal((await f.call(null,null,{view:'topic',id})).data.topic.reply_count,1);
+ assert.equal((await f.call('admin',{...cat,id:c.id,name:'Renamed',archived:true})).status,200);assert.equal((await f.call('alice',{...topic,categoryId:c.id})).status,400);
+});
+test('member restrictions and forum-wide read-only mode are enforced',async()=>{
+ const f=fixture(),id=(await f.call('alice',topic)).data.id,m=(await f.call('alice',null,{view:'self'})).data.myMemberId;const ban={action:'memberModerate',id:m,banned:true,clearAbout:true};assert.equal((await f.call('alice',ban)).status,403);await f.call('admin',ban);
+ for(const data of [topic,{action:'reply',id,body:'Blocked'},{action:'profile',about:'Blocked'}])assert.equal((await f.call('alice',data)).status,403);
+ await f.call('admin',{...ban,banned:false});assert.equal((await f.call('alice',{action:'reply',id,body:'Allowed'})).status,201);
+ await f.call('admin',{action:'settings',postingOpen:false});assert.equal((await f.call('alice',topic)).status,409);assert.equal((await f.call('bob',{action:'reply',id,body:'Blocked'})).status,409);assert.equal((await f.call('admin',topic)).status,201);
+ const own=(await f.call('admin',null,{view:'self'})).data.myMemberId;assert.equal((await f.call('admin',{...ban,id:own})).status,400);
+});
+test('quotas, pagination, validation and literal searches',async()=>{
+ const f=fixture();for(const bad of [{...topic,title:''},{...topic,body:'x'.repeat(10001)},{action:'profile',about:'x'.repeat(1001)},{action:'unknown'}])assert.equal((await f.call('alice',bad)).status,400);
+ assert.equal((await f.call('alice',{...topic,body:'x'.repeat(33000)})).status,413);assert.equal((await f.call('alice',{...topic,profileId:99})).status,400);
+ for(let i=0;i<10;i++)assert.equal((await f.call('alice',topic)).status,201);assert.equal((await f.call('alice',topic)).status,429);
+ for(let i=0;i<10;i++)await f.call('bob',topic);await f.call('carol',topic);const first=(await f.call(null)).data,second=(await f.call(null,null,{page:2})).data;assert.equal(first.topics.length,20);assert.equal(first.hasMore,true);assert.equal(second.topics.length,1);assert.equal(second.hasMore,false);assert.equal((await f.call(null,null,{q:'%'})).data.topics.length,0);
+ for(let i=0;i<50;i++)assert.equal((await f.call('alice',{action:'reply',id:1,body:'Test reply'})).status,201);assert.equal((await f.call('alice',{action:'reply',id:1,body:'Over quota'})).status,429);
+ const replies=(await f.call(null,null,{view:'topic',id:1})).data;assert.equal(replies.replies.length,20);assert.equal(replies.hasMore,true);const next=(await f.call(null,null,{view:'topic',id:1,after:replies.replies.at(-1).id})).data;assert.equal(next.replies.length,20);assert.notEqual(next.replies[0].id,replies.replies[0].id);
+});

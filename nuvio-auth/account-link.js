@@ -201,6 +201,14 @@
       }
     }
     const accountLink = popover.querySelector('[data-kollection-account-link]');
+    if (accountLink && !popover.querySelector('[data-kollection-forum-link]')) {
+      const link = document.createElement('a');
+      link.className = 'nuvio-desktop-menu-row nuvio-account-link-row';
+      link.href = '/discussions';
+      link.dataset.kollectionForumLink = 'true';
+      link.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true" class="nuvio-row-icon"><path d="M4 4h16v12H9l-5 4V4Z"></path></svg><span class="nuvio-row-copy"><strong>Discussions</strong><small>The Kollection community</small></span>`;
+      accountLink.after(link);
+    }
     if (accountLink && !popover.querySelector('[data-kollection-issues-link]')) {
       const link = document.createElement('a');
       link.className = 'nuvio-desktop-menu-row nuvio-account-link-row';

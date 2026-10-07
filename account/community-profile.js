@@ -1,0 +1,10 @@
+(() => {
+  const form=document.getElementById('communityProfileForm');if(!form)return;
+  const about=form.elements.about,status=document.getElementById('communityProfileStatus'),link=document.getElementById('communityProfileLink');let loaded=false,busy=false,generation=0;
+  async function request(data){const r=await fetch('/api/forum?view=self',{credentials:'same-origin',cache:'no-store',...(data?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}:{})});const value=await r.json();if(!r.ok)throw Error(value.error||'Could not save your profile.');return value;}
+  function lock(){for(const field of form.elements)field.disabled=!loaded||busy;}
+  function showLink(id){link.hidden=!id;if(id)link.href='/discussions#member/'+encodeURIComponent(id);}
+  async function load(){const n=++generation;loaded=false;lock();try{const r=await request();if(n!==generation)return;loaded=r.authenticated;about.value=r.about;showLink(r.myMemberId);status.textContent='';}catch(e){if(n===generation)status.textContent=e.message;}finally{if(n===generation)lock();}}
+  form.addEventListener('submit',async e=>{e.preventDefault();if(!loaded||busy||!form.reportValidity())return;busy=true;lock();status.textContent='Saving…';try{const r=await request({action:'profile',about:about.value,profileId:window.KollectionNavAccount?.getSelectedProfile?.()?.id||null});showLink(r.memberId);status.textContent='Community profile saved.';}catch(e){status.textContent=e.message;}finally{busy=false;lock();}});
+  window.addEventListener('kollection:nuvio-signed-in',load);window.addEventListener('kollection:nuvio-signed-out',()=>{generation++;loaded=false;about.value='';showLink(null);lock();});load();
+})();
