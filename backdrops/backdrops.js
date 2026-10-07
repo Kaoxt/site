@@ -427,10 +427,8 @@
     const gap = width * .008;
     const w = posterMode ? (tilted ? width*.17 : Math.min(width/cols,height/rows*2/3)) : (tilted ? width*.24 : width/cols);
     const h = posterMode ? w*3/2 : (tilted ? w*9/16 : height/rows);
-    ctx.save();
-    if (tilted) { ctx.translate(width*.22, -height*.13); ctx.rotate(-12*Math.PI/180); }
+    const slots = [];
     for (let index=0; index<(tilted ? cols*rows : assets.length); index++) {
-      const {image,logo,entry,embeddedTitle,contain} = assets[index % assets.length];
       const row = Math.floor(index/cols), col=index%cols;
       const rowCount = tilted ? cols : Math.min(cols, assets.length-row*cols);
       const tw = (tilted || posterMode ? w : width/rowCount)-gap, th=posterMode ? tw*3/2 : h-gap;
@@ -439,13 +437,26 @@
       const columnOffset = tilted ? [0, -.45, -.15, -.6, -.3][col] * h : 0;
       const tx = tilted ? col*w : posterMode ? (width-rowCount*w)/2+col*w : col*width/rowCount;
       const ty = row*h + columnOffset;
-      ctx.save();ctx.translate(tx,ty);
       // Keep the same tile geometry for the accessible preview editing layer.
       const angle = tilted ? -12*Math.PI/180 : 0;
       const points = [[0,0],[tw,0],[tw,th],[0,th]].map(([x,y]) => ({
         x:(tilted ? width*.22 : 0)+(tx+x)*Math.cos(angle)-(ty+y)*Math.sin(angle),
         y:(tilted ? -height*.13 : 0)+(tx+x)*Math.sin(angle)+(ty+y)*Math.cos(angle)
       }));
+      const xs=points.map(p=>p.x), ys=points.map(p=>p.y);
+      const visibleWidth=Math.max(0,Math.min(width,Math.max(...xs))-Math.max(0,Math.min(...xs)));
+      const visibleHeight=Math.max(0,Math.min(height,Math.max(...ys))-Math.max(0,Math.min(...ys)));
+      slots.push({index,tx,ty,tw,th,points,visibleArea:visibleWidth*visibleHeight});
+    }
+    // Fill the most visible positions once each; never cycle through movie assets.
+    const chosenSlots = tilted ? slots.sort((a,b)=>b.visibleArea-a.visibleArea || a.index-b.index)
+      .slice(0,assets.length).sort((a,b)=>a.index-b.index) : slots;
+    ctx.save();
+    if (tilted) { ctx.translate(width*.22, -height*.13); ctx.rotate(-12*Math.PI/180); }
+    for (let index=0; index<chosenSlots.length; index++) {
+      const {image,logo,entry,embeddedTitle,contain}=assets[index];
+      const {tx,ty,tw,th,points}=chosenSlots[index];
+      ctx.save();ctx.translate(tx,ty);
       surface.tileRegions.push({key:titleKey(entry),title:entry.title || 'Untitled',points});
       ctx.beginPath();ctx.roundRect(0,0,tw,th,width*.004);ctx.clip();
       const scale=Math.max(tw/image.width,th/image.height),sw=tw/scale,sh=th/scale;

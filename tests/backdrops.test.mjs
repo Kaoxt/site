@@ -196,3 +196,16 @@ test('Backdrops requires a saved Fanart key while Posters works without one',asy
  assert.equal(h.nodes.get('downloadBackdrop').disabled,false);
  assert.equal(h.nodes.get('fanartKeySection').hidden,true);
 });
+
+test('each movie image is drawn once in angled and grid collages in both formats',async()=>{
+ for (const tileType of ['backdrops','posters']) for (const collageLayout of ['tilted','grid']) {
+  const h=harness();h.api.restore({artworkSource:'tmdb-original',tileType,collageLayout});
+  const items=Array.from({length:18},(_,i)=>({title:`Movie ${i}`,backdropPath:`/${i}.jpg`,posterPath:`/poster${i}.jpg`}));
+  await h.api.selectTitle({title:'Unique wall',items});
+  const drawn=h.calls.filter(c=>c.key==='drawImage' && c.args[0]?.width===1280 && c.args[0]?.height===720);
+  // Tile draws use loaded Images; the final draw uses the composed canvas.
+  const images=drawn.filter(c=>!c.args[0].getContext).map(c=>c.args[0]);
+  assert.equal(images.length,18);
+  assert.equal(new Set(images).size,18);
+ }
+});
