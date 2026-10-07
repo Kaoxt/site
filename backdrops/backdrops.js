@@ -19,8 +19,8 @@
     showTitle: false,
     showMovieLogos: true,
     collageLayout: 'tilted',
-    artworkSource: 'tmdb-original',
-    artworkVersion: 2,
+    artworkSource: 'fanart',
+    artworkVersion: 3,
     tileType: 'backdrops',
     fontFamily: 'Inter, Arial, sans-serif',
     textPosition: 'left-center',
@@ -52,7 +52,10 @@
   function loadState() {
     try {
       const saved = JSON.parse(localStorage.getItem(STATE_KEY) || '{}');
-      if (saved.artworkVersion !== 2) { saved.artworkSource = 'tmdb-original'; saved.artworkVersion = 2; }
+      if (saved.artworkVersion !== 3) {
+        if (saved.artworkSource === 'tmdb-original') { saved.artworkSource = 'fanart'; saved.showMovieLogos = true; }
+        saved.artworkVersion = 3;
+      }
       return { ...defaults, ...saved };
     }
     catch { return { ...defaults }; }
@@ -450,6 +453,8 @@
     const fallbackCount = assets.length-fanartCount-titledCount;
     surface.artworkSummary = `${fanartCount} Fanart.tv · ${titledCount} TMDB ${posterMode ? 'posters' : 'title artwork'} · ${fallbackCount} TMDB backdrops`;
     if (source === 'tmdb-original') surface.artworkSummary = `${assets.length} original TMDB ${posterMode ? 'posters' : 'images'}. Titles are shown only when included in the artwork.`;
+    const missingTitles = useLogos && !posterMode && source !== 'tmdb-original' ? assets.filter(asset=>!asset.embeddedTitle && !asset.logo).length : 0;
+    if (missingTitles) surface.artworkSummary += `. Title artwork unavailable for ${missingTitles} of ${assets.length} titles; those tiles show the image only.`;
     if ((useLogos || posterMode) && source === 'fanart' && !key) surface.artworkSummary += '. Add a Fanart.tv key in API Keys to use its title artwork.';
     if (assets.some(x=>x.fanartFailed)) surface.artworkSummary += '. Some Fanart.tv artwork could not load; TMDB was used instead. Check your key or try again.';
     return surface;
