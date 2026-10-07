@@ -3,14 +3,14 @@ import { test } from 'node:test';
 import fs from 'node:fs';
 import vm from 'node:vm';
 const source = fs.readFileSync(new URL('../backdrops/backdrops.js', import.meta.url),'utf8');
-function harness(logos = [], responder = null) {
+function harness(logos = [], responder = null, options = {}) {
  const nodes=new Map(), storage=new Map(), loads=[], requests=[], calls=[];
  const context2d=new Proxy({},{get:(target,key)=>key in target ? target[key] : key.startsWith('create')?()=>({addColorStop(){}}):(...args)=>calls.push({key,args})});
  const el=()=>({value:'',checked:false,hidden:false,disabled:false,classList:{add(){},remove(){},toggle(){}},addEventListener(){},setAttribute(){},querySelectorAll:()=>[],getContext:()=>context2d});
  const document={getElementById:id=>{if(!nodes.has(id))nodes.set(id,el());return nodes.get(id)},querySelector:()=>el(),querySelectorAll:()=>[],createElement:()=>el()};
- class Image {width=1280;height=720;set src(url){loads.push(url);queueMicrotask(()=>this.onload())}}
+ class Image {width=1280;height=720;set src(url){loads.push(url);if (!options.stallImages) queueMicrotask(()=>this.onload?.())}}
  const window={dispatchEvent(){}};
- vm.runInNewContext(source,{document,window,Image,Map,URL,AbortSignal,CustomEvent:class{},localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},requestAnimationFrame:()=>1,cancelAnimationFrame(){},fetch:async url=>{requests.push(url);return {ok:true,json:async()=>responder ? responder(url) : ({logos})}},setTimeout});
+ vm.runInNewContext(source,{document,window,Image,Map,URL,AbortSignal,CustomEvent:class{},localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},requestAnimationFrame:()=>1,cancelAnimationFrame(){},fetch:async url=>{requests.push(url);return {ok:true,json:async()=>responder ? responder(url) : ({logos})}},setTimeout:(fn,ms)=>setTimeout(fn,options.stallImages && ms===12000 ? 0 : ms),clearTimeout});
  return {api:window.KollectionBackdrops,nodes,loads,requests,calls};
 }
 test('search selections accumulate unique titles and require at least two',async()=>{
@@ -126,4 +126,20 @@ test('poster-only titles can be selected and missing posters use uncropped backd
  assert.equal(h.api.getState().selected.items.length,2);
  assert.equal(h.nodes.get('downloadBackdrop').disabled,false);
  assert.ok(h.calls.some(c=>c.key==='drawImage' && c.args.length===5));
+});
+
+test('stalled artwork releases the spinner and can be retried after the connection recovers',async()=>{
+ const options={stallImages:true};const h=harness([],null,options);
+ const selected={title:'Test',items:[{backdropPath:'/a.jpg'},{backdropPath:'/b.jpg'}]};
+ await h.api.selectTitle(selected);
+ assert.equal(h.nodes.get('renderBusy').hidden,true);
+ assert.equal(h.nodes.get('retryRender').hidden,false);
+ assert.match(h.nodes.get('renderStatus').textContent,/too long/);
+ assert.equal(h.nodes.get('downloadBackdrop').disabled,true);
+ await new Promise(resolve=>setTimeout(resolve,5));
+ options.stallImages=false;
+ await h.api.selectTitle(selected);
+ assert.equal(h.nodes.get('renderStatus').hidden,true);
+ assert.equal(h.nodes.get('retryRender').hidden,true);
+ assert.equal(h.nodes.get('downloadBackdrop').disabled,false);
 });

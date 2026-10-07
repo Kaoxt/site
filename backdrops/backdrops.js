@@ -45,7 +45,7 @@
   [
     'backdropSourceMode','backdropModeStatus','tmdbKey','toggleKey','saveKey','validateKey','keyStatus','mediaType','titleSearch','searchTitle','titleSearchStatus','titleResults',
     'overlayPreset','overlayOpacity','overlayOpacityValue','gradientCoverage','coverageValue','backdropZoom','zoomValue','positionX','positionXValue','showTitle','textControls','fontFamily','textPosition','fontSize','fontSizeValue','textColor','textShadow',
-    'editImages','undoRemoval','editImagesHelp','tileEditor','tileType','tileTypeHelp','fanartKey','saveFanartKey','toggleFanartKey','fanartKeyStatus','artworkSource','artworkStatus','showMovieLogos','collageLayout','collageTitles','collageStatus','clearCollage','shuffleCollage','backdropCanvas','emptyState','renderBusy','previewTitle','resolution','downloadBackdrop'
+    'editImages','undoRemoval','editImagesHelp','tileEditor','tileType','tileTypeHelp','fanartKey','saveFanartKey','toggleFanartKey','fanartKeyStatus','artworkSource','artworkStatus','showMovieLogos','collageLayout','collageTitles','collageStatus','clearCollage','shuffleCollage','backdropCanvas','emptyState','renderBusy','renderStatus','retryRender','previewTitle','resolution','downloadBackdrop'
   ].forEach(id => { els[id] = $(id); });
 
   function loadState() {
@@ -81,7 +81,7 @@
       if (v !== '' && v !== null && v !== undefined) url.searchParams.set(k, String(v));
     });
     const auth = authFor(url.toString());
-    const response = await fetch(auth.url, { headers: auth.headers, cache: 'default' });
+    const response = await fetch(auth.url, { headers: auth.headers, cache: 'default', signal: AbortSignal.timeout(12000) });
     if (!response.ok) {
       if (response.status === 401) throw new Error('TMDB rejected this key.');
       if (response.status === 429) throw new Error('TMDB rate limit reached. Try again shortly.');
@@ -186,13 +186,31 @@
     const promise = new Promise((resolve, reject) => {
       const image = new Image();
       image.crossOrigin = 'anonymous';
-      image.onload = () => resolve(image);
-      image.onerror = () => { imageCache.delete(url); reject(new Error('Could not load this TMDB backdrop. Try selecting it again.')); };
+      const timer = setTimeout(() => {
+        image.onload = image.onerror = null;
+        image.src = '';
+        imageCache.delete(url);
+        reject(new Error('Artwork took too long to load. Check your connection and retry.'));
+      }, 12000);
+      image.onload = () => { clearTimeout(timer); resolve(image); };
+      image.onerror = () => {
+        clearTimeout(timer); imageCache.delete(url);
+        reject(new Error('Artwork could not load from the image provider. Retry or remove this title.'));
+      };
       image.src = url;
     });
     imageCache.set(url, promise);
     if (imageCache.size > 100) imageCache.delete(imageCache.keys().next().value);
     return promise;
+  }
+
+  async function withRenderTimeout(task) {
+    let timer;
+    try {
+      return await Promise.race([task, new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error('Artwork is taking too long to load. Retry, or try TMDB only in the artwork source settings.')), 45000);
+      })]);
+    } finally { clearTimeout(timer); }
   }
 
   function applyOverlay(ctx, width, height) {
@@ -342,8 +360,10 @@
     const source = state.artworkSource;
     const key = fanartKey();
     const assets = [];
+    const deadline = Date.now() + 45000;
     // Limit concurrent image/metadata requests and reuse them for slider changes.
     for (let i=0; i<entries.length; i+=4) {
+      if (Date.now() >= deadline) throw new Error('Artwork loading timed out. Please retry.');
       assets.push(...await Promise.all(entries.slice(i,i+4).map(entry => tileArtwork(entry,width,useLogos,source,key,tileType))));
     }
     const surface = document.createElement('canvas');
@@ -422,6 +442,8 @@
     updateTileEditor();
     if (!canRender()) {
       els.renderBusy.hidden = true;
+      els.renderStatus.hidden = true;
+      els.retryRender.hidden = true;
       els.emptyState.hidden = false;
       els.backdropCanvas.getContext('2d').clearRect(0,0,1280,720);
       els.previewTitle.textContent = 'Add at least two titles to begin';
@@ -429,8 +451,10 @@
       return;
     }
     els.renderBusy.hidden = false;
+    els.renderStatus.hidden = true;
+    els.retryRender.hidden = true;
     try {
-      const image = await artwork(item, 'w1280');
+      const image = await withRenderTimeout(artwork(item, 'w1280'));
       if (token !== renderToken) return;
       const canvas = els.backdropCanvas;
       canvas.width = 1280; canvas.height = 720;
@@ -448,7 +472,9 @@
       if (token !== renderToken) return;
       els.backdropCanvas.getContext('2d').clearRect(0,0,1280,720);
       els.emptyState.hidden = false;
-      setStatus(els.titleSearchStatus, error.message || 'Could not render backdrop.', 'error');
+      setStatus(els.renderStatus, error.message || 'Could not render backdrop.', 'error');
+      els.renderStatus.hidden = false;
+      els.retryRender.hidden = false;
     } finally { if (token === renderToken) { els.renderBusy.hidden = true; updateTileEditor(); } }
   }
 
@@ -459,7 +485,7 @@
     els.downloadBackdrop.disabled = true;
     try {
       const [width,height] = els.resolution.value.split('x').map(Number);
-      const image = await artwork(item, 'original', width, height);
+      const image = await withRenderTimeout(artwork(item, 'original', width, height));
       if (token !== renderToken) throw new Error('Artwork changed. Download the updated preview again.');
       const canvas = document.createElement('canvas'); canvas.width=width; canvas.height=height;
       const ctx = canvas.getContext('2d');
@@ -470,7 +496,8 @@
       const slug = item.title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'backdrop';
       a.href=url; a.download=`${slug}-backdrop.png`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1500);
     } catch (error) {
-      setStatus(els.titleSearchStatus, error.message || 'Could not download backdrop.', 'error');
+      setStatus(els.renderStatus, error.message || 'Could not download backdrop.', 'error');
+      els.renderStatus.hidden = false;
     } finally { els.downloadBackdrop.disabled = editMode || !canRender(); }
   }
 
@@ -598,6 +625,7 @@
       });
     });
   }
+  els.retryRender.addEventListener('click', renderPreview);
   els.editImages.addEventListener('click', async () => {
     if (!editMode) { editMode=true; els.downloadBackdrop.disabled=true; updateTileEditor(); return; }
     editMode=false;
