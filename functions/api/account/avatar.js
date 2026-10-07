@@ -10,8 +10,8 @@ export const onRequestPost = context => handle(context, true, async ({session,re
   if(data.remove === true) {await db.prepare('DELETE FROM account_avatars WHERE user_id = ?').bind(session.id).run();return reply({avatarUrl:''});}
   let url='',image='';
   if(typeof data.image === 'string' && data.image) {
-    imageAttachments([data.image]);
-    if(atob(data.image.split(',')[1]).length>50000) throw new IssueError('Avatar must be smaller than 50 KB after compression.');
+    imageAttachments([data.image], 500000);
+    if(atob(data.image.split(',')[1]).length>500000) throw new IssueError('Avatar must be no larger than 500 KB after compression.');
     image=data.image;
   } else {
     try {const u=new URL(data.url);if(u.protocol!=='https:' || u.username || u.password || u.href.length>2048)throw new Error();url=u.href;}

@@ -109,16 +109,16 @@ async function issueMediaSchema(db) {
   })().catch(error => { mediaSchemas.delete(db); throw error; }));
   await mediaSchemas.get(db);
 }
-export function imageAttachments(value) {
+export function imageAttachments(value, maxBytes = 400000) {
   if (value == null) return '';
   if (!Array.isArray(value) || value.length > 3) throw new IssueError('Attach up to 3 images.');
   return JSON.stringify(value.map(image => {
-    if (typeof image !== 'string' || image.length > 540000) throw new IssueError('Each image must be smaller than 400 KB after compression.');
+    if (typeof image !== 'string' || image.length > Math.ceil(maxBytes / 3) * 4 + 32) throw new IssueError(`Each image must be no larger than ${maxBytes / 1000} KB after compression.`);
     const match = image.match(/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/);
     if (!match) throw new IssueError('Use JPG, PNG, or WebP images.');
     let bytes; try { bytes = atob(match[2]); } catch { throw new IssueError('Invalid image data.'); }
     const valid = match[1] === 'jpeg' ? bytes.startsWith('\xff\xd8\xff') : match[1] === 'png' ? bytes.startsWith('\x89PNG\r\n\x1a\n') : bytes.startsWith('RIFF') && bytes.slice(8,12) === 'WEBP';
-    if (!valid || bytes.length > 400000) throw new IssueError('Invalid or oversized image.');
+    if (!valid || bytes.length > maxBytes) throw new IssueError('Invalid or oversized image.');
     return image;
   }));
 }

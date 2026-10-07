@@ -201,3 +201,13 @@ test('avatar uploads have one stored image per account and a working public imag
   assert.equal((await env.DB.prepare('SELECT COUNT(*) AS n FROM account_avatars WHERE user_id = ?').bind('avatar-upload').first()).n,1);
   assert.equal((await image(context)).status,404);
 });
+
+
+test('avatar limit accepts 500 KB while report images retain their 400 KB limit',async()=>{
+  const {imageAttachments}=await import('../functions/_lib/issues.js');
+  const {onRequestPost:save}=await import('../functions/api/account/avatar.js');
+  const makeImage=size=>'data:image/jpeg;base64,'+Buffer.concat([Buffer.from([255,216,255]),Buffer.alloc(size-3)]).toString('base64');
+  assert.throws(()=>imageAttachments([makeImage(400001)]),/Invalid or oversized/);
+  assert.equal((await save(await ctx('avatar-limit','POST',{image:makeImage(500000)}))).status,200);
+  assert.equal((await save(await ctx('avatar-limit-over','POST',{image:makeImage(500001)}))).status,400);
+});

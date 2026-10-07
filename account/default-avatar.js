@@ -18,8 +18,8 @@
       await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error('This image could not be read.'));img.src=objectUrl;});
       const canvas=document.createElement('canvas');canvas.width=canvas.height=256;const ctx=canvas.getContext('2d'),side=Math.min(img.naturalWidth,img.naturalHeight);
       ctx.fillStyle='#fff';ctx.fillRect(0,0,256,256);ctx.drawImage(img,(img.naturalWidth-side)/2,(img.naturalHeight-side)/2,side,side,0,0,256,256);
-      let encoded='';for(const quality of [.85,.7,.5,.3]){encoded=canvas.toDataURL('image/jpeg',quality);if(encoded.length<=66680)break;}
-      if(encoded.length>66680)throw new Error('Please choose a simpler or smaller image.');
+      let encoded='';for(const quality of [.85,.7,.5,.3]){encoded=canvas.toDataURL('image/jpeg',quality);if(atob(encoded.split(',')[1]).length<=500000)break;}
+      if(atob(encoded.split(',')[1]).length>500000)throw new Error('Please choose a simpler or smaller image.');
       pendingImage=encoded;url.value='';show(encoded);status.textContent='Preview ready. Choose Save avatar to use it.';
     }catch(e){status.textContent=e.message;}finally{if(objectUrl)URL.revokeObjectURL(objectUrl);file.value='';lock(false);}
   });
