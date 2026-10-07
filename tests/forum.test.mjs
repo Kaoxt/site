@@ -193,3 +193,25 @@ test('GitHub release links are exclusive to Announcements and removed when movin
  await f.call('admin',{action:'topicModerate',id,categoryId:1,pinned:false,locked:false,hidden:false});
  assert.equal((await f.call(null,null,{view:'topic',id})).data.topic.github_release_url,'');
 });
+test('likes are unique, reversible, authenticated and counted on public and account profiles',async()=>{
+ const f=fixture(),id=(await f.call('alice',topic)).data.id,rid=(await f.call('alice',{action:'reply',id,body:'Reply with likes'})).data.id;
+ const like={action:'like',kind:'topic',id,liked:true};
+ assert.equal((await f.call(null,like)).status,401);assert.equal((await f.call('alice',like)).status,403);assert.equal((await f.call('bob',like,{},'https://evil.test')).status,403);
+ assert.equal((await f.call('bob',like)).data.like_count,1);assert.equal((await f.call('bob',like)).data.like_count,1);
+ await f.call('carol',like);await f.call('bob',{...like,kind:'reply',id:rid});
+ let d=(await f.call('bob',null,{view:'topic',id})).data;assert.equal(d.topic.like_count,2);assert.equal(d.topic.liked,true);assert.equal(d.replies[0].like_count,1);
+ assert.equal((await f.call(null,null,{view:'topic',id})).data.topic.liked,false);
+ const member=d.topic.member_id;
+ assert.equal((await f.call(null,null,{view:'member',id:member})).data.member.likes_received,3);
+ assert.equal((await f.call('alice',null,{view:'self'})).data.stats.likes_received,3);
+ await f.call('bob',{...like,liked:false});assert.equal((await f.call('alice',null,{view:'self'})).data.stats.likes_received,2);
+ await f.call('admin',{action:'replyModerate',id:rid,hidden:true});assert.equal((await f.call('alice',null,{view:'self'})).data.stats.likes_received,1);assert.equal((await f.call('bob',{...like,kind:'reply',id:rid})).status,404);
+ await f.call('admin',{action:'topicModerate',id,categoryId:1,pinned:false,locked:false,hidden:true});assert.equal((await f.call('alice',null,{view:'self'})).data.stats.likes_received,0);
+ await f.call('admin',{action:'topicDelete',id});const db=await forumDb(f.env);assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM forum_likes').first()).n,0);
+});
+test('shared reply links load the requested reply beyond the first page',async()=>{
+ const f=fixture(),id=(await f.call('alice',topic)).data.id;let rid;
+ for(let i=0;i<25;i++)rid=(await f.call('bob',{action:'reply',id,body:'Reply '+i})).data.id;
+ assert.notEqual((await f.call(null,null,{view:'topic',id})).data.replies.at(-1).id,rid);
+ assert.equal((await f.call(null,null,{view:'topic',id,reply:rid})).data.replies[0].id,rid);
+});

@@ -25,7 +25,7 @@ export const onRequestGet = context => forumHandle(context,false,async({db,sessi
     return reply({...common,categories:await categories(db),articles:articles.slice(0,10),hasMore:articles.length>10,page:current});
   }
   if(view==='categories')return reply({...common,categories:await categoryOverview(db)});
-  if(view==='self')return reply({...common,about:me?.about||''});
+  if(view==='self'){const stats=me?await db.prepare(`SELECT ${counts} FROM forum_members m WHERE m.id=?`).bind(me.id).first():{topic_count:0,reply_count:0,likes_received:0};return reply({...common,about:me?.about||'',stats});}
   if(view==='member'){
     const member=await db.prepare(`SELECT ${memberSelect},m.about,m.created_at,${counts} FROM forum_members m LEFT JOIN account_preferences p ON p.user_id=m.user_id LEFT JOIN account_avatars a ON a.user_id=m.user_id WHERE m.id=?`).bind(q.get('id')||'').first();
     if(!member)throw new IssueError('Member not found.',404);
@@ -35,9 +35,12 @@ export const onRequestGet = context => forumHandle(context,false,async({db,sessi
   if(view==='topic'||view==='newsTopic'||view==='newsLegacy'){
     const topic=await db.prepare(`${topicSelect} WHERE t.id=? ${admin?'':'AND t.hidden=0'} ${isNews?'AND t.category_id='+ANNOUNCEMENTS_ID:''}`).bind(view==='newsLegacy'?legacyId:id(q.get('id'))).first();
     if(!topic)throw new IssueError('Discussion not found.',404);
-    const after=Math.max(0,Number(q.get('after'))||0);
+    const after=q.get('reply')?id(q.get('reply'))-1:Math.max(0,Number(q.get('after'))||0);
     const rows=(await db.prepare(`SELECT t.id,t.body,t.created_at,t.hidden,${memberSelect},((SELECT COUNT(*) FROM forum_topics ft WHERE ft.member_id=m.id AND ft.hidden=0)+(SELECT COUNT(*) FROM forum_replies fr JOIN forum_topics ft ON ft.id=fr.topic_id WHERE fr.member_id=m.id AND fr.hidden=0 AND ft.hidden=0)) AS post_count FROM forum_replies t ${memberJoin} WHERE t.topic_id=? AND t.id>? ${admin?'':'AND t.hidden=0'} ORDER BY t.id LIMIT 21`).bind(topic.id,after).all()).results;
-    return reply({...common,topic:{...topic,can_edit:canEdit(topic,me,admin)},replies:rows.slice(0,20).map(r=>({...r,can_edit:!topic.hidden&&canEdit(r,me,admin)||admin})),hasMore:rows.length>20,categories:await categories(db)});
+    const visible=rows.slice(0,20);
+    const likes=(await db.prepare(`SELECT kind,post_id,COUNT(*) AS n,MAX(CASE WHEN member_id=? THEN 1 ELSE 0 END) AS liked FROM forum_likes WHERE (kind='topic' AND post_id=?) OR (kind='reply' AND post_id IN (${visible.length?visible.map(()=>'?').join(','):'NULL'})) GROUP BY kind,post_id`).bind(me?.id||'',topic.id,...visible.map(r=>r.id)).all()).results;
+    const reaction=(p,kind)=>{const l=likes.find(l=>l.kind===kind&&l.post_id===p.id);return {...p,like_count:l?.n||0,liked:!!l?.liked};};
+    return reply({...common,topic:{...reaction(topic,'topic'),can_edit:canEdit(topic,me,admin)},replies:visible.map(r=>({...reaction(r,'reply'),can_edit:!topic.hidden&&canEdit(r,me,admin)||admin})),hasMore:rows.length>20,categories:await categories(db)});
   }
   if(view==='admin'){
     requireAdmin(admin);
@@ -60,6 +63,18 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
   const data=await forumInput(context.request);
   if(data.action==='news'){requireAdmin(admin);data.categoryId=ANNOUNCEMENTS_ID;}
   const action=data.action==='news'?'topic':data.action;
+  if(action==='like'){
+    if(!['topic','reply'].includes(data.kind)||typeof data.liked!=='boolean')throw new IssueError('Invalid like.');
+    const postId=id(data.id),target=await db.prepare(data.kind==='topic'?'SELECT member_id,hidden FROM forum_topics WHERE id=?':'SELECT r.member_id,MAX(r.hidden,t.hidden) AS hidden FROM forum_replies r JOIN forum_topics t ON t.id=r.topic_id WHERE r.id=?').bind(postId).first();
+    if(!target||target.hidden)throw new IssueError('Post not found.',404);
+    const member=await ensureMember(db,session,context.env,data.profileId);
+    if(member.banned&&!admin)throw new IssueError('Posting is disabled for this account.',403);
+    if(target.member_id===member.id)throw new IssueError('You cannot like your own post.',403);
+    if(data.liked)await db.prepare('INSERT OR IGNORE INTO forum_likes(kind,post_id,member_id) VALUES(?,?,?)').bind(data.kind,postId,member.id).run();
+    else await db.prepare('DELETE FROM forum_likes WHERE kind=? AND post_id=? AND member_id=?').bind(data.kind,postId,member.id).run();
+    const count=await db.prepare('SELECT COUNT(*) AS n FROM forum_likes WHERE kind=? AND post_id=?').bind(data.kind,postId).first();
+    return reply({liked:data.liked,like_count:count.n});
+  }
   if(action==='topicEdit'||action==='replyEdit'){
     const targetId=id(data.id),isTopic=action==='topicEdit';
     const target=await db.prepare(isTopic?'SELECT * FROM forum_topics WHERE id=?':'SELECT * FROM forum_replies WHERE id=?').bind(targetId).first();
@@ -86,9 +101,9 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
     const member=await selfMember(db,session);
     if(!admin&&(!member||member.id!==target.member_id))throw new IssueError('You can only delete your own posts.',403);
     if(isTopic){
-      await db.batch([db.prepare('DELETE FROM forum_replies WHERE topic_id=?').bind(targetId),db.prepare('DELETE FROM forum_topics WHERE id=?').bind(targetId)]);
+      await db.batch([db.prepare("DELETE FROM forum_likes WHERE (kind='topic' AND post_id=?) OR (kind='reply' AND post_id IN (SELECT id FROM forum_replies WHERE topic_id=?))").bind(targetId,targetId),db.prepare('DELETE FROM forum_replies WHERE topic_id=?').bind(targetId),db.prepare('DELETE FROM forum_topics WHERE id=?').bind(targetId)]);
     }else{
-      await db.batch([db.prepare('DELETE FROM forum_replies WHERE id=?').bind(targetId),db.prepare('UPDATE forum_topics SET updated_at=MAX(created_at,COALESCE((SELECT MAX(created_at) FROM forum_replies WHERE topic_id=? AND hidden=0),created_at)) WHERE id=?').bind(target.topic_id,target.topic_id)]);
+      await db.batch([db.prepare("DELETE FROM forum_likes WHERE kind='reply' AND post_id=?").bind(targetId),db.prepare('DELETE FROM forum_replies WHERE id=?').bind(targetId),db.prepare('UPDATE forum_topics SET updated_at=MAX(created_at,COALESCE((SELECT MAX(created_at) FROM forum_replies WHERE topic_id=? AND hidden=0),created_at)) WHERE id=?').bind(target.topic_id,target.topic_id)]);
     }
     return reply({ok:true});
   }

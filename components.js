@@ -116,7 +116,7 @@
     catch (error) { console.warn('[The Kollection] Nuvio navigation could not initialize.', error); }
 
     if (!window.KollectionAccountLink) {
-      await loadScriptOnce('nuvio-auth/account-link.js?v=20261007-forum1', () => Boolean(window.KollectionAccountLink));
+      await loadScriptOnce('nuvio-auth/account-link.js?v=20261007-social1', () => Boolean(window.KollectionAccountLink));
     }
     window.KollectionAccountLink?.init?.();
 
@@ -211,8 +211,8 @@
     const navTarget = document.getElementById('site-nav');
     const footerTarget = document.getElementById('site-footer');
     const tasks = [];
-    if (navTarget) tasks.push(loadFragment('nav.html?v=20261007-nav2', navTarget));
-    if (footerTarget) tasks.push(loadFragment('footer.html?v=20261007-forum1', footerTarget));
+    if (navTarget) tasks.push(loadFragment('nav.html?v=20261007-social1', navTarget));
+    if (footerTarget) tasks.push(loadFragment('footer.html?v=20261007-social1', footerTarget));
     if (tasks.length) await Promise.allSettled(tasks);
     setActiveNav();
     bindThemeButtons();
