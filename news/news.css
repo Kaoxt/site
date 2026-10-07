@@ -20,3 +20,10 @@
 .news-community .release-summary{margin-top:20px}
 @media(max-width:600px){.news-community .news-article{grid-template-columns:minmax(0,1fr);gap:20px}.news-community .release-actions{display:grid;grid-template-columns:minmax(0,190px) 1fr;align-items:center}.news-community .release-actions [data-expand]{grid-column:1;grid-row:1}.news-community .news-github-link{grid-column:1;grid-row:2}.news-community .news-comment-link{grid-column:2;grid-row:1;justify-self:end}#post-news{padding-inline:14px;font-size:13px}}
 html[data-theme=light] .news-community .release-actions [data-expand]{background:#20212b;color:#fff}
+
+/* Match the release button's subtle color feedback for either expand label. */
+.news-community .release-actions [data-expand]{--news-action:var(--button);--news-action-text:var(--button-text);transition:background-color .18s ease,color .18s ease,border-color .18s ease}
+html[data-theme=light] .news-community .release-actions [data-expand]{--news-action:#20212b;--news-action-text:#fff}
+.news-community .release-actions [data-expand]:is(:hover,:focus-visible,:active):not(:disabled){background:color-mix(in srgb,var(--news-action) 88%,var(--news-action-text));color:var(--news-action-text)}
+.news-community .release-actions [data-expand]:focus-visible{outline:2px solid #9699ff;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){.news-community .release-actions [data-expand]{transition:none}}
