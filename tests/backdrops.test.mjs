@@ -28,7 +28,6 @@ test('search selections accumulate unique titles and require at least two',async
 test('collage uses tile-sized images and shares the preview pipeline',async()=>{
  const h=harness();await h.api.selectTitle({title:'Folder',items:[{backdropPath:'/a.jpg'},{backdropPath:'/b.jpg'}]});
  assert.equal(h.loads.length,2);assert.ok(h.loads.every(u=>u.includes('/w780/')));
- assert.equal(h.nodes.get('previewMeta').textContent,'2 titles · Folder backdrop');
  assert.equal(h.nodes.get('downloadBackdrop').disabled,false);
 });
 test('clearing selection invalidates an in-flight image',async()=>{

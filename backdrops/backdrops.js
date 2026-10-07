@@ -353,7 +353,7 @@
     ctx.fillStyle = '#050608'; ctx.fillRect(0,0,width,height);
     const tilted = layout === 'tilted';
     const cols = posterMode ? (tilted ? 5 : Math.ceil(Math.sqrt(assets.length * (width/height) / (2/3)))) : (tilted ? 4 : Math.min(4, Math.ceil(Math.sqrt(assets.length * 16/9))));
-    const rows = tilted ? (posterMode ? 4 : 6) : Math.ceil(assets.length / cols);
+    const rows = tilted ? (posterMode ? 5 : 7) : Math.ceil(assets.length / cols);
     const gap = width * .008;
     const w = posterMode ? (tilted ? width*.17 : Math.min(width/cols,height/rows*2/3)) : (tilted ? width*.24 : width/cols);
     const h = posterMode ? w*3/2 : (tilted ? w*9/16 : height/rows);
@@ -364,10 +364,13 @@
       const row = Math.floor(index/cols), col=index%cols;
       const rowCount = tilted ? cols : Math.min(cols, assets.length-row*cols);
       const tw = (tilted || posterMode ? w : width/rowCount)-gap, th=posterMode ? tw*3/2 : h-gap;
-      ctx.save();ctx.translate(tilted ? col*w : posterMode ? (width-rowCount*w)/2+col*w : col*width/rowCount, row*h);
-      // Keep the same tile geometry for the accessible preview editing layer.
+      // Offset neighboring columns to form a staggered wall in both artwork formats.
+      // Extra rows cover the lower edge after staggering and rotation.
+      const columnOffset = tilted ? [0, -.45, -.15, -.6, -.3][col] * h : 0;
       const tx = tilted ? col*w : posterMode ? (width-rowCount*w)/2+col*w : col*width/rowCount;
-      const ty = row*h;
+      const ty = row*h + columnOffset;
+      ctx.save();ctx.translate(tx,ty);
+      // Keep the same tile geometry for the accessible preview editing layer.
       const angle = tilted ? -12*Math.PI/180 : 0;
       const points = [[0,0],[tw,0],[tw,th],[0,th]].map(([x,y]) => ({
         x:(tilted ? width*.22 : 0)+(tx+x)*Math.cos(angle)-(ty+y)*Math.sin(angle),
