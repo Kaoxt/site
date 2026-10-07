@@ -13,7 +13,7 @@
     const profile = selectedProfile();
     document.querySelectorAll('[data-posting-profile]').forEach(node => {
       const name = displayName || profile?.name;
-      const avatar = document.querySelector('.nuvio-desktop-profile-button img')?.src || profile?.avatarUrl || '';
+      const avatar = window.KollectionNavAccount?.getAccountAvatar?.() || document.querySelector('.nuvio-desktop-profile-button img')?.src || profile?.avatarUrl || '';
       node.innerHTML = name ? `${media.avatar(name, avatar, profile?.avatarColor)}<span>Posting as ${esc(name)}</span>` : 'Your selected Nuvio profile will be used.';
     });
   }
@@ -122,6 +122,7 @@
   $('back-issues').onclick = event => { event.preventDefault(); location.hash = ''; };
   window.addEventListener('hashchange', load);
   window.addEventListener('kollection:display-name-changed', load);
+  window.addEventListener('kollection:avatar-changed', load);
   window.addEventListener('kollection:nuvio-profile-changed', updatePostingProfile);
   ['kollection:nuvio-signed-in', 'kollection:nuvio-signed-out', 'kollection:nuvio-session-changed'].forEach(event => window.addEventListener(event, () => { $('issue-dialog').close(); load(); }));
   media.attach($('report-form'));

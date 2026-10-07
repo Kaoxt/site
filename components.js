@@ -105,7 +105,7 @@
       await loadScriptOnce('nuvio-auth/nuvio-auth.js', () => Boolean(window.KollectionNuvioAuth));
     }
     if (!window.KollectionNavAccount) {
-      await loadScriptOnce('nuvio-auth/nav-account.js?v=20260927-displayname1', () => Boolean(window.KollectionNavAccount));
+      await loadScriptOnce('nuvio-auth/nav-account.js?v=20261007-account-avatar1', () => Boolean(window.KollectionNavAccount));
     }
     if (!window.KollectionNavLoginRedirect) {
       await loadScriptOnce('nuvio-auth/nav-login-redirect.js?v=20260908-1', () => Boolean(window.KollectionNavLoginRedirect));

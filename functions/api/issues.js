@@ -29,7 +29,7 @@ export const onRequestGet = context => handle(context, false, async ({ session, 
     }
   }
   const where = filters.length ? ' WHERE ' + filters.join(' AND ') : '';
-  const rows = await database.prepare(`SELECT i.id, i.user_id, i.title, i.body, i.category, i.status, i.created_at, i.updated_at, i.avatar_url, i.avatar_color, COALESCE(NULLIF(p.display_name, ''), i.author) AS author, (SELECT COUNT(*) FROM community_issue_comments c WHERE c.issue_id = i.id) AS comment_count FROM community_issues i LEFT JOIN account_preferences p ON p.user_id = i.user_id${where} ORDER BY i.id DESC LIMIT 21 OFFSET ?`).bind(...values, (page - 1) * 20).all();
+  const rows = await database.prepare(`SELECT i.id, i.user_id, i.title, i.body, i.category, i.status, i.created_at, i.updated_at, COALESCE(a.url, i.avatar_url) AS avatar_url, i.avatar_color, COALESCE(NULLIF(p.display_name, ''), i.author) AS author, (SELECT COUNT(*) FROM community_issue_comments c WHERE c.issue_id = i.id) AS comment_count FROM community_issues i LEFT JOIN account_preferences p ON p.user_id = i.user_id LEFT JOIN (SELECT user_id, CASE WHEN url != '' THEN url ELSE '/api/avatars/' || id END AS url FROM account_avatars) a ON a.user_id = i.user_id${where} ORDER BY i.id DESC LIMIT 21 OFFSET ?`).bind(...values, (page - 1) * 20).all();
   return reply({ issues: rows.results.slice(0, 20).map(row => publicIssue(row, session)), hasMore: rows.results.length > 20, page, categories: CATEGORIES, authenticated: !!session, isAdmin: admin, displayName: await getDisplayName(context.env, session?.id) });
 });
 

@@ -284,7 +284,7 @@
       await resolveAvatar(profile).catch(() => ''),
     ]));
     const avatars = new Map(avatarPairs);
-    const activeAvatar = avatars.get(activeProfile.id) || '';
+    const activeAvatar = session.user?.avatarUrl || avatars.get(activeProfile.id) || '';
     const displayName = session.user?.displayName || activeProfile.name;
 
     const desktopProfileRows = profiles.map((profile) => {
@@ -473,6 +473,7 @@
 
       window.addEventListener('kollection:nuvio-signed-in', refresh);
       window.addEventListener('kollection:display-name-changed', refresh);
+      window.addEventListener('kollection:avatar-changed', refresh);
       window.addEventListener('kollection:nuvio-session-changed', refresh);
     }
 
@@ -483,5 +484,6 @@
     init,
     refresh,
     getSelectedProfile: () => currentProfile,
+    getAccountAvatar: () => currentSession?.user?.avatarUrl || '',
   });
 })();

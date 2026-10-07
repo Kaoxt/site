@@ -3,7 +3,7 @@
   const drafts = new WeakMap();
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function avatar(author, url, color) {
-    let safe = ''; try { const u = new URL(url); if(u.protocol === 'https:') safe = u.href; } catch {}
+    let safe = /^\/api\/avatars\/[0-9a-f-]{36}$/.test(url || '') ? url : ''; try { const u = new URL(url); if(u.protocol === 'https:') safe = u.href; } catch {}
     const shade = /^#[0-9a-f]{6}$/i.test(color || '') ? color : '#6568e8';
     return `<span class="issue-avatar" style="background:${shade}" aria-hidden="true"><span>${esc((author || 'N')[0].toUpperCase())}</span>${safe ? `<img src="${esc(safe)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ''}</span>`;
   }

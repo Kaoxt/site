@@ -171,3 +171,33 @@ test('avatar identity is resolved from Nuvio profile and catalog, not submitted 
     const result=await (await detail(await ctx(null,'GET',null,id))).json();assert.equal(result.issue.avatar_url,identity.avatar_url);
   } finally {globalThis.fetch=previous;}
 });
+
+test('account avatar overrides existing reports, comments and session across profiles', async()=>{
+  const {onRequestPost:save,onRequestGet:read}=await import('../functions/api/account/avatar.js');
+  const {onRequestGet:session}=await import('../functions/api/auth/session.js');
+  assert.equal((await save(await ctx(null,'POST',{url:'https://example.com/a.jpg'}))).status,401);
+  assert.equal((await save(await ctx('alice','POST',{url:'javascript:alert(1)'}))).status,400);
+  assert.equal((await save(await ctx('alice','POST',{url:'http://example.com/a.jpg'}))).status,400);
+  assert.equal((await save(await ctx('alice','POST',{url:'https://example.com/a.jpg'},null,'','https://other.test'))).status,403);
+  assert.equal((await save(await ctx('alice','POST',{url:'https://example.com/a.jpg'}))).status,200);
+  assert.equal((await (await read(await ctx('alice'))).json()).avatarUrl,'https://example.com/a.jpg');
+  assert.equal((await (await session(await ctx('alice'))).json()).user.avatarUrl,'https://example.com/a.jpg');
+  assert.equal((await (await detail(await ctx(null,'GET',null,1))).json()).issue.avatar_url,'https://example.com/a.jpg');
+  const response=await create(await ctx('alice','POST',{...report,profileId:2}));const {id}=await response.json();
+  assert.equal((await (await detail(await ctx(null,'GET',null,id))).json()).issue.avatar_url,'https://example.com/a.jpg');
+  assert.equal((await (await read(await ctx('bob'))).json()).avatarUrl,'');
+  await save(await ctx('alice','POST',{remove:true}));
+  assert.equal((await (await read(await ctx('alice'))).json()).avatarUrl,'');
+});
+test('avatar uploads have one stored image per account and a working public image endpoint',async()=>{
+  const {onRequestPost:save}=await import('../functions/api/account/avatar.js');
+  const {onRequestGet:image}=await import('../functions/api/avatars/[id].js');
+  const png='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=';
+  let response=await save(await ctx('avatar-upload','POST',{image:png}));assert.equal(response.status,200);
+  const {avatarUrl}=await response.json(),id=avatarUrl.split('/').pop();
+  const context=await ctx(null);context.params.id=id;response=await image(context);assert.equal(response.status,200);assert.equal(response.headers.get('content-type'),'image/png');
+  await env.DB.prepare("UPDATE account_avatars SET updated_at = '2000-01-01' WHERE user_id = ?").bind('avatar-upload').run();
+  await save(await ctx('avatar-upload','POST',{image:png}));
+  assert.equal((await env.DB.prepare('SELECT COUNT(*) AS n FROM account_avatars WHERE user_id = ?').bind('avatar-upload').first()).n,1);
+  assert.equal((await image(context)).status,404);
+});

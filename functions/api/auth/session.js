@@ -1,3 +1,4 @@
+import { getAccountAvatar } from '../../_lib/account-avatar.js';
 import { getDisplayName } from '../../_lib/account-preferences.js';
 import {
   authServerReady,
@@ -25,7 +26,7 @@ export async function onRequestGet(context) {
     return json({ authenticated: false, isAdmin: false, user: null });
   }
 
-  const user = { id: session.id, email: session.email, displayName: await getDisplayName(env, session.id) };
+  const user = { id: session.id, email: session.email, displayName: await getDisplayName(env, session.id), avatarUrl: await getAccountAvatar(env, session.id) };
   return json({
     authenticated: true,
     isAdmin: isAdminUser(user, env),

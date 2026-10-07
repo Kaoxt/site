@@ -1,3 +1,4 @@
+import { avatarDb } from './account-avatar.js';
 import { getDisplayName, preferencesDb } from './account-preferences.js';
 import { assertSameOrigin, nuvioConfig, isAdminUser, readSession, refreshSessionIfNeeded } from './nuvio-session.js';
 import { requireDb } from './saved-collections.js';
@@ -29,6 +30,7 @@ const schemas = new WeakMap();
 export async function issuesDb(env) {
   const db = requireDb(env);
   await preferencesDb(env);
+  await avatarDb(env);
   if (!schemas.has(db)) schemas.set(db, db.batch([
     db.prepare(`CREATE TABLE IF NOT EXISTS community_issues (
       id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL, author TEXT NOT NULL,
