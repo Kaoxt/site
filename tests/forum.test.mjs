@@ -183,3 +183,13 @@ test('existing forum table gains release URL without losing historical content',
  const db=await forumDb(f.env),old=await db.prepare('SELECT * FROM forum_topics WHERE id=1').first();assert.equal(old.body,'Original body');assert.equal(old.github_release_url,'');
  assert.equal((await f.call('admin',{...topic,action:'news',releaseUrl:'https://github.com/Kaoxt/site/releases'})).status,201);
 });
+test('GitHub release links are exclusive to Announcements and removed when moving a topic out',async()=>{
+ const f=fixture(),releaseUrl='https://github.com/Kaoxt/site/releases/latest';
+ assert.equal((await f.call('admin',{...topic,releaseUrl})).status,400);
+ const general=(await f.call('admin',topic)).data.id;
+ assert.equal((await f.call('admin',{action:'topicEdit',id:general,title:'General edited',body:'Body edited',releaseUrl})).status,400);
+ const id=(await f.call('admin',{...topic,categoryId:4,releaseUrl})).data.id;
+ assert.equal((await f.call(null,null,{view:'topic',id})).data.topic.github_release_url,releaseUrl);
+ await f.call('admin',{action:'topicModerate',id,categoryId:1,pinned:false,locked:false,hidden:false});
+ assert.equal((await f.call(null,null,{view:'topic',id})).data.topic.github_release_url,'');
+});

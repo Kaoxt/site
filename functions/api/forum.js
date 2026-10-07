@@ -73,6 +73,7 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
       const title=textField(data.title,'Title',5,160);
       const url=data.releaseUrl===undefined?target.github_release_url:releaseUrl(data.releaseUrl);
       if(data.releaseUrl!==undefined&&!admin)requireAdmin(admin);
+      if(url&&target.category_id!==ANNOUNCEMENTS_ID)throw new IssueError('GitHub release links are only available for Announcements.');
       await db.prepare('UPDATE forum_topics SET title=?,body=?,github_release_url=? WHERE id=?').bind(title,body,url,targetId).run();
     }
     else await db.prepare('UPDATE forum_replies SET body=? WHERE id=?').bind(body,targetId).run();
@@ -110,7 +111,7 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
     } else if(action==='topicModerate'){
       for(const key of ['pinned','locked','hidden'])if(typeof data[key]!=='boolean')throw new IssueError('Invalid topic settings.');
       const category=id(data.categoryId);if(!await db.prepare('SELECT id FROM forum_categories WHERE id=?').bind(category).first())throw new IssueError('Category not found.');
-      const r=await db.prepare('UPDATE forum_topics SET pinned=?,locked=?,hidden=?,category_id=? WHERE id=?').bind(+data.pinned,+data.locked,+data.hidden,category,id(data.id)).run();
+      const r=await db.prepare("UPDATE forum_topics SET pinned=?,locked=?,hidden=?,category_id=?,github_release_url=CASE WHEN ?=4 THEN github_release_url ELSE '' END WHERE id=?").bind(+data.pinned,+data.locked,+data.hidden,category,category,id(data.id)).run();
       if(!r.meta.changes)throw new IssueError('Discussion not found.',404);
     } else if(action==='replyModerate'){
       if(typeof data.hidden!=='boolean')throw new IssueError('Invalid visibility.');
@@ -139,6 +140,7 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
   const now=new Date().toISOString(),since=new Date(Date.now()-86400000).toISOString();
   if(action==='topic'){
     const category=await validCategory(db,data.categoryId,admin);
+    if(githubUrl&&category!==ANNOUNCEMENTS_ID)throw new IssueError('GitHub release links are only available for Announcements.');
     const result=await db.prepare(`INSERT INTO forum_topics(member_id,category_id,title,body,created_at,updated_at,github_release_url) SELECT ?,?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM forum_topics WHERE member_id=? AND created_at>?)<10 AND EXISTS(SELECT 1 FROM forum_members WHERE id=? AND (banned=0 OR ?=1)) AND EXISTS(SELECT 1 FROM forum_settings WHERE posting_open=1 OR ?=1) AND EXISTS(SELECT 1 FROM forum_categories WHERE id=? AND archived=0 AND ((read_only=0 AND id!=4) OR ?=1))`).bind(member.id,category,title,body,now,now,githubUrl,member.id,since,member.id,+admin,+admin,category,+admin).run();
     if(!result.meta.changes)throw new IssueError('Unable to post: the forum settings changed or you reached the limit of 10 topics per day.',429);
     return reply({id:result.meta.last_row_id},201);
