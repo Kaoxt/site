@@ -202,7 +202,7 @@ html[data-theme="light"] .backdrop-page .select-input option, html[data-theme="l
 .preview-toolbar > div:first-child { display:flex; flex-direction:column; gap:3px; }
 .preview-toolbar strong { color:#f4f5f7; font-size:13px; }
 .section-kicker { color:#818cf8; font-size:9px; font-weight:800; letter-spacing:.14em; }
-.toolbar-actions { display:flex; gap:7px; }
+.toolbar-actions { display:flex; gap:7px; margin-left:auto; justify-content:flex-end; }
 
 .canvas-stage {
   position:relative;

@@ -45,7 +45,7 @@
   [
     'backdropSourceMode','backdropModeStatus','tmdbKey','toggleKey','saveKey','validateKey','keyStatus','mediaType','titleSearch','searchTitle','titleSearchStatus','titleResults',
     'overlayPreset','overlayOpacity','overlayOpacityValue','gradientCoverage','coverageValue','backdropZoom','zoomValue','positionX','positionXValue','showTitle','textControls','fontFamily','textPosition','fontSize','fontSizeValue','textColor','textShadow',
-    'editImages','undoRemoval','editImagesHelp','tileEditor','tileType','tileTypeHelp','fanartKey','saveFanartKey','toggleFanartKey','fanartKeyStatus','artworkSource','artworkStatus','showMovieLogos','collageLayout','collageTitles','collageStatus','clearCollage','shuffleCollage','backdropCanvas','emptyState','renderBusy','previewTitle','previewMeta','resolution','downloadBackdrop'
+    'editImages','undoRemoval','editImagesHelp','tileEditor','tileType','tileTypeHelp','fanartKey','saveFanartKey','toggleFanartKey','fanartKeyStatus','artworkSource','artworkStatus','showMovieLogos','collageLayout','collageTitles','collageStatus','clearCollage','shuffleCollage','backdropCanvas','emptyState','renderBusy','previewTitle','resolution','downloadBackdrop'
   ].forEach(id => { els[id] = $(id); });
 
   function loadState() {
@@ -422,7 +422,6 @@
       els.emptyState.hidden = false;
       els.backdropCanvas.getContext('2d').clearRect(0,0,1280,720);
       els.previewTitle.textContent = 'Add at least two titles to begin';
-      els.previewMeta.textContent = '';
       els.artworkStatus.textContent = '';
       return;
     }
@@ -442,7 +441,6 @@
       updateTileEditor();
       setStatus(els.artworkStatus, image.artworkSummary);
       els.previewTitle.textContent = item.title;
-      els.previewMeta.textContent = item.items ? `${item.items.length} titles · Folder backdrop` : `${item.year || ''} · ${item.media === 'movie' ? 'Movie' : 'TV Show'}`;
     } catch (error) {
       if (token !== renderToken) return;
       els.backdropCanvas.getContext('2d').clearRect(0,0,1280,720);
