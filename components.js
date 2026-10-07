@@ -211,7 +211,7 @@
     const navTarget = document.getElementById('site-nav');
     const footerTarget = document.getElementById('site-footer');
     const tasks = [];
-    if (navTarget) tasks.push(loadFragment('nav.html?v=20261007-forum1', navTarget));
+    if (navTarget) tasks.push(loadFragment('nav.html?v=20261007-nav2', navTarget));
     if (footerTarget) tasks.push(loadFragment('footer.html?v=20261007-forum1', footerTarget));
     if (tasks.length) await Promise.allSettled(tasks);
     setActiveNav();
