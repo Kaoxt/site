@@ -46,7 +46,7 @@
   [
     'backdropSourceMode','backdropModeStatus','tmdbKey','toggleKey','saveKey','validateKey','keyStatus','mediaType','titleSearch','searchTitle','titleSearchStatus','titleResults',
     'overlayPreset','overlayOpacity','overlayOpacityValue','gradientCoverage','coverageValue','backdropZoom','zoomValue','positionX','positionXValue','showTitle','textControls','fontFamily','textPosition','fontSize','fontSizeValue','textColor','textShadow',
-    'editImages','undoRemoval','editImagesHelp','tileEditor','tileType','tileTypeHelp','fanartKey','saveFanartKey','toggleFanartKey','fanartKeyStatus','artworkSource','artworkStatus','showMovieLogos','collageLayout','collageTitles','collageStatus','clearCollage','shuffleCollage','backdropCanvas','emptyState','renderBusy','renderStatus','retryRender','previewTitle','resolution','downloadBackdrop'
+    'editImages','undoRemoval','editImagesHelp','tileEditor','tileType','tileTypeHelp','fanartKeySection','fanartKey','saveFanartKey','toggleFanartKey','fanartKeyStatus','artworkSource','artworkStatus','showMovieLogos','collageLayout','collageTitles','collageStatus','clearCollage','shuffleCollage','backdropCanvas','emptyState','renderBusy','renderStatus','retryRender','previewTitle','resolution','downloadBackdrop'
   ].forEach(id => { els[id] = $(id); });
 
   function loadState() {
@@ -399,8 +399,9 @@
     const layout = state.collageLayout;
     const tileType = state.tileType;
     const posterMode = tileType === 'posters';
-    const source = state.artworkSource;
+    const source = posterMode && state.artworkSource === 'fanart' ? 'tmdb' : state.artworkSource;
     const key = fanartKey();
+    if (!posterMode && !savedFanartKey().trim()) throw new Error('Backdrops requires a Fanart.tv API key. Add and save it in API Keys, or switch to Posters.');
     const assets = [];
     const skipped = [];
     const deadline = Date.now() + 45000;
@@ -601,7 +602,7 @@
     els.artworkSource.value = state.artworkSource;
     syncTileType();
     els.fanartKey.value = savedFanartKey();
-    setStatus(els.fanartKeyStatus, els.fanartKey.value ? 'Fanart.tv key is saved in this browser.' : 'Without a Fanart.tv key, TMDB artwork is used.');
+    setStatus(els.fanartKeyStatus, els.fanartKey.value ? 'Fanart.tv key is saved in this browser.' : 'Required for Backdrops. Add and save your Fanart.tv key.');
     updateSelection();
     els.fontFamily.value = state.fontFamily;
     els.textPosition.value = state.textPosition;
@@ -696,6 +697,8 @@
       button.classList.toggle('active',active);
       button.setAttribute('aria-pressed',String(active));
     });
+    els.fanartKeySection.hidden = state.tileType === 'posters';
+    els.fanartKey.required = state.tileType !== 'posters';
     els.showMovieLogos.disabled = state.tileType === 'posters' || state.artworkSource === 'tmdb-original';
     els.tileTypeHelp.textContent = state.tileType === 'posters'
       ? 'Portrait movie covers. Titles printed on posters stay as part of the artwork; no extra logo is added. Downloads remain widescreen.'
@@ -716,7 +719,7 @@
     try { localStorage.setItem(FANART_KEY,key); }
     catch { return setStatus(els.fanartKeyStatus,'Could not save the key in this browser.','error'); }
     fanartCache.clear();
-    setStatus(els.fanartKeyStatus,key ? 'Key saved. Fanart.tv artwork will be tried when titles are enabled.' : 'Key removed. Using TMDB artwork.', 'ok');
+    setStatus(els.fanartKeyStatus,key ? 'Key saved. Fanart.tv artwork will be tried when titles are enabled.' : 'Key removed. Save a Fanart.tv key to generate Backdrops.', 'ok');
     queuePreview();
   });
   els.clearCollage.addEventListener('click', () => selectTitle(null));

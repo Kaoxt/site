@@ -4,15 +4,15 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 const source = fs.readFileSync(new URL('../backdrops/backdrops.js', import.meta.url),'utf8');
 function harness(logos = [], responder = null, options = {}) {
- const nodes=new Map(), storage=new Map(), loads=[], requests=[], calls=[];
+ const nodes=new Map(), storage=new Map([['kollection-backdrops-fanart-key-v1','test-key']]), loads=[], requests=[], calls=[];
  const context2d=new Proxy({},{get:(target,key)=>key in target ? target[key] : key.startsWith('create')?()=>({addColorStop(){}}):(...args)=>calls.push({key,args})});
  const el=()=>({value:'',checked:false,hidden:false,disabled:false,classList:{add(){},remove(){},toggle(){}},addEventListener(){},setAttribute(){},querySelectorAll:()=>[],getContext:()=>context2d});
  const document={getElementById:id=>{if(!nodes.has(id))nodes.set(id,el());return nodes.get(id)},querySelector:()=>el(),querySelectorAll:()=>[],createElement:()=>el()};
  class Image {width=1280;height=720;set src(url){loads.push(url);if (!options.stallImages) queueMicrotask(()=>this.onload?.())}}
  const window={dispatchEvent(){}};
  vm.runInNewContext(source,{document,window,Image,Map,URL,AbortSignal,CustomEvent:class{},localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},requestAnimationFrame:()=>1,cancelAnimationFrame(){},fetch:async url=>{requests.push(url);return {ok:true,json:async()=>responder ? responder(url) : ({logos})}},setTimeout:(fn,ms)=>setTimeout(fn,options.stallImages && ms===12000 ? 0 : ms),clearTimeout});
- window.KollectionBackdrops.restore({artworkSource:'fanart'});
- return {api:window.KollectionBackdrops,nodes,loads,requests,calls};
+ window.KollectionBackdrops.restore({artworkSource:'tmdb'});
+ return {api:window.KollectionBackdrops,nodes,loads,requests,calls,storage};
 }
 test('search selections accumulate unique titles and require at least two',async()=>{
  const h=harness();
@@ -66,7 +66,7 @@ test('Fanart thumbnails use movie TMDB IDs and TVDB IDs; embedded titles get no 
    moviebackground:[{url:'https://assets.fanart.tv/background.jpg',lang:'en',likes:'99'}],
    tvthumb:[{url:'https://assets.fanart.tv/tv.jpg',lang:'en',likes:'3'}]
  });
- h.nodes.get('tmdbKey').value='tmdb-test';h.nodes.get('fanartKey').value='fanart-test';
+ h.nodes.get('tmdbKey').value='tmdb-test';h.api.restore({...h.api.getState(),artworkSource:'fanart'});h.nodes.get('tmdbKey').value='test';h.nodes.get('fanartKey').value='fanart-test';
  await h.api.selectTitle(pair);await h.api.selectTitle(pair);
  assert.ok(h.requests.some(u=>u.includes('/movies/1?')));
  assert.ok(h.requests.some(u=>u.includes('/tv/99?')));
@@ -84,7 +84,7 @@ test('TMDB title-bearing art is preferred without a Fanart key and does not get 
 });
 test('Fanart failure falls back to TMDB and explains the fallback',async()=>{
  const h=harness([],url=>{if(url.includes('fanart.tv')) throw new Error('Unavailable');return {};});
- h.nodes.get('tmdbKey').value='test';h.nodes.get('fanartKey').value='bad';
+ h.nodes.get('tmdbKey').value='test';h.api.restore({...h.api.getState(),artworkSource:'fanart'});h.nodes.get('tmdbKey').value='test';h.nodes.get('fanartKey').value='bad';
  await h.api.selectTitle(pair);
  assert.equal(h.nodes.get('downloadBackdrop').disabled,false);
  assert.ok(h.loads.every(u=>u.includes('image.tmdb.org')));
@@ -92,7 +92,7 @@ test('Fanart failure falls back to TMDB and explains the fallback',async()=>{
 });
 test('disabling movie titles avoids Fanart thumbs and title artwork requests',async()=>{
  const h=harness();const saved=h.api.getState();saved.showMovieLogos=false;h.api.restore(saved);
- h.nodes.get('tmdbKey').value='test';h.nodes.get('fanartKey').value='test';
+ h.nodes.get('tmdbKey').value='test';h.api.restore({...h.api.getState(),artworkSource:'fanart'});h.nodes.get('tmdbKey').value='test';h.nodes.get('fanartKey').value='test';
  await h.api.selectTitle(pair);
  assert.equal(h.requests.length,0);
  assert.ok(!h.calls.some(c=>c.key==='fillText'));
@@ -109,16 +109,18 @@ test('poster mode loads portrait covers, keeps titles, and survives saved-state 
  const tiles=h.calls.filter(c=>c.key==='roundRect');
  assert.ok(tiles.every(c=>Math.abs(c.args[3]/c.args[2]-1.5)<.001));
 });
-test('poster mode uses Fanart poster categories rather than landscape thumbnails',async()=>{
+test('poster mode uses TMDB without requiring the hidden Fanart key',async()=>{
  const h=harness([],url=>url.includes('external_ids') ? {tvdb_id:99} : {
    movieposter:[{url:'https://assets.fanart.tv/movieposter.jpg',lang:'en'}],
    tvposter:[{url:'https://assets.fanart.tv/tvposter.jpg',lang:'en'}],
    moviethumb:[{url:'https://assets.fanart.tv/thumb.jpg',lang:'en'}]
  });
  h.api.restore({...h.api.getState(),tileType:'posters'});
- h.nodes.get('fanartKey').value='test';h.nodes.get('tmdbKey').value='test';
+ h.api.restore({...h.api.getState(),artworkSource:'fanart'});h.nodes.get('tmdbKey').value='test';h.nodes.get('fanartKey').value='test';h.nodes.get('tmdbKey').value='test';
  await h.api.selectTitle(pair);
- assert.deepEqual(h.loads,['https://assets.fanart.tv/movieposter.jpg','https://assets.fanart.tv/tvposter.jpg']);
+ assert.ok(h.loads.every(url=>url.startsWith('https://image.tmdb.org/')));
+ assert.ok(!h.requests.some(url=>url.includes('fanart.tv')));
+ assert.equal(h.nodes.get('fanartKeySection').hidden,true);
 });
 test('poster-only titles can be selected and missing posters use uncropped backdrop fallback',async()=>{
  const h=harness();h.api.restore({...h.api.getState(),tileType:'posters'});
@@ -156,7 +158,7 @@ test('original-language title artwork and SVG logos avoid plain-text fallback',a
 });
 test('Fanart clear logos are used when TMDB has no title artwork',async()=>{
  const h=harness([],url=>url.includes('external_ids') ? {tvdb_id:99} : url.includes('fanart.tv') ? {hdmovielogo:[{url:'https://assets.fanart.tv/movie-logo.png',lang:'en'}],hdtvlogo:[{url:'https://assets.fanart.tv/tv-logo.png',lang:'en'}]} : {});
- h.nodes.get('tmdbKey').value='test';h.nodes.get('fanartKey').value='test';
+ h.nodes.get('tmdbKey').value='test';h.api.restore({...h.api.getState(),artworkSource:'fanart'});h.nodes.get('tmdbKey').value='test';h.nodes.get('fanartKey').value='test';
  await h.api.selectTitle(pair);
  assert.ok(h.loads.includes('https://assets.fanart.tv/movie-logo.png'));
  assert.ok(h.loads.includes('https://assets.fanart.tv/tv-logo.png'));
@@ -181,4 +183,16 @@ test('backdrops never substitute a poster when a landscape image is missing',asy
   assert.match(h.nodes.get('artworkStatus').textContent,/Skipped 1.*Poster only/);
   assert.equal(h.api.getState().selected.items.length,3);
  }
+});
+
+test('Backdrops requires a saved Fanart key while Posters works without one',async()=>{
+ const h=harness();h.storage.delete('kollection-backdrops-fanart-key-v1');
+ await h.api.selectTitle(pair);
+ assert.equal(h.nodes.get('downloadBackdrop').disabled,true);
+ assert.match(h.nodes.get('renderStatus').textContent,/requires a Fanart/);
+ assert.equal(h.loads.length,0);
+ h.api.restore({...h.api.getState(),tileType:'posters'});
+ await h.api.selectTitle(pair);
+ assert.equal(h.nodes.get('downloadBackdrop').disabled,false);
+ assert.equal(h.nodes.get('fanartKeySection').hidden,true);
 });
