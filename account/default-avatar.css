@@ -12,3 +12,10 @@
 .account-identity-settings .account-avatar-actions{gap:10px}
 .account-identity-settings button{white-space:normal}
 @media(max-width:760px){.account-identity-settings{grid-template-columns:minmax(0,1fr);gap:16px}.account-identity-settings .account-display-name{padding:18px}}
+
+.account-collection-cta{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:24px;padding:22px;border:1px solid rgba(124,115,255,.35);border-radius:16px;background:linear-gradient(120deg,rgba(111,124,255,.12),rgba(139,92,246,.055))}
+.account-collection-cta h3{margin:0;color:var(--account-text);font-size:18px}
+.account-collection-cta p{margin:6px 0 0;color:var(--account-muted);line-height:1.5}
+.account-collection-cta .account-primary-button{flex-shrink:0;gap:14px;min-height:48px}
+.account-profile-card>.account-actions{margin-top:24px;padding-top:20px;border-top:1px solid var(--account-border)}
+@media(max-width:600px){.account-collection-cta{flex-direction:column;align-items:stretch;padding:18px;gap:16px}.account-collection-cta .account-primary-button{width:100%;box-sizing:border-box}}
