@@ -10,7 +10,7 @@
   <meta name="description" content="Choose original or custom movie, TV, and folder backdrops for The Kollection, Nuvio, and compatible metadata setups." />
   <link rel="stylesheet" href="/shared.css?v=20260906-1" />
   <link rel="stylesheet" href="/secondary-pages.css?v=20260909-3" />
-  <link rel="stylesheet" href="/backdrops/styles.css?v=20261006-1" />
+  <link rel="stylesheet" href="/backdrops/styles.css?v=20261007-1" />
   <link rel="stylesheet" href="/backdrops/title-mode.css?v=20261004-1" />
   <link rel="stylesheet" href="/backdrops/folder-builder.css?v=20261004-1" />
   <script src="/components.js?v=20260908-3" defer></script>
@@ -22,7 +22,7 @@
     <header data-page-header class="backdrop-page-header">
       <div data-page-chip>Backdrop Configurator</div>
       <h1 data-page-title>Backdrops</h1>
-      <p data-page-subtitle>Create backdrops from TMDB or MDBList. Preview and download artwork, or save a separate design for each collection folder in this browser.</p>
+      <p data-page-subtitle>Create multi-movie collages from TMDB or MDBList. Preview and download artwork, or save a separate design for each collection folder in this browser.</p>
       <div class="hero-pills">
         <span>Per-folder setup</span>
         <span>TMDB + MDBList</span>
@@ -41,7 +41,7 @@
                 <option value="original" selected>Original backdrop (default)</option>
                 <option value="custom">Custom backdrop style</option>
               </select>
-              <p class="backdrop-source-note"><strong>Default</strong> keeps the existing backdrop. Custom lets you build a new backdrop from TMDB or MDBList artwork.</p>
+              <p class="backdrop-source-note"><strong>Default</strong> uses original artwork in your collage. Custom adds overall lighting and text effects.</p>
               <div id="backdropModeStatus" class="status-line ok">Original is selected.</div>
             </div>
           </section>
@@ -94,7 +94,7 @@
                   <input id="titleSearch" class="text-input" type="search" placeholder="Search TMDB…" autocomplete="off" />
                   <button id="searchTitle" class="primary-button" type="button">Search</button>
                 </div>
-                <div id="titleSearchStatus" class="status-line">Search for a title to preview its artwork.</div>
+                <div id="titleSearchStatus" class="status-line">Search and tap titles to add them to your collage.</div>
                 <div id="titleResults" class="title-results" aria-live="polite"></div>
               </div>
 
@@ -136,6 +136,20 @@
                 <div id="mdblistStatus" class="status-line">Add an MDBList key above, then choose one of your lists or browse another list.</div>
                 <div id="mdblistTitleResults" class="title-results mdblist-title-results" aria-live="polite"></div>
               </div>
+            </div>
+          </section>
+
+          <section class="control-card">
+            <div class="control-card-heading"><span><small>COLLAGE</small><strong>Movies in your backdrop</strong></span></div>
+            <div class="control-card-body">
+              <p class="control-help">Add 2–18 movies or shows. Loading an MDBList replaces the selection with a collage from that list.</p>
+              <div id="collageStatus" class="status-line" aria-live="polite"></div>
+              <div id="collageTitles" class="collage-titles"></div>
+              <div class="inline-actions"><button id="shuffleCollage" class="secondary-button" type="button">Shuffle tiles</button><button id="clearCollage" class="ghost-button" type="button">Clear titles</button></div>
+              <label class="field-label" for="collageLayout">Collage layout</label>
+              <select id="collageLayout" class="select-input"><option value="tilted">Angled movie wall</option><option value="grid">Full-width grid</option></select>
+              <label class="toggle-row"><span><strong>Movie title logos</strong><small>Official title artwork on each movie tile</small></span><input id="showMovieLogos" type="checkbox" checked /></label>
+              <p class="control-help">Uses English title logos from TMDB where available, with readable title text as a fallback. Angled walls repeat tiles to fill the design.</p>
             </div>
           </section>
 
@@ -182,7 +196,7 @@
         <div class="preview-toolbar">
           <div>
             <span class="section-kicker">BACKDROP PREVIEW</span>
-            <strong id="previewTitle">Choose artwork to begin</strong>
+            <strong id="previewTitle">Add at least two titles to begin</strong>
           </div>
           <div class="title-meta" id="previewMeta"></div>
         </div>
@@ -197,7 +211,7 @@
               </svg>
             </div>
             <strong>Your backdrop will appear here</strong>
-            <span>Configure a source and generate a backdrop to preview it here.</span>
+            <span>Add movies individually or load an MDBList to build your collage.</span>
           </div>
           <canvas id="backdropCanvas" width="1280" height="720" aria-label="Backdrop preview"></canvas>
           <div id="renderBusy" class="render-busy" hidden><span></span>Rendering backdrop…</div>
@@ -211,9 +225,9 @@
         <div class="workspace-footer">
           <div class="privacy-note"><span class="privacy-dot"></span><div><strong>Browser-only image pipeline</strong><small>TMDB and MDBList requests are made by the user's browser. The Kollection does not pre-render every possible backdrop.</small></div></div>
           <div class="export-panel">
-            <label for="resolution">Preview download</label>
+            <label for="resolution">Download resolution</label>
             <select id="resolution" class="select-input resolution-select"><option value="1280x720">720p</option><option value="1920x1080" selected>1080p</option><option value="2560x1440">1440p</option><option value="3840x2160">4K</option></select>
-            <button id="downloadBackdrop" class="primary-button" type="button" disabled>Download Preview</button>
+            <button id="downloadBackdrop" class="primary-button" type="button" disabled>Download Backdrop</button>
           </div>
         </div>
       </section>
@@ -221,8 +235,8 @@
 
     <div id="site-footer"></div>
   </main>
-  <script src="/backdrops/backdrops.js?v=20261004-1"></script>
-  <script src="/backdrops/mdblist.js?v=20261004-1"></script>
+  <script src="/backdrops/backdrops.js?v=20261007-1"></script>
+  <script src="/backdrops/mdblist.js?v=20261007-1"></script>
   <script src="/backdrops/folder-builder.js?v=20261004-1"></script>
 </body>
 </html>

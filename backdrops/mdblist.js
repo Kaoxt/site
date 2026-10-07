@@ -219,7 +219,8 @@
       }
       if (!resolved.length) throw new Error('No backdrop artwork could be loaded. Check your TMDB key and try again.');
       renderTitleResults(resolved);
-      status(els.mdblistStatus, `Loaded ${resolved.length} title${resolved.length === 1 ? '' : 's'} with backdrops from this list. Choose one to preview.`, 'ok');
+      await window.KollectionBackdrops.selectTitle({title:'Movie collage', items:resolved.slice(0,18)});
+      status(els.mdblistStatus, `Loaded ${resolved.length} title${resolved.length === 1 ? '' : 's'} with backdrops from this list. The first 18 titles are used in your collage. Tap others to add them after removing a title.`, 'ok');
     } catch (error) {
       els.mdblistTitleResults.innerHTML = '';
       status(els.mdblistStatus, error.message || 'Could not load titles from this MDBList list.', 'error');
@@ -234,7 +235,7 @@
       </button>`).join('');
     els.mdblistTitleResults.querySelectorAll('.title-result').forEach((button,index) => {
       button.backdropItem = items[index];
-      button.addEventListener('click', () => window.KollectionBackdrops?.selectTitle?.(items[index]));
+      button.addEventListener('click', () => window.KollectionBackdrops?.addTitle?.(items[index]));
     });
   }
 

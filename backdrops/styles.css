@@ -383,3 +383,6 @@ html[data-theme="light"] .backdrop-page .status-line.error { color:#b91c1c; }
   .folder-builder-actions { width:100%; display:grid; grid-template-columns:1fr; }
   .folder-builder-actions .primary-button, .folder-builder-actions .secondary-button { width:100%; }
 }
+
+.collage-titles { display:flex; flex-wrap:wrap; gap:6px; }
+.collage-titles button { max-width:100%; height:auto; padding:8px 10px; overflow-wrap:anywhere; text-align:left; }

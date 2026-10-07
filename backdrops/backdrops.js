@@ -16,6 +16,8 @@
     backdropZoom: 100,
     positionX: 50,
     showTitle: false,
+    showMovieLogos: true,
+    collageLayout: 'tilted',
     fontFamily: 'Inter, Arial, sans-serif',
     textPosition: 'left-center',
     fontSize: 72,
@@ -29,12 +31,13 @@
   let searchToken = 0;
   let renderFrame = 0;
   const imageCache = new Map();
+  const logoCache = new Map();
   const $ = id => document.getElementById(id);
   const els = {};
   [
     'backdropSourceMode','backdropModeStatus','tmdbKey','toggleKey','saveKey','validateKey','keyStatus','mediaType','titleSearch','searchTitle','titleSearchStatus','titleResults',
     'overlayPreset','overlayOpacity','overlayOpacityValue','gradientCoverage','coverageValue','backdropZoom','zoomValue','positionX','positionXValue','showTitle','textControls','fontFamily','textPosition','fontSize','fontSizeValue','textColor','textShadow',
-    'backdropCanvas','emptyState','renderBusy','previewTitle','previewMeta','resolution','downloadBackdrop'
+    'showMovieLogos','collageLayout','collageTitles','collageStatus','clearCollage','shuffleCollage','backdropCanvas','emptyState','renderBusy','previewTitle','previewMeta','resolution','downloadBackdrop'
   ].forEach(id => { els[id] = $(id); });
 
   function loadState() {
@@ -51,7 +54,7 @@
     if (type) el.classList.add(type);
   }
   function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[c]));
+    return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
   function authFor(urlString) {
@@ -117,7 +120,7 @@
       const results = (data.results || []).filter(item => item.backdrop_path).slice(0, 8).map(item => normalizeSearchItem(item, media));
       if (token !== searchToken) return;
       renderResults(results);
-      setStatus(els.titleSearchStatus, results.length ? `Choose a title below. Each result has its own backdrop.` : 'No matching titles with backdrops were found.', results.length ? 'ok' : '');
+      setStatus(els.titleSearchStatus, results.length ? `Tap titles to add them to your collage. Search again to add more.` : 'No matching titles with backdrops were found.', results.length ? 'ok' : '');
     } catch (error) {
       if (token === searchToken) setStatus(els.titleSearchStatus, error.message || 'Could not search TMDB.', 'error');
     } finally { if (token === searchToken) els.searchTitle.disabled = false; }
@@ -130,17 +133,41 @@
         <span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.year || item.media)}</small></span>
       </button>`).join('');
     els.titleResults.querySelectorAll('.title-result').forEach((button, index) => {
-      button.addEventListener('click', () => selectTitle(results[index]));
+      button.addEventListener('click', () => addTitle(results[index]));
     });
   }
 
-  async function selectTitle(item) {
-    state.selected = item;
-    saveState();
+  const titleKey = item => `${item.media || 'movie'}:${item.id || item.backdropPath}`;
+  function selectedItems() {
+    return state.selected?.items || (state.selected?.backdropPath ? [state.selected] : []);
+  }
+  function updateSelection() {
+    const items = selectedItems();
     document.querySelectorAll('.title-result').forEach(button => {
-      button.classList.toggle('selected', Number(button.dataset.id) === Number(item.id) && String(button.dataset.media || '') === String(item.media || ''));
+      button.classList.toggle('selected', items.some(item => String(item.id) === button.dataset.id && item.media === button.dataset.media));
     });
+    els.collageTitles.innerHTML = items.map((item, index) => `<button type="button" class="ghost-button" data-index="${index}" aria-label="Remove ${escapeHtml(item.title)}">${escapeHtml(item.title || 'Untitled')} ×</button>`).join('');
+    els.collageTitles.querySelectorAll('button').forEach(button => button.addEventListener('click', () => {
+      const next = selectedItems().filter((_, index) => index !== Number(button.dataset.index));
+      selectTitle({title:state.selected?.title || 'Movie collage', items:next});
+    }));
+    setStatus(els.collageStatus, `${items.length}/18 titles selected. ${items.length < 2 ? 'Add at least two titles to create a collage.' : 'Ready to preview and download.'}`);
+  }
+  async function selectTitle(item) {
+    if (item?.items) {
+      const unique = new Map(item.items.filter(entry => entry.backdropPath).map(entry => [titleKey(entry), entry]));
+      item = {...item, items:[...unique.values()].slice(0,18)};
+    }
+    state.selected = item;
+    saveState(); updateSelection();
     await renderPreview();
+  }
+  async function addTitle(item) {
+    if (!item?.backdropPath) return;
+    const items = selectedItems();
+    if (items.some(entry => titleKey(entry) === titleKey(item))) return;
+    if (items.length >= 18) return setStatus(els.collageStatus, 'Your collage has 18 titles. Remove one before adding another.', 'error');
+    await selectTitle({title:state.selected?.items ? state.selected.title : 'Movie collage', items:[...items, item]});
   }
 
   function loadImage(url) {
@@ -153,7 +180,7 @@
       image.src = url;
     });
     imageCache.set(url, promise);
-    if (imageCache.size > 24) imageCache.delete(imageCache.keys().next().value);
+    if (imageCache.size > 100) imageCache.delete(imageCache.keys().next().value);
     return promise;
   }
 
@@ -214,26 +241,75 @@
     ctx.restore();
   }
 
-  async function artwork(item, size) {
-    if (!item?.items) return loadImage(`${IMAGE_BASE}${size}${item.backdropPath}`);
-    const images = await Promise.all(item.items.map(entry => loadImage(`${IMAGE_BASE}w780${entry.backdropPath}`)));
+  async function titleLogo(item) {
+    if (!item.id || !['movie','tv'].includes(item.media)) return null;
+    const key = titleKey(item);
+    if (!logoCache.has(key)) {
+      const promise = tmdbFetch(`/${item.media}/${item.id}/images`, {include_image_language:'en,null'})
+        .then(data => (data.logos || []).filter(logo => /\.png$/i.test(logo.file_path))
+          .sort((a,b) => (Number(b.iso_639_1 === 'en') - Number(a.iso_639_1 === 'en')) || (b.vote_average || 0) - (a.vote_average || 0))[0]?.file_path || null)
+        .catch(() => { logoCache.delete(key); return null; });
+      logoCache.set(key, promise);
+      if (logoCache.size > 80) logoCache.delete(logoCache.keys().next().value);
+    }
+    const path = await logoCache.get(key);
+    return path ? loadImage(`${IMAGE_BASE}w500${path}`).catch(() => null) : null;
+  }
+  async function artwork(item, size, width=1280, height=720) {
+    const entries = item.items || [item];
+    const useLogos = state.showMovieLogos;
+    const layout = state.collageLayout;
+    const assets = [];
+    // Limit concurrent image/metadata requests and reuse them for slider changes.
+    for (let i=0; i<entries.length; i+=4) {
+      assets.push(...await Promise.all(entries.slice(i,i+4).map(async entry => ({
+        entry,
+        image:await loadImage(`${IMAGE_BASE}${width > 1920 ? 'w1280' : 'w780'}${entry.backdropPath}`),
+        logo:useLogos ? await titleLogo(entry) : null
+      }))));
+    }
     const surface = document.createElement('canvas');
-    surface.width = 1920; surface.height = 1080;
+    surface.width = width; surface.height = height;
     const ctx = surface.getContext('2d');
-    const cols = Math.min(images.length, images.length <= 6 ? 3 : 4);
-    const rows = Math.ceil(images.length / cols);
-    images.forEach((image, index) => {
-      const row = Math.floor(index / cols);
-      const rowCount = Math.min(cols, images.length - row * cols);
-      const w = surface.width / rowCount, h = surface.height / rows;
-      const scale = Math.max(w / image.width, h / image.height);
-      const sw = w / scale, sh = h / scale;
-      ctx.drawImage(image, (image.width-sw)/2, (image.height-sh)/2, sw, sh, (index%cols)*w, row*h, w, h);
-    });
+    ctx.fillStyle = '#050608'; ctx.fillRect(0,0,width,height);
+    const tilted = layout === 'tilted';
+    const cols = tilted ? 4 : Math.min(4, Math.ceil(Math.sqrt(assets.length * 16/9)));
+    const rows = tilted ? 6 : Math.ceil(assets.length / cols);
+    const gap = width * .008;
+    const w = tilted ? width * .24 : width / cols;
+    const h = tilted ? w * 9/16 : height / rows;
+    ctx.save();
+    if (tilted) { ctx.translate(width*.22, -height*.13); ctx.rotate(-12*Math.PI/180); }
+    for (let index=0; index<(tilted ? cols*rows : assets.length); index++) {
+      const {image,logo,entry} = assets[index % assets.length];
+      const row = Math.floor(index/cols), col=index%cols;
+      const rowCount = tilted ? cols : Math.min(cols, assets.length-row*cols);
+      const tw = (tilted ? w : width/rowCount)-gap, th=h-gap;
+      ctx.save();ctx.translate(tilted ? col*w : col*width/rowCount, row*h);
+      ctx.beginPath();ctx.rect(0,0,tw,th);ctx.clip();
+      const scale=Math.max(tw/image.width,th/image.height),sw=tw/scale,sh=th/scale;
+      ctx.drawImage(image,(image.width-sw)/2,(image.height-sh)/2,sw,sh,0,0,tw,th);
+      if (useLogos) {
+        const fade=ctx.createLinearGradient(0,th*.45,0,th);
+        fade.addColorStop(0,'rgba(0,0,0,0)');fade.addColorStop(1,'rgba(0,0,0,.8)');
+        ctx.fillStyle=fade;ctx.fillRect(0,0,tw,th);
+        if (logo) {
+          const factor=Math.min(tw*.72/logo.width,th*.29/logo.height);
+          const lw=logo.width*factor,lh=logo.height*factor;
+          ctx.drawImage(logo,(tw-lw)/2,th-lh-th*.07,lw,lh);
+        } else {
+          ctx.fillStyle='#fff';ctx.font=`700 ${Math.max(12,th*.105)}px Arial, sans-serif`;
+          ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.fillText(entry.title || 'Untitled',tw/2,th*.84,tw*.88);
+        }
+      }
+      ctx.restore();
+    }
+    ctx.restore();
     return surface;
   }
 
-  function canRender() { return !!(state.selected?.backdropPath || state.selected?.items?.length); }
+  function canRender() { return selectedItems().length >= 2; }
   function queuePreview() {
     cancelAnimationFrame(renderFrame);
     renderFrame = requestAnimationFrame(renderPreview);
@@ -246,7 +322,7 @@
       els.renderBusy.hidden = true;
       els.emptyState.hidden = false;
       els.backdropCanvas.getContext('2d').clearRect(0,0,1280,720);
-      els.previewTitle.textContent = 'Choose artwork to begin';
+      els.previewTitle.textContent = 'Add at least two titles to begin';
       els.previewMeta.textContent = '';
       return;
     }
@@ -279,7 +355,7 @@
     els.downloadBackdrop.disabled = true;
     try {
       const [width,height] = els.resolution.value.split('x').map(Number);
-      const image = await artwork(item, 'original');
+      const image = await artwork(item, 'original', width, height);
       if (token !== renderToken) throw new Error('Artwork changed. Download the updated preview again.');
       const canvas = document.createElement('canvas'); canvas.width=width; canvas.height=height;
       const ctx = canvas.getContext('2d');
@@ -299,8 +375,8 @@
     document.querySelector('.backdrop-app')?.classList.toggle('mode-custom', state.mode === 'custom');
     document.querySelector('.backdrop-app')?.classList.toggle('mode-original', state.mode === 'original');
     setStatus(els.backdropModeStatus, state.mode === 'custom'
-      ? 'Custom styling is selected. Every title still uses its own TMDB backdrop image.'
-      : 'Original is selected. Each title uses its own TMDB backdrop.', 'ok');
+      ? 'Custom styling is selected for your movie collage.'
+      : 'Original artwork is selected for your collage, without the overall overlay.', 'ok');
     saveState(); queuePreview();
   }
 
@@ -311,6 +387,8 @@
     state.backdropZoom = Number(els.backdropZoom.value);
     state.positionX = Number(els.positionX.value);
     state.showTitle = els.showTitle.checked;
+    state.showMovieLogos = els.showMovieLogos.checked;
+    state.collageLayout = els.collageLayout.value;
     state.fontFamily = els.fontFamily.value;
     state.textPosition = els.textPosition.value;
     state.fontSize = Number(els.fontSize.value);
@@ -336,6 +414,9 @@
     els.backdropZoom.value = state.backdropZoom;
     els.positionX.value = state.positionX;
     els.showTitle.checked = state.showTitle;
+    els.showMovieLogos.checked = state.showMovieLogos;
+    els.collageLayout.value = state.collageLayout;
+    updateSelection();
     els.fontFamily.value = state.fontFamily;
     els.textPosition.value = state.textPosition;
     els.fontSize.value = state.fontSize;
@@ -366,11 +447,17 @@
   });
   els.searchTitle.addEventListener('click', searchTitles);
   els.titleSearch.addEventListener('keydown', event => { if (event.key === 'Enter') searchTitles(); });
-  [els.overlayPreset,els.overlayOpacity,els.gradientCoverage,els.backdropZoom,els.positionX,els.showTitle,els.fontFamily,els.textPosition,els.fontSize,els.textColor,els.textShadow,els.resolution]
+  [els.showMovieLogos,els.collageLayout,els.overlayPreset,els.overlayOpacity,els.gradientCoverage,els.backdropZoom,els.positionX,els.showTitle,els.fontFamily,els.textPosition,els.fontSize,els.textColor,els.textShadow,els.resolution]
     .forEach(el => el.addEventListener('input', syncState));
   els.downloadBackdrop.addEventListener('click', downloadPreview);
 
-  window.KollectionBackdrops = Object.freeze({ selectTitle, tmdbFetch, getState: () => JSON.parse(JSON.stringify(state)), restore: value => { ++renderToken; state = { ...defaults, ...value }; hydrate(); applyMode(); } });
+  els.clearCollage.addEventListener('click', () => selectTitle(null));
+  els.shuffleCollage.addEventListener('click', () => {
+    const items=[...selectedItems()];
+    for(let i=items.length-1;i>0;i--) {const j=Math.floor(Math.random()*(i+1));[items[i],items[j]]=[items[j],items[i]];}
+    selectTitle({title:state.selected?.title || 'Movie collage',items});
+  });
+  window.KollectionBackdrops = Object.freeze({ selectTitle, addTitle, tmdbFetch, getState: () => JSON.parse(JSON.stringify(state)), restore: value => { ++renderToken; state = { ...defaults, ...value }; hydrate(); applyMode(); } });
   window.dispatchEvent(new CustomEvent('kollection:backdrops-ready'));
 
   hydrate();
