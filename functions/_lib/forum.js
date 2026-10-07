@@ -11,6 +11,7 @@ export async function forumDb(env) {
     db.prepare(`CREATE TABLE IF NOT EXISTS forum_replies (id INTEGER PRIMARY KEY AUTOINCREMENT, topic_id INTEGER NOT NULL REFERENCES forum_topics(id), member_id TEXT NOT NULL REFERENCES forum_members(id), body TEXT NOT NULL, hidden INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL)`),
     db.prepare('CREATE INDEX IF NOT EXISTS forum_topics_list ON forum_topics(hidden, pinned DESC, updated_at DESC, id DESC)'),
     db.prepare('CREATE INDEX IF NOT EXISTS forum_topics_category ON forum_topics(category_id, hidden, pinned DESC, updated_at DESC)'),
+    db.prepare('CREATE INDEX IF NOT EXISTS forum_topics_news ON forum_topics(category_id,hidden,created_at DESC,id DESC)'),
     db.prepare('CREATE INDEX IF NOT EXISTS forum_topics_member ON forum_topics(member_id, created_at DESC)'),
     db.prepare('CREATE INDEX IF NOT EXISTS forum_replies_topic ON forum_replies(topic_id, hidden, id)'),
     db.prepare('CREATE INDEX IF NOT EXISTS forum_replies_member ON forum_replies(member_id, created_at DESC)'),
@@ -64,7 +65,7 @@ export async function mayPost(db,member,admin){
 export async function validCategory(db,value,admin){
   const c=await db.prepare('SELECT * FROM forum_categories WHERE id=?').bind(id(value)).first();
   if(!c||c.archived)throw new IssueError('Choose an active category.');
-  if(c.read_only&&!admin)throw new IssueError('Only administrators can start topics in this category.',403);
+  if((c.id===4||c.read_only)&&!admin)throw new IssueError('Only administrators can start topics in this category.',403);
   return c.id;
 }
 export { IssueError, textField };

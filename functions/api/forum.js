@@ -1,17 +1,28 @@
+import { ANNOUNCEMENTS_ID, importLegacyNews } from '../_lib/forum-news.js';
 import { forumHandle, forumInput, IssueError, textField, id, page, requireAdmin, memberSelect, memberJoin, counts, selfMember, ensureMember, mayPost, validCategory } from '../_lib/forum.js';
-const categories = async db => (await db.prepare('SELECT * FROM forum_categories ORDER BY position,id').all()).results;
+const protectCategory=c=>({...c,read_only:c.id===ANNOUNCEMENTS_ID?1:c.read_only});
+const categories = async db => (await db.prepare('SELECT * FROM forum_categories ORDER BY position,id').all()).results.map(protectCategory);
 const categoryOverview = async db => (await db.prepare(`SELECT c.*,
  (SELECT COUNT(*) FROM forum_topics t WHERE t.category_id=c.id AND t.hidden=0) AS topic_count,
  (SELECT COUNT(*) FROM forum_replies r JOIN forum_topics t ON t.id=r.topic_id WHERE t.category_id=c.id AND t.hidden=0 AND r.hidden=0) AS reply_count,
  (SELECT t.id FROM forum_topics t WHERE t.category_id=c.id AND t.hidden=0 ORDER BY t.updated_at DESC,t.id DESC LIMIT 1) AS latest_id,
  (SELECT t.title FROM forum_topics t WHERE t.category_id=c.id AND t.hidden=0 ORDER BY t.updated_at DESC,t.id DESC LIMIT 1) AS latest_title,
  (SELECT t.updated_at FROM forum_topics t WHERE t.category_id=c.id AND t.hidden=0 ORDER BY t.updated_at DESC,t.id DESC LIMIT 1) AS latest_at
- FROM forum_categories c ORDER BY c.position,c.id`).all()).results;
+ FROM forum_categories c ORDER BY c.position,c.id`).all()).results.map(protectCategory);
 const topicSelect = `SELECT t.*,c.name AS category_name,${memberSelect},((SELECT COUNT(*) FROM forum_topics ft WHERE ft.member_id=m.id AND ft.hidden=0)+(SELECT COUNT(*) FROM forum_replies fr JOIN forum_topics ft ON ft.id=fr.topic_id WHERE fr.member_id=m.id AND fr.hidden=0 AND ft.hidden=0)) AS post_count,(SELECT COUNT(*) FROM forum_replies r WHERE r.topic_id=t.id AND r.hidden=0) AS reply_count FROM forum_topics t JOIN forum_categories c ON c.id=t.category_id ${memberJoin}`;
 export const onRequestGet = context => forumHandle(context,false,async({db,session,admin,reply})=>{
   const q=new URL(context.request.url).searchParams,view=q.get('view')||'list',current=page(q.get('page')),offset=(current-1)*20;
+  // Only the public news surfaces need to run the idempotent historical import.
+  const isNews=['news','latestNews','newsTopic','newsLegacy'].includes(view);
+  const legacyId=isNews?await importLegacyNews(db):null;
   const me=await selfMember(db,session);
-  const common={authenticated:!!session,isAdmin:admin,myMemberId:me?.id||null,canPost:!!session&&(!me?.banned||admin),postingOpen:!!(await db.prepare('SELECT posting_open FROM forum_settings WHERE id=1').first()).posting_open};
+  const common={authenticated:!!session,isAdmin:admin,myMemberId:me?.id||null,canPost:!!session&&(!me?.banned||admin),announcementsCategoryId:ANNOUNCEMENTS_ID,postingOpen:!!(await db.prepare('SELECT posting_open FROM forum_settings WHERE id=1').first()).posting_open};
+  if(view==='news'||view==='latestNews'){
+    const limit=view==='latestNews'?1:11;
+    const articles=(await db.prepare(`${topicSelect} WHERE t.category_id=? AND t.hidden=0 ORDER BY t.created_at DESC,t.id DESC LIMIT ? OFFSET ?`).bind(ANNOUNCEMENTS_ID,limit,view==='latestNews'?0:(current-1)*10).all()).results;
+    if(view==='latestNews')return reply({article:articles[0]?{id:articles[0].id,title:articles[0].title,created_at:articles[0].created_at}:null});
+    return reply({...common,categories:await categories(db),articles:articles.slice(0,10),hasMore:articles.length>10,page:current});
+  }
   if(view==='categories')return reply({...common,categories:await categoryOverview(db)});
   if(view==='self')return reply({...common,about:me?.about||''});
   if(view==='member'){
@@ -20,8 +31,8 @@ export const onRequestGet = context => forumHandle(context,false,async({db,sessi
     const rows=(await db.prepare(`${topicSelect} WHERE t.member_id=? AND t.hidden=0 ORDER BY t.id DESC LIMIT 21 OFFSET ?`).bind(member.member_id,offset).all()).results;
     return reply({...common,member,topics:rows.slice(0,20),hasMore:rows.length>20,page:current});
   }
-  if(view==='topic'){
-    const topic=await db.prepare(`${topicSelect} WHERE t.id=? ${admin?'':'AND t.hidden=0'}`).bind(id(q.get('id'))).first();
+  if(view==='topic'||view==='newsTopic'||view==='newsLegacy'){
+    const topic=await db.prepare(`${topicSelect} WHERE t.id=? ${admin?'':'AND t.hidden=0'} ${isNews?'AND t.category_id='+ANNOUNCEMENTS_ID:''}`).bind(view==='newsLegacy'?legacyId:id(q.get('id'))).first();
     if(!topic)throw new IssueError('Discussion not found.',404);
     const after=Math.max(0,Number(q.get('after'))||0);
     const rows=(await db.prepare(`SELECT t.id,t.body,t.created_at,t.hidden,${memberSelect},((SELECT COUNT(*) FROM forum_topics ft WHERE ft.member_id=m.id AND ft.hidden=0)+(SELECT COUNT(*) FROM forum_replies fr JOIN forum_topics ft ON ft.id=fr.topic_id WHERE fr.member_id=m.id AND fr.hidden=0 AND ft.hidden=0)) AS post_count FROM forum_replies t ${memberJoin} WHERE t.topic_id=? AND t.id>? ${admin?'':'AND t.hidden=0'} ORDER BY t.id LIMIT 21`).bind(topic.id,after).all()).results;
@@ -45,7 +56,9 @@ export const onRequestGet = context => forumHandle(context,false,async({db,sessi
   return reply({...common,categories:await categories(db),topics:rows.slice(0,20).map(({body,...t})=>t),hasMore:rows.length>20,page:current});
 });
 export const onRequestPost = context => forumHandle(context,true,async({db,session,admin,reply})=>{
-  const data=await forumInput(context.request),action=data.action;
+  const data=await forumInput(context.request);
+  if(data.action==='news'){requireAdmin(admin);data.categoryId=ANNOUNCEMENTS_ID;}
+  const action=data.action==='news'?'topic':data.action;
   if(action==='topicDelete'||action==='replyDelete'){
     const targetId=id(data.id),isTopic=action==='topicDelete';
     const target=await db.prepare(isTopic?'SELECT * FROM forum_topics WHERE id=?':'SELECT * FROM forum_replies WHERE id=?').bind(targetId).first();
@@ -70,7 +83,7 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
       const existing=data.id?id(data.id):null;
       if(existing&&!await db.prepare('SELECT id FROM forum_categories WHERE id=?').bind(existing).first())throw new IssueError('Category not found.',404);
       if(await db.prepare('SELECT id FROM forum_categories WHERE name=? AND id!=?').bind(name,existing||0).first())throw new IssueError('A category with this name already exists.');
-      if(existing)await db.prepare('UPDATE forum_categories SET name=?,description=?,position=?,archived=?,read_only=? WHERE id=?').bind(name,description,data.position,+data.archived,+data.readOnly,existing).run();
+      if(existing)await db.prepare('UPDATE forum_categories SET name=?,description=?,position=?,archived=?,read_only=? WHERE id=?').bind(name,description,data.position,+data.archived,existing===ANNOUNCEMENTS_ID?1:+data.readOnly,existing).run();
       else {
         const result=await db.prepare('INSERT INTO forum_categories(name,description,position,archived,read_only) SELECT ?,?,?,?,? WHERE (SELECT COUNT(*) FROM forum_categories)<100').bind(name,description,data.position,+data.archived,+data.readOnly).run();
         if(!result.meta.changes)throw new IssueError('You can create up to 100 categories.');
@@ -105,7 +118,7 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
   const now=new Date().toISOString(),since=new Date(Date.now()-86400000).toISOString();
   if(action==='topic'){
     const category=await validCategory(db,data.categoryId,admin);
-    const result=await db.prepare(`INSERT INTO forum_topics(member_id,category_id,title,body,created_at,updated_at) SELECT ?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM forum_topics WHERE member_id=? AND created_at>?)<10 AND EXISTS(SELECT 1 FROM forum_members WHERE id=? AND (banned=0 OR ?=1)) AND EXISTS(SELECT 1 FROM forum_settings WHERE posting_open=1 OR ?=1) AND EXISTS(SELECT 1 FROM forum_categories WHERE id=? AND archived=0 AND (read_only=0 OR ?=1))`).bind(member.id,category,title,body,now,now,member.id,since,member.id,+admin,+admin,category,+admin).run();
+    const result=await db.prepare(`INSERT INTO forum_topics(member_id,category_id,title,body,created_at,updated_at) SELECT ?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM forum_topics WHERE member_id=? AND created_at>?)<10 AND EXISTS(SELECT 1 FROM forum_members WHERE id=? AND (banned=0 OR ?=1)) AND EXISTS(SELECT 1 FROM forum_settings WHERE posting_open=1 OR ?=1) AND EXISTS(SELECT 1 FROM forum_categories WHERE id=? AND archived=0 AND ((read_only=0 AND id!=4) OR ?=1))`).bind(member.id,category,title,body,now,now,member.id,since,member.id,+admin,+admin,category,+admin).run();
     if(!result.meta.changes)throw new IssueError('Unable to post: the forum settings changed or you reached the limit of 10 topics per day.',429);
     return reply({id:result.meta.last_row_id},201);
   }
