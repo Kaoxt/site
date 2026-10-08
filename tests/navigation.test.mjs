@@ -74,6 +74,7 @@ test('navigation helper downloads overlap and each initializes only after its de
   const initialized = [];
   const names = {
     'nuvio-auth': 'KollectionNuvioAuth',
+    'nav-notifications': 'KollectionNavNotifications',
     'nav-account': 'KollectionNavAccount',
     'nav-login-redirect': 'KollectionNavLoginRedirect',
     'account-link': 'KollectionAccountLink',
@@ -93,7 +94,7 @@ test('navigation helper downloads overlap and each initializes only after its de
   });
   vm.runInContext(section('  const loadNavigationAssets = () => {', '  const resolvePage'), context);
   vm.runInContext('const assets = loadNavigationAssets(); prepareNuvioNavigation(assets)', context);
-  assert.equal(started.length, 5, 'all requests start without awaiting another helper');
+  assert.equal(started.length, 6, 'all requests start without awaiting another helper');
   modules['nav-account'].resolve(true);
   modules['nav-login-redirect'].resolve(true);
   modules['account-link'].resolve(true);
@@ -103,9 +104,10 @@ test('navigation helper downloads overlap and each initializes only after its de
   assert.ok(!initialized.includes('KollectionNavAccount'), 'account waits for auth');
   modules['nuvio-auth'].resolve(true);
   await flush();
-  assert.ok(initialized.includes('KollectionNavAccount'), 'slow admin helper cannot hold account');
+  assert.ok(initialized.includes('KollectionNavAccount'), 'slow notifications and admin helpers cannot hold account');
   assert.ok(!initialized.includes('KollectionAdminNav'));
   modules['admin-nav'].resolve(true);
+  modules['nav-notifications'].resolve(true);
   await flush();
   assert.ok(initialized.includes('KollectionAdminNav'));
 });

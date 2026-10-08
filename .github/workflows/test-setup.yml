@@ -16,5 +16,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Check setup scripts, saved choices, profile safety, and addon routing
-        run: node --test tests/setup-*.test.mjs tests/saved-*.test.mjs tests/issues.test.mjs tests/forum*.test.mjs tests/account-nuvio-state.test.mjs tests/collection-clear.test.mjs tests/poster-addon-bridge.test.mjs
+      - name: Check setup, forum, navigation, and account behavior
+        run: node --test tests/setup-*.test.mjs tests/saved-*.test.mjs tests/issues.test.mjs tests/forum*.test.mjs tests/navigation*.test.mjs tests/account-nuvio-state.test.mjs tests/collection-clear.test.mjs tests/poster-addon-bridge.test.mjs
