@@ -1,6 +1,6 @@
 import { ANNOUNCEMENTS_ID, importLegacyNews } from '../_lib/forum-news.js';
 import { mentionedMembers, mentionInsert, syncMentionVisibility, notifications, unreadNotifications } from '../_lib/forum-mentions.js';
-import { forumHandle, forumInput, releaseUrl, IssueError, textField, id, page, requireAdmin, memberSelect, memberJoin, counts, selfMember, ensureMember, mayPost, validCategory } from '../_lib/forum.js';
+import { limitForumWrites, forumHandle, forumInput, releaseUrl, IssueError, textField, id, page, requireAdmin, memberSelect, memberJoin, counts, selfMember, ensureMember, mayPost, validCategory } from '../_lib/forum.js';
 const canEdit=(post,member,admin)=>admin||!!member&&!member.banned&&!post.hidden&&member.id===post.member_id;
 const protectCategory=c=>({...c,read_only:c.id===ANNOUNCEMENTS_ID?1:c.read_only});
 const categories = async db => (await db.prepare('SELECT * FROM forum_categories ORDER BY position,id').all()).results.map(protectCategory);
@@ -97,6 +97,10 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
   const data=await forumInput(context.request);
   if(data.action==='news'){requireAdmin(admin);data.categoryId=ANNOUNCEMENTS_ID;}
   const action=data.action==='news'?'topic':data.action;
+  if(!admin){
+    await limitForumWrites(db,session.id,'writes',120,60);
+    if(action==='topicEdit'||action==='replyEdit')await limitForumWrites(db,session.id,'edits',20,600);
+  }
   if(action==='notificationsRead'){
     const all=data.all===true;
     if(!all&&(!Array.isArray(data.ids)||!data.ids.length||data.ids.length>100))throw new IssueError('Choose up to 100 notifications to mark as read.');

@@ -22,6 +22,7 @@ export async function forumDb(env) {
     db.prepare('CREATE INDEX IF NOT EXISTS forum_replies_topic ON forum_replies(topic_id, hidden, id)'),
     db.prepare('CREATE INDEX IF NOT EXISTS forum_replies_member ON forum_replies(member_id, created_at DESC)'),
     ...notificationSchema.map(sql => db.prepare(sql)),
+    db.prepare('CREATE TABLE IF NOT EXISTS forum_rate_limits (user_id TEXT NOT NULL,scope TEXT NOT NULL,window_start INTEGER NOT NULL,count INTEGER NOT NULL,PRIMARY KEY(user_id,scope))'),
     db.prepare(`CREATE TABLE IF NOT EXISTS forum_settings (id INTEGER PRIMARY KEY CHECK(id=1), posting_open INTEGER NOT NULL DEFAULT 1)`),
     db.prepare('INSERT OR IGNORE INTO forum_settings(id) VALUES(1)'),
     // Seed only once; category edits and archives survive future deployments.
@@ -43,7 +44,7 @@ export async function forumDb(env) {
 }
 export async function forumHandle(context, write, run) {
   let cookie;
-  const reply = (data, status=200) => Response.json(data,{status,headers:{'Cache-Control':'no-store',...(cookie?{'Set-Cookie':cookie}:{})}});
+  const reply = (data, status=200) => Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...(cookie?{'Set-Cookie':cookie}:{})}});
   try {
     if(write && !assertSameOrigin(context.request)) throw new IssueError('Invalid request origin.',403);
     const auth=await refreshSessionIfNeeded(await readSession(context.request,context.env),context.env); cookie=auth.cookie;
@@ -94,4 +95,14 @@ export function releaseUrl(value){
   if(!text)return '';
   try{const url=new URL(text);if(url.protocol==='https:'&&url.hostname==='github.com'&&!url.username&&!url.password&&!url.port&&/^\/[^/]+\/[^/]+\/releases(?:\/latest\/?|\/tag\/[^\s]+|\/?)$/.test(url.pathname))return url.href;}catch{}
   throw new IssueError('Enter a GitHub release URL such as https://github.com/owner/repo/releases/tag/v1.0.');
+}
+
+// Durable counters are updated atomically, including concurrent requests.
+export async function limitForumWrites(db,userId,scope,limit,seconds){
+  const now=Math.floor(Date.now()/1000),windowStart=Math.floor(now/seconds)*seconds;
+  const result=await db.prepare(`INSERT INTO forum_rate_limits(user_id,scope,window_start,count) VALUES(?,?,?,1)
+    ON CONFLICT(user_id,scope) DO UPDATE SET window_start=excluded.window_start,
+    count=CASE WHEN forum_rate_limits.window_start=excluded.window_start THEN forum_rate_limits.count+1 ELSE 1 END
+    WHERE forum_rate_limits.window_start!=excluded.window_start OR forum_rate_limits.count<?`).bind(userId,scope,windowStart,limit).run();
+  if(!result.meta.changes)throw new IssueError('Too many changes. Please wait a few minutes before trying again.',429);
 }

@@ -90,12 +90,16 @@ export function nuvioConfig(env) {
 
 export function assertSameOrigin(request) {
   const origin = request.headers.get('Origin');
-  if (!origin) return true;
+  const site = request.headers.get('Sec-Fetch-Site');
   try {
-    return origin === new URL(request.url).origin;
-  } catch {
-    return false;
-  }
+    const expected = new URL(request.url).origin;
+    if (origin) return origin === expected && site !== 'cross-site';
+    if (site === 'cross-site' || site === 'same-site') return false;
+    if (['GET', 'HEAD', 'OPTIONS'].includes(request.method)) return true;
+    if (site === 'same-origin') return true;
+    const referer = request.headers.get('Referer');
+    return !!referer && new URL(referer).origin === expected;
+  } catch { return false; }
 }
 
 export function isAdminUser(user, env) {

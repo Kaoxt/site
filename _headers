@@ -73,3 +73,16 @@
 
 /secondary-pages.css
   Cache-Control: public, max-age=300
+
+# Browser defenses for static site pages and assets.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  Content-Security-Policy: frame-ancestors 'none'; base-uri 'self'; object-src 'none'
+
+# The forum has only same-origin external scripts; disallow injected scripts.
+/discussions
+  Content-Security-Policy: script-src 'self'; script-src-attr 'none'
+/discussions.html
+  Content-Security-Policy: script-src 'self'; script-src-attr 'none'

@@ -295,3 +295,13 @@ test('topic pagination uses 25 per page with accurate filtered, member and follo
  const visible=(await f.call(null,null,{view:'list',category:1})).data;assert.equal(visible.total,25);assert.equal(visible.totalPages,1);assert.equal(visible.hasMore,false);
  const other=(await f.call(null,null,{view:'list',category:2})).data;assert.equal(other.total,0);assert.equal(other.totalPages,1);
 });
+
+test('edit spam is throttled and SQL payloads remain literal data',async()=>{
+ const f=fixture(),id=(await f.call('alice',topic)).data.id;
+ for(let i=0;i<20;i++)assert.equal((await f.call('alice',{action:'topicEdit',id,title:'Safe title',body:'Edit '+i})).status,200);
+ assert.equal((await f.call('alice',{action:'topicEdit',id,title:'Spam edit',body:'Blocked'})).status,429);
+ assert.equal((await f.call('admin',{action:'topicEdit',id,title:'Admin update',body:'Allowed'})).status,200);
+ assert.equal((await f.call(null,null,{view:'list',q:"' OR 1=1; DROP TABLE forum_topics;--"})).data.total,0);
+ assert.equal((await f.call(null,null,{view:'topic',id:"1 OR 1=1"})).status,404);
+ assert.equal((await f.call(null,null,{view:'topic',id})).data.topic.title,'Admin update');
+});
