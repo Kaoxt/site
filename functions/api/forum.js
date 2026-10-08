@@ -1,4 +1,5 @@
 import { ANNOUNCEMENTS_ID, importLegacyNews } from '../_lib/forum-news.js';
+import { mentionedMembers, mentionInsert, syncMentionVisibility, notifications, unreadNotifications } from '../_lib/forum-mentions.js';
 import { forumHandle, forumInput, releaseUrl, IssueError, textField, id, page, requireAdmin, memberSelect, memberJoin, counts, selfMember, ensureMember, mayPost, validCategory } from '../_lib/forum.js';
 const canEdit=(post,member,admin,now=Date.now())=>admin||!!member&&!member.banned&&!post.hidden&&member.id===post.member_id&&now-Date.parse(post.created_at)>=0&&now-Date.parse(post.created_at)<86400000;
 const protectCategory=c=>({...c,read_only:c.id===ANNOUNCEMENTS_ID?1:c.read_only});
@@ -18,6 +19,16 @@ export const onRequestGet = context => forumHandle(context,false,async({db,sessi
   const isNews=['news','latestNews','newsTopic','newsLegacy'].includes(view);
   const legacyId=isNews?await importLegacyNews(db):null;
   const me=await selfMember(db,session);
+  if(view==='mentionMembers'){
+    if(!session)throw new IssueError('Sign in to mention a member.',401);
+    const members=(await db.prepare(`SELECT ${memberSelect} FROM forum_members m LEFT JOIN account_preferences p ON p.user_id=m.user_id LEFT JOIN account_avatars a ON a.user_id=m.user_id WHERE m.banned=0 AND instr(lower(COALESCE(NULLIF(p.display_name,''),m.author)),lower(?))>0 ORDER BY lower(COALESCE(NULLIF(p.display_name,''),m.author)),m.id LIMIT 8`).bind((q.get('q')||'').trim().slice(0,80)).all()).results;
+    return reply({members});
+  }
+  if(view==='notifications'){
+    if(!session)throw new IssueError('Sign in to view your notifications.',401);
+    if(q.get('summary')==='1')return reply({unreadCount:await unreadNotifications(db,me)});
+    return reply(await notifications(db,me,q.has('cursor')?id(q.get('cursor')):null));
+  }
   const common={authenticated:!!session,isAdmin:admin,myMemberId:me?.id||null,canPost:!!session&&(!me?.banned||admin),announcementsCategoryId:ANNOUNCEMENTS_ID,postingOpen:!!(await db.prepare('SELECT posting_open FROM forum_settings WHERE id=1').first()).posting_open};
   if(view==='news'||view==='latestNews'){
     const limit=view==='latestNews'?1:11;
@@ -73,6 +84,18 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
   const data=await forumInput(context.request);
   if(data.action==='news'){requireAdmin(admin);data.categoryId=ANNOUNCEMENTS_ID;}
   const action=data.action==='news'?'topic':data.action;
+  if(action==='notificationsRead'){
+    const all=data.all===true;
+    if(!all&&(!Array.isArray(data.ids)||!data.ids.length||data.ids.length>100))throw new IssueError('Choose up to 100 notifications to mark as read.');
+    const ids=all?[]:[...new Set(data.ids.map(value=>id(value)))];
+    const member=await selfMember(db,session);
+    if(member){
+      const now=new Date().toISOString(),chunks=all?[[]]:[ids.slice(0,90),ids.slice(90)].filter(chunk=>chunk.length);
+      // D1 permits 100 bound parameters per statement, including timestamp/owner.
+      await db.batch(chunks.map(chunk=>db.prepare(`UPDATE forum_notifications SET read_at=? WHERE recipient_id=? AND read_at IS NULL ${all?'':`AND id IN (${chunk.map(()=>'?').join(',')})`}`).bind(now,member.id,...chunk)));
+    }
+    return reply({unreadCount:await unreadNotifications(db,member)});
+  }
   if(action==='follow'){
     if(typeof data.following!=='boolean')throw new IssueError('Invalid follow setting.');
     const topicId=id(data.id),target=await db.prepare('SELECT hidden FROM forum_topics WHERE id=?').bind(topicId).first();
@@ -104,15 +127,25 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
     if(!canEdit(target,member,admin,now))throw new IssueError('You can edit your own posts for 24 hours after posting.',403);
     if(!isTopic&&!admin){const parent=await db.prepare('SELECT hidden FROM forum_topics WHERE id=?').bind(target.topic_id).first();if(!parent||parent.hidden)throw new IssueError('Discussion not found.',404);}
     const body=textField(data.body,'Message',2,10000);
+    const recipients=mentionedMembers(body),previous=new Set(mentionedMembers(target.body,false));
+    const added=recipients.filter(recipient=>!previous.has(recipient));
+    const statements=[];
     // Keep the original publication/activity dates: edits never restart the window or reorder News.
     if(isTopic){
       const title=textField(data.title,'Title',5,160);
       const url=data.releaseUrl===undefined?target.github_release_url:releaseUrl(data.releaseUrl);
       if(data.releaseUrl!==undefined&&!admin)requireAdmin(admin);
       if(url&&target.category_id!==ANNOUNCEMENTS_ID)throw new IssueError('GitHub release links are only available for Announcements.');
-      await db.prepare('UPDATE forum_topics SET title=?,body=?,github_release_url=? WHERE id=?').bind(title,body,url,targetId).run();
+      statements.push(db.prepare('UPDATE forum_topics SET title=?,body=?,github_release_url=? WHERE id=?').bind(title,body,url,targetId));
     }
-    else await db.prepare('UPDATE forum_replies SET body=? WHERE id=?').bind(body,targetId).run();
+    else statements.push(db.prepare('UPDATE forum_replies SET body=? WHERE id=?').bind(body,targetId));
+    const kind=isTopic?'topic':'reply';
+    statements.push(syncMentionVisibility(db,kind,targetId,recipients));
+    if(added.length){
+      const actor=member||await ensureMember(db,session,context.env,data.profileId);
+      statements.push(mentionInsert(db,{kind,postId:targetId,actorId:actor.id,recipients:added,createdAt:new Date().toISOString()}));
+    }
+    await db.batch(statements);
     return reply({ok:true});
   }
   if(action==='topicDelete'||action==='replyDelete'){
@@ -122,9 +155,9 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
     const member=await selfMember(db,session);
     if(!admin&&(!member||member.id!==target.member_id))throw new IssueError('You can only delete your own posts.',403);
     if(isTopic){
-      await db.batch([db.prepare("DELETE FROM forum_follows WHERE topic_id=?").bind(targetId),db.prepare("DELETE FROM forum_likes WHERE (kind='topic' AND post_id=?) OR (kind='reply' AND post_id IN (SELECT id FROM forum_replies WHERE topic_id=?))").bind(targetId,targetId),db.prepare('DELETE FROM forum_replies WHERE topic_id=?').bind(targetId),db.prepare('DELETE FROM forum_topics WHERE id=?').bind(targetId)]);
+      await db.batch([db.prepare('DELETE FROM forum_notifications WHERE topic_id=?').bind(targetId),db.prepare("DELETE FROM forum_follows WHERE topic_id=?").bind(targetId),db.prepare("DELETE FROM forum_likes WHERE (kind='topic' AND post_id=?) OR (kind='reply' AND post_id IN (SELECT id FROM forum_replies WHERE topic_id=?))").bind(targetId,targetId),db.prepare('DELETE FROM forum_replies WHERE topic_id=?').bind(targetId),db.prepare('DELETE FROM forum_topics WHERE id=?').bind(targetId)]);
     }else{
-      await db.batch([db.prepare("DELETE FROM forum_likes WHERE kind='reply' AND post_id=?").bind(targetId),db.prepare('DELETE FROM forum_replies WHERE id=?').bind(targetId),db.prepare('UPDATE forum_topics SET updated_at=MAX(created_at,COALESCE((SELECT MAX(created_at) FROM forum_replies WHERE topic_id=? AND hidden=0),created_at)) WHERE id=?').bind(target.topic_id,target.topic_id)]);
+      await db.batch([db.prepare("DELETE FROM forum_notifications WHERE kind='reply' AND post_id=?").bind(targetId),db.prepare("DELETE FROM forum_likes WHERE kind='reply' AND post_id=?").bind(targetId),db.prepare('DELETE FROM forum_replies WHERE id=?').bind(targetId),db.prepare('UPDATE forum_topics SET updated_at=MAX(created_at,COALESCE((SELECT MAX(created_at) FROM forum_replies WHERE topic_id=? AND hidden=0),created_at)) WHERE id=?').bind(target.topic_id,target.topic_id)]);
     }
     return reply({ok:true});
   }
@@ -164,6 +197,7 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
   if(!['profile','topic','reply'].includes(action))throw new IssueError('Unknown action.');
   // Validate before creating a member or contacting Nuvio.
   const body=action==='profile'?textField(data.about??'','About me',0,1000):textField(data.body,'Message',2,10000);
+  const recipients=action==='profile'?[]:mentionedMembers(body);
   const title=action==='topic'?textField(data.title,'Title',5,160):'';
   const githubUrl=action==='topic'?releaseUrl(data.releaseUrl):'';
   if(githubUrl&&!admin)requireAdmin(admin);
@@ -177,15 +211,18 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
   if(action==='topic'){
     const category=await validCategory(db,data.categoryId,admin);
     if(githubUrl&&category!==ANNOUNCEMENTS_ID)throw new IssueError('GitHub release links are only available for Announcements.');
-    const result=await db.prepare(`INSERT INTO forum_topics(member_id,category_id,title,body,created_at,updated_at,github_release_url) SELECT ?,?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM forum_topics WHERE member_id=? AND created_at>?)<10 AND EXISTS(SELECT 1 FROM forum_members WHERE id=? AND (banned=0 OR ?=1)) AND EXISTS(SELECT 1 FROM forum_settings WHERE posting_open=1 OR ?=1) AND EXISTS(SELECT 1 FROM forum_categories WHERE id=? AND archived=0 AND ((read_only=0 AND id!=4) OR ?=1))`).bind(member.id,category,title,body,now,now,githubUrl,member.id,since,member.id,+admin,+admin,category,+admin).run();
+    const insert=db.prepare(`INSERT INTO forum_topics(member_id,category_id,title,body,created_at,updated_at,github_release_url) SELECT ?,?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM forum_topics WHERE member_id=? AND created_at>?)<10 AND EXISTS(SELECT 1 FROM forum_members WHERE id=? AND (banned=0 OR ?=1)) AND EXISTS(SELECT 1 FROM forum_settings WHERE posting_open=1 OR ?=1) AND EXISTS(SELECT 1 FROM forum_categories WHERE id=? AND archived=0 AND ((read_only=0 AND id!=4) OR ?=1))`).bind(member.id,category,title,body,now,now,githubUrl,member.id,since,member.id,+admin,+admin,category,+admin);
+    const notification=mentionInsert(db,{kind:'topic',actorId:member.id,recipients,createdAt:now,newPost:true});
+    const [result]=await db.batch([insert,...(notification?[notification]:[])]);
     if(!result.meta.changes)throw new IssueError('Unable to post: the forum settings changed or you reached the limit of 10 topics per day.',429);
     return reply({id:result.meta.last_row_id},201);
   }
   const topicId=id(data.id),topic=await db.prepare('SELECT * FROM forum_topics WHERE id=?').bind(topicId).first();
   if(!topic||topic.hidden)throw new IssueError('Discussion not found.',404);
   if(topic.locked&&!admin)throw new IssueError('This discussion is locked.',409);
-  const result=await db.prepare(`INSERT INTO forum_replies(topic_id,member_id,body,created_at) SELECT ?,?,?,? WHERE (SELECT COUNT(*) FROM forum_replies WHERE member_id=? AND created_at>?)<50 AND EXISTS(SELECT 1 FROM forum_topics WHERE id=? AND hidden=0 AND (locked=0 OR ?=1)) AND EXISTS(SELECT 1 FROM forum_members WHERE id=? AND (banned=0 OR ?=1)) AND EXISTS(SELECT 1 FROM forum_settings WHERE posting_open=1 OR ?=1)`).bind(topicId,member.id,body,now,member.id,since,topicId,+admin,member.id,+admin,+admin).run();
+  const insert=db.prepare(`INSERT INTO forum_replies(topic_id,member_id,body,created_at) SELECT ?,?,?,? WHERE (SELECT COUNT(*) FROM forum_replies WHERE member_id=? AND created_at>?)<50 AND EXISTS(SELECT 1 FROM forum_topics WHERE id=? AND hidden=0 AND (locked=0 OR ?=1)) AND EXISTS(SELECT 1 FROM forum_members WHERE id=? AND (banned=0 OR ?=1)) AND EXISTS(SELECT 1 FROM forum_settings WHERE posting_open=1 OR ?=1)`).bind(topicId,member.id,body,now,member.id,since,topicId,+admin,member.id,+admin,+admin);
+  const notification=mentionInsert(db,{kind:'reply',actorId:member.id,recipients,createdAt:now,newPost:true});
+  const [result]=await db.batch([insert,...(notification?[notification]:[]),db.prepare('UPDATE forum_topics SET updated_at=(SELECT MAX(created_at) FROM forum_replies WHERE topic_id=? AND hidden=0) WHERE id=? AND updated_at<(SELECT MAX(created_at) FROM forum_replies WHERE topic_id=? AND hidden=0)').bind(topicId,topicId,topicId)]);
   if(!result.meta.changes)throw new IssueError('Unable to reply: the discussion settings changed or you reached the limit of 50 replies per day.',429);
-  await db.prepare('UPDATE forum_topics SET updated_at=? WHERE id=? AND updated_at<?').bind(now,topicId,now).run();
   return reply({id:result.meta.last_row_id},201);
 });

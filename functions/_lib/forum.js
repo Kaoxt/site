@@ -1,6 +1,7 @@
 import { avatarDb } from './account-avatar.js';
 import { IssueError, profileIdentity, textField } from './issues.js';
 import { assertSameOrigin, isAdminUser, readSession, refreshSessionIfNeeded } from './nuvio-session.js';
+import { notificationSchema } from './forum-mentions.js';
 const schemas = new WeakMap();
 export async function forumDb(env) {
   const db = await avatarDb(env);
@@ -18,6 +19,7 @@ export async function forumDb(env) {
     db.prepare('CREATE INDEX IF NOT EXISTS forum_topics_member ON forum_topics(member_id, created_at DESC)'),
     db.prepare('CREATE INDEX IF NOT EXISTS forum_replies_topic ON forum_replies(topic_id, hidden, id)'),
     db.prepare('CREATE INDEX IF NOT EXISTS forum_replies_member ON forum_replies(member_id, created_at DESC)'),
+    ...notificationSchema.map(sql => db.prepare(sql)),
     db.prepare(`CREATE TABLE IF NOT EXISTS forum_settings (id INTEGER PRIMARY KEY CHECK(id=1), posting_open INTEGER NOT NULL DEFAULT 1)`),
     db.prepare('INSERT OR IGNORE INTO forum_settings(id) VALUES(1)'),
     // Seed only once; category edits and archives survive future deployments.

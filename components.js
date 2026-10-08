@@ -4,7 +4,7 @@
   const THEME_KEY = 'kollection-theme';
   const DARK_COLOR = '#050608';
   const LIGHT_COLOR = '#f4f5f7';
-  const NAV_VERSION = '20261007-nav1';
+  const NAV_VERSION = '20261008-mentions1';
   const FRAGMENT_TTL = 5 * 60 * 1000;
 
   const currentScript = document.currentScript || [...document.scripts].find((script) => /(?:^|\/)components\.js(?:\?|$)/.test(script.src));
@@ -136,6 +136,7 @@
     // These helpers only define their APIs at load time, so their downloads can overlap.
     return Object.fromEntries([
       ['nuvio-auth', 'KollectionNuvioAuth'],
+      ['nav-notifications', 'KollectionNavNotifications'],
       ['nav-account', 'KollectionNavAccount'],
       ['nav-login-redirect', 'KollectionNavLoginRedirect'],
       ['account-link', 'KollectionAccountLink'],

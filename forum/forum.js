@@ -88,7 +88,8 @@
 
   function newsView(d,params){
     root.innerHTML=`<div id="forum-list">${d.articles.map(t=>{
-      const plain=t.body.replace(/\[([^\]]+)\]\(https?:[^)]+\)/g,'$1').replace(/[*+`>#]/g,'');
+      const readable=window.KollectionForumEditor?.plainMentions?.(t.body)??t.body;
+      const plain=readable.replace(/\[([^\]]+)\]\(https?:[^)]+\)/g,'$1').replace(/[*+`>#]/g,'');
       return `<article class="release news-article" id="news-${t.id}"><div class="news-entry-content"><div class="release-tag">The Kollection</div><h2><a href="#topic/${t.id}">${esc(t.title)}</a></h2><div class="release-meta">${date(t.created_at)} · ${esc(t.author)}</div><p class="release-summary" data-summary>${esc(plain.slice(0,320))}${plain.length>320?'…':''}</p><div class="forum-rich news-full" id="news-body-${t.id}" hidden>${rich(t.body)}</div></div><div class="release-actions"><button type="button" data-expand aria-expanded="false" aria-controls="news-body-${t.id}">Show more</button>${releaseLink(t)}<a class="news-comment-link" href="#topic/${t.id}" aria-label="${t.reply_count} ${t.reply_count===1?'comment':'comments'} on ${esc(t.title)}" title="View comments"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/></svg><span aria-hidden="true">${t.reply_count}</span></a></div></article>`;
     }).join('')||'<p>No news posts yet.</p>'}</div>${pager(d,p=>'#news?page='+p)}`;
     if($('post-news')){$('post-news').hidden=!d.isAdmin;$('post-news').onclick=()=>newTopic(d);}

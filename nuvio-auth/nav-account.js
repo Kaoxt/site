@@ -84,6 +84,12 @@
       <path d="M14 8l4 4-4 4"></path><path d="M8.5 12H18"></path>
     </svg>`;
 
+  const notificationBadge = () => '<span class="nuvio-notification-badge" data-nuvio-notification-count role="img" hidden></span>';
+  const notificationIcon = () => `
+    <svg viewBox="0 0 24 24" aria-hidden="true" class="nuvio-row-icon">
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path>
+    </svg>`;
+
   const normalizeAvatarUrl = (value) => {
     const raw = String(value || '').trim();
     if (!raw) return '';
@@ -245,6 +251,7 @@
   async function signOut() {
     const userId = currentSession?.user?.id;
     invalidateRefresh();
+    window.KollectionNavNotifications?.setSession?.(null);
     try {
       await window.KollectionNuvioAuth?.signOut?.();
     } catch {
@@ -288,6 +295,7 @@
 
   function renderSignedOut() {
     renderGeneration += 1;
+    window.KollectionNavNotifications?.setSession?.(null);
     const { desktop, mobile } = slots();
 
     if (desktop) {
@@ -348,6 +356,7 @@
           <button class="nuvio-desktop-profile-button" type="button" aria-haspopup="true" aria-expanded="false">
             ${avatarMarkup(activeProfile, activeAvatar, 'desktop', true)}
             <span class="nuvio-desktop-profile-name">${esc(displayName)}</span>
+            ${notificationBadge()}
             <svg class="nuvio-profile-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"></path></svg>
           </button>
 
@@ -364,6 +373,13 @@
             <div class="nuvio-desktop-profile-list">${desktopProfileRows}</div>
 
             <div class="nuvio-desktop-menu-divider"></div>
+
+            <button class="nuvio-desktop-menu-row nuvio-account-link-row nuvio-notification-open" type="button"
+                    data-nuvio-notifications aria-haspopup="dialog" aria-controls="nuvioNotificationDialog" hidden>
+              ${notificationIcon()}
+              <span class="nuvio-row-copy"><strong>Notifications</strong><small>When someone tags you</small></span>
+              ${notificationBadge()}
+            </button>
 
             <a class="nuvio-desktop-menu-row" href="${SETUP_URL}">
               ${setupIcon()}
@@ -389,6 +405,7 @@
         const open = !wrap.classList.contains('open');
         wrap.classList.toggle('open', open);
         button.setAttribute('aria-expanded', String(open));
+        if (open) window.KollectionNavNotifications?.refresh?.();
       });
 
       desktop.querySelectorAll('[data-profile-id]').forEach((buttonEl) => {
@@ -420,7 +437,7 @@
           <div class="nuvio-mobile-current-profile">
             ${avatarMarkup(activeProfile, activeAvatar, 'mobile', true)}
             <div>
-              <strong>${esc(displayName)}</strong>
+              <span class="nuvio-mobile-identity-name"><strong>${esc(displayName)}</strong>${notificationBadge()}</span>
               <small>${esc(profileLabel)}</small>
             </div>
           </div>
@@ -429,6 +446,11 @@
             <div class="nuvio-mobile-switch-label">Switch profile</div>
             <div class="nuvio-mobile-profile-chips">${chips}</div>
           ` : ''}
+
+          <button class="nuvio-mobile-notification-button" type="button" data-nuvio-notifications
+                  aria-haspopup="dialog" aria-controls="nuvioNotificationDialog" hidden>
+            ${notificationIcon()}<span>Notifications</span>${notificationBadge()}
+          </button>
 
           <div class="nuvio-mobile-bottom-row">
             <div class="nuvio-mobile-socials">
@@ -449,6 +471,7 @@
     }
 
     enhanceAvatars(session, profiles, activeProfile);
+    window.KollectionNavNotifications?.setSession?.(session);
   }
 
   function accountPlaceholder() {
@@ -488,6 +511,7 @@
     }
 
     enhanceAvatars(session, profiles, activeProfile);
+    window.KollectionNavNotifications?.setSession?.(session);
   }
 
   function invalidateRefresh() {
@@ -581,6 +605,16 @@
       window.addEventListener('kollection:display-name-changed', sessionChanged);
       window.addEventListener('kollection:avatar-changed', sessionChanged);
       window.addEventListener('kollection:nuvio-session-changed', sessionChanged);
+      window.addEventListener('kollection:notifications-ready', () => {
+        window.KollectionNavNotifications?.setSession?.(currentSession);
+      });
+      document.getElementById('menuButton')?.addEventListener('click', () => {
+        queueMicrotask(() => {
+          if (document.getElementById('menuButton')?.getAttribute('aria-expanded') === 'true') {
+            window.KollectionNavNotifications?.refresh?.();
+          }
+        });
+      });
     }
 
     await refresh();

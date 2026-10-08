@@ -278,3 +278,37 @@ test('failed profile loading leaves navigation usable without assuming a profile
   assert.equal(h.writes.length, 0);
   assert.equal(h.desktop.querySelector('.nuvio-desktop-popover-user').querySelector('small').textContent, 'Nuvio account');
 });
+
+test('an already-loaded notifications controller receives validated sessions without delaying account controls', async () => {
+  const h = loadNav();
+  const sessions = [];
+  h.window.KollectionNavNotifications = { setSession: (session) => { sessions.push(session); return new Promise(() => {}); } };
+  const initialized = h.window.KollectionNavAccount.init();
+  h.session.resolve(signedIn);
+  h.token.resolve({ authenticated: true, accessToken: 'token' });
+  h.profiles.resolve(Response.json(profilesData));
+  await initialized;
+  assert.equal(h.window.KollectionNavAccount.getSelectedProfile().id, 2);
+  assert.ok(sessions.some((session) => session?.user?.id === 'user-1'));
+  assert.match(h.desktop.innerHTML, /data-nuvio-notifications/);
+  assert.match(h.mobile.innerHTML, /data-nuvio-notification-count/);
+  h.window.dispatchEvent({ type: 'kollection:nuvio-signed-out' });
+  assert.equal(sessions.at(-1), null);
+});
+
+test('a notifications module loaded after the account receives the current session through its readiness event', async () => {
+  const h = loadNav();
+  const initialized = h.window.KollectionNavAccount.init();
+  h.session.resolve(signedIn);
+  h.token.resolve({ authenticated: true, accessToken: 'token' });
+  h.profiles.resolve(Response.json(profilesData));
+  await initialized;
+  const sessions = [];
+  h.window.KollectionNavNotifications = { setSession: (session) => sessions.push(session) };
+  h.window.dispatchEvent({ type: 'kollection:notifications-ready' });
+  assert.equal(sessions.length, 1);
+  assert.equal(sessions[0].user.id, 'user-1');
+  h.window.dispatchEvent({ type: 'kollection:nuvio-signed-out' });
+  h.window.dispatchEvent({ type: 'kollection:notifications-ready' });
+  assert.equal(sessions.at(-1), null);
+});
