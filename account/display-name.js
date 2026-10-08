@@ -3,42 +3,54 @@
   const form = document.getElementById('accountDisplayNameForm');
   if (!form) return;
   const field = form.elements.displayName, button = form.querySelector('button'), status = document.getElementById('accountDisplayNameStatus');
-  let loaded = false;
+  const summary = document.getElementById('accountIdentityName'), settings = document.getElementById('accountIdentitySettings');
+  let loaded = false, generation = 0;
+  function showSavedName(name) { if (summary) summary.textContent = name || 'Nuvio profile name'; }
   function showQuota(data) {
     if (typeof data.changesRemaining !== 'number') return;
     const remaining = data.changesRemaining;
     document.getElementById('accountDisplayNameLimit').textContent = remaining > 0
-      ? `Your initial display name does not count as a change. ${remaining} of 2 later changes remain in a rolling 60-day period; changing or clearing the name uses one.`
-      : `Your initial display name did not count as a change. You have used both later changes in the last 60 days. You can change your name again on ${new Date(data.nextChangeAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}.`;
+      ? `First name is free · ${remaining} of 2 later changes available (rolling 60 days).`
+      : `First name is free · 0 of 2 later changes available (rolling 60 days). Next change: ${new Date(data.nextChangeAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}.`;
   }
-  async function request(options) {
+  async function request(options, version) {
     const response = await fetch('/api/account/preferences', { credentials: 'same-origin', cache: 'no-store', ...options });
     const data = await response.json();
-    showQuota(data);
+    if (version === generation) showQuota(data);
     if (!response.ok) throw new Error(data.error || 'Could not save your display name. Please try again.');
     return data;
   }
+  function clear() {
+    generation++; loaded = false; field.value = ''; field.disabled = button.disabled = true;
+    field.removeAttribute('aria-invalid'); button.textContent = 'Save display name'; status.textContent = '';
+    document.getElementById('accountDisplayNameLimit').textContent = 'First name is free · 2 later changes per rolling 60 days.';
+    showSavedName(''); if (settings) settings.open = false;
+  }
   async function load() {
-    loaded = false; field.disabled = button.disabled = true;
-    try { const data = await request(); field.value = data.displayName || ''; status.textContent = ''; loaded = true; }
-    catch (error) { status.textContent = error.message; }
-    finally { field.disabled = button.disabled = !loaded; }
+    clear(); const version = generation;
+    try { const data = await request(undefined, version); if (version !== generation) return; field.value = data.displayName || ''; showSavedName(data.displayName); status.textContent = ''; loaded = true; }
+    catch (error) { if (version === generation) status.textContent = error.message; }
+    finally { if (version === generation) field.disabled = button.disabled = !loaded; }
   }
   form.addEventListener('submit', async event => {
     event.preventDefault(); if (!loaded || button.disabled) return;
     status.textContent = ''; field.removeAttribute('aria-invalid');
     const name = field.value.trim();
     if (name.length > 50) { status.textContent = 'Display name must be 50 characters or fewer.'; field.setAttribute('aria-invalid', 'true'); field.focus(); return; }
+    const version = generation;
     button.disabled = true; button.textContent = 'Saving…';
     try {
-      const data = await request({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ displayName: name }) });
+      const data = await request({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ displayName: name }) }, version);
+      if (version !== generation) return;
       field.value = data.displayName;
+      showSavedName(data.displayName);
       status.textContent = data.displayName ? 'Display name saved. This name will appear across The Kollection.' : 'Display name cleared. Your selected Nuvio profile name will be used.';
       window.dispatchEvent(new CustomEvent('kollection:display-name-changed'));
-    } catch (error) { status.textContent = error.message; }
-    finally { button.disabled = false; button.textContent = 'Save display name'; }
+    } catch (error) { if (version === generation) status.textContent = error.message; }
+    finally { if (version === generation) { button.disabled = false; button.textContent = 'Save display name'; } }
   });
   window.addEventListener('kollection:nuvio-signed-in', load);
-  window.addEventListener('kollection:nuvio-signed-out', () => { loaded = false; field.value = ''; field.disabled = button.disabled = true; });
+  window.addEventListener('kollection:nuvio-session-changed', load);
+  window.addEventListener('kollection:nuvio-signed-out', clear);
   load();
 })();
