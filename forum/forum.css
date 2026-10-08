@@ -87,18 +87,19 @@ html[data-theme="light"] .forum-shell .issue-filters > button:hover:not(:disable
 .forum-shell .forum-topic-shortcuts [data-share]{background:transparent;border-color:transparent;color:var(--issue-muted)}
 .forum-topic-shortcuts [data-share] svg{width:16px;height:16px;flex:none}
 .forum-shell .forum-topic-shortcuts [data-share]:hover{background:var(--issue-field);color:inherit}
-.forum-shell #follow-topic{background:#f2f2f4;color:#151517;border-color:transparent}
-.forum-shell #follow-topic:hover:not(:disabled),.forum-shell #follow-topic[aria-pressed=true]{background:#e2e3e7}
-html[data-theme=light] .forum-shell #follow-topic{border-color:var(--issue-line)}
-.forum-follow-count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;padding:2px 5px;border-radius:5px;background:rgba(21,21,23,.08);font-size:12px;font-variant-numeric:tabular-nums}
+.forum-shell #follow-topic{background:var(--issue-field);color:inherit;border-color:var(--issue-line)}
+.forum-shell #follow-topic[aria-pressed=false]:hover:not(:disabled){background:var(--issue-panel);border-color:var(--issue-muted)}
+.forum-shell #follow-topic[aria-pressed=true]{background:color-mix(in srgb,#6568e8 14%,var(--issue-panel));border-color:#777af1;color:#b9bbff}
+html[data-theme=light] .forum-shell #follow-topic[aria-pressed=true]{color:#494bc0}
+.forum-follow-count{display:inline-flex;align-items:center;justify-content:center;min-width:22px;padding:2px 5px;border-radius:5px;background:var(--issue-panel);font-size:12px;font-variant-numeric:tabular-nums}
 .forum-topic-reply-row{display:flex;justify-content:flex-end;margin:12px 0 0}
 .forum-topic-reply-row:empty{display:none}
 .forum-topic-reply-row+.forum-post{margin-top:12px}
-.forum-shell .forum-reply-shortcut{display:inline-flex;align-items:center;justify-content:center;min-height:40px;box-sizing:border-box;padding:8px 16px;border:1px solid transparent;border-radius:999px;background:#f2f2f4;color:#151517;font-size:13px;font-weight:600;line-height:1.3}
-.forum-shell .forum-reply-shortcut:hover{background:#e2e3e7}
-html[data-theme=light] .forum-shell .forum-reply-shortcut{border-color:var(--issue-line)}
+.forum-shell .forum-reply-shortcut,.forum-shell #reply-form .issue-form-actions>.issue-primary{display:inline-flex;align-items:center;justify-content:center;min-height:40px;box-sizing:border-box;padding:8px 16px;border:1px solid transparent;border-radius:999px;background:#f2f2f4;color:#151517;font-size:13px;font-weight:600;line-height:1.3}
+.forum-shell .forum-reply-shortcut:hover,.forum-shell #reply-form .issue-form-actions>.issue-primary:hover:not(:disabled){background:#e2e3e7}
+html[data-theme=light] .forum-shell .forum-reply-shortcut,html[data-theme=light] .forum-shell #reply-form .issue-form-actions>.issue-primary{border-color:var(--issue-line)}
 @media(max-width:600px){.forum-topic-title{padding:14px 16px}.forum-shell .forum-topic-name{font-size:20px}.forum-topic-details{padding:12px 16px;gap:10px 16px}}
-@media(pointer:coarse){.forum-shell .forum-topic-shortcuts button,.forum-shell .forum-reply-shortcut{min-height:44px}}
+@media(pointer:coarse){.forum-shell .forum-topic-shortcuts button,.forum-shell .forum-reply-shortcut,.forum-shell #reply-form .issue-form-actions>.issue-primary{min-height:44px}}
 
 /* Keep the full-width separator above each post's actions. */
 .forum-post-footer{border-top:1px solid var(--issue-line);padding-top:14px;margin-top:24px;min-height:44px;flex-wrap:wrap}.forum-post-footer>div{gap:10px}.forum-shell .forum-post-footer button{border:1px solid var(--issue-line);border-radius:9px;padding:8px 13px}.forum-shell .forum-post-footer .forum-like{border-radius:999px;margin-left:auto}
