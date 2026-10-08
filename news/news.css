@@ -20,7 +20,6 @@
 .news-community .news-comment-link{align-self:flex-end;min-width:52px}
 .news-community .release-tag{margin-bottom:16px}
 .news-community .release-summary{margin-top:20px}
-@media(max-width:600px){.news-community .news-article{grid-template-columns:minmax(0,1fr);gap:20px}.news-community .release-actions{display:grid;grid-template-columns:minmax(0,176px) 1fr;align-items:center}.news-community .release-actions [data-expand]{grid-column:1;grid-row:1}.news-community .news-github-link{grid-column:1;grid-row:2}.news-community .news-comment-link{grid-column:2;grid-row:1;justify-self:end}#post-news{padding-inline:14px;font-size:13px}}
 html[data-theme=light] .news-community .release-actions [data-expand]{background:#20212b;color:#fff}
 
 /* Match the release button's subtle color feedback for either expand label. */
@@ -29,3 +28,81 @@ html[data-theme=light] .news-community .release-actions [data-expand]{--news-act
 .news-community .release-actions [data-expand]:is(:hover,:focus-visible,:active):not(:disabled){background:color-mix(in srgb,var(--news-action) 88%,var(--news-action-text));color:var(--news-action-text)}
 .news-community .release-actions [data-expand]:focus-visible{outline:2px solid #9699ff;outline-offset:3px}
 @media(prefers-reduced-motion:reduce){.news-community .release-actions [data-expand]{transition:none}}
+
+/* Nuvio switches its release feed to one column below 860px. Keep these
+   changes scoped to the news feed so desktop and the shared header stay intact. */
+@media (max-width: 859px) {
+  .news-shell.page-body.news-community {
+    width: calc(100vw - 40px) !important;
+    margin-inline: auto !important;
+  }
+  .news-community .news-article,
+  .news-community #forum-list > .release:first-child {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem;
+    padding-block: clamp(2rem, 1.5rem + 2vw, 3.25rem);
+  }
+  .news-community .release-tag {
+    min-height: 1.75rem;
+    margin-bottom: 1rem;
+    padding-inline: .625rem;
+    border-radius: .5rem;
+    background: transparent;
+    font-size: .75rem !important;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .news-community .news-article h2 {
+    font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.25rem) !important;
+    font-weight: 600;
+    letter-spacing: -.028em;
+    line-height: 1.08 !important;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+  .news-community .release-meta {
+    margin-top: .625rem;
+    font-size: .8125rem !important;
+    line-height: 1.45;
+  }
+  .news-community .release-summary,
+  .news-community .news-full {
+    max-width: 68ch;
+    margin: 1rem 0 0;
+    font-size: 1rem !important;
+    line-height: 1.62 !important;
+    overflow-wrap: anywhere;
+  }
+  .news-community .release-actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: .75rem;
+    margin-top: 0;
+  }
+  .news-community .release-actions [data-expand],
+  .news-community .news-github-link {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 2.625rem;
+    padding-inline: 1.125rem;
+    font-size: .875rem;
+    letter-spacing: -.01em;
+    white-space: nowrap;
+  }
+  .news-community .news-github-link {
+    background: var(--panel);
+    box-shadow: 0 1px 2px rgba(0,0,0,.12);
+  }
+  .news-community .news-comment-link {
+    margin-left: auto;
+    align-self: flex-start;
+    min-height: 2.625rem;
+  }
+  #post-news { padding-inline: 14px; font-size: 13px; }
+}
+@media (min-width: 640px) and (max-width: 859px) {
+  .news-shell.page-body.news-community { width: calc(100vw - 64px) !important; }
+}
