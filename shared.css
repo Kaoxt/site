@@ -1617,3 +1617,6 @@ body.light .hero .latest-update.is-pressed {
     0 16px 40px rgba(17,24,39,.09) !important;
 }
 
+
+/* Suppress Chromium touch flashes while retaining keyboard focus indicators. */
+html { -webkit-tap-highlight-color: transparent; }
