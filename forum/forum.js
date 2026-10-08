@@ -14,7 +14,7 @@
   const deleteButton=(post,d,kind)=>removable(post,d)?`<button type="button" class="forum-delete" data-delete="${kind}" data-id="${post.id}">Delete</button>`:'';
   const postActions=(post,d,kind)=>{
     const actions=`${post.can_edit?`<button type="button" data-edit="${kind}" data-id="${post.id}">Edit ${kind==='topic'&&newsPage?'news':'post'}</button>`:''}${kind==='topic'&&d.isAdmin?'<button type="button" id="manage-topic-toggle" aria-expanded="false" aria-controls="topic-management">Manage</button>':''}${kind==='reply'&&d.isAdmin?`<button type="button" data-reply="${post.id}" data-hidden="${post.hidden?0:1}">${post.hidden?'Restore':'Hide'}</button>`:''}${deleteButton(post,d,kind)}`;
-    return actions?`<details class="forum-post-actions"><summary aria-label="Post actions" title="Post actions"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></summary><div class="forum-action-menu" role="group" aria-label="Post actions">${actions}</div></details>`:'';
+    return actions?`<details class="forum-post-actions"><summary aria-label="Post actions" title="Post actions"><span class="forum-action-icon" aria-hidden="true"></span></summary><div class="forum-action-menu" role="group" aria-label="Post actions">${actions}</div></details>`:'';
   };
   function closePostActions(except=null){root.querySelectorAll('.forum-post-actions[open]').forEach(menu=>{if(menu!==except)menu.open=false;});}
   document.addEventListener('click',event=>{
