@@ -13,6 +13,11 @@ const categoryOverview = async db => (await db.prepare(`SELECT c.*,
  FROM forum_categories c ORDER BY c.position,c.id`).all()).results.map(protectCategory);
 const unreadSql=`(SELECT COUNT(*) FROM forum_replies ur WHERE ur.topic_id=t.id AND ur.hidden=0 AND ur.id>f.last_read_reply AND ur.member_id!=f.member_id)`;
 const topicSelect = `SELECT t.*,c.name AS category_name,${memberSelect},((SELECT COUNT(*) FROM forum_topics ft WHERE ft.member_id=m.id AND ft.hidden=0)+(SELECT COUNT(*) FROM forum_replies fr JOIN forum_topics ft ON ft.id=fr.topic_id WHERE fr.member_id=m.id AND fr.hidden=0 AND ft.hidden=0)) AS post_count,(SELECT COUNT(*) FROM forum_replies r WHERE r.topic_id=t.id AND r.hidden=0) AS reply_count FROM forum_topics t JOIN forum_categories c ON c.id=t.category_id ${memberJoin}`;
+const topicPages=async(db,from,values,current)=>{
+  const {total}=await db.prepare(`SELECT COUNT(*) AS total ${from}`).bind(...values).first();
+  const totalPages=Math.max(1,Math.ceil(total/25)),selected=Math.min(current,totalPages);
+  return {total,totalPages,page:selected,pageSize:25,hasMore:selected<totalPages};
+};
 export const onRequestGet = context => forumHandle(context,false,async({db,session,admin,reply})=>{
   const q=new URL(context.request.url).searchParams,view=q.get('view')||'list',current=page(q.get('page')),offset=(current-1)*20;
   // Only the public news surfaces need to run the idempotent historical import.
@@ -41,8 +46,9 @@ export const onRequestGet = context => forumHandle(context,false,async({db,sessi
   if(view==='member'){
     const member=await db.prepare(`SELECT ${memberSelect},m.about,m.created_at,${counts} FROM forum_members m LEFT JOIN account_preferences p ON p.user_id=m.user_id LEFT JOIN account_avatars a ON a.user_id=m.user_id WHERE m.id=?`).bind(q.get('id')||'').first();
     if(!member)throw new IssueError('Member not found.',404);
-    const rows=(await db.prepare(`${topicSelect} WHERE t.member_id=? AND t.hidden=0 ORDER BY t.id DESC LIMIT 21 OFFSET ?`).bind(member.member_id,offset).all()).results;
-    return reply({...common,member,topics:rows.slice(0,20),hasMore:rows.length>20,page:current});
+    const pagination=await topicPages(db,'FROM forum_topics t WHERE t.member_id=? AND t.hidden=0',[member.member_id],current);
+    const rows=(await db.prepare(`${topicSelect} WHERE t.member_id=? AND t.hidden=0 ORDER BY t.id DESC LIMIT 25 OFFSET ?`).bind(member.member_id,(pagination.page-1)*25).all()).results;
+    return reply({...common,member,topics:rows,...pagination});
   }
   if(view==='topic'||view==='newsTopic'||view==='newsLegacy'){
     const topic=await db.prepare(`${topicSelect} WHERE t.id=? ${admin?'':'AND t.hidden=0'} ${isNews?'AND t.category_id='+ANNOUNCEMENTS_ID:''}`).bind(view==='newsLegacy'?legacyId:id(q.get('id'))).first();
@@ -65,9 +71,13 @@ export const onRequestGet = context => forumHandle(context,false,async({db,sessi
   }
   if(view==='followed'){
     if(!session)throw new IssueError('Sign in to view followed topics.',401);
-    const topics=(await db.prepare(`${topicSelect} LEFT JOIN forum_follows f ON f.topic_id=t.id AND f.member_id=? LEFT JOIN forum_category_follows cf ON cf.category_id=t.category_id AND cf.member_id=? WHERE (f.member_id IS NOT NULL OR cf.member_id IS NOT NULL) AND t.hidden=0 ORDER BY t.updated_at DESC,t.id DESC LIMIT 21 OFFSET ?`).bind(me?.id||'',me?.id||'',offset).all()).results;
-    const unread=(await db.prepare(`SELECT t.id,${unreadSql} AS unread_count,(SELECT MIN(ur.id) FROM forum_replies ur WHERE ur.topic_id=t.id AND ur.hidden=0 AND ur.id>f.last_read_reply AND ur.member_id!=f.member_id) AS first_unread FROM forum_follows f JOIN forum_topics t ON t.id=f.topic_id WHERE f.member_id=? AND t.hidden=0 ORDER BY t.updated_at DESC,t.id DESC LIMIT 21 OFFSET ?`).bind(me?.id||'',offset).all()).results;
-    return reply({...common,followingView:true,categories:await categories(db),topics:topics.slice(0,20).map(({body,...t})=>({...t,...unread.find(r=>r.id===t.id)})),hasMore:topics.length>20,page:current});
+    const joins='LEFT JOIN forum_follows f ON f.topic_id=t.id AND f.member_id=? LEFT JOIN forum_category_follows cf ON cf.category_id=t.category_id AND cf.member_id=?';
+    const where='WHERE (f.member_id IS NOT NULL OR cf.member_id IS NOT NULL) AND t.hidden=0';
+    const values=[me?.id||'',me?.id||''];
+    const pagination=await topicPages(db,`FROM forum_topics t ${joins} ${where}`,values,current);
+    const rows=(await db.prepare(`${topicSelect} ${joins} ${where} ORDER BY t.updated_at DESC,t.id DESC LIMIT 25 OFFSET ?`).bind(...values,(pagination.page-1)*25).all()).results;
+    const unread=rows.length?(await db.prepare(`SELECT t.id,${unreadSql} AS unread_count,(SELECT MIN(ur.id) FROM forum_replies ur WHERE ur.topic_id=t.id AND ur.hidden=0 AND ur.id>f.last_read_reply AND ur.member_id!=f.member_id) AS first_unread FROM forum_follows f JOIN forum_topics t ON t.id=f.topic_id WHERE f.member_id=? AND t.id IN (${rows.map(()=>'?').join(',')})`).bind(me?.id||'',...rows.map(t=>t.id)).all()).results:[];
+    return reply({...common,followingView:true,categories:await categories(db),topics:rows.map(({body,...t})=>({...t,...unread.find(r=>r.id===t.id)})),...pagination});
   }
   if(view!=='list')throw new IssueError('Not found.',404);
   const moderation=q.get('moderation')==='1';if(moderation)requireAdmin(admin);
@@ -76,10 +86,12 @@ export const onRequestGet = context => forumHandle(context,false,async({db,sessi
   if(q.get('category')){filters.push('t.category_id=?');values.push(id(q.get('category')));}
   const search=(q.get('q')||'').trim().slice(0,100);
   if(search){filters.push('instr(lower(t.title),lower(?))>0');values.push(search);}
-  const rows=(await db.prepare(`${topicSelect} ${filters.length?'WHERE '+filters.join(' AND '):''} ORDER BY t.pinned DESC,t.updated_at DESC,t.id DESC LIMIT 21 OFFSET ?`).bind(...values,offset).all()).results;
+  const where=filters.length?'WHERE '+filters.join(' AND '):'';
+  const pagination=await topicPages(db,`FROM forum_topics t ${where}`,values,current);
+  const rows=(await db.prepare(`${topicSelect} ${where} ORDER BY t.pinned DESC,t.updated_at DESC,t.id DESC LIMIT 25 OFFSET ?`).bind(...values,(pagination.page-1)*25).all()).results;
   const categoryFollow=q.get('category')?await db.prepare('SELECT COUNT(*) AS follower_count,COALESCE(MAX(CASE WHEN member_id=? THEN 1 ELSE 0 END),0) AS following FROM forum_category_follows WHERE category_id=?').bind(me?.id||'',id(q.get('category'))).first():null;
   // Bodies are not needed on list pages.
-  return reply({...common,categoryFollow,categories:await categories(db),topics:rows.slice(0,20).map(({body,...t})=>t),hasMore:rows.length>20,page:current});
+  return reply({...common,categoryFollow,categories:await categories(db),topics:rows.map(({body,...t})=>t),...pagination});
 });
 export const onRequestPost = context => forumHandle(context,true,async({db,session,admin,reply})=>{
   const data=await forumInput(context.request);

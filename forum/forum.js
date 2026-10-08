@@ -88,7 +88,14 @@
     $('new-topic').onclick=()=>newTopic(d);bindForumSearch(d);
   }
   const options=(cats,value,filter=false,admin=false)=>cats.filter(c=>!filter||(!c.archived&&(c.id!==4&&!c.read_only||admin))).map(c=>`<option value="${c.id}" ${Number(value)===c.id?'selected':''}>${esc(c.name)}${c.archived?' (archived)':''}</option>`).join('');
-  const pager=(data,link)=>`<nav class="issue-pagination" aria-label="Discussion pages">${data.page>1?`<a href="${link(data.page-1)}">← Previous</a>`:''}<span>Page ${data.page}</span>${data.hasMore?`<a href="${link(data.page+1)}">Next →</a>`:''}</nav>`;
+  const pager=(data,link)=>{
+    if(!data.totalPages)return `<nav class="issue-pagination" aria-label="Discussion pages">${data.page>1?`<a href="${link(data.page-1)}">← Previous</a>`:''}<span>Page ${data.page}</span>${data.hasMore?`<a href="${link(data.page+1)}">Next →</a>`:''}</nav>`;
+    if(data.totalPages<=1)return '';
+    const current=data.page,total=data.totalPages,start=Math.max(1,Math.min(current-2,total-5));
+    const pageLink=(p,label,description)=>`<a href="${esc(link(p))}" aria-label="${description}" ${p===current?'aria-current="page"':''}>${label}</a>`;
+    return `<nav class="forum-pagination" aria-label="Topic pages"><div class="forum-page-links">${current>1?pageLink(1,'«','First page')+pageLink(current-1,'Previous','Previous page'):''}${Array.from({length:Math.min(6,total)},(_,i)=>pageLink(start+i,start+i,'Page '+(start+i))).join('')}${current<total?pageLink(current+1,'Next','Next page')+pageLink(total,'»','Last page'):''}</div><label class="forum-page-select"><span>Page ${current} of ${total}</span><select aria-label="Go to topic page">${Array.from({length:total},(_,i)=>`<option value="${esc(link(i+1))}" ${i+1===current?'selected':''}>Page ${i+1} of ${total}</option>`).join('')}</select></label></nav>`;
+  };
+  root.addEventListener('change',event=>{if(event.target.matches('.forum-page-select select'))location.hash=event.target.value;});
   const status='<p data-status class="issue-error" role="alert" tabindex="-1"></p>';
   const canWrite=d=>d.canPost&&(d.postingOpen||d.isAdmin);
   const note=d=>!d.authenticated?`<a href="/account?next=${encodeURIComponent(pagePath+location.hash)}">Sign in with Nuvio</a> to join the conversation.`:!d.canPost?'Posting is disabled for your account.':!d.postingOpen?'The forum is temporarily read-only.':'';

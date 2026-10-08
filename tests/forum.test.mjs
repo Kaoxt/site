@@ -43,7 +43,7 @@ test('quotas, pagination, validation and literal searches',async()=>{
  const f=fixture();for(const bad of [{...topic,title:''},{...topic,body:'x'.repeat(10001)},{action:'profile',about:'x'.repeat(1001)},{action:'unknown'}])assert.equal((await f.call('alice',bad)).status,400);
  assert.equal((await f.call('alice',{...topic,body:'x'.repeat(33000)})).status,413);assert.equal((await f.call('alice',{...topic,profileId:99})).status,400);
  for(let i=0;i<10;i++)assert.equal((await f.call('alice',topic)).status,201);assert.equal((await f.call('alice',topic)).status,429);
- for(let i=0;i<10;i++)await f.call('bob',topic);await f.call('carol',topic);const first=(await f.call(null)).data,second=(await f.call(null,null,{page:2})).data;assert.equal(first.topics.length,20);assert.equal(first.hasMore,true);assert.equal(second.topics.length,1);assert.equal(second.hasMore,false);assert.equal((await f.call(null,null,{q:'%'})).data.topics.length,0);
+ for(let i=0;i<10;i++)await f.call('bob',topic);for(let i=0;i<6;i++)await f.call('carol',topic);const first=(await f.call(null)).data,second=(await f.call(null,null,{page:2})).data;assert.equal(first.topics.length,25);assert.equal(first.hasMore,true);assert.equal(second.topics.length,1);assert.equal(second.hasMore,false);assert.equal((await f.call(null,null,{q:'%'})).data.topics.length,0);
  for(let i=0;i<50;i++)assert.equal((await f.call('alice',{action:'reply',id:1,body:'Test reply'})).status,201);assert.equal((await f.call('alice',{action:'reply',id:1,body:'Over quota'})).status,429);
  const replies=(await f.call(null,null,{view:'topic',id:1})).data;assert.equal(replies.replies.length,20);assert.equal(replies.hasMore,true);const next=(await f.call(null,null,{view:'topic',id:1,after:replies.replies.at(-1).id})).data;assert.equal(next.replies.length,20);assert.notEqual(next.replies[0].id,replies.replies[0].id);
 });
@@ -276,4 +276,22 @@ test('edited notes persist, only admins can hide them, and announcement edits st
  assert.equal(result.status,200);assert.equal(result.data.edited_at,null);
  for(const view of ['topic','newsTopic'])assert.equal((await f.call(null,null,{view,id:announcement})).data.topic.edited_at,null);
  assert.equal((await f.call(null,null,{view:'news'})).data.articles.find(a=>a.id===announcement).edited_at,null);
+});
+
+test('topic pagination uses 25 per page with accurate filtered, member and followed totals',async()=>{
+ const f=fixture(),id=(await f.call('alice',topic)).data.id;
+ const db=await forumDb(f.env),member=(await f.call('alice',null,{view:'self'})).data.myMemberId;
+ for(let i=0;i<50;i++)await db.prepare('INSERT INTO forum_topics(member_id,category_id,title,body,created_at,updated_at) VALUES(?,1,?,?,?,?)').bind(member,'Pagination topic '+i,'Body','2026-01-01','2026-01-01').run();
+ await f.call('alice',{action:'categoryFollow',id:1,following:true});
+ for(const params of [{view:'list',category:1},{view:'member',id:member},{view:'followed'}]){
+  const a=(await f.call('alice',null,params)).data,b=(await f.call('alice',null,{...params,page:2})).data,c=(await f.call('alice',null,{...params,page:3})).data;
+  assert.equal(a.total,51);assert.equal(a.totalPages,3);assert.equal(a.topics.length,25);assert.equal(a.hasMore,true);
+  assert.equal(b.topics.length,25);assert.equal(c.topics.length,1);assert.equal(c.hasMore,false);
+  assert.equal(new Set([...a.topics,...b.topics,...c.topics].map(t=>t.id)).size,51);
+  assert.equal((await f.call('alice',null,{...params,page:99})).data.page,3);
+ }
+ const search=(await f.call(null,null,{view:'list',q:'Pagination topic'})).data;assert.equal(search.total,50);assert.equal(search.totalPages,2);
+ await db.prepare('UPDATE forum_topics SET hidden=1 WHERE id>?').bind(id+24).run();
+ const visible=(await f.call(null,null,{view:'list',category:1})).data;assert.equal(visible.total,25);assert.equal(visible.totalPages,1);assert.equal(visible.hasMore,false);
+ const other=(await f.call(null,null,{view:'list',category:2})).data;assert.equal(other.total,0);assert.equal(other.totalPages,1);
 });
