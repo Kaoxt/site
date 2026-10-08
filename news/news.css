@@ -4,11 +4,6 @@
 /* Compact comment action paired with the existing outlined reading control. */
 .news-community .release-actions{justify-content:space-between;gap:16px}.news-community .release-actions [data-expand]{background:transparent;border-color:var(--issue-line);border-radius:12px;padding:10px 18px;min-height:44px;color:inherit}.news-community .news-comment-link{gap:8px;justify-content:center;min-width:52px;min-height:44px;padding:8px 6px;color:var(--issue-muted);font-size:16px;font-weight:500;line-height:1;border-radius:10px;font-variant-numeric:tabular-nums;text-decoration:none}.news-community .news-comment-link svg{display:block;flex:none}.news-community .news-comment-link:hover{color:#aaadff;background:var(--issue-field)}html[data-theme=light] .news-community .news-comment-link:hover{color:#4c4fc4}.news-community .news-comment-link:focus-visible{outline:2px solid #9699ff;outline-offset:3px}
 
-/* Keep the existing hero geometry; the owner action occupies its unused right side. */
-.news-title-row{position:relative}
-#post-news{position:absolute;right:0;top:50%;transform:translateY(-50%);font:600 14px Inter,system-ui,sans-serif;padding:11px 18px;min-height:44px;border:1px solid #777af1;border-radius:12px;background:#6568e8;color:#fff;cursor:pointer}
-#post-news[hidden]{display:none}
-#post-news:focus-visible{outline:2px solid #9699ff;outline-offset:3px}
 .news-community .news-article{display:grid;grid-template-columns:minmax(0,1fr) 176px;gap:32px;align-items:start;padding:36px 0 42px}
 .news-community .news-entry-content{min-width:0}
 .news-community .release-actions{display:flex;flex-direction:column;align-items:stretch;gap:10px;margin-top:0}
@@ -36,8 +31,7 @@ html[data-theme=light] .news-community .release-actions [data-expand]{--news-act
     width: calc(100vw - 40px) !important;
     margin-inline: auto !important;
   }
-  .news-community .news-article,
-  .news-community #forum-list > .release:first-child {
+  .news-community .news-article {
     grid-template-columns: minmax(0, 1fr);
     gap: 1.75rem;
     padding-block: clamp(2rem, 1.5rem + 2vw, 3.25rem);
@@ -101,7 +95,6 @@ html[data-theme=light] .news-community .release-actions [data-expand]{--news-act
     align-self: flex-start;
     min-height: 2.625rem;
   }
-  #post-news { padding-inline: 14px; font-size: 13px; }
 }
 @media (min-width: 640px) and (max-width: 859px) {
   .news-shell.page-body.news-community { width: calc(100vw - 64px) !important; }
