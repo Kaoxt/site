@@ -32,6 +32,12 @@ export async function forumDb(env) {
       try{await db.prepare("ALTER TABLE forum_topics ADD COLUMN github_release_url TEXT NOT NULL DEFAULT ''").run();}
       catch(e){if(!(await db.prepare('PRAGMA table_info(forum_topics)').all()).results.some(c=>c.name==='github_release_url'))throw e;}
     }
+    for(const table of ['forum_topics','forum_replies']){
+      if(!(await db.prepare(`PRAGMA table_info(${table})`).all()).results.some(c=>c.name==='edited_at')){
+        try{await db.prepare(`ALTER TABLE ${table} ADD COLUMN edited_at TEXT`).run();}
+        catch(e){if(!(await db.prepare(`PRAGMA table_info(${table})`).all()).results.some(c=>c.name==='edited_at'))throw e;}
+      }
+    }
   }).catch(e => { schemas.delete(db); throw e; }));
   await schemas.get(db); return db;
 }

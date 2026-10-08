@@ -253,3 +253,11 @@ html[data-theme=light] .forum-action-menu{color:#20212b}
 .forum-shell .forum-management-save{justify-self:end;width:auto;min-height:40px;padding:9px 18px;border-radius:999px;background:#f4f4f6;border-color:#f4f4f6;color:#151518;font-size:13px;font-weight:650}
 .forum-shell .forum-management-save:hover:not(:disabled){background:#e2e3e7}
 @media(max-width:700px){.forum-post-author{border-bottom-left-radius:0}.forum-post-bar .forum-post-meta{flex-wrap:nowrap}.forum-shell .forum-management-save{min-height:44px}}
+
+.forum-edited-note{margin:16px 0 0;color:var(--issue-muted);font-size:12px;line-height:1.5}
+.forum-shell .forum-hide-edit{display:flex;flex-direction:row;align-items:center;gap:8px;font-size:13px;color:var(--issue-muted)}
+.forum-status-icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--issue-field);color:var(--issue-muted);vertical-align:middle}
+.forum-status-icon[aria-label=Pinned]{color:#b5b7ff;background:rgba(101,104,232,.14)}
+html[data-theme=light] .forum-status-icon[aria-label=Pinned]{color:#5355bd}
+.forum-shell .issue-row h3{display:flex;align-items:center;gap:7px}
+.forum-shell .issue-row h3 a{min-width:0;overflow-wrap:anywhere}

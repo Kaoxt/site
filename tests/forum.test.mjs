@@ -57,19 +57,21 @@ test('category overview totals omit hidden content and include empty categories'
  await f.call('admin',{action:'topicModerate',id,categoryId:1,pinned:false,locked:false,hidden:true});
  overview=(await f.call(null,null,{view:'categories'})).data;c=overview.categories.find(c=>c.id===1);assert.equal(c.topic_count,0);assert.equal(c.reply_count,0);assert.equal(c.latest_id,null);
 });
-test('deletion enforces ownership and origin; admins can delete any post and topics remove replies',async()=>{
+test('deletion is admin-only and enforces origin; topics remove replies',async()=>{
  const f=fixture(),id=(await f.call('alice',topic)).data.id;
  const replyId=(await f.call('bob',{action:'reply',id,body:'Reply to delete'})).data.id;
  assert.equal((await f.call(null,{action:'topicDelete',id})).status,401);
  assert.equal((await f.call('alice',{action:'topicDelete',id},{},'https://evil.test')).status,403);
  assert.equal((await f.call('bob',{action:'topicDelete',id})).status,403);
  assert.equal((await f.call('alice',{action:'replyDelete',id:replyId})).status,403);
- assert.equal((await f.call('bob',{action:'replyDelete',id:replyId})).status,200);
+ assert.equal((await f.call('bob',{action:'replyDelete',id:replyId})).status,403);
+ assert.equal((await f.call('admin',{action:'replyDelete',id:replyId})).status,200);
  assert.equal((await f.call(null,null,{view:'topic',id})).data.topic.reply_count,0);
  const second=(await f.call('bob',{action:'reply',id,body:'Another reply'})).data.id;
  assert.equal((await f.call('admin',{action:'replyDelete',id:second})).status,200);
  await f.call('bob',{action:'reply',id,body:'Reply removed with topic'});
- assert.equal((await f.call('alice',{action:'topicDelete',id})).status,200);
+ assert.equal((await f.call('alice',{action:'topicDelete',id})).status,403);
+ assert.equal((await f.call('admin',{action:'topicDelete',id})).status,200);
  assert.equal((await f.call('admin',null,{view:'topic',id})).status,404);
  const db=await forumDb(f.env);assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM forum_replies WHERE topic_id=?').bind(id).first()).n,0);
  const another=(await f.call('alice',topic)).data.id;assert.equal((await f.call('admin',{action:'topicDelete',id:another})).status,200);
@@ -122,7 +124,7 @@ test('Historical release imports once, keeps its date and legacy link, and is no
  assert.equal((await f.call(null,null,{view:'latestNews'})).data.article,null);
  assert.equal((await f.call(null,null,{view:'newsLegacy'})).status,404);
 });
-test('editing enforces ownership, origin and the exact 24-hour cutoff without resetting dates',async()=>{
+test('editing enforces ownership and origin without a time limit or resetting dates',async()=>{
  const f=fixture(),id=(await f.call('alice',topic)).data.id;
  const rid=(await f.call('alice',{action:'reply',id,body:'Original reply'})).data.id;
  const db=await forumDb(f.env),realNow=Date.now,fixed=realNow();
@@ -145,9 +147,9 @@ test('editing enforces ownership, origin and the exact 24-hour cutoff without re
   assert.equal(d.topic.title,'Edited title');assert.equal(d.replies[0].body,'Edited reply');
   assert.equal((await f.call('bob',null,{view:'topic',id})).data.topic.can_edit,false);
   Date.now=()=>fixed+1;
-  assert.equal((await f.call('alice',edit)).status,403);
-  assert.equal((await f.call('alice',{action:'replyEdit',id:rid,body:'Too late'})).status,403);
-  d=(await f.call('alice',null,{view:'topic',id})).data;assert.equal(d.topic.can_edit,false);assert.equal(d.replies[0].can_edit,false);
+  assert.equal((await f.call('alice',edit)).status,200);
+  assert.equal((await f.call('alice',{action:'replyEdit',id:rid,body:'Later edit'})).status,200);
+  d=(await f.call('alice',null,{view:'topic',id})).data;assert.equal(d.topic.can_edit,true);assert.equal(d.replies[0].can_edit,true);
   assert.equal((await f.call('admin',edit)).status,200);
   assert.equal((await f.call('admin',{action:'replyEdit',id:rid,body:'Admin edit'})).status,200);
  }finally{Date.now=realNow;}
@@ -255,4 +257,23 @@ test('forum follows persist, include future topics, hide moderated posts and pre
  assert.equal((await f.call('alice',null,{view:'list',category:1})).data.categoryFollow.follower_count,0);
  await db.prepare("UPDATE forum_members SET banned=1 WHERE user_id='alice'").run();
  assert.equal((await f.call('alice',{action:'categoryFollow',id:2,following:true})).status,403);
+});
+
+test('edited notes persist, only admins can hide them, and announcement edits stay unmarked',async()=>{
+ const f=fixture(),id=(await f.call('alice',topic)).data.id;
+ const rid=(await f.call('alice',{action:'reply',id,body:'Original reply'})).data.id;
+ for(const [action,postId] of [['topicEdit',id],['replyEdit',rid]]){
+  const edit={action,id:postId,title:'Edited topic title',body:'Edited body',hideEdit:true};
+  let result=await f.call('alice',edit);assert.equal(result.status,200);assert.ok(result.data.edited_at);
+  let d=(await f.call(null,null,{view:'topic',id})).data;
+  assert.equal((action==='topicEdit'?d.topic:d.replies[0]).edited_at,result.data.edited_at);
+  result=await f.call('admin',edit);assert.equal(result.status,200);assert.equal(result.data.edited_at,null);
+  d=(await f.call(null,null,{view:'topic',id})).data;assert.equal((action==='topicEdit'?d.topic:d.replies[0]).edited_at,null);
+  result=await f.call('admin',{...edit,hideEdit:false});assert.ok(result.data.edited_at);
+ }
+ const announcement=(await f.call('admin',{...topic,categoryId:4})).data.id;
+ const result=await f.call('admin',{action:'topicEdit',id:announcement,title:'Announcement updated',body:'Updated news',hideEdit:false});
+ assert.equal(result.status,200);assert.equal(result.data.edited_at,null);
+ for(const view of ['topic','newsTopic'])assert.equal((await f.call(null,null,{view,id:announcement})).data.topic.edited_at,null);
+ assert.equal((await f.call(null,null,{view:'news'})).data.articles.find(a=>a.id===announcement).edited_at,null);
 });

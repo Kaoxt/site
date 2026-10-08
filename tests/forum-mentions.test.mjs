@@ -166,8 +166,8 @@ test('hidden/deleted content and banned actors never leak through inboxes or unr
   const alice = (await f.call('alice', null, { view: 'self' })).data.myMemberId;
   await f.call('admin', { action: 'memberModerate', id: alice, banned: true, clearAbout: false }); assert.equal((await f.inbox('bob')).notifications.length, 0);
   await f.call('admin', { action: 'memberModerate', id: alice, banned: false, clearAbout: false });
-  await f.call('alice', { action: 'replyDelete', id: rid }); assert.equal((await f.inbox('bob')).unreadCount, 1);
-  await f.call('alice', { action: 'topicDelete', id: tid }); assert.equal((await f.inbox('bob')).unreadCount, 0);
+  await f.call('admin', { action: 'replyDelete', id: rid }); assert.equal((await f.inbox('bob')).unreadCount, 1);
+  await f.call('admin', { action: 'topicDelete', id: tid }); assert.equal((await f.inbox('bob')).unreadCount, 0);
   assert.equal((await f.env.DB.prepare('SELECT COUNT(*) AS n FROM forum_notifications').first()).n, 0);
 });
 

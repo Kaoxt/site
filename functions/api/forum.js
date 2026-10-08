@@ -1,7 +1,7 @@
 import { ANNOUNCEMENTS_ID, importLegacyNews } from '../_lib/forum-news.js';
 import { mentionedMembers, mentionInsert, syncMentionVisibility, notifications, unreadNotifications } from '../_lib/forum-mentions.js';
 import { forumHandle, forumInput, releaseUrl, IssueError, textField, id, page, requireAdmin, memberSelect, memberJoin, counts, selfMember, ensureMember, mayPost, validCategory } from '../_lib/forum.js';
-const canEdit=(post,member,admin,now=Date.now())=>admin||!!member&&!member.banned&&!post.hidden&&member.id===post.member_id&&now-Date.parse(post.created_at)>=0&&now-Date.parse(post.created_at)<86400000;
+const canEdit=(post,member,admin)=>admin||!!member&&!member.banned&&!post.hidden&&member.id===post.member_id;
 const protectCategory=c=>({...c,read_only:c.id===ANNOUNCEMENTS_ID?1:c.read_only});
 const categories = async db => (await db.prepare('SELECT * FROM forum_categories ORDER BY position,id').all()).results.map(protectCategory);
 const categoryOverview = async db => (await db.prepare(`SELECT c.*,
@@ -48,7 +48,7 @@ export const onRequestGet = context => forumHandle(context,false,async({db,sessi
     const topic=await db.prepare(`${topicSelect} WHERE t.id=? ${admin?'':'AND t.hidden=0'} ${isNews?'AND t.category_id='+ANNOUNCEMENTS_ID:''}`).bind(view==='newsLegacy'?legacyId:id(q.get('id'))).first();
     if(!topic)throw new IssueError('Discussion not found.',404);
     const after=q.get('reply')?id(q.get('reply'))-1:Math.max(0,Number(q.get('after'))||0);
-    const rows=(await db.prepare(`SELECT t.id,t.body,t.created_at,t.hidden,${memberSelect},((SELECT COUNT(*) FROM forum_topics ft WHERE ft.member_id=m.id AND ft.hidden=0)+(SELECT COUNT(*) FROM forum_replies fr JOIN forum_topics ft ON ft.id=fr.topic_id WHERE fr.member_id=m.id AND fr.hidden=0 AND ft.hidden=0)) AS post_count FROM forum_replies t ${memberJoin} WHERE t.topic_id=? AND t.id>? ${admin?'':'AND t.hidden=0'} ORDER BY t.id LIMIT 21`).bind(topic.id,after).all()).results;
+    const rows=(await db.prepare(`SELECT t.id,t.body,t.created_at,t.edited_at,t.hidden,${memberSelect},((SELECT COUNT(*) FROM forum_topics ft WHERE ft.member_id=m.id AND ft.hidden=0)+(SELECT COUNT(*) FROM forum_replies fr JOIN forum_topics ft ON ft.id=fr.topic_id WHERE fr.member_id=m.id AND fr.hidden=0 AND ft.hidden=0)) AS post_count FROM forum_replies t ${memberJoin} WHERE t.topic_id=? AND t.id>? ${admin?'':'AND t.hidden=0'} ORDER BY t.id LIMIT 21`).bind(topic.id,after).all()).results;
     const visible=rows.slice(0,20);
     const follow=await db.prepare('SELECT COUNT(*) AS follower_count,COALESCE(MAX(CASE WHEN member_id=? THEN 1 ELSE 0 END),0) AS following FROM forum_follows WHERE topic_id=?').bind(me?.id||'',topic.id).first();
     if(me&&follow.following&&visible.length)await db.prepare('UPDATE forum_follows SET last_read_reply=MAX(last_read_reply,?) WHERE topic_id=? AND member_id=?').bind(visible.at(-1).id,topic.id,me.id).run();
@@ -136,21 +136,22 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
     const target=await db.prepare(isTopic?'SELECT * FROM forum_topics WHERE id=?':'SELECT * FROM forum_replies WHERE id=?').bind(targetId).first();
     if(!target)throw new IssueError(isTopic?'Discussion not found.':'Reply not found.',404);
     const member=await selfMember(db,session),now=Date.now();
-    if(!canEdit(target,member,admin,now))throw new IssueError('You can edit your own posts for 24 hours after posting.',403);
+    if(!canEdit(target,member,admin,now))throw new IssueError('You can only edit your own visible posts.',403);
     if(!isTopic&&!admin){const parent=await db.prepare('SELECT hidden FROM forum_topics WHERE id=?').bind(target.topic_id).first();if(!parent||parent.hidden)throw new IssueError('Discussion not found.',404);}
     const body=textField(data.body,'Message',2,10000);
     const recipients=mentionedMembers(body),previous=new Set(mentionedMembers(target.body,false));
     const added=recipients.filter(recipient=>!previous.has(recipient));
+    const editedAt=isTopic&&target.category_id===ANNOUNCEMENTS_ID||admin&&data.hideEdit===true?null:new Date(now).toISOString();
     const statements=[];
-    // Keep the original publication/activity dates: edits never restart the window or reorder News.
+    // Keep the original publication/activity dates: edits never reorder News.
     if(isTopic){
       const title=textField(data.title,'Title',5,160);
       const url=data.releaseUrl===undefined?target.github_release_url:releaseUrl(data.releaseUrl);
       if(data.releaseUrl!==undefined&&!admin)requireAdmin(admin);
       if(url&&target.category_id!==ANNOUNCEMENTS_ID)throw new IssueError('GitHub release links are only available for Announcements.');
-      statements.push(db.prepare('UPDATE forum_topics SET title=?,body=?,github_release_url=? WHERE id=?').bind(title,body,url,targetId));
+      statements.push(db.prepare('UPDATE forum_topics SET title=?,body=?,github_release_url=?,edited_at=? WHERE id=?').bind(title,body,url,editedAt,targetId));
     }
-    else statements.push(db.prepare('UPDATE forum_replies SET body=? WHERE id=?').bind(body,targetId));
+    else statements.push(db.prepare('UPDATE forum_replies SET body=?,edited_at=? WHERE id=?').bind(body,editedAt,targetId));
     const kind=isTopic?'topic':'reply';
     statements.push(syncMentionVisibility(db,kind,targetId,recipients));
     if(added.length){
@@ -158,14 +159,13 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
       statements.push(mentionInsert(db,{kind,postId:targetId,actorId:actor.id,recipients:added,createdAt:new Date().toISOString()}));
     }
     await db.batch(statements);
-    return reply({ok:true});
+    return reply({ok:true,edited_at:editedAt});
   }
   if(action==='topicDelete'||action==='replyDelete'){
+    requireAdmin(admin);
     const targetId=id(data.id),isTopic=action==='topicDelete';
     const target=await db.prepare(isTopic?'SELECT * FROM forum_topics WHERE id=?':'SELECT * FROM forum_replies WHERE id=?').bind(targetId).first();
     if(!target)throw new IssueError(isTopic?'Discussion not found.':'Reply not found.',404);
-    const member=await selfMember(db,session);
-    if(!admin&&(!member||member.id!==target.member_id))throw new IssueError('You can only delete your own posts.',403);
     if(isTopic){
       await db.batch([db.prepare('DELETE FROM forum_notifications WHERE topic_id=?').bind(targetId),db.prepare("DELETE FROM forum_follows WHERE topic_id=?").bind(targetId),db.prepare("DELETE FROM forum_likes WHERE (kind='topic' AND post_id=?) OR (kind='reply' AND post_id IN (SELECT id FROM forum_replies WHERE topic_id=?))").bind(targetId,targetId),db.prepare('DELETE FROM forum_replies WHERE topic_id=?').bind(targetId),db.prepare('DELETE FROM forum_topics WHERE id=?').bind(targetId)]);
     }else{
