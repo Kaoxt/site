@@ -37,7 +37,7 @@ export const onRequestGet = context => forumHandle(context,false,async({db,sessi
     return reply({...common,categories:await categories(db),articles:articles.slice(0,10),hasMore:articles.length>10,page:current});
   }
   if(view==='categories')return reply({...common,categories:await categoryOverview(db)});
-  if(view==='self'){const stats=me?await db.prepare(`SELECT ${counts} FROM forum_members m WHERE m.id=?`).bind(me.id).first():{topic_count:0,reply_count:0,likes_received:0};const follows=me?await db.prepare(`SELECT COUNT(*) AS total,COALESCE(SUM(CASE WHEN ${unreadSql}>0 THEN 1 ELSE 0 END),0) AS unread FROM forum_follows f JOIN forum_topics t ON t.id=f.topic_id WHERE f.member_id=? AND t.hidden=0`).bind(me.id).first():{total:0,unread:0};return reply({...common,about:me?.about||'',stats,follows});}
+  if(view==='self'){const stats=me?await db.prepare(`SELECT ${counts} FROM forum_members m WHERE m.id=?`).bind(me.id).first():{topic_count:0,reply_count:0,likes_received:0};const follows=me?await db.prepare(`SELECT COUNT(*) AS total,COALESCE(SUM(CASE WHEN ${unreadSql}>0 THEN 1 ELSE 0 END),0) AS unread FROM forum_topics t LEFT JOIN forum_follows f ON f.topic_id=t.id AND f.member_id=? LEFT JOIN forum_category_follows cf ON cf.category_id=t.category_id AND cf.member_id=? WHERE (f.member_id IS NOT NULL OR cf.member_id IS NOT NULL) AND t.hidden=0`).bind(me.id,me.id).first():{total:0,unread:0};return reply({...common,about:me?.about||'',stats,follows});}
   if(view==='member'){
     const member=await db.prepare(`SELECT ${memberSelect},m.about,m.created_at,${counts} FROM forum_members m LEFT JOIN account_preferences p ON p.user_id=m.user_id LEFT JOIN account_avatars a ON a.user_id=m.user_id WHERE m.id=?`).bind(q.get('id')||'').first();
     if(!member)throw new IssueError('Member not found.',404);
@@ -65,7 +65,7 @@ export const onRequestGet = context => forumHandle(context,false,async({db,sessi
   }
   if(view==='followed'){
     if(!session)throw new IssueError('Sign in to view followed topics.',401);
-    const topics=(await db.prepare(`${topicSelect} JOIN forum_follows f ON f.topic_id=t.id WHERE f.member_id=? AND t.hidden=0 ORDER BY t.updated_at DESC,t.id DESC LIMIT 21 OFFSET ?`).bind(me?.id||'',offset).all()).results;
+    const topics=(await db.prepare(`${topicSelect} LEFT JOIN forum_follows f ON f.topic_id=t.id AND f.member_id=? LEFT JOIN forum_category_follows cf ON cf.category_id=t.category_id AND cf.member_id=? WHERE (f.member_id IS NOT NULL OR cf.member_id IS NOT NULL) AND t.hidden=0 ORDER BY t.updated_at DESC,t.id DESC LIMIT 21 OFFSET ?`).bind(me?.id||'',me?.id||'',offset).all()).results;
     const unread=(await db.prepare(`SELECT t.id,${unreadSql} AS unread_count,(SELECT MIN(ur.id) FROM forum_replies ur WHERE ur.topic_id=t.id AND ur.hidden=0 AND ur.id>f.last_read_reply AND ur.member_id!=f.member_id) AS first_unread FROM forum_follows f JOIN forum_topics t ON t.id=f.topic_id WHERE f.member_id=? AND t.hidden=0 ORDER BY t.updated_at DESC,t.id DESC LIMIT 21 OFFSET ?`).bind(me?.id||'',offset).all()).results;
     return reply({...common,followingView:true,categories:await categories(db),topics:topics.slice(0,20).map(({body,...t})=>({...t,...unread.find(r=>r.id===t.id)})),hasMore:topics.length>20,page:current});
   }
@@ -77,8 +77,9 @@ export const onRequestGet = context => forumHandle(context,false,async({db,sessi
   const search=(q.get('q')||'').trim().slice(0,100);
   if(search){filters.push('instr(lower(t.title),lower(?))>0');values.push(search);}
   const rows=(await db.prepare(`${topicSelect} ${filters.length?'WHERE '+filters.join(' AND '):''} ORDER BY t.pinned DESC,t.updated_at DESC,t.id DESC LIMIT 21 OFFSET ?`).bind(...values,offset).all()).results;
+  const categoryFollow=q.get('category')?await db.prepare('SELECT COUNT(*) AS follower_count,COALESCE(MAX(CASE WHEN member_id=? THEN 1 ELSE 0 END),0) AS following FROM forum_category_follows WHERE category_id=?').bind(me?.id||'',id(q.get('category'))).first():null;
   // Bodies are not needed on list pages.
-  return reply({...common,categories:await categories(db),topics:rows.slice(0,20).map(({body,...t})=>t),hasMore:rows.length>20,page:current});
+  return reply({...common,categoryFollow,categories:await categories(db),topics:rows.slice(0,20).map(({body,...t})=>t),hasMore:rows.length>20,page:current});
 });
 export const onRequestPost = context => forumHandle(context,true,async({db,session,admin,reply})=>{
   const data=await forumInput(context.request);
@@ -95,6 +96,17 @@ export const onRequestPost = context => forumHandle(context,true,async({db,sessi
       await db.batch(chunks.map(chunk=>db.prepare(`UPDATE forum_notifications SET read_at=? WHERE recipient_id=? AND read_at IS NULL ${all?'':`AND id IN (${chunk.map(()=>'?').join(',')})`}`).bind(now,member.id,...chunk)));
     }
     return reply({unreadCount:await unreadNotifications(db,member)});
+  }
+  if(action==='categoryFollow'){
+    if(typeof data.following!=='boolean')throw new IssueError('Invalid follow setting.');
+    const categoryId=id(data.id),target=await db.prepare('SELECT id FROM forum_categories WHERE id=?').bind(categoryId).first();
+    if(!target)throw new IssueError('Forum not found.',404);
+    const member=await ensureMember(db,session,context.env,data.profileId);
+    if(member.banned&&!admin)throw new IssueError('Posting is disabled for this account.',403);
+    if(data.following)await db.prepare('INSERT OR IGNORE INTO forum_category_follows(category_id,member_id) VALUES(?,?)').bind(categoryId,member.id).run();
+    else await db.prepare('DELETE FROM forum_category_follows WHERE category_id=? AND member_id=?').bind(categoryId,member.id).run();
+    const count=await db.prepare('SELECT COUNT(*) AS n FROM forum_category_follows WHERE category_id=?').bind(categoryId).first();
+    return reply({following:data.following,follower_count:count.n});
   }
   if(action==='follow'){
     if(typeof data.following!=='boolean')throw new IssueError('Invalid follow setting.');

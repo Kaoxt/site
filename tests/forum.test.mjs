@@ -231,3 +231,28 @@ test('follow persists uniquely, tracks new replies, stays private and clears on 
  assert.equal((await f.call('bob',{...follow,following:false})).data.follower_count,0);assert.equal((await f.call('bob',null,{view:'followed'})).data.topics.length,0);
  await f.call('bob',follow);await f.call('admin',{action:'topicDelete',id});const db=await forumDb(f.env);assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM forum_follows').first()).n,0);
 });
+
+test('forum follows persist, include future topics, hide moderated posts and preserve explicit topic follows',async()=>{
+ const f=fixture();
+ assert.equal((await f.call(null,{action:'categoryFollow',id:1,following:true})).status,401);
+ assert.equal((await f.call('alice',{action:'categoryFollow',id:1,following:true},{},'https://evil.test')).status,403);
+ assert.equal((await f.call('alice',{action:'categoryFollow',id:999,following:true})).status,404);
+ assert.equal((await f.call('alice',{action:'categoryFollow',id:1,following:'true'})).status,400);
+ for(let n=0;n<2;n++)assert.deepEqual((await f.call('alice',{action:'categoryFollow',id:1,following:true})).data,{following:true,follower_count:1});
+ assert.equal((await f.call('alice',null,{view:'list',category:1})).data.categoryFollow.following,1);
+ assert.equal((await f.call('bob',null,{view:'list',category:1})).data.categoryFollow.following,0);
+ const first=(await f.call('bob',topic)).data.id;
+ const second=(await f.call('bob',{...topic,title:'A later forum topic'})).data.id;
+ const other=(await f.call('bob',{...topic,categoryId:2,title:'Another forum topic'})).data.id;
+ assert.deepEqual((await f.call('alice',null,{view:'followed'})).data.topics.map(t=>t.id),[second,first]);
+ assert.equal((await f.call('alice',null,{view:'self'})).data.follows.total,2);
+ await f.call('alice',{action:'follow',id:first,following:true});
+ assert.equal((await f.call('alice',null,{view:'followed'})).data.topics.length,2);
+ const db=await forumDb(f.env);await db.prepare('UPDATE forum_topics SET hidden=1 WHERE id=?').bind(second).run();
+ assert.deepEqual((await f.call('alice',null,{view:'followed'})).data.topics.map(t=>t.id),[first]);
+ await f.call('alice',{action:'categoryFollow',id:1,following:false});
+ assert.deepEqual((await f.call('alice',null,{view:'followed'})).data.topics.map(t=>t.id),[first]);
+ assert.equal((await f.call('alice',null,{view:'list',category:1})).data.categoryFollow.follower_count,0);
+ await db.prepare("UPDATE forum_members SET banned=1 WHERE user_id='alice'").run();
+ assert.equal((await f.call('alice',{action:'categoryFollow',id:2,following:true})).status,403);
+});
