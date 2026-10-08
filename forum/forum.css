@@ -130,28 +130,28 @@ html[data-theme=light] .forum-rich a.forum-mention{color:#494bc0;background:rgba
 html[data-theme=light] .forum-rich a.forum-mention:hover{background:rgba(101,104,232,.16)}
 
 /* Keep post editing actions separate from the release link and social footer. */
-.forum-shell .forum-edit-form { gap: 18px; }
-.forum-shell .forum-edit-form [data-status]:empty { display: none; }
-.forum-shell .forum-edit-form .issue-form-actions {
+.forum-shell :is(.forum-edit-form, #new-topic-form) { gap: 18px; }
+.forum-shell :is(.forum-edit-form, #new-topic-form) [data-status]:empty { display: none; }
+.forum-shell :is(.forum-edit-form, #new-topic-form) .issue-form-actions {
   align-items: center;
   gap: 10px;
   margin-top: 2px;
   padding-top: 16px;
   border-top: 1px solid var(--issue-line);
 }
-.forum-shell .forum-edit-form .issue-form-actions button {
+.forum-shell :is(.forum-edit-form, #new-topic-form) .issue-form-actions button {
   min-height: 42px;
   padding: 10px 18px;
   border-radius: 999px;
   font-size: 14px;
   line-height: 1.2;
 }
-.forum-shell .forum-edit-form .issue-form-actions .issue-primary {
+.forum-shell :is(.forum-edit-form, #new-topic-form) .issue-form-actions .issue-primary {
   background: #f4f4f6;
   border-color: #f4f4f6;
   color: #151518;
 }
-.forum-shell .forum-edit-form .issue-form-actions .issue-primary:hover:not(:disabled) {
+.forum-shell :is(.forum-edit-form, #new-topic-form) .issue-form-actions .issue-primary:hover:not(:disabled) {
   background: #dddde2;
   border-color: #dddde2;
 }
@@ -178,6 +178,16 @@ html[data-theme=light] .forum-rich a.forum-mention:hover{background:rgba(101,104
 }
 .forum-shell .forum-post-main [data-release-link] .news-github-link:hover {
   background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Indigo distinguishes links within posts, previews and release details. */
+.forum-shell { --forum-post-link: #a5b4fc; }
+html[data-theme=light] .forum-shell { --forum-post-link: #4f46e5; }
+.forum-shell .forum-rich a:not(.forum-mention),
+.forum-shell .forum-post-main [data-release-link] .news-github-link {
+  color: var(--forum-post-link);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
