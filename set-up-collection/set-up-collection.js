@@ -2851,7 +2851,16 @@
         </div>
         <hr class="sep">
         <div class="callout warn"><strong>${setupUpdatesExisting ? 'This update replaces the previous Kollection setup and its AIOMetadata installation.' : `The final setup adds AIOMetadata${bcNeeded ? ' and Bingecat' : ''} before pushing your selected sections.`}</strong> ${setupUpdatesExisting ? 'The new AIOMetadata configuration is created first, the updated collection is synced, and then the previous AIOMetadata add-on is removed. Unrelated add-ons and plugins are preserved.' : 'Unselected matching The Kollection sections are omitted; unrelated add-ons and collection groups are preserved.'}</div>
-        <div class="actions"><button class="ghost" id="backBtn">Back</button><div class="action-group"><button class="ghost" id="backupBtn">Download backup</button><button class="ghost" id="aioExportBtn">Export AIOMetadata</button><button class="btn" id="nextBtn">Continue</button></div></div>
+        <div class="review-actions">
+          <div class="review-exports" role="group" aria-label="Download configuration">
+            <button class="ghost" id="backupBtn" type="button">Download backup</button>
+            <button class="ghost" id="aioExportBtn" type="button">Export AIOMetadata</button>
+          </div>
+          <div class="review-navigation">
+            <button class="ghost" id="backBtn" type="button">Back</button>
+            <button class="btn" id="nextBtn" type="button">Continue</button>
+          </div>
+        </div>
       </div>`);
     $('#backBtn').onclick = () => setStep(4);
     $('#backupBtn').onclick = () => downloadJson(`nuvio-backup-profile-${state.profileId}-${new Date().toISOString().slice(0,10)}.json`, state.backup);

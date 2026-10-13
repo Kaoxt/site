@@ -1341,3 +1341,18 @@ body.light .setup-frame select,
 body.light .smart-overlay-modal select{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5.5 7.5L10 12l4.5-4.5' fill='none' stroke='%23686b73' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
 }
+
+
+/* Review: keep optional downloads separate from step navigation. */
+.review-actions{display:grid;gap:18px;margin-top:26px}
+.review-exports{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.review-exports .ghost{width:100%;min-width:0;min-height:44px;padding:10px 12px;line-height:1.4;text-align:center}
+.review-navigation{display:flex;align-items:stretch;justify-content:space-between;gap:12px;padding-top:18px;border-top:1px solid var(--line-soft)}
+.review-navigation .ghost,.review-navigation .btn{min-width:100px;min-height:44px}
+@media(max-width:600px){
+  .review-navigation{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .review-navigation .ghost,.review-navigation .btn{width:100%;min-width:0}
+}
+@media(max-width:380px){
+  .review-exports{grid-template-columns:minmax(0,1fr)}
+}
