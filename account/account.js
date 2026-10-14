@@ -173,14 +173,17 @@
     avatar.className = 'account-profile-avatar';
     avatar.style.setProperty('--profile-color', avatarColor);
     if (avatarUrl) {
+      // Do not flash the profile's fallback color while the image loads.
+      avatar.style.setProperty('--profile-color', 'transparent');
       const img = document.createElement('img');
-      img.src = avatarUrl;
       img.alt = '';
       img.referrerPolicy = 'no-referrer';
       img.addEventListener('error', () => {
         img.remove();
+        avatar.style.setProperty('--profile-color', avatarColor);
         avatar.textContent = (name[0] || 'N').toUpperCase();
       }, { once: true });
+      img.src = avatarUrl;
       avatar.appendChild(img);
     } else {
       avatar.textContent = (name[0] || 'N').toUpperCase();
