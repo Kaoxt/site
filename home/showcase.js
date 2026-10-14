@@ -3,10 +3,8 @@
   if (!root) return;
   const track = root.querySelector('.tour-track');
   const slides = [...root.querySelectorAll('.tour-slide')];
-  const thumbnails = [...root.querySelectorAll('.tour-thumbnail')];
-  const rail = root.querySelector('.tour-thumbnails');
+  const dots = [...root.querySelectorAll('.tour-dot')];
   const toggle = root.querySelector('[data-tour-toggle]');
-  const count = root.querySelector('.tour-count');
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   let index = 0;
   let playing = !motion.matches;
@@ -23,18 +21,17 @@
   };
   function setPlaying(value) {
     playing = value;
-    toggle.textContent = playing ? 'Pause slideshow' : 'Play slideshow';
+    toggle.innerHTML = playing
+      ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg>'
+      : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 10 7-10 7Z"/></svg>';
+    toggle.title = playing ? 'Pause slideshow' : 'Play slideshow';
     toggle.setAttribute('aria-label', playing ? 'Pause slideshow' : 'Play slideshow');
     track.setAttribute('aria-live', playing ? 'off' : 'polite');
     schedule();
   }
   function update(next) {
     index = next;
-    thumbnails.forEach((button, i) => button.setAttribute('aria-pressed', String(i === index)));
-    count.textContent = `${String(index + 1).padStart(2, '0')} / ${String(slides.length).padStart(2, '0')}`;
-    const thumb = thumbnails[index];
-    const left = rail.scrollLeft + thumb.getBoundingClientRect().left - rail.getBoundingClientRect().left - (rail.clientWidth - thumb.offsetWidth) / 2;
-    rail.scrollTo({left, behavior: motion.matches ? 'auto' : 'smooth'});
+    dots.forEach((button, i) => button.setAttribute('aria-pressed', String(i === index)));
   }
   function go(next) {
     const target = (next + slides.length) % slides.length;
@@ -43,10 +40,10 @@
     schedule();
   }
   root.querySelector('.tour-controls').hidden = false;
-  rail.hidden = false;
+  root.querySelector('.tour-arrows').hidden = false;
   root.querySelector('[data-tour-prev]').addEventListener('click', () => {setPlaying(false); go(index - 1);});
   root.querySelector('[data-tour-next]').addEventListener('click', () => {setPlaying(false); go(index + 1);});
-  thumbnails.forEach((button, i) => button.addEventListener('click', () => {setPlaying(false); go(i);}));
+  dots.forEach((button, i) => button.addEventListener('click', () => {setPlaying(false); go(i);}));
   toggle.addEventListener('click', () => setPlaying(!playing));
   track.addEventListener('keydown', event => {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;

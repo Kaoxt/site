@@ -367,8 +367,8 @@
   </style>
   <script src="/components.js?v=20261008-mentions1" defer></script>
   <script src="/news/home.js?v=20261007-news1" defer></script>
-  <link rel="stylesheet" href="/home/showcase.css?v=20261013-1" />
-  <script src="/home/showcase.js?v=20261013-1" defer></script>
+  <link rel="stylesheet" href="/home/showcase.css?v=20261014-2" />
+  <script src="/home/showcase.js?v=20261014-2" defer></script>
 </head>
 <body>
   <main class="page">
@@ -409,7 +409,7 @@
     <section id="explore" class="collection-tour" aria-labelledby="tour-title" aria-roledescription="carousel">
       <div class="tour-heading">
         <span class="tour-eyebrow">Inside The Kollection</span>
-        <h2>A new way to find your next favorite.</h2>
+        <h2 id="tour-title">A new way to find your next favorite.</h2>
         <p>Explore what The Kollection brings to Nuvio, from cinematic artwork to more ways to browse.</p>
       </div>
       <div class="tour-shell">
@@ -447,26 +447,24 @@
             <figcaption><h3>More ways to explore</h3><p>Discover stories inspired by comics, video games, books, and biographies.</p></figcaption>
           </figure>
         </div>
-        <div class="tour-controls" hidden>
-          <button class="tour-control" data-tour-toggle type="button">Pause slideshow</button>
-          <div class="tour-controls-group">
-            <span class="tour-count" aria-label="Current slide">01 / 08</span>
-            <button class="tour-control" data-tour-prev type="button" aria-label="Previous screenshot" aria-controls="tour-track"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg></button>
-            <button class="tour-control" data-tour-next type="button" aria-label="Next screenshot" aria-controls="tour-track"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg></button>
-          </div>
+        <div class="tour-arrows" hidden>
+          <button class="tour-control" data-tour-prev type="button" aria-label="Previous screenshot" aria-controls="tour-track"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg></button>
+          <button class="tour-control" data-tour-next type="button" aria-label="Next screenshot" aria-controls="tour-track"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg></button>
         </div>
       </div>
-      <div class="tour-thumbnails" role="group" aria-label="Choose a collection preview" hidden>
-        <button class="tour-thumbnail" type="button" aria-label="Show Discover" aria-pressed="true" aria-controls="tour-track"><img src="/home/assets/discover-thumb.webp" width="240" height="135" alt="" loading="lazy" decoding="async"><span>Discover</span></button>
-        <button class="tour-thumbnail" type="button" aria-label="Show Genres" aria-pressed="false" aria-controls="tour-track"><img src="/home/assets/genres-thumb.webp" width="240" height="135" alt="" loading="lazy" decoding="async"><span>Genres</span></button>
-        <button class="tour-thumbnail" type="button" aria-label="Show Actors" aria-pressed="false" aria-controls="tour-track"><img src="/home/assets/actors-thumb.webp" width="240" height="135" alt="" loading="lazy" decoding="async"><span>Actors</span></button>
-        <button class="tour-thumbnail" type="button" aria-label="Show Decades" aria-pressed="false" aria-controls="tour-track"><img src="/home/assets/decades-thumb.webp" width="240" height="135" alt="" loading="lazy" decoding="async"><span>Decades</span></button>
-        <button class="tour-thumbnail" type="button" aria-label="Show Directors" aria-pressed="false" aria-controls="tour-track"><img src="/home/assets/directors-thumb.webp" width="240" height="135" alt="" loading="lazy" decoding="async"><span>Directors</span></button>
-        <button class="tour-thumbnail" type="button" aria-label="Show Awards & festivals" aria-pressed="false" aria-controls="tour-track"><img src="/home/assets/awards-thumb.webp" width="240" height="135" alt="" loading="lazy" decoding="async"><span>Awards & festivals</span></button>
-        <button class="tour-thumbnail" type="button" aria-label="Show Holiday specials" aria-pressed="false" aria-controls="tour-track"><img src="/home/assets/holidays-thumb.webp" width="240" height="135" alt="" loading="lazy" decoding="async"><span>Holiday specials</span></button>
-        <button class="tour-thumbnail" type="button" aria-label="Show Based on…" aria-pressed="false" aria-controls="tour-track"><img src="/home/assets/inspired-by-thumb.webp" width="240" height="135" alt="" loading="lazy" decoding="async"><span>Based on…</span></button>
+      <div class="tour-controls" hidden>
+        <div class="tour-dots" role="group" aria-label="Choose a collection preview">
+          <button class="tour-dot" type="button" aria-label="Show Discover" aria-pressed="true" aria-controls="tour-track"><span></span></button>
+          <button class="tour-dot" type="button" aria-label="Show Genres" aria-pressed="false" aria-controls="tour-track"><span></span></button>
+          <button class="tour-dot" type="button" aria-label="Show Actors" aria-pressed="false" aria-controls="tour-track"><span></span></button>
+          <button class="tour-dot" type="button" aria-label="Show Decades" aria-pressed="false" aria-controls="tour-track"><span></span></button>
+          <button class="tour-dot" type="button" aria-label="Show Directors" aria-pressed="false" aria-controls="tour-track"><span></span></button>
+          <button class="tour-dot" type="button" aria-label="Show Awards & festivals" aria-pressed="false" aria-controls="tour-track"><span></span></button>
+          <button class="tour-dot" type="button" aria-label="Show Holiday specials" aria-pressed="false" aria-controls="tour-track"><span></span></button>
+          <button class="tour-dot" type="button" aria-label="Show Based on…" aria-pressed="false" aria-controls="tour-track"><span></span></button>
+        </div>
+        <button class="tour-control tour-play" data-tour-toggle type="button" aria-label="Pause slideshow" title="Pause slideshow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg></button>
       </div>
-      <p class="tour-hint">Swipe through the preview or scroll the thumbnails to explore.</p>
     </section>
     <section class="caption">
       <h2>One collection.<br>Every screen.</h2>
