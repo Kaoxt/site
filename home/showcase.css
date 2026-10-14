@@ -23,8 +23,6 @@
 .tour-dot span{display:block;width:10px;height:10px;background:rgba(255,255,255,.22);border-radius:50%;transition:background .2s,transform .2s}
 .tour-dot[aria-pressed="true"] span{background:#969bff;transform:scale(1.25)}
 .tour-dot:hover span{background:#c3c6ff}
-.tour-play{min-width:36px;width:36px;height:36px;min-height:36px;padding:8px;border-color:var(--tour-border);color:var(--tour-muted);background:var(--tour-surface)}
-.tour-play svg{width:16px;height:16px}
 .tour-control:focus-visible,.tour-dot:focus-visible,.tour-track:focus-visible{outline:2px solid #a5b4fc;outline-offset:3px}
 body.light .collection-tour{--tour-border:rgba(0,0,0,.13);--tour-surface:rgba(255,255,255,.65);--tour-muted:#686b73}
 body.light .tour-eyebrow{color:#5751bc}

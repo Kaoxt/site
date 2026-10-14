@@ -4,7 +4,6 @@
   const track = root.querySelector('.tour-track');
   const slides = [...root.querySelectorAll('.tour-slide')];
   const dots = [...root.querySelectorAll('.tour-dot')];
-  const toggle = root.querySelector('[data-tour-toggle]');
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   let index = 0;
   let playing = !motion.matches;
@@ -21,11 +20,6 @@
   };
   function setPlaying(value) {
     playing = value;
-    toggle.innerHTML = playing
-      ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg>'
-      : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 10 7-10 7Z"/></svg>';
-    toggle.title = playing ? 'Pause slideshow' : 'Play slideshow';
-    toggle.setAttribute('aria-label', playing ? 'Pause slideshow' : 'Play slideshow');
     track.setAttribute('aria-live', playing ? 'off' : 'polite');
     schedule();
   }
@@ -44,7 +38,6 @@
   root.querySelector('[data-tour-prev]').addEventListener('click', () => {setPlaying(false); go(index - 1);});
   root.querySelector('[data-tour-next]').addEventListener('click', () => {setPlaying(false); go(index + 1);});
   dots.forEach((button, i) => button.addEventListener('click', () => {setPlaying(false); go(i);}));
-  toggle.addEventListener('click', () => setPlaying(!playing));
   track.addEventListener('keydown', event => {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
     event.preventDefault();
