@@ -240,7 +240,7 @@
     openModal(`
       <header class="account-modal-head">
         <h3>Edit ${esc(name)}</h3>
-        <button class="account-modal-x" type="button" data-modal-close aria-label="Close">×</button>
+        <button class="account-modal-x" type="button" data-modal-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
       </header>
       <div class="account-modal-body">
         <p class="account-modal-copy">Update this profile name${showSetupPicker ? ' and choose which saved setup this profile uses' : ''}.</p>
@@ -347,7 +347,7 @@
       const { accessToken } = await getAuth();
       profiles = await getProfiles(accessToken);
     } catch (error) {
-      openModal(`<header class="account-modal-head"><h3>Copy settings</h3><button class="account-modal-x" type="button" data-modal-close>×</button></header><div class="account-modal-body"><p class="account-modal-copy">${esc(error?.message || 'Could not load Nuvio profiles.')}</p></div>`);
+      openModal(`<header class="account-modal-head"><h3>Copy settings</h3><button class="account-modal-x" type="button" data-modal-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 6 12 12M6 18 18 6"/></svg></button></header><div class="account-modal-body"><p class="account-modal-copy">${esc(error?.message || 'Could not load Nuvio profiles.')}</p></div>`);
       return;
     }
     const sources = profiles.filter((p) => profileId(p) !== targetId);
@@ -363,13 +363,13 @@
     openModal(`
       <header class="account-modal-head">
         <h3>Copy settings to ${esc(targetName)}</h3>
-        <button class="account-modal-x" type="button" data-modal-close aria-label="Close">×</button>
+        <button class="account-modal-x" type="button" data-modal-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
       </header>
       <div class="account-modal-body">
         <p class="account-modal-copy">This is a one-time copy from the source profile’s latest synced Nuvio data. Future changes stay independent.</p>
         <div class="account-copy-route">
           <label class="account-modal-field"><span>Copy from</span><select id="accountCopySource">${options}</select></label>
-          <span class="account-copy-arrow" aria-hidden="true">→</span>
+          <span class="account-copy-arrow" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
           <label class="account-modal-field"><span>Copy to</span><input value="${esc(targetName)}" disabled /></label>
         </div>
         <fieldset class="account-copy-options">
@@ -415,7 +415,7 @@
     const name = profileName(profile);
     if (id === 1) return;
     openModal(`
-      <header class="account-modal-head"><h3>Delete ${esc(name)}?</h3><button class="account-modal-x" type="button" data-modal-close aria-label="Close">×</button></header>
+      <header class="account-modal-head"><h3>Delete ${esc(name)}?</h3><button class="account-modal-x" type="button" data-modal-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 6 12 12M6 18 18 6"/></svg></button></header>
       <div class="account-modal-body">
         <p class="account-modal-copy">This removes the profile from your Nuvio account. This action cannot be undone.</p>
         <p class="account-modal-status" id="accountDeleteStatus" role="status"></p>
@@ -447,7 +447,7 @@
     openModal(`
       <header class="account-modal-head">
         <h3>Clear collection from ${esc(name)}?</h3>
-        <button class="account-modal-x" type="button" data-modal-close aria-label="Close">×</button>
+        <button class="account-modal-x" type="button" data-modal-close aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
       </header>
       <div class="account-modal-body">
         <p class="account-modal-copy">${isKollectionSetup

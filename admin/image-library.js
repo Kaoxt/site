@@ -350,7 +350,7 @@
           <strong>${esc(item.folder || item.filename)} · ${esc(labelFor(item.filename))}</strong>
           <small>${esc(item.path)}<br>${esc(prettyDate(item.uploaded))}</small>
           <div class="recent-actions">
-            <button class="copy-url-button" type="button" data-url="${esc(item.url)}">Copy URL</button>
+            <button class="copy-url-button" type="button" data-url="${esc(item.url)}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4H4v12h4"/></svg><span>Copy URL</span></button>
           </div>
         </div>
       </article>
@@ -396,7 +396,7 @@
           <h3 class="image-card-title">${esc(title)}</h3>
           <span class="image-card-path">${esc(item.path)}</span>
           <div class="image-card-actions">
-            <button class="copy-url-button" type="button" data-url="${esc(item.url)}">Copy URL</button>
+            <button class="copy-url-button" type="button" data-url="${esc(item.url)}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4H4v12h4"/></svg><span>Copy URL</span></button>
             <a class="open-image-button" href="${esc(item.url)}" target="_blank" rel="noopener">Open</a>
           </div>
         </div>
@@ -406,14 +406,14 @@
 
   function bindCopyButtons(container) {
     container.querySelectorAll('.copy-url-button').forEach((button) => {
+      const original = button.innerHTML;
       button.addEventListener('click', async () => {
-        const original = button.textContent;
         try {
           await copyText(button.dataset.url || '');
-          button.textContent = 'Copied';
+          button.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m5 12 4 4L19 6"/></svg><span>Copied</span>';
           button.classList.add('copied');
           setTimeout(() => {
-            button.textContent = original;
+            button.innerHTML = original;
             button.classList.remove('copied');
           }, 1300);
         } catch {

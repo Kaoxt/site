@@ -51,7 +51,11 @@ body { margin: 0; }
 .account-card-copy { color: var(--account-muted); line-height: 1.6; }
 .account-primary-button,
 .account-secondary-button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 13px; padding: 0 18px; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; transition: transform .16s ease, opacity .16s ease, border-color .16s ease; }
-.account-primary-button { border: 0; color: white; background: linear-gradient(135deg, var(--account-accent), var(--account-accent-2)); }
+.account-primary-button { border: 0; color: #151517; background: #f2f2f4; }
+.account-primary-button:hover:not(:disabled) { background: #e2e3e7; }
+html[data-theme="light"] .account-primary-button { background: #20212b; color: #fff; }
+html[data-theme="light"] .account-primary-button:hover:not(:disabled) { background: #2a2b30; }
+.account-primary-button svg { flex-shrink: 0; }
 .account-secondary-button { color: var(--account-text); border: 1px solid var(--account-border); background: transparent; }
 .account-primary-button:hover,
 .account-secondary-button:hover { transform: translateY(-1px); }
