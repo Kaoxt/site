@@ -1,3 +1,4 @@
+import { authInput } from '../../_lib/auth-guard.js';
 import {
   assertSameOrigin,
   authServerReady,
@@ -28,7 +29,7 @@ export async function onRequestPost(context) {
       return json({ error: 'Cross-origin login requests are not allowed.' }, 403);
     }
 
-    const body = await context.request.json().catch(() => null);
+    const body = await authInput(context.request);
     const accessToken = String(body?.accessToken || '').trim();
     const user = await verifyNuvioAccessToken(accessToken, env);
 
@@ -46,6 +47,7 @@ export async function onRequestPost(context) {
       user,
     }, 200, { 'Set-Cookie': cookie });
   } catch (error) {
+    if (error?.status) return json({ error: error.message }, error.status);
     return json({ error: error?.message || 'Could not create Kollection session.' }, 401);
   }
 }

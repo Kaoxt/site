@@ -1,3 +1,4 @@
+import { authInput } from '../../../_lib/auth-guard.js';
 import {
   assertSameOrigin,
   authServerReady,
@@ -49,7 +50,7 @@ export async function onRequestPost(context) {
       return json({ error: 'Cross-origin login requests are not allowed.' }, 403);
     }
 
-    const input = await context.request.json().catch(() => null);
+    const input = await authInput(context.request);
     const code = String(input?.code || '').trim();
     const deviceNonce = String(input?.deviceNonce || '').trim();
 
@@ -119,6 +120,7 @@ export async function onRequestPost(context) {
       user,
     }, 200, { 'Set-Cookie': cookie });
   } catch (error) {
+    if (error?.status) return json({ error: error.message }, error.status);
     console.error(error);
     return json({ error: error?.message || 'Could not finish Nuvio sign in.' }, 502);
   }

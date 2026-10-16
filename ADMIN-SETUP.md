@@ -200,3 +200,23 @@ The navigation uses:
 1. the profile's `avatar_url` when Nuvio returns one;
 2. the standard Nuvio avatar catalog when the profile has `avatar_id`;
 3. the profile color + first letter as a fallback.
+
+## Login-session abuse protection
+
+The `/api/auth/nuvio-connect`, `/api/auth/nuvio/start`, and `/api/auth/nuvio/poll`
+POST routes enforce same-origin requests and durable, atomic per-client limits
+using the existing `DB` D1 binding. Limits are respectively 30 per 10 minutes,
+10 per 10 minutes, and 120 per minute (to allow normal approval polling).
+They return HTTP 429 with `Retry-After` when exceeded. Shared networks share
+these limits. Requests fail with HTTP 503 if the database or Cloudflare client-IP
+header is unavailable; local integration tests must supply both.
+
+The `auth_rate_limits` table and its cleanup index are created automatically.
+Addresses are stored as daily, secret-salted hashes; stale counters are removed
+after one day. Authentication JSON is limited to 16 KiB while streaming, even
+without a Content-Length header. All authentication responses disable caching.
+
+These limits protect Kollection session creation and device-login calls only.
+The browser's password request still goes directly to Nuvio's authentication
+API, whose password/signup throttling and CAPTCHA settings are controlled by
+Nuvio. A client-only CAPTCHA on Kollection would not protect that API.

@@ -1,3 +1,4 @@
+import { authInput } from '../../../_lib/auth-guard.js';
 import {
   assertSameOrigin,
   authServerReady,
@@ -50,7 +51,7 @@ export async function onRequestPost(context) {
       return json({ error: 'Cross-origin login requests are not allowed.' }, 403);
     }
 
-    const input = await context.request.json().catch(() => ({}));
+    const input = await authInput(context.request);
     const { apiBase, publishableKey } = nuvioConfig(env);
     const deviceNonce = randomNonce();
     const deviceName = String(input?.deviceName || 'The Kollection').slice(0, 80);
@@ -103,6 +104,7 @@ export async function onRequestPost(context) {
       legacy: true,
     });
   } catch (error) {
+    if (error?.status) return json({ error: error.message }, error.status);
     console.error(error);
     return json({ error: error?.message || 'Could not start Nuvio sign in.' }, 502);
   }

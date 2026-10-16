@@ -32,3 +32,38 @@ test('API security headers preserve bodies, cookies and CORS',async()=>{
  assert.equal(response.headers.get('X-Content-Type-Options'),'nosniff');assert.equal(response.headers.get('X-Frame-Options'),'DENY');
  assert.equal(response.headers.get('Set-Cookie'),'session=test; HttpOnly');assert.equal(response.headers.get('Access-Control-Allow-Origin'),'*');assert.equal(await response.text(),'image bytes');
 });
+
+const {authInput,guardAuthRequest} = await import('../functions/_lib/auth-guard.js');
+test('auth inputs reject oversized streams, invalid JSON and non-object bodies',async()=>{
+ const req=(body,type='application/json')=>new Request('https://kollection.tv/api/auth/nuvio-connect',{method:'POST',headers:{'Content-Type':type},body});
+ for(const body of ['null','[]','invalid'])await assert.rejects(()=>authInput(req(body)),e=>e.status===400);
+ await assert.rejects(()=>authInput(req('{}','text/plain')),e=>e.status===415);
+ await assert.rejects(()=>authInput(req(JSON.stringify({token:'x'.repeat(17000)}))),e=>e.status===413);
+ assert.deepEqual(await authInput(req('{"accessToken":"valid"}')),{accessToken:'valid'});
+});
+test('auth limits are atomic, isolate scopes and clients, expire, and fail closed',async()=>{
+ const sql=new DatabaseSync(':memory:');
+ const db={prepare(q){return {bind(...args){return {async run(){return {meta:{changes:sql.prepare(q).run(...args).changes}};}};},async run(){sql.exec(q);}};},async batch(stmts){return Promise.all(stmts.map(s=>s.run()));}};
+ const context=(ip='192.0.2.1',origin='https://kollection.tv')=>({env:{DB:db,KOLLECTION_SESSION_SECRET:'test-only'},request:new Request('https://kollection.tv/api/auth/nuvio-connect',{method:'POST',headers:{Origin:origin,'CF-Connecting-IP':ip}})});
+ const realNow=Date.now;Date.now=()=>120000;
+ try{
+  const results=await Promise.all(Array.from({length:15},()=>guardAuthRequest(context(),'connect',10,600)));
+  assert.equal(results.filter(r=>r===null).length,10);assert.equal(results.filter(r=>r?.status===429).length,5);
+  assert.equal(results.find(r=>r?.status===429).headers.get('Retry-After'),'480');
+  assert.equal(await guardAuthRequest(context('192.0.2.2'),'connect',10,600),null);
+  assert.equal(await guardAuthRequest(context(),'start',10,600),null);
+  assert.equal((await guardAuthRequest(context('192.0.2.1','https://evil.test'),'connect',10,600)).status,403);
+  assert.equal((await guardAuthRequest({...context(),env:{}},'connect',10,600)).status,503);
+  assert.equal(sql.prepare('SELECT key FROM auth_rate_limits').get().key.includes('192.0.2'),false);
+  Date.now=()=>720000;assert.equal(await guardAuthRequest(context(),'connect',10,600),null);
+ }finally{Date.now=realNow;sql.close();}
+});
+test('auth middleware blocks excess before upstream work and leaves reads available',async()=>{
+ const {onRequest:authMiddleware}=await import('../functions/api/auth/_middleware.js');
+ let calls=0;
+ const next=async()=>{calls++;return new Response('ok');};
+ const blocked=await authMiddleware({request:new Request('https://kollection.tv/api/auth/nuvio-connect',{method:'POST',headers:{Origin:'https://kollection.tv'}}),env:{},next});
+ assert.equal(blocked.status,503);assert.equal(calls,0);
+ const read=await authMiddleware({request:new Request('https://kollection.tv/api/auth/session'),next});
+ assert.equal(await read.text(),'ok');assert.equal(read.headers.get('Cache-Control'),'no-store');assert.equal(calls,1);
+});
