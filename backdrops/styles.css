@@ -454,3 +454,16 @@ html[data-theme="light"] .api-key-group { background:#fafafa; border-color:#e1e2
   .canvas-preview-frame { width:min(100%,89svh); }
   .backdrop-page > .backdrop-page-header { padding-top:32px !important; padding-bottom:28px !important; }
 }
+
+/* Highlight the primary download action in both site themes. */
+.backdrop-page #downloadBackdrop:not(:disabled) {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #fff;
+}
+.backdrop-page #downloadBackdrop:hover:not(:disabled) {
+  background: #4f46e5;
+  border-color: #4f46e5;
+  color: #fff;
+}
+html[data-theme="light"] .backdrop-page #downloadBackdrop:not(:disabled) { color: #fff; }
