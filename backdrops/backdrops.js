@@ -423,10 +423,10 @@
     const ctx = surface.getContext('2d');
     ctx.fillStyle = '#050608'; ctx.fillRect(0,0,width,height);
     const tilted = layout === 'tilted';
-    const cols = posterMode ? (tilted ? Math.max(2, Math.ceil(Math.sqrt(assets.length * 1.7))) : Math.ceil(Math.sqrt(assets.length * (width/height) / (2/3)))) : (tilted ? 4 : Math.min(4, Math.ceil(Math.sqrt(assets.length * 16/9))));
-    const rows = tilted ? (posterMode ? Math.ceil(assets.length / cols) : 7) : Math.ceil(assets.length / cols);
+    const cols = posterMode ? (tilted ? Math.max(2, Math.ceil(Math.sqrt(assets.length * 1.7))) : Math.ceil(Math.sqrt(assets.length * (width/height) / (2/3)))) : (tilted ? Math.max(3, Math.ceil(Math.sqrt(assets.length * .9))) : Math.min(4, Math.ceil(Math.sqrt(assets.length * 16/9))));
+    const rows = Math.ceil(assets.length / cols);
     const gap = width * .008;
-    const w = posterMode ? (tilted ? width*.17 : Math.min(width/cols,height/rows*2/3)) : (tilted ? width*.24 : width/cols);
+    const w = posterMode ? (tilted ? width*.17 : Math.min(width/cols,height/rows*2/3)) : (tilted ? Math.max(width * 1.45 / cols, height * 1.55 / rows * 16/9) : width/cols);
     const h = posterMode ? w*3/2 : (tilted ? w*9/16 : height/rows);
     const slots = [];
     for (let index=0; index<(tilted ? cols*rows : assets.length); index++) {
@@ -435,14 +435,14 @@
       const tw = (tilted || posterMode ? w : width/rowCount)-gap, th=posterMode ? tw*3/2 : h-gap;
       // Offset neighboring columns to form a staggered wall in both artwork formats.
       // Extra rows cover the lower edge after staggering and rotation.
-      const columnOffset = tilted ? (posterMode ? (col % 2 ? -.5 : 0) : [0, -.45, -.15, -.6, -.3, -.4, -.2][col % 7]) * h : 0;
+      const columnOffset = tilted ? (col % 2 ? -.5 : 0) * h : 0;
       const tx = tilted ? col*w : posterMode ? (width-rowCount*w)/2+col*w : col*width/rowCount;
       const ty = row*h + columnOffset;
       // Keep the same tile geometry for the accessible preview editing layer.
       const angle = tilted ? -12*Math.PI/180 : 0;
       const points = [[0,0],[tw,0],[tw,th],[0,th]].map(([x,y]) => ({
-        x:(tilted ? (posterMode ? -width*.30 : 0) : 0)+(tx+x)*Math.cos(angle)-(ty+y)*Math.sin(angle),
-        y:(tilted ? (posterMode ? -height*.35 : -height*.13) : 0)+(tx+x)*Math.sin(angle)+(ty+y)*Math.cos(angle)
+        x:(tilted ? (posterMode ? -width*.30 : -width*.20) : 0)+(tx+x)*Math.cos(angle)-(ty+y)*Math.sin(angle),
+        y:(tilted ? (posterMode ? -height*.35 : -height*.32) : 0)+(tx+x)*Math.sin(angle)+(ty+y)*Math.cos(angle)
       }));
       const xs=points.map(p=>p.x), ys=points.map(p=>p.y);
       const visibleWidth=Math.max(0,Math.min(width,Math.max(...xs))-Math.max(0,Math.min(...xs)));
