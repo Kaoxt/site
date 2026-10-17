@@ -91,6 +91,7 @@
     const mode = els.mdblistMode.value;
     els.mdblistUsernameRow.hidden = mode !== 'user';
     els.mdblistUrlRow.hidden = mode !== 'url';
+    els.loadMdblistTitles.hidden = mode === 'url';
     els.mdblistListRow.hidden = mode === 'url';
     els.mdblistMediaRow.hidden = mode !== 'official';
     els.mdblistTitleResults.innerHTML = '';
