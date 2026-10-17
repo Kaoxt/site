@@ -185,10 +185,17 @@
                   <button id="searchMdblistUser" class="secondary-button" type="button">Search</button>
                 </div>
 
-                <div id="mdblistUrlRow" class="source-inline" hidden>
-                  <input id="mdblistUrl" class="text-input" type="url" placeholder="https://mdblist.com/lists/user/list" autocomplete="off" />
-                  <input id="mdblistUrlSecond" class="text-input" type="url" placeholder="Second MDBList URL (optional — movies or series)" aria-label="Second MDBList URL (optional)" autocomplete="off" />
-                  <button id="loadMdblistUrl" class="secondary-button" type="button">Load</button>
+                <div id="mdblistUrlRow" class="source-fields" hidden>
+                  <div class="source-field">
+                    <label class="field-label" for="mdblistUrl">List 1 URL</label>
+                    <input id="mdblistUrl" class="text-input" type="url" placeholder="https://mdblist.com/lists/user/movies" autocomplete="off" style="width:100%;min-width:0;box-sizing:border-box" />
+                  </div>
+                  <div class="source-field">
+                    <label class="field-label" for="mdblistUrlSecond">List 2 URL <span style="font-weight:400;opacity:.7">(optional)</span></label>
+                    <input id="mdblistUrlSecond" class="text-input" type="url" placeholder="https://mdblist.com/lists/user/shows" autocomplete="off" style="width:100%;min-width:0;box-sizing:border-box" />
+                  </div>
+                  <p class="control-help">One list: up to 50 titles. Two lists: up to 25 from each. Movies and shows are included according to each list.</p>
+                  <button id="loadMdblistUrl" class="secondary-button full" type="button">Load Lists</button>
                 </div>
 
                 <div id="mdblistListRow">
@@ -205,7 +212,7 @@
                   </select>
                 </div>
 
-                <button id="loadMdblistTitles" class="primary-button full" type="button">Load titles from list</button>
+                <button id="loadMdblistTitles" class="primary-button full" type="button">Load Titles</button>
                 <div id="mdblistStatus" class="status-line">Add an MDBList key above, then choose one of your lists or browse another list.</div>
                 <div id="mdblistTitleResults" class="title-results mdblist-title-results" aria-live="polite"></div>
               </div>
