@@ -474,3 +474,13 @@ html[data-theme="light"] .backdrop-page #downloadBackdrop:not(:disabled) { color
 .collage-disclosure-chevron { font-size:19px; transition:transform .15s ease; }
 .collage-list-disclosure[open] .collage-disclosure-chevron { transform:rotate(180deg); }
 .collage-list-disclosure > summary:focus-visible { outline:2px solid #a5b4fc; outline-offset:-2px; }
+
+/* Selected collage titles are collapsed by default; artwork settings stay visible. */
+.backdrop-page .collage-list-disclosure { margin:0; }
+.backdrop-page .collage-list-disclosure > summary { display:flex; align-items:center; justify-content:space-between; cursor:pointer; list-style:none; padding:12px 16px; font-size:13px; font-weight:600; color:#e5e7eb; border-top:1px solid rgba(255,255,255,.08); }
+.backdrop-page .collage-list-disclosure > summary::-webkit-details-marker { display:none; }
+.backdrop-page .collage-list-disclosure > summary:hover { background:rgba(255,255,255,.035); }
+.backdrop-page .collage-disclosure-chevron { font-size:19px; transition:transform .15s ease; }
+.backdrop-page .collage-list-disclosure[open] .collage-disclosure-chevron { transform:rotate(180deg); }
+.backdrop-page .collage-list-disclosure > .control-card-body { padding-top:10px; }
+html[data-theme="light"] .backdrop-page .collage-list-disclosure > summary { color:#18181c; border-color:rgba(0,0,0,.09); }
