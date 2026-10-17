@@ -169,14 +169,14 @@
       const next = selectedItems().filter((_, index) => index !== Number(button.dataset.index));
       selectTitle({title:state.selected?.title || 'Movie collage', items:next});
     }));
-    setStatus(els.collageStatus, `${items.length}/18 titles selected. ${items.length < 2 ? 'Add at least two titles to create a collage.' : 'Ready to preview and download.'}`);
+    setStatus(els.collageStatus, `${items.length}/35 titles selected. ${items.length < 2 ? 'Add at least two titles to create a collage.' : 'Ready to preview and download.'}`);
   }
   async function selectTitle(item, keepUndo=false) {
     if (!keepUndo) removalUndo = null;
     excludedTiles.clear();
     if (item?.items) {
       const unique = new Map(item.items.filter(entry => entry.backdropPath || entry.posterPath).map(entry => [titleKey(entry), entry]));
-      item = {...item, items:[...unique.values()].slice(0,18)};
+      item = {...item, items:[...unique.values()].slice(0,35)};
     }
     state.selected = item;
     saveState(); updateSelection();
@@ -186,7 +186,7 @@
     if (!item?.backdropPath && !item?.posterPath) return;
     const items = selectedItems();
     if (items.some(entry => titleKey(entry) === titleKey(item))) return;
-    if (items.length >= 18) return setStatus(els.collageStatus, 'Your collage has 18 titles. Remove one before adding another.', 'error');
+    if (items.length >= 35) return setStatus(els.collageStatus, 'Your collage has 35 titles. Remove one before adding another.', 'error');
     await selectTitle({title:state.selected?.items ? state.selected.title : 'Movie collage', items:[...items, item]});
   }
 
