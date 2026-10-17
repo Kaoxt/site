@@ -228,24 +228,43 @@
         writeCache(path, mediaType, items);
         return items;
       }));
-      const baseItems = lists.flat();
-      if (!baseItems.length) throw new Error('This MDBList list does not contain any TMDB-linked movies or shows.');
+      if (!lists.some(list => list.length)) throw new Error('These MDBList lists do not contain TMDB-linked movies or shows.');
 
-      if (token !== titlesToken) return;
-      const previewItems = [...new Map(baseItems.map(item => [`${item.media}:${item.id}`, item])).values()].slice(0, 60);
-      const resolved = [];
-      for (let i=0; i<previewItems.length; i += 8) {
-        if (token !== titlesToken) return;
-        const batch = previewItems.slice(i, i+8);
-        const results = await Promise.allSettled(batch.map(resolveTmdbItem));
-        results.forEach(result => { if (result.status === 'fulfilled' && (result.value.backdropPath || result.value.posterPath)) resolved.push(result.value); });
+      // Resolve each source independently, preserving its original list order.
+      // With two URLs, each contributes up to 25 distinct, usable titles.
+      const perListLimit = listPaths.length === 2 ? 25 : 50;
+      const seen = new Set();
+      const selected = [];
+      const resolvedAll = [];
+      for (const list of lists) {
+        const unique = [...new Map(list.map(item => [`${item.media}:${item.id}`, item])).values()];
+        let contributed = 0;
+        for (let i = 0; i < unique.length && contributed < perListLimit; i += 8) {
+          if (token !== titlesToken) return;
+          const batch = unique.slice(i, i + 8);
+          const results = await Promise.allSettled(batch.map(resolveTmdbItem));
+          for (const result of results) {
+            if (result.status !== 'fulfilled') continue;
+            const item = result.value;
+            if (!item.backdropPath && !item.posterPath) continue;
+            const key = `${item.media}:${item.id}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            resolvedAll.push(item);
+            if (contributed < perListLimit) {
+              selected.push(item);
+              contributed++;
+            }
+          }
+        }
       }
       if (token !== titlesToken) return;
-      if (!resolved.length) throw new Error('No backdrop artwork could be loaded. Check your TMDB key and try again.');
-      renderTitleResults(resolved);
-      await window.KollectionBackdrops.selectTitle({title:'Movie collage', items:resolved.slice(0,50)});
+      if (!selected.length) throw new Error('No backdrop artwork could be loaded. Check your TMDB key and try again.');
+      renderTitleResults(resolvedAll);
+      await window.KollectionBackdrops.selectTitle({title:'Movie collage', items:selected});
       if (token !== titlesToken) return;
-      status(els.mdblistStatus, `Loaded ${resolved.length} unique title${resolved.length === 1 ? '' : 's'} from ${listPaths.length} MDBList list${listPaths.length === 1 ? '' : 's'}. The first 50 titles are used in your collage. Tap others to add them after removing a title.`, 'ok');
+      const allocation = listPaths.length === 2 ? 'Up to 25 unique titles from each list' : 'Up to 50 unique titles from the list';
+      status(els.mdblistStatus, `${selected.length} titles selected from ${listPaths.length} MDBList list${listPaths.length === 1 ? '' : 's'}. ${allocation}. Duplicate titles are excluded.`, 'ok');
     } catch (error) {
       if (token !== titlesToken) return;
       els.mdblistTitleResults.innerHTML = '';
