@@ -430,7 +430,12 @@
     const h = posterMode ? w*3/2 : (tilted ? w*9/16 : height/rows);
     const slots = [];
     for (let index=0; index<(tilted ? cols*rows : assets.length); index++) {
-      const row = Math.floor(index/cols), col=index%cols;
+      const fullRows = Math.floor(assets.length / cols);
+      const remaining = assets.length % cols;
+      // Put incomplete landscape rows on the right, where rotation needs extra coverage.
+      const partialLandscapeRow = tilted && !posterMode && index >= fullRows * cols;
+      const row = partialLandscapeRow ? fullRows : Math.floor(index/cols);
+      const col = partialLandscapeRow ? cols - remaining + index - fullRows * cols : index % cols;
       const rowCount = tilted ? cols : Math.min(cols, assets.length-row*cols);
       const tw = (tilted || posterMode ? w : width/rowCount)-gap, th=posterMode ? tw*3/2 : h-gap;
       // Offset neighboring columns to form a staggered wall in both artwork formats.
@@ -442,7 +447,7 @@
       const angle = tilted ? -12*Math.PI/180 : 0;
       const points = [[0,0],[tw,0],[tw,th],[0,th]].map(([x,y]) => ({
         x:(tilted ? (posterMode ? -width*.30 : -width*.34) : 0)+(tx+x)*Math.cos(angle)-(ty+y)*Math.sin(angle),
-        y:(tilted ? (posterMode ? -height*.35 : -height*.32) : 0)+(tx+x)*Math.sin(angle)+(ty+y)*Math.cos(angle)
+        y:(tilted ? (posterMode ? -height*.35 : -height*.12) : 0)+(tx+x)*Math.sin(angle)+(ty+y)*Math.cos(angle)
       }));
       const xs=points.map(p=>p.x), ys=points.map(p=>p.y);
       const visibleWidth=Math.max(0,Math.min(width,Math.max(...xs))-Math.max(0,Math.min(...xs)));
@@ -450,10 +455,10 @@
       slots.push({index,tx,ty,tw,th,points,visibleArea:visibleWidth*visibleHeight});
     }
     // Fill the most visible positions once each; never cycle through movie assets.
-    const chosenSlots = tilted ? slots.sort((a,b)=>b.visibleArea-a.visibleArea || a.index-b.index)
+    const chosenSlots = tilted && posterMode ? slots.sort((a,b)=>b.visibleArea-a.visibleArea || a.index-b.index)
       .slice(0,assets.length).sort((a,b)=>a.index-b.index) : slots.slice(0,assets.length);
     ctx.save();
-    if (tilted) { ctx.translate(posterMode ? -width*.30 : -width*.34, posterMode ? -height*.35 : -height*.32); ctx.rotate(-12*Math.PI/180); }
+    if (tilted) { ctx.translate(posterMode ? -width*.30 : -width*.34, posterMode ? -height*.35 : -height*.12); ctx.rotate(-12*Math.PI/180); }
     for (let index=0; index<chosenSlots.length; index++) {
       const {image,logo,entry,embeddedTitle,contain}=assets[index];
       const {tx,ty,tw,th,points}=chosenSlots[index];
