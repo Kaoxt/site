@@ -11,7 +11,7 @@
     titleSource: $('titleSource'), tmdbTitleSource: $('tmdbTitleSource'), mdblistTitleSource: $('mdblistTitleSource'),
     mdblistKey: $('mdblistKey'), toggleMdblistKey: $('toggleMdblistKey'), saveMdblistKey: $('saveMdblistKey'), validateMdblistKey: $('validateMdblistKey'), mdblistKeyStatus: $('mdblistKeyStatus'),
     mdblistMode: $('mdblistMode'), mdblistUsernameRow: $('mdblistUsernameRow'), mdblistUsername: $('mdblistUsername'), searchMdblistUser: $('searchMdblistUser'),
-    mdblistUrlRow: $('mdblistUrlRow'), mdblistUrl: $('mdblistUrl'), loadMdblistUrl: $('loadMdblistUrl'), mdblistListRow: $('mdblistListRow'), mdblistList: $('mdblistList'),
+    mdblistUrlRow: $('mdblistUrlRow'), mdblistUrl: $('mdblistUrl'), mdblistUrlSecond: $('mdblistUrlSecond'), loadMdblistUrl: $('loadMdblistUrl'), mdblistListRow: $('mdblistListRow'), mdblistList: $('mdblistList'),
     mdblistMediaRow: $('mdblistMediaRow'), mdblistMediaType: $('mdblistMediaType'), loadMdblistTitles: $('loadMdblistTitles'), mdblistStatus: $('mdblistStatus'), mdblistTitleResults: $('mdblistTitleResults')
   };
 
@@ -144,8 +144,8 @@
     } finally { els.searchMdblistUser.disabled = false; }
   }
 
-  function parseListUrl() {
-    const raw = els.mdblistUrl.value.trim();
+  function parseListUrl(raw) {
+    raw = raw.trim();
     const match = raw.match(/mdblist\.com\/lists\/([^?#]+)/i);
     if (!match) throw new Error('Use an MDBList URL like https://mdblist.com/lists/user/list-name');
     return match[1].replace(/\/$/, '');
@@ -205,7 +205,7 @@
     let listPath = forcedPath;
     if (!listPath) {
       if (els.mdblistMode.value === 'url') {
-        try { listPath = parseListUrl(); } catch (error) { return status(els.mdblistStatus, error.message, 'error'); }
+        try { listPath = parseListUrl(els.mdblistUrl.value); } catch (error) { return status(els.mdblistStatus, error.message, 'error'); }
       } else listPath = els.mdblistList.value;
     }
     if (!listPath) return status(els.mdblistStatus, 'Choose an MDBList list first.', 'error');
@@ -214,12 +214,21 @@
     els.loadMdblistTitles.disabled = true;
     status(els.mdblistStatus, 'Loading titles from MDBList…');
     try {
-      let baseItems = readCache(listPath, mediaType);
-      if (!baseItems) {
-        const data = await mdblistFetch(`lists/${listPath}/items`, { limit:1000, mediatype:mediaType });
-        baseItems = listItemsFromResponse(data);
-        writeCache(listPath, mediaType, baseItems);
+      const secondRaw = els.mdblistMode.value === 'url' ? els.mdblistUrlSecond.value.trim() : '';
+      const listPaths = [listPath];
+      if (secondRaw) {
+        const secondPath = parseListUrl(secondRaw);
+        if (!listPaths.includes(secondPath)) listPaths.push(secondPath);
       }
+      const lists = await Promise.all(listPaths.map(async path => {
+        const cached = readCache(path, mediaType);
+        if (cached) return cached;
+        const data = await mdblistFetch(`lists/${path}/items`, { limit:1000, mediatype:mediaType });
+        const items = listItemsFromResponse(data);
+        writeCache(path, mediaType, items);
+        return items;
+      }));
+      const baseItems = lists.flat();
       if (!baseItems.length) throw new Error('This MDBList list does not contain any TMDB-linked movies or shows.');
 
       if (token !== titlesToken) return;
@@ -236,7 +245,7 @@
       renderTitleResults(resolved);
       await window.KollectionBackdrops.selectTitle({title:'Movie collage', items:resolved.slice(0,50)});
       if (token !== titlesToken) return;
-      status(els.mdblistStatus, `Loaded ${resolved.length} title${resolved.length === 1 ? '' : 's'} with backdrops from this list. The first 50 titles are used in your collage. Tap others to add them after removing a title.`, 'ok');
+      status(els.mdblistStatus, `Loaded ${resolved.length} unique title${resolved.length === 1 ? '' : 's'} from ${listPaths.length} MDBList list${listPaths.length === 1 ? '' : 's'}. The first 50 titles are used in your collage. Tap others to add them after removing a title.`, 'ok');
     } catch (error) {
       if (token !== titlesToken) return;
       els.mdblistTitleResults.innerHTML = '';
@@ -287,6 +296,7 @@
   els.mdblistUsername.addEventListener('keydown', event => { if (event.key === 'Enter') searchUserLists(); });
   els.loadMdblistUrl.addEventListener('click', () => loadListTitles());
   els.mdblistUrl.addEventListener('keydown', event => { if (event.key === 'Enter') loadListTitles(); });
+  els.mdblistUrlSecond.addEventListener('keydown', event => { if (event.key === 'Enter') loadListTitles(); });
   els.loadMdblistTitles.addEventListener('click', () => loadListTitles());
 
   window.KollectionMDBList = Object.freeze({ mdblistFetch, listItemsFromResponse, resolveTmdbItem });
