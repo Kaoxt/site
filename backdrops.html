@@ -10,7 +10,7 @@
   <meta name="description" content="Choose original or custom movie, TV, and folder backdrops for The Kollection, Nuvio, and compatible metadata setups." />
   <link rel="stylesheet" href="/shared.css?v=20261008-tap2" />
   <link rel="stylesheet" href="/secondary-pages.css?v=20261007-nav1" />
-  <link rel="stylesheet" href="/backdrops/styles.css?v=20261017-indigo-download" />
+  <link rel="stylesheet" href="/backdrops/styles.css?v=20261017-collage-collapse" />
   <link rel="stylesheet" href="/backdrops/title-mode.css?v=20261004-1" />
   <link rel="stylesheet" href="/backdrops/folder-builder.css?v=20261004-1" />
   <link rel="stylesheet" href="/backdrops/sources.css?v=20261007-landscape2" />
@@ -221,11 +221,16 @@
 
           <section class="control-card">
             <div class="control-card-heading"><span><small>COLLAGE</small><strong>Movies in your backdrop</strong></span></div>
-            <div class="control-card-body">
+            <details class="collage-list-disclosure">
+              <summary>Expand movie list <span class="collage-disclosure-chevron" aria-hidden="true">⌄</span></summary>
+              <div class="control-card-body">
               <p class="control-help">Add 2–50 movies or shows. Loading a list or catalogs replaces the selection with up to 50 unique titles.</p>
               <div id="collageStatus" class="status-line" aria-live="polite"></div>
               <div id="collageTitles" class="collage-titles"></div>
               <div class="inline-actions"><button id="clearCollage" class="ghost-button" type="button">Clear titles</button></div>
+              </div>
+            </details>
+            <div class="control-card-body">
               <div class="source-fields">
                 <div class="source-field">
                   <label class="field-label" for="collageLayout">Collage layout</label>
