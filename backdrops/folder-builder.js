@@ -43,7 +43,7 @@
   build.textContent = 'Build collage from loaded list';
   $('mdblistTitleResults').before(build);
   build.addEventListener('click', async () => {
-    const items = Array.from($('mdblistTitleResults').querySelectorAll('.title-result')).map(button => button.backdropItem).filter(Boolean).slice(0,18);
+    const items = Array.from($('mdblistTitleResults').querySelectorAll('.title-result')).map(button => button.backdropItem).filter(Boolean).slice(0,35);
     if (!items.length) return report('Load a list with backdrop artwork first.', true);
     build.disabled = true;
     try {
