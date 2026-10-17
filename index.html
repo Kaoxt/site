@@ -301,7 +301,7 @@
       isolation: isolate;
       overflow: visible;
     }
-    .showcase-card img {
+    .showcase-card .showcase-image {
       position: relative;
       z-index: 1;
       width: 100%;
@@ -310,6 +310,7 @@
       object-fit: contain;
       filter: drop-shadow(0 26px 80px rgba(0,0,0,.42));
     }
+    body.light .showcase-card .showcase-image { filter: drop-shadow(0 26px 70px rgba(17,24,39,.18)); }
     .showcase-card::after { content: none !important; display: none !important; }
     @media (min-width: 1000px) { .showcase-card { width: min(100%, 920px); } }
     .tv { position: relative; width: min(94%, 1540px); margin: 0 auto; padding: 16px 16px 24px; border-radius: 34px; background: linear-gradient(180deg, #2a2b31 0%, #15161a 38%, #0b0b0e 100%); border: 1px solid rgba(255,255,255,.18); box-shadow: 0 40px 120px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(255,255,255,.04); }
@@ -404,7 +405,19 @@
     <section id="collection" class="showcase-wrap" aria-label="The Kollection preview">
       <div class="ambient"></div>
       <div class="showcase-card">
-        <img src="/showcase-middle.webp?v=6" alt="The Kollection TV and phone preview" />
+        <svg class="showcase-image" viewBox="0 0 1536 1044" width="1536" height="1044" role="img" aria-labelledby="showcase-title" xmlns="http://www.w3.org/2000/svg">
+          <title id="showcase-title">The Kollection TV and phone preview</title>
+          <defs>
+            <!-- Clip only the empty backdrop; keep the original device artwork intact. -->
+            <clipPath id="showcase-devices" clipPathUnits="userSpaceOnUse">
+              <path d="M121 42H1377C1425 42 1459 75 1459 122V725C1459 770 1425 804 1377 804H121C73 804 39 771 39 724V123C39 77 74 42 121 42Z"/>
+              <path d="M680 790H818V805C818 831 800 848 775 848H723C698 848 680 832 680 805Z"/>
+              <rect x="582" y="856" width="335" height="23" rx="11.5"/>
+              <path d="M1097 89H1377C1434 89 1463 118 1463 174V925C1463 979 1433 1011 1380 1011H1094C1042 1011 1009 982 1009 929V177C1009 121 1039 89 1097 89Z"/>
+            </clipPath>
+          </defs>
+          <image href="/showcase-middle.webp?v=6" width="1536" height="1044" clip-path="url(#showcase-devices)"/>
+        </svg>
       </div>
     </section>
     <section id="explore" class="collection-tour" aria-labelledby="tour-title" aria-roledescription="carousel">
