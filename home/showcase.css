@@ -33,3 +33,8 @@ body.light .tour-slide h3{color:#17181c}
 body.light .tour-slide p{color:#686b73}
 @media(max-width:700px){.collection-tour{margin:48px auto}.tour-heading{padding:0 12px;margin-bottom:22px}.tour-shell{border-radius:19px}.tour-track{border-radius:18px}.tour-slide figcaption{padding:18px 16px;min-height:132px}.tour-arrows{padding:0 8px}.tour-arrows .tour-control{width:44px;height:44px}.tour-controls{gap:6px;margin-top:12px}}
 @media(prefers-reduced-motion:reduce){.tour-dot span{transition:none}}
+
+/* Projectivy-inspired compact carousel on desktop only. */
+@media (min-width: 1000px) {
+  .collection-tour { max-width: 920px; }
+}
