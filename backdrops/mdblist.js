@@ -234,9 +234,9 @@
       if (token !== titlesToken) return;
       if (!resolved.length) throw new Error('No backdrop artwork could be loaded. Check your TMDB key and try again.');
       renderTitleResults(resolved);
-      await window.KollectionBackdrops.selectTitle({title:'Movie collage', items:resolved.slice(0,18)});
+      await window.KollectionBackdrops.selectTitle({title:'Movie collage', items:resolved.slice(0,35)});
       if (token !== titlesToken) return;
-      status(els.mdblistStatus, `Loaded ${resolved.length} title${resolved.length === 1 ? '' : 's'} with backdrops from this list. The first 18 titles are used in your collage. Tap others to add them after removing a title.`, 'ok');
+      status(els.mdblistStatus, `Loaded ${resolved.length} title${resolved.length === 1 ? '' : 's'} with backdrops from this list. The first 35 titles are used in your collage. Tap others to add them after removing a title.`, 'ok');
     } catch (error) {
       if (token !== titlesToken) return;
       els.mdblistTitleResults.innerHTML = '';
