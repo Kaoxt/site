@@ -214,7 +214,7 @@
     els.loadMdblistTitles.disabled = true;
     status(els.mdblistStatus, 'Loading titles from MDBList…');
     try {
-      const secondRaw = els.mdblistMode.value === 'url' ? els.mdblistUrlSecond.value.trim() : '';
+      const secondRaw = els.mdblistMode.value === 'url' ? els.mdblistUrlSecond?.value?.trim() || '' : '';
       const listPaths = [listPath];
       if (secondRaw) {
         const secondPath = parseListUrl(secondRaw);
@@ -296,7 +296,7 @@
   els.mdblistUsername.addEventListener('keydown', event => { if (event.key === 'Enter') searchUserLists(); });
   els.loadMdblistUrl.addEventListener('click', () => loadListTitles());
   els.mdblistUrl.addEventListener('keydown', event => { if (event.key === 'Enter') loadListTitles(); });
-  els.mdblistUrlSecond.addEventListener('keydown', event => { if (event.key === 'Enter') loadListTitles(); });
+  els.mdblistUrlSecond?.addEventListener('keydown', event => { if (event.key === 'Enter') loadListTitles(); });
   els.loadMdblistTitles.addEventListener('click', () => loadListTitles());
 
   window.KollectionMDBList = Object.freeze({ mdblistFetch, listItemsFromResponse, resolveTmdbItem });
