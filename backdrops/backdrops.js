@@ -450,8 +450,8 @@
       slots.push({index,tx,ty,tw,th,points,visibleArea:visibleWidth*visibleHeight});
     }
     // Fill the most visible positions once each; never cycle through movie assets.
-    const chosenSlots = tilted && !posterMode ? slots.sort((a,b)=>b.visibleArea-a.visibleArea || a.index-b.index)
-      .slice(0,assets.length).sort((a,b)=>a.index-b.index) : slots;
+    const chosenSlots = tilted ? slots.sort((a,b)=>b.visibleArea-a.visibleArea || a.index-b.index)
+      .slice(0,assets.length).sort((a,b)=>a.index-b.index) : slots.slice(0,assets.length);
     ctx.save();
     if (tilted) { ctx.translate(posterMode ? -width*.30 : 0, posterMode ? -height*.35 : -height*.13); ctx.rotate(-12*Math.PI/180); }
     for (let index=0; index<chosenSlots.length; index++) {
