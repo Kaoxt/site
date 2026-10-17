@@ -435,7 +435,7 @@
       const tw = (tilted || posterMode ? w : width/rowCount)-gap, th=posterMode ? tw*3/2 : h-gap;
       // Offset neighboring columns to form a staggered wall in both artwork formats.
       // Extra rows cover the lower edge after staggering and rotation.
-      const columnOffset = tilted ? [0, -.45, -.15, -.6, -.3, -.4, -.2][col % 7] * h : 0;
+      const columnOffset = tilted ? (posterMode ? (col % 2 ? -.5 : 0) : [0, -.45, -.15, -.6, -.3, -.4, -.2][col % 7]) * h : 0;
       const tx = tilted ? col*w : posterMode ? (width-rowCount*w)/2+col*w : col*width/rowCount;
       const ty = row*h + columnOffset;
       // Keep the same tile geometry for the accessible preview editing layer.
