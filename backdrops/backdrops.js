@@ -426,7 +426,7 @@
     const cols = posterMode ? (tilted ? Math.max(2, Math.ceil(Math.sqrt(assets.length * 1.7))) : Math.ceil(Math.sqrt(assets.length * (width/height) / (2/3)))) : (tilted ? 4 : Math.min(4, Math.ceil(Math.sqrt(assets.length * 16/9))));
     const rows = tilted ? (posterMode ? Math.ceil(assets.length / cols) : 7) : Math.ceil(assets.length / cols);
     const gap = width * .008;
-    const w = posterMode ? (tilted ? Math.max(width * 1.55 / cols, height * 1.6 / rows / 1.5) : Math.min(width/cols,height/rows*2/3)) : (tilted ? width*.24 : width/cols);
+    const w = posterMode ? (tilted ? width*.17 : Math.min(width/cols,height/rows*2/3)) : (tilted ? width*.24 : width/cols);
     const h = posterMode ? w*3/2 : (tilted ? w*9/16 : height/rows);
     const slots = [];
     for (let index=0; index<(tilted ? cols*rows : assets.length); index++) {
