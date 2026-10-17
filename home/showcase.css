@@ -62,3 +62,23 @@ body.light .tour-slide p{color:#686b73}
     border-color: rgba(0,0,0,.1);
   }
 }
+
+/* Put each slide's wording over its image, like the Projectivy gallery. */
+.tour-slide { position:relative; }
+.tour-slide figcaption {
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index:1;
+  box-sizing:border-box;
+  min-height:0;
+  padding:40px 22px 20px;
+  background:linear-gradient(to bottom,transparent,rgba(5,6,10,.72) 55%,rgba(5,6,10,.94));
+  pointer-events:none;
+}
+.tour-slide figcaption h3 { margin-bottom:5px; }
+.tour-slide figcaption p { color:#e1e1e7; }
+body.light .tour-slide figcaption { background:linear-gradient(to bottom,transparent,rgba(5,6,10,.72) 55%,rgba(5,6,10,.94)); }
+body.light .tour-slide figcaption h3, body.light .tour-slide figcaption p { color:#fff; }
+@media(max-width:700px) { .tour-slide figcaption { min-height:0; padding:28px 12px 12px; } .tour-slide figcaption p { font-size:12px; line-height:1.35; } }
