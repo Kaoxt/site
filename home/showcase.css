@@ -109,3 +109,15 @@ body.light .collection-tour .tour-slide figcaption p {
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
   .collection-tour .tour-slide figcaption { background:rgba(12,13,21,.88); }
 }
+
+/* Projectivy-like shorter desktop image viewport, without changing mobile sizing. */
+.collection-tour .tour-slide figcaption,
+body.light .collection-tour .tour-slide figcaption {
+  border-top: 0;
+  box-shadow: 0 -12px 35px rgba(0,0,0,.12);
+}
+@media (min-width: 1000px) {
+  .collection-tour .tour-slide { aspect-ratio: 1.84 / 1; }
+  .collection-tour .tour-slide > img { height:100%; object-fit:cover; }
+  .collection-tour .tour-arrows { aspect-ratio:1.84 / 1; }
+}
