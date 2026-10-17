@@ -467,3 +467,10 @@ html[data-theme="light"] .api-key-group { background:#fafafa; border-color:#e1e2
   color: #fff;
 }
 html[data-theme="light"] .backdrop-page #downloadBackdrop:not(:disabled) { color: #fff; }
+
+/* Keep long selected-title lists tucked away without hiding collage settings. */
+.collage-list-disclosure > summary { cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; color:#d5d9e4; font-size:13px; font-weight:600; }
+.collage-list-disclosure > summary::-webkit-details-marker { display:none; }
+.collage-disclosure-chevron { font-size:19px; transition:transform .15s ease; }
+.collage-list-disclosure[open] .collage-disclosure-chevron { transform:rotate(180deg); }
+.collage-list-disclosure > summary:focus-visible { outline:2px solid #a5b4fc; outline-offset:-2px; }
