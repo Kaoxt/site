@@ -311,6 +311,7 @@
       filter: drop-shadow(0 26px 80px rgba(0,0,0,.42));
     }
     .showcase-card::after { content: none !important; display: none !important; }
+    @media (min-width: 1000px) { .showcase-card { width: min(100%, 920px); } }
     .tv { position: relative; width: min(94%, 1540px); margin: 0 auto; padding: 16px 16px 24px; border-radius: 34px; background: linear-gradient(180deg, #2a2b31 0%, #15161a 38%, #0b0b0e 100%); border: 1px solid rgba(255,255,255,.18); box-shadow: 0 40px 120px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(255,255,255,.04); }
     .tv::before { content: ""; position: absolute; left: 50%; bottom: -22px; transform: translateX(-50%); width: 8%; min-width: 70px; height: 28px; border-radius: 0 0 20px 20px; background: linear-gradient(180deg, #24252b, #09090c); box-shadow: 0 12px 24px rgba(0,0,0,.5); }
     .tv::after { content: ""; position: absolute; left: 50%; bottom: -38px; transform: translateX(-50%); width: 18%; min-width: 170px; height: 10px; border-radius: 999px; background: linear-gradient(180deg, #3a3b42, #0d0d11); box-shadow: 0 12px 20px rgba(0,0,0,.55); }
