@@ -477,6 +477,10 @@
       ctx.restore();
     }
     ctx.restore();
+    // Match the source generator's default 50% image opacity on the dark canvas.
+    // Apply it to the artwork canvas so preview and exported images agree.
+    ctx.fillStyle = 'rgba(5, 6, 8, 0.50)';
+    ctx.fillRect(0, 0, width, height);
     const fanartCount = assets.filter(x=>x.source==='fanart').length;
     const titledCount = assets.filter(x=>x.source===(posterMode ? 'tmdb-poster' : 'tmdb-title')).length;
     const fallbackCount = assets.length-fanartCount-titledCount;
