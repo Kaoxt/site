@@ -38,3 +38,27 @@ body.light .tour-slide p{color:#686b73}
 @media (min-width: 1000px) {
   .collection-tour { max-width: 920px; }
 }
+
+/* Desktop showcase section extends its top and bottom edges across the viewport,
+   while the carousel itself stays compact and centered. */
+@media (min-width: 1000px) {
+  .collection-tour {
+    position: relative;
+    isolation: isolate;
+    padding: 34px 0 58px;
+  }
+  .collection-tour::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0 calc(50% - 50vw);
+    background: rgba(255,255,255,.018);
+    border-top: 1px solid rgba(255,255,255,.08);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    pointer-events: none;
+  }
+  body.light .collection-tour::before {
+    background: rgba(0,0,0,.018);
+    border-color: rgba(0,0,0,.1);
+  }
+}
