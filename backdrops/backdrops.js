@@ -423,7 +423,7 @@
     const ctx = surface.getContext('2d');
     ctx.fillStyle = '#050608'; ctx.fillRect(0,0,width,height);
     const tilted = layout === 'tilted';
-    const cols = posterMode ? (tilted ? 5 : Math.ceil(Math.sqrt(assets.length * (width/height) / (2/3)))) : (tilted ? 4 : Math.min(4, Math.ceil(Math.sqrt(assets.length * 16/9))));
+    const cols = posterMode ? (tilted ? 7 : Math.ceil(Math.sqrt(assets.length * (width/height) / (2/3)))) : (tilted ? 4 : Math.min(4, Math.ceil(Math.sqrt(assets.length * 16/9))));
     const rows = tilted ? (posterMode ? 5 : 7) : Math.ceil(assets.length / cols);
     const gap = width * .008;
     const w = posterMode ? (tilted ? width*.17 : Math.min(width/cols,height/rows*2/3)) : (tilted ? width*.24 : width/cols);
@@ -435,7 +435,7 @@
       const tw = (tilted || posterMode ? w : width/rowCount)-gap, th=posterMode ? tw*3/2 : h-gap;
       // Offset neighboring columns to form a staggered wall in both artwork formats.
       // Extra rows cover the lower edge after staggering and rotation.
-      const columnOffset = tilted ? [0, -.45, -.15, -.6, -.3][col] * h : 0;
+      const columnOffset = tilted ? [0, -.45, -.15, -.6, -.3, -.4, -.2][col] * h : 0;
       const tx = tilted ? col*w : posterMode ? (width-rowCount*w)/2+col*w : col*width/rowCount;
       const ty = row*h + columnOffset;
       // Keep the same tile geometry for the accessible preview editing layer.
