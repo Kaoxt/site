@@ -441,7 +441,7 @@
       // Keep the same tile geometry for the accessible preview editing layer.
       const angle = tilted ? -12*Math.PI/180 : 0;
       const points = [[0,0],[tw,0],[tw,th],[0,th]].map(([x,y]) => ({
-        x:(tilted ? width*.22 : 0)+(tx+x)*Math.cos(angle)-(ty+y)*Math.sin(angle),
+        x:(tilted ? 0 : 0)+(tx+x)*Math.cos(angle)-(ty+y)*Math.sin(angle),
         y:(tilted ? -height*.13 : 0)+(tx+x)*Math.sin(angle)+(ty+y)*Math.cos(angle)
       }));
       const xs=points.map(p=>p.x), ys=points.map(p=>p.y);
@@ -453,7 +453,7 @@
     const chosenSlots = tilted ? slots.sort((a,b)=>b.visibleArea-a.visibleArea || a.index-b.index)
       .slice(0,assets.length).sort((a,b)=>a.index-b.index) : slots;
     ctx.save();
-    if (tilted) { ctx.translate(width*.22, -height*.13); ctx.rotate(-12*Math.PI/180); }
+    if (tilted) { ctx.translate(0, -height*.13); ctx.rotate(-12*Math.PI/180); }
     for (let index=0; index<chosenSlots.length; index++) {
       const {image,logo,entry,embeddedTitle,contain}=assets[index];
       const {tx,ty,tw,th,points}=chosenSlots[index];
