@@ -74,9 +74,9 @@
     const items=data.interleave(good);
     if(!items.length) throw new Error(failures[0]?.reason?.message || 'No titles with artwork matched. Try different filters or catalogs.');
     renderResults(resultId,items);
-    await api.selectTitle({title:'Movie collage',items:items.slice(0,35)});
+    await api.selectTitle({title:'Movie collage',items:items.slice(0,50)});
     if(token!==requestToken) return;
-    status(statusId,`${items.length} unique titles loaded; ${Math.min(35,items.length)} selected.${failures.length?` ${failures.length} source(s) failed: ${failures[0].reason.message}`:''}`,failures.length>0);
+    status(statusId,`${items.length} unique titles loaded; ${Math.min(50,items.length)} selected.${failures.length?` ${failures.length} source(s) failed: ${failures[0].reason.message}`:''}`,failures.length>0);
   }
   $('loadTmdbBrowse').addEventListener('click',async()=>{
     const token=++requestToken;$('loadTmdbBrowse').disabled=true;status('tmdbBrowseStatus','Loading titles…');
