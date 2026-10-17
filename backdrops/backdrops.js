@@ -423,7 +423,7 @@
     const ctx = surface.getContext('2d');
     ctx.fillStyle = '#050608'; ctx.fillRect(0,0,width,height);
     const tilted = layout === 'tilted';
-    const cols = posterMode ? (tilted ? Math.max(2, Math.ceil(Math.sqrt(assets.length * 1.7))) : Math.ceil(Math.sqrt(assets.length * (width/height) / (2/3)))) : (tilted ? Math.max(3, Math.ceil(Math.sqrt(assets.length / 7))) : Math.min(4, Math.ceil(Math.sqrt(assets.length * 16/9))));
+    const cols = posterMode ? (tilted ? Math.max(2, Math.ceil(Math.sqrt(assets.length * 1.7))) : Math.ceil(Math.sqrt(assets.length * (width/height) / (2/3)))) : (tilted ? Math.max(6, Math.min(8, Math.ceil(Math.sqrt(assets.length * 1.1)))) : Math.min(4, Math.ceil(Math.sqrt(assets.length * 16/9))));
     const rows = Math.ceil(assets.length / cols);
     const gap = width * .008;
     const w = posterMode ? (tilted ? width*.17 : Math.min(width/cols,height/rows*2/3)) : (tilted ? width*.24 : width/cols);
@@ -446,7 +446,7 @@
       // Keep the same tile geometry for the accessible preview editing layer.
       const angle = tilted ? -12*Math.PI/180 : 0;
       const points = [[0,0],[tw,0],[tw,th],[0,th]].map(([x,y]) => ({
-        x:(tilted ? (posterMode ? -width*.30 : -width*.34) : 0)+(tx+x)*Math.cos(angle)-(ty+y)*Math.sin(angle),
+        x:(tilted ? (posterMode ? -width*.30 : -width*.12) : 0)+(tx+x)*Math.cos(angle)-(ty+y)*Math.sin(angle),
         y:(tilted ? (posterMode ? -height*.35 : -height*.12) : 0)+(tx+x)*Math.sin(angle)+(ty+y)*Math.cos(angle)
       }));
       const xs=points.map(p=>p.x), ys=points.map(p=>p.y);
