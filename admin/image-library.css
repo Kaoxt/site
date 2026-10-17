@@ -222,6 +222,8 @@
 }
 
 .recent-card {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   padding: 10px;
   border: 1px solid rgba(255,255,255,.08);
@@ -230,6 +232,7 @@
 }
 
 .recent-thumb {
+  flex-shrink: 0;
   aspect-ratio: 16/9;
   display: grid;
   place-items: center;
@@ -245,6 +248,9 @@
 }
 
 .recent-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   padding: 10px 2px 2px;
 }
 
@@ -267,7 +273,8 @@
 .recent-actions {
   display: flex;
   gap: 7px;
-  margin-top: 9px;
+  margin-top: auto;
+  padding-top: 9px;
 }
 
 .recent-actions .copy-url-button {
