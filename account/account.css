@@ -137,3 +137,17 @@ html[data-theme="light"] .account-profile-switch:disabled { background: rgba(0,0
   }
 }
 
+
+/* Account collection CTA: indigo primary action in both themes. */
+.account-collection-cta .account-collection-indigo-button,
+html[data-theme="light"] .account-collection-cta .account-collection-indigo-button {
+  background:#6366f1;
+  color:#fff;
+  border:1px solid #6366f1;
+}
+.account-collection-cta .account-collection-indigo-button:hover,
+html[data-theme="light"] .account-collection-cta .account-collection-indigo-button:hover {
+  background:#4f46e5;
+  border-color:#4f46e5;
+  color:#fff;
+}
