@@ -423,7 +423,7 @@
     const ctx = surface.getContext('2d');
     ctx.fillStyle = '#050608'; ctx.fillRect(0,0,width,height);
     const tilted = layout === 'tilted';
-    const cols = posterMode ? (tilted ? Math.max(2, Math.ceil(Math.sqrt(assets.length * 1.7))) : Math.ceil(Math.sqrt(assets.length * (width/height) / (2/3)))) : (tilted ? Math.max(6, Math.min(8, Math.ceil(Math.sqrt(assets.length * 1.1)))) : Math.min(4, Math.ceil(Math.sqrt(assets.length * 16/9))));
+    const cols = posterMode ? (tilted ? Math.max(2, Math.ceil(Math.sqrt(assets.length * 1.7))) : Math.ceil(Math.sqrt(assets.length * (width/height) / (2/3)))) : (tilted ? Math.min(6, Math.max(3, Math.ceil(assets.length / 8))) : Math.min(4, Math.ceil(Math.sqrt(assets.length * 16/9))));
     const rows = Math.ceil(assets.length / cols);
     const gap = width * .008;
     const w = posterMode ? (tilted ? width*.17 : Math.min(width/cols,height/rows*2/3)) : (tilted ? width*.24 : width/cols);
@@ -455,7 +455,7 @@
       slots.push({index,tx,ty,tw,th,points,visibleArea:visibleWidth*visibleHeight});
     }
     // Fill the most visible positions once each; never cycle through movie assets.
-    const chosenSlots = tilted ? slots.sort((a,b)=>b.visibleArea-a.visibleArea || a.index-b.index)
+    const chosenSlots = tilted && posterMode ? slots.sort((a,b)=>b.visibleArea-a.visibleArea || a.index-b.index)
       .slice(0,assets.length).sort((a,b)=>a.index-b.index) : slots.slice(0,assets.length);
     ctx.save();
     if (tilted) { ctx.translate(posterMode ? -width*.30 : -width*.12, posterMode ? -height*.35 : -height*.12); ctx.rotate(-12*Math.PI/180); }
