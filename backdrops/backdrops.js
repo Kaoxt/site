@@ -13,6 +13,7 @@
     selected: null,
     overlayPreset: 'cinematic',
     overlayOpacity: 72,
+    imageOpacity: 50,
     gradientCoverage: 68,
     backdropZoom: 100,
     positionX: 50,
@@ -45,7 +46,7 @@
   const els = {};
   [
     'backdropSourceMode','backdropModeStatus','tmdbKey','toggleKey','saveKey','validateKey','keyStatus','mediaType','titleSearch','searchTitle','titleSearchStatus','titleResults',
-    'overlayPreset','overlayOpacity','overlayOpacityValue','gradientCoverage','coverageValue','backdropZoom','zoomValue','positionX','positionXValue','showTitle','textControls','fontFamily','textPosition','fontSize','fontSizeValue','textColor','textShadow',
+    'overlayPreset','overlayOpacity','overlayOpacityValue','imageOpacity','imageOpacityValue','gradientCoverage','coverageValue','backdropZoom','zoomValue','positionX','positionXValue','showTitle','textControls','fontFamily','textPosition','fontSize','fontSizeValue','textColor','textShadow',
     'editImages','undoRemoval','editImagesHelp','tileEditor','tileType','tileTypeHelp','fanartKeySection','fanartKey','saveFanartKey','toggleFanartKey','fanartKeyStatus','artworkSource','artworkStatus','showMovieLogos','collageLayout','collageTitles','collageStatus','clearCollage','shuffleCollage','backdropCanvas','emptyState','renderBusy','renderStatus','retryRender','previewTitle','resolution','downloadBackdrop'
   ].forEach(id => { els[id] = $(id); });
 
@@ -479,7 +480,7 @@
     ctx.restore();
     // Match the source generator's default 50% image opacity on the dark canvas.
     // Apply it to the artwork canvas so preview and exported images agree.
-    ctx.fillStyle = 'rgba(5, 6, 8, 0.50)';
+    ctx.fillStyle = `rgba(5, 6, 8, ${1 - state.imageOpacity / 100})`;
     ctx.fillRect(0, 0, width, height);
     const fanartCount = assets.filter(x=>x.source==='fanart').length;
     const titledCount = assets.filter(x=>x.source===(posterMode ? 'tmdb-poster' : 'tmdb-title')).length;
@@ -579,6 +580,7 @@
   function syncState() {
     state.overlayPreset = els.overlayPreset.value;
     state.overlayOpacity = Number(els.overlayOpacity.value);
+    state.imageOpacity = Number(els.imageOpacity.value);
     state.gradientCoverage = Number(els.gradientCoverage.value);
     state.backdropZoom = Number(els.backdropZoom.value);
     state.positionX = Number(els.positionX.value);
@@ -594,6 +596,7 @@
     state.textShadow = els.textShadow.checked;
     state.resolution = els.resolution.value;
     els.overlayOpacityValue.value = `${state.overlayOpacity}%`;
+    els.imageOpacityValue.value = `${state.imageOpacity}%`;
     els.coverageValue.value = `${state.gradientCoverage}%`;
     els.zoomValue.value = `${state.backdropZoom}%`;
     els.positionXValue.value = `${state.positionX}%`;
@@ -608,6 +611,7 @@
     els.mediaType.querySelectorAll('button').forEach(btn => btn.classList.toggle('active', btn.dataset.value === state.mediaType));
     els.overlayPreset.value = state.overlayPreset;
     els.overlayOpacity.value = state.overlayOpacity;
+    els.imageOpacity.value = state.imageOpacity;
     els.gradientCoverage.value = state.gradientCoverage;
     els.backdropZoom.value = state.backdropZoom;
     els.positionX.value = state.positionX;
@@ -653,7 +657,7 @@
   });
   els.searchTitle.addEventListener('click', searchTitles);
   els.titleSearch.addEventListener('keydown', event => { if (event.key === 'Enter') searchTitles(); });
-  [els.artworkSource,els.showMovieLogos,els.collageLayout,els.overlayPreset,els.overlayOpacity,els.gradientCoverage,els.backdropZoom,els.positionX,els.showTitle,els.fontFamily,els.textPosition,els.fontSize,els.textColor,els.textShadow,els.resolution]
+  [els.artworkSource,els.showMovieLogos,els.collageLayout,els.overlayPreset,els.overlayOpacity,els.imageOpacity,els.gradientCoverage,els.backdropZoom,els.positionX,els.showTitle,els.fontFamily,els.textPosition,els.fontSize,els.textColor,els.textShadow,els.resolution]
     .forEach(el => el.addEventListener('input', syncState));
   els.downloadBackdrop.addEventListener('click', downloadPreview);
 
