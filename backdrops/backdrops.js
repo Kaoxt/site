@@ -458,7 +458,7 @@
     const chosenSlots = tilted ? slots.sort((a,b)=>b.visibleArea-a.visibleArea || a.index-b.index)
       .slice(0,assets.length).sort((a,b)=>a.index-b.index) : slots.slice(0,assets.length);
     ctx.save();
-    if (tilted) { ctx.translate(posterMode ? -width*.30 : -width*.34, posterMode ? -height*.35 : -height*.12); ctx.rotate(-12*Math.PI/180); }
+    if (tilted) { ctx.translate(posterMode ? -width*.30 : -width*.12, posterMode ? -height*.35 : -height*.12); ctx.rotate(-12*Math.PI/180); }
     for (let index=0; index<chosenSlots.length; index++) {
       const {image,logo,entry,embeddedTitle,contain}=assets[index];
       const {tx,ty,tw,th,points}=chosenSlots[index];
