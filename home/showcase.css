@@ -82,3 +82,30 @@ body.light .tour-slide p{color:#686b73}
 body.light .tour-slide figcaption { background:linear-gradient(to bottom,transparent,rgba(5,6,10,.72) 55%,rgba(5,6,10,.94)); }
 body.light .tour-slide figcaption h3, body.light .tour-slide figcaption p { color:#fff; }
 @media(max-width:700px) { .tour-slide figcaption { min-height:0; padding:28px 12px 12px; } .tour-slide figcaption p { font-size:12px; line-height:1.35; } }
+
+/* Frosted-glass caption strip inspired by Projectivy's gallery. */
+.collection-tour .tour-slide figcaption,
+body.light .collection-tour .tour-slide figcaption {
+  padding: 28px 24px 17px;
+  background: linear-gradient(180deg, rgba(14,15,23,.28), rgba(12,13,21,.72));
+  -webkit-backdrop-filter: blur(16px) saturate(135%);
+  backdrop-filter: blur(16px) saturate(135%);
+  border-top: 1px solid rgba(255,255,255,.13);
+  box-shadow: 0 -12px 35px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.055);
+}
+.collection-tour .tour-slide figcaption h3,
+body.light .collection-tour .tour-slide figcaption h3 {
+  color:#fff;
+  text-shadow:0 1px 5px rgba(0,0,0,.5);
+}
+.collection-tour .tour-slide figcaption p,
+body.light .collection-tour .tour-slide figcaption p {
+  color:rgba(255,255,255,.88);
+  text-shadow:0 1px 4px rgba(0,0,0,.45);
+}
+@media(max-width:700px) {
+  .collection-tour .tour-slide figcaption { padding:15px 12px 12px; }
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  .collection-tour .tour-slide figcaption { background:rgba(12,13,21,.88); }
+}
