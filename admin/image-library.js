@@ -37,6 +37,7 @@
     uploadFolderSelect: $('uploadFolderSelect'),
     newFolderField: $('newFolderField'),
     uploadFolder: $('uploadFolder'),
+    deleteFolderButton: $('deleteFolderButton'),
     coverFile: $('coverFile'),
     backdropFile: $('backdropFile'),
     logoFile: $('logoFile'),
@@ -285,7 +286,7 @@
       ? [...new Set(
           state.images
             .filter((item) => item.category === category)
-            .map((item) => item.folder)
+            .map((item) => item.key.split('/').slice(2, -1).join('/'))
             .filter(Boolean)
         )].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
       : [];
@@ -475,6 +476,7 @@
     const creating = el.uploadFolderSelect.value === '__new__';
     el.newFolderField.hidden = !creating;
     el.uploadFolder.required = creating;
+    el.deleteFolderButton.hidden = creating || !el.uploadFolderSelect.value || el.uploadCategorySelect.value === '__new__';
 
     if (!creating) {
       el.uploadFolder.value = '';
@@ -560,6 +562,40 @@
   if (el.cancelUploadButton) {
     el.cancelUploadButton.addEventListener('click', resetUploadSelections);
   }
+
+  el.deleteFolderButton.addEventListener('click', async () => {
+    const category = getUploadCategory();
+    const folder = getUploadFolder();
+    if (!category || !folder || el.uploadFolderSelect.value === '__new__') return;
+    const controls = [...el.uploadForm.querySelectorAll('input, select, button')];
+    const previous = controls.map(control => control.disabled);
+    controls.forEach(control => { control.disabled = true; });
+    clearMessage(el.uploadMessage);
+    async function requestFolder(action, revision) {
+      const res = await fetch('/api/admin/artwork-folder', {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category, folder, action, revision }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not delete the folder.');
+      return data;
+    }
+    try {
+      const preview = await requestFolder('preview');
+      if (!preview.files.length) throw new Error('This folder is already empty. Refresh the library.');
+      if (!window.confirm(`Delete ${preview.folder}?\n\nThis removes ${preview.files.length} files, including any subfolders, from GitHub and artwork storage:\n\n${preview.files.join('\n')}\n\nExisting collection links to this artwork will stop working. Delete this folder?`)) return;
+      const result = await requestFolder('delete', preview.revision);
+      resetUploadSelections();
+      await loadLibrary();
+      setMessage(el.uploadMessage, result.message, 'success');
+    } catch (error) {
+      setMessage(el.uploadMessage, error.message || 'Folder deletion failed.');
+      await loadLibrary();
+    } finally {
+      controls.forEach((control, index) => { control.disabled = previous[index]; });
+    }
+  });
 
   el.uploadForm.addEventListener('submit', async (event) => {
     event.preventDefault();

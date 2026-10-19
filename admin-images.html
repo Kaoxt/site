@@ -17,7 +17,7 @@
   <script src="/components.js?v=20261008-mentions1" defer></script>
   <script src="/set-up-collection/config.js?v=20260906-1" defer></script>
   <script src="/nuvio-auth/nuvio-auth.js?v=20261007-nav1" defer></script>
-  <script src="/admin/image-library.js?v=20261014-white-buttons1" defer></script>
+  <script src="/admin/image-library.js?v=20261019-folder-delete1" defer></script>
 </head>
 <body>
   <main class="page admin-page image-library-page">
@@ -124,6 +124,7 @@
                 <option value="__new__">+ Create New Folder…</option>
               </select>
               <small>Choose a folder from the selected category or create a new one.</small>
+              <button id="deleteFolderButton" class="button-secondary" type="button" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg> Delete Folder</button>
             </label>
 
             <label class="upload-field new-folder-field" id="newFolderField" hidden>
