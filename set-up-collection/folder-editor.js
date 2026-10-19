@@ -645,7 +645,7 @@
 
     const refreshCards = (set) => {
       $('#folderEditCount').textContent = `${set.size} of ${total} folders selected`;
-      $('.folder-edit-card').forEach(card => {
+      $$('.folder-edit-card').forEach(card => {
         const available = card.dataset.folderAvailable !== 'false';
         const on = available && set.has(card.dataset.folderKey || '');
         card.classList.toggle('selected', on);
@@ -658,7 +658,7 @@
       });
     };
 
-    $('.folder-edit-card').forEach(card => {
+    $$('.folder-edit-card').forEach(card => {
       card.onclick = () => {
         if (card.dataset.folderAvailable === 'false') return;
         const set = selectedFolderKeys(state, group, collectionGroupKey, collectionFolderKey);
