@@ -135,13 +135,20 @@ for (const [name, engine, mobile] of [
       await count('0 of 0 folders selected');
       await activate('#doneEditingBtn');
 
-      // beforeunload saves the real wizard state; reload restores the same selection.
+      // Clicks must be saved before unload; Firefox reload can discard unload-only writes.
+      assert.deepEqual(await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)).selectedCollectionGroupIds.slice().sort(), sessionKey), ['movies', 'series']);
       await page.reload();
+      assert.deepEqual(await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)).selectedCollectionGroupIds.slice().sort(), sessionKey), ['movies', 'series']);
+      assert.equal(await page.locator('[data-edit-group="movies"]').isEnabled(), true, 'a selected section must remain editable after reload');
       await activate('[data-edit-group="movies"]');
       await count('1 of 3 folders selected');
       const saved = await page.evaluate(key => JSON.parse(sessionStorage.getItem(key)), sessionKey);
       assert.deepEqual(saved.existingCollections, fixture.existingCollections);
       assert.deepEqual(saved.selectedCollectionFolderIds.series, ['drama']);
+      assert.deepEqual(saved.collectionFolderSourceOverrides, fixture.collectionFolderSourceOverrides);
+      assert.deepEqual(saved.collectionFolderSortModes, fixture.collectionFolderSortModes);
+      assert.deepEqual(saved.collectionFolderOrders, fixture.collectionFolderOrders);
+      assert.deepEqual(saved.collectionCategoryOrder, fixture.collectionCategoryOrder);
       const action = saved.collectionPack.find(group => group.id === 'movies').folders.find(folder => folder.id === 'action');
       assert.equal(action.tileShape, 'LANDSCAPE');
       assert.equal(action.hideTitle, true);

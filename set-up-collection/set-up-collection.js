@@ -222,6 +222,13 @@
         selectedCollectionGroupIds: state.selectedCollectionGroupIds,
         selectedCollectionFolderIds: state.selectedCollectionFolderIds,
         collectionSelectionInitialized: state.collectionSelectionInitialized,
+        collectionCategoryOrder: state.collectionCategoryOrder,
+        collectionDefaultGroupOrder: state.collectionDefaultGroupOrder,
+        collectionFolderSortModes: state.collectionFolderSortModes,
+        collectionFolderOrders: state.collectionFolderOrders,
+        collectionDefaultFolderOrders: state.collectionDefaultFolderOrders,
+        collectionFolderSourceOverrides: state.collectionFolderSourceOverrides,
+        collectionFolderDefaults: state.collectionFolderDefaults,
         bingecatManifestUrl: state.bingecatManifestUrl,
         bingecatManifest: state.bingecatManifest,
         bingecatAddonId: state.bingecatAddonId,
@@ -3133,6 +3140,9 @@
     window.scrollTo({ top: 0, behavior: 'auto' });
   });
 
+  // Poster and bulk-selection buttons do not emit input/change. Store their
+  // completed state now; unload-only writes can be lost during a Firefox reload.
+  window.addEventListener('kollection:collection-selection-changed', persistWizardSession);
   window.addEventListener('beforeunload', persistWizardSession);
   document.addEventListener('change', scheduleWizardSession, true);
   document.addEventListener('input', scheduleWizardSession, true);
