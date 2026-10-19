@@ -18,3 +18,18 @@ jobs:
           node-version: '24'
       - name: Check setup, forum, navigation, and account behavior
         run: node --test tests/setup-*.test.mjs tests/saved-*.test.mjs tests/security.test.mjs tests/issues.test.mjs tests/forum*.test.mjs tests/navigation*.test.mjs tests/account*.test.mjs tests/collection-clear.test.mjs tests/poster-addon-bridge.test.mjs
+
+  editor-browsers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install browser test tools
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium firefox webkit
+      - name: Check poster selection on desktop and mobile
+        run: node --test tests/browser/folder-selection.test.mjs
