@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="/shared.css?v=20261008-tap2" />
   <link rel="stylesheet" href="/admin/admin.css?v=20260906-1" />
   <link rel="stylesheet" href="/admin/admin-pages.css?v=20260907-4" />
-  <link rel="stylesheet" href="/admin/image-library.css?v=20261017-aligned-actions1" />
+  <link rel="stylesheet" href="/admin/image-library.css?v=20261019-folder-button2" />
 
   <script src="/components.js?v=20261008-mentions1" defer></script>
   <script src="/set-up-collection/config.js?v=20260906-1" defer></script>
@@ -117,15 +117,14 @@
               <small>The category is created automatically when you upload the first artwork into it.</small>
             </label>
 
-            <label class="upload-field">
-              <span>Folder</span>
+            <div class="upload-field">
+              <div class="folder-field-heading"><label for="uploadFolderSelect">Folder</label><button id="deleteFolderButton" class="delete-folder-button" type="button" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg> Delete Folder</button></div>
               <select id="uploadFolderSelect" required>
                 <option value="">Choose Folder</option>
                 <option value="__new__">+ Create New Folder…</option>
               </select>
               <small>Choose a folder from the selected category or create a new one.</small>
-              <button id="deleteFolderButton" class="button-secondary" type="button" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg> Delete Folder</button>
-            </label>
+            </div>
 
             <label class="upload-field new-folder-field" id="newFolderField" hidden>
               <span>New Folder Name</span>

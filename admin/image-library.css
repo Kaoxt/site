@@ -697,3 +697,49 @@ body.light .image-library-page .copy-url-button {
 .copy-url-button svg { flex-shrink: 0; }
 body.light .image-library-page .button-primary:hover:not(:disabled),
 body.light .image-library-page .copy-url-button:hover { background: #2a2b30 !important; }
+
+
+/* Keep category and folder inputs aligned, with a compact folder action. */
+.image-upload-form > .upload-field > span,
+.folder-field-heading {
+  min-height: 32px;
+}
+.folder-field-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.folder-field-heading > label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #9299aa;
+}
+.delete-folder-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  width: auto;
+  min-height: 32px;
+  margin: 0;
+  padding: 5px 10px;
+  border: 1px solid rgba(248,113,113,.22);
+  border-radius: 8px;
+  background: rgba(248,113,113,.06);
+  color: #e8a3a3;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+  cursor: pointer;
+}
+.delete-folder-button svg { display: block; flex-shrink: 0; }
+.delete-folder-button[hidden] { display: none !important; }
+.delete-folder-button:hover:not(:disabled) { background: rgba(248,113,113,.13); border-color: rgba(248,113,113,.4); }
+.delete-folder-button:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.delete-folder-button:disabled { opacity: .5; cursor: wait; }
+body.light .delete-folder-button { color: #a33434; border-color: rgba(163,52,52,.25); background: rgba(163,52,52,.05); }
