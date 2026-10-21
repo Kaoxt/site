@@ -121,3 +121,7 @@ body.light .collection-tour .tour-slide figcaption {
   .collection-tour .tour-slide > img { height:100%; object-fit:cover; }
   .collection-tour .tour-arrows { aspect-ratio:1.84 / 1; }
 }
+
+/* Cover the baked-in Actors selection ring without changing the original portraits.
+   SVG scales and crops with the screenshot on both desktop and mobile. */
+.tour-selection-cleanup { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
