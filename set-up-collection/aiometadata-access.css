@@ -11,6 +11,14 @@
 .aio-access-status { font-size: .85rem; color: #cbd5e1; }
 .aio-access-details { margin-top: 14px; }
 .aio-access-details > summary { cursor: pointer; font-size: .85rem; font-weight: 650; padding: 8px 0; }
-.aio-password-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
-.aio-password-fields .field { min-width: 0; }
-@media (max-width: 540px) { .aio-password-fields { grid-template-columns: 1fr; gap: 0; } }
+.aio-password-section { min-width: 0; margin: 24px 0 0; padding: 0; border: 0; }
+.aio-password-section legend { padding: 0; color: #dddde2; font-size: 15px; line-height: 1.35; font-weight: 700; }
+.aio-password-section p { color: #aeb7c8; font-size: 13.5px; line-height: 1.55; }
+.aio-password-section .aio-password-intro { margin: 8px 0 18px; }
+.aio-password-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; gap: 16px; }
+.aio-password-fields .field { min-width: 0; margin: 0; align-content: start; }
+.aio-password-section .aio-password-help { margin: 12px 0 0; }
+.aio-password-section .aio-password-privacy { margin: 4px 0 0; }
+body.light .aio-password-section legend { color: #202126; }
+body.light .aio-password-section p { color: #686b73; }
+@media (max-width: 640px) { .aio-password-fields { grid-template-columns: 1fr; } }
