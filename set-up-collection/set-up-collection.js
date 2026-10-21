@@ -2681,11 +2681,16 @@
           <input id="aiSelfHostUrl" type="url" inputmode="url" value="${esc(state.aiSelfHostUrl || (selfHostSelected ? currentHost : ''))}" placeholder="https://your-aiometadata.example.com/" autocomplete="url">
           <small>Paste the base URL for your AIOMetadata instance. The Kollection will use this host when creating the configuration.</small>
         </div>
-        <div class="aio-password-fields">
-          <div class="field"><label for="aiConfigPassword">AIOMetadata password</label><input id="aiConfigPassword" type="password" autocomplete="new-password" minlength="6" value="${esc(state.aiConfigPassword)}" aria-describedby="aiConfigPasswordHelp" required></div>
-          <div class="field"><label for="aiConfigPasswordConfirm">Confirm AIOMetadata password</label><input id="aiConfigPasswordConfirm" type="password" autocomplete="new-password" minlength="6" value="${esc(state.aiConfigPasswordConfirm)}" required></div>
-        </div>
-        <p id="aiConfigPasswordHelp" class="aio-access-note">Choose at least 6 characters and keep this password. Use it with your UUID to edit AIOMetadata later. It is separate from your Nuvio password and is not saved by Kollection. The same password will protect each configuration created in this setup.</p>
+        <fieldset class="aio-password-section" aria-describedby="aiConfigPasswordIntro aiConfigPasswordPrivacy">
+          <legend>AIOMetadata access</legend>
+          <p id="aiConfigPasswordIntro" class="aio-password-intro">Keep your password and UUID to edit your settings later.</p>
+          <div class="aio-password-fields">
+            <div class="field"><label for="aiConfigPassword">Password</label><input id="aiConfigPassword" type="password" autocomplete="new-password" minlength="6" value="${esc(state.aiConfigPassword)}" aria-describedby="aiConfigPasswordHelp" required></div>
+            <div class="field"><label for="aiConfigPasswordConfirm">Confirm password</label><input id="aiConfigPasswordConfirm" type="password" autocomplete="new-password" minlength="6" value="${esc(state.aiConfigPasswordConfirm)}" aria-describedby="aiConfigPasswordHelp" required></div>
+          </div>
+          <p id="aiConfigPasswordHelp" class="aio-password-help">Use at least 6 characters. One password protects all configurations in this setup.</p>
+          <p id="aiConfigPasswordPrivacy" class="aio-password-privacy">Separate from your Nuvio password. Never saved by Kollection.</p>
+        </fieldset>
         <details class="aio-access-details" ${window.KollectionSavedSetup?.getId?.() ? '' : 'hidden'}><summary>Current AIOMetadata settings</summary><div id="aioCurrentAccess">${window.KollectionAioAccess.markup(window.KollectionSavedSetup?.getInstalledConfigurations?.(), { legacy: true })}</div></details>
         <div class="smart-overlay-option" style="margin-top:18px">
           <label class="toggle-row" for="aiCatalogModeOnly">
