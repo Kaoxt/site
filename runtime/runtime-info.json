@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-10-21T01:01:29.398Z",
+  "generatedAt": "2026-10-21T14:27:03.910Z",
   "sourceFiles": {
-    "nuvio": "nuvio-collections-profile-kollection-v3.json",
+    "nuvio": "nuvio-collections-kollection-v3.json",
     "aio": "aiometadata-config-kollection-v3.json"
   },
   "aiometadataVersion": "3.6.1",
   "sections": 14,
-  "folders": 205,
-  "catalogs": 530,
-  "referencedCatalogs": 480,
+  "folders": 206,
+  "catalogs": 532,
+  "referencedCatalogs": 482,
   "missingCatalogIds": [
     "streaming.nfx_movie",
     "streaming.nfx_series",

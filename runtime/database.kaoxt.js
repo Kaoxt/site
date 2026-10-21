@@ -212,8 +212,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Discover/Recommended%20For%20You/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Discover/Recommended%20For%20You/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Discover/For%20You/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Discover/For%20You/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -253,7 +253,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Discover/Recommended%20For%20You/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Discover/For%20You/backdrop.webp"
       }
     ],
     "pinToTop": true,
@@ -1749,6 +1749,49 @@ window.NUVIO_DATABASE = [
         "heroBackdropUrl": "https://kollection.tv/images/Genres/Action/backdrop.webp"
       },
       {
+        "id": "folder-96dac645",
+        "title": "Adventure",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.230803"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.230804"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Adventure/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Adventure/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.230803"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.230804"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Adventure/backdrop.webp"
+      },
+      {
         "id": "3ea8222f-9173-43ec-b60d-ef9085d669c7",
         "title": "Animation",
         "sources": [
@@ -2083,6 +2126,7 @@ window.NUVIO_DATABASE = [
         "tileShape": "LANDSCAPE",
         "coverEmoji": "",
         "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Genres/Crime/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Genres/Crime/cover.webp",
         "catalogSources": [
@@ -2314,6 +2358,7 @@ window.NUVIO_DATABASE = [
         "tileShape": "LANDSCAPE",
         "coverEmoji": "",
         "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Genres/Family/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Genres/Family/cover.webp",
         "catalogSources": [
@@ -2618,6 +2663,7 @@ window.NUVIO_DATABASE = [
         "tileShape": "LANDSCAPE",
         "coverEmoji": "",
         "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Genres/Music/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Genres/Music/cover.webp",
         "catalogSources": [
@@ -2957,6 +3003,7 @@ window.NUVIO_DATABASE = [
     "pinToTop": true,
     "viewMode": "TABBED_GRID",
     "showAllTab": false,
+    "backdropImageUrl": "",
     "focusGlowEnabled": false
   },
   {
@@ -3730,8 +3777,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Networks/Syfy/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Networks/Syfy/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/SYFY/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/SYFY/cover.webp",
         "catalogSources": [
           {
             "type": "series",
@@ -4008,8 +4055,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Franchises/Jurassic%20Park/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Franchises/Jurassic%20Park/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Jurrasic%20Park/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Jurrasic%20Park/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -4019,7 +4066,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Jurassic%20Park/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Jurrasic%20Park/backdrop.webp"
       },
       {
         "id": "c72f4077-8c3c-4e64-888d-44632ab464bd",
@@ -6413,8 +6460,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Robert%20Downey%20Jr/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Robert%20Downey%20Jr/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Robert%20Downey%20Jr./logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Robert%20Downey%20Jr./cover.webp",
         "catalogSources": [
           {
             "type": "all",
@@ -6424,7 +6471,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Robert%20Downey%20Jr/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Robert%20Downey%20Jr./backdrop.webp"
       },
       {
         "id": "folder-54e064f9",
@@ -7127,8 +7174,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Directors/Guillermo%20Del%20Toro/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Directors/Guillermo%20Del%20Toro/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Directors/Guillermo%20del%20Toro/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Directors/Guillermo%20del%20Toro/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -7138,7 +7185,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Directors/Guillermo%20Del%20Toro/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Directors/Guillermo%20del%20Toro/backdrop.webp"
       },
       {
         "id": "folder-b2fc478a",
@@ -7416,7 +7463,7 @@ window.NUVIO_DATABASE = [
         "hideTitle": true,
         "tileShape": "POSTER",
         "titleLogoUrl": "https://kollection.tv/images/World/Argentina/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/Argentina/cover.webp",
+        "coverImageUrl": "https://kollection.tv/images/World/Argentina/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -7508,7 +7555,7 @@ window.NUVIO_DATABASE = [
         "hideTitle": true,
         "tileShape": "POSTER",
         "titleLogoUrl": "https://kollection.tv/images/World/Brazil/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/Brazil/cover.webp",
+        "coverImageUrl": "https://kollection.tv/images/World/Brazil/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -7600,7 +7647,7 @@ window.NUVIO_DATABASE = [
         "hideTitle": true,
         "tileShape": "POSTER",
         "titleLogoUrl": "https://kollection.tv/images/World/China/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/China/cover.webp",
+        "coverImageUrl": "https://kollection.tv/images/World/China/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -7692,7 +7739,7 @@ window.NUVIO_DATABASE = [
         "hideTitle": true,
         "tileShape": "POSTER",
         "titleLogoUrl": "https://kollection.tv/images/World/France/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/France/cover.webp",
+        "coverImageUrl": "https://kollection.tv/images/World/France/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -7784,7 +7831,7 @@ window.NUVIO_DATABASE = [
         "hideTitle": true,
         "tileShape": "POSTER",
         "titleLogoUrl": "https://kollection.tv/images/World/Germany/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/Germany/cover.webp",
+        "coverImageUrl": "https://kollection.tv/images/World/Germany/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -7876,7 +7923,7 @@ window.NUVIO_DATABASE = [
         "hideTitle": true,
         "tileShape": "POSTER",
         "titleLogoUrl": "https://kollection.tv/images/World/India/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/India/cover.webp",
+        "coverImageUrl": "https://kollection.tv/images/World/India/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -7968,7 +8015,7 @@ window.NUVIO_DATABASE = [
         "hideTitle": true,
         "tileShape": "POSTER",
         "titleLogoUrl": "https://kollection.tv/images/World/Italy/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/Italy/cover.webp",
+        "coverImageUrl": "https://kollection.tv/images/World/Italy/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -8060,7 +8107,7 @@ window.NUVIO_DATABASE = [
         "hideTitle": true,
         "tileShape": "POSTER",
         "titleLogoUrl": "https://kollection.tv/images/World/Japan/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/Japan/cover.webp",
+        "coverImageUrl": "https://kollection.tv/images/World/Japan/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -8152,7 +8199,7 @@ window.NUVIO_DATABASE = [
         "hideTitle": true,
         "tileShape": "POSTER",
         "titleLogoUrl": "https://kollection.tv/images/World/Mexico/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/Mexico/cover.webp",
+        "coverImageUrl": "https://kollection.tv/images/World/Mexico/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -8244,7 +8291,7 @@ window.NUVIO_DATABASE = [
         "hideTitle": true,
         "tileShape": "POSTER",
         "titleLogoUrl": "https://kollection.tv/images/World/Nordic/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/Nordic/cover.webp",
+        "coverImageUrl": "https://kollection.tv/images/World/Nordic/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -8336,7 +8383,7 @@ window.NUVIO_DATABASE = [
         "hideTitle": true,
         "tileShape": "POSTER",
         "titleLogoUrl": "https://kollection.tv/images/World/Russia/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/Russia/cover.webp",
+        "coverImageUrl": "https://kollection.tv/images/World/Russia/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -8442,7 +8489,7 @@ window.NUVIO_DATABASE = [
         "hideTitle": true,
         "tileShape": "POSTER",
         "titleLogoUrl": "https://kollection.tv/images/World/South%20Korea/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/South%20Korea/cover.webp",
+        "coverImageUrl": "https://kollection.tv/images/World/South%20Korea/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -8546,7 +8593,7 @@ window.NUVIO_DATABASE = [
         "hideTitle": true,
         "tileShape": "POSTER",
         "titleLogoUrl": "https://kollection.tv/images/World/Spain/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/Spain/cover.webp",
+        "coverImageUrl": "https://kollection.tv/images/World/Spain/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -8638,7 +8685,7 @@ window.NUVIO_DATABASE = [
         "hideTitle": true,
         "tileShape": "POSTER",
         "titleLogoUrl": "https://kollection.tv/images/World/T%C3%BCrkiye/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/T%C3%BCrkiye/cover.webp",
+        "coverImageUrl": "https://kollection.tv/images/World/T%C3%BCrkiye/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -8758,7 +8805,7 @@ window.NUVIO_DATABASE = [
         "hideTitle": true,
         "tileShape": "POSTER",
         "titleLogoUrl": "https://kollection.tv/images/World/United%20Kingdom/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/United%20Kingdom/cover.webp",
+        "coverImageUrl": "https://kollection.tv/images/World/United%20Kingdom/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -8873,8 +8920,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/International%20Cinema/USA/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/USA/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/World/USA/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/World/USA/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -8914,7 +8961,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/International%20Cinema/USA/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/World/USA/backdrop.webp"
       }
     ],
     "pinToTop": true,
@@ -8940,8 +8987,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Based%20On/True%20Events/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Based%20On/True%20Events/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Based%20On/True%20Stories/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Based%20On/True%20Stories/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -8951,7 +8998,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Based%20On/True%20Events/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Based%20On/True%20Stories/backdrop.webp"
       },
       {
         "id": "folder-77392d45",

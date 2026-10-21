@@ -2267,6 +2267,52 @@
       "displayType": "series"
     },
     {
+      "id": "mdblist.230803",
+      "type": "movie",
+      "name": "Adventure",
+      "enabled": true,
+      "showInHome": false,
+      "source": "mdblist",
+      "sort": "default",
+      "order": "asc",
+      "genreSelection": "standard",
+      "enableRatingPosters": true,
+      "metadata": {
+        "itemCount": 983,
+        "author": "kaoxt",
+        "url": "https://mdblist.com/lists/kaoxt/adventure-movies",
+        "mediatype": "movie"
+      },
+      "displayType": "movie",
+      "tags": [
+        "Genres"
+      ],
+      "randomizePerPage": true
+    },
+    {
+      "id": "mdblist.230804",
+      "type": "series",
+      "name": "Adventure",
+      "enabled": true,
+      "showInHome": false,
+      "source": "mdblist",
+      "sort": "default",
+      "order": "asc",
+      "genreSelection": "standard",
+      "enableRatingPosters": true,
+      "metadata": {
+        "itemCount": 454,
+        "author": "kaoxt",
+        "url": "https://mdblist.com/lists/kaoxt/adventure-series",
+        "mediatype": "show"
+      },
+      "displayType": "series",
+      "tags": [
+        "Genres"
+      ],
+      "randomizePerPage": true
+    },
+    {
       "id": "mdblist.222283",
       "type": "movie",
       "name": "Anime",
