@@ -1256,8 +1256,12 @@
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
       if (tz) config.timezone = tz;
     } catch { /* keep base */ }
-    config.searchEnabled = index === 0 ? (config.searchEnabled !== false) : false;
-    if (config.search && typeof config.search === 'object') config.search.enabled = index === 0;
+    // Preserve the primary configuration's search preferences, including an
+    // explicitly disabled search. Overflow instances must not duplicate search.
+    if (index > 0) {
+      config.searchEnabled = false;
+      config.search = { ...config.search, enabled: false };
+    }
     const now = Date.now();
     if ('lastModified' in config) config.lastModified = now;
     if ('configVersion' in config) config.configVersion = now + index + 1;

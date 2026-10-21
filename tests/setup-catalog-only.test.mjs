@@ -27,6 +27,48 @@ for (const [choice, imported, expected] of [
   });
 }
 
+for (const catalogModeOnly of [true, false]) {
+  test(`catalogs-only ${catalogModeOnly} preserves primary search preferences and suppresses overflow search`, () => {
+    for (const fromImport of [true, false]) for (const enabled of [true, false, undefined]) {
+      const original = {
+        searchEnabled: enabled,
+        search: {
+          enabled,
+          providers: { movie: 'tmdb.search', series: 'tvdb.search' },
+          engineEnabled: { 'tmdb.search': true, 'tvdb.search': false },
+          searchOrder: ['series', 'movie'],
+          searchNames: { movie: 'My movie search' },
+          searchDisplayTypes: { movie: 'movie' },
+          ai_enabled: false,
+        },
+      };
+      const base = copy(original);
+      const state = { aiCatalogModeOnly: catalogModeOnly, aiCustomConfig: fromImport ? base : null, betterPostersEnabled: false };
+      const c = vm.createContext({ state, base, window: {}, jsonClone: copy });
+      vm.runInContext(booleanHelper + prepare, c);
+      const primary = vm.runInContext('prepareAiConfig(base, [], 0)', c);
+      assert.deepEqual(copy(primary.search), base.search);
+      assert.equal(primary.searchEnabled, enabled);
+      assert.equal(Object.hasOwn(primary, 'searchEnabled'), Object.hasOwn(base, 'searchEnabled'));
+      const overflow = vm.runInContext('prepareAiConfig(base, [], 1)', c);
+      assert.equal(overflow.searchEnabled, false);
+      assert.deepEqual(copy(overflow.search), { ...base.search, enabled: false });
+      assert.deepEqual(base, copy(original), 'preparing either instance must not mutate the import');
+    }
+  });
+}
+
+test('missing search settings keep primary defaults but cannot enable overflow search', () => {
+  const c = vm.createContext({ state: { betterPostersEnabled: false }, window: {}, jsonClone: copy });
+  vm.runInContext(booleanHelper + prepare, c);
+  const primary = vm.runInContext('prepareAiConfig({}, [], 0)', c);
+  assert.equal(Object.hasOwn(primary, 'search'), false);
+  assert.equal(Object.hasOwn(primary, 'searchEnabled'), false);
+  const overflow = vm.runInContext('prepareAiConfig({}, [], 1)', c);
+  assert.deepEqual(copy(overflow.search), { enabled: false });
+  assert.equal(overflow.searchEnabled, false);
+});
+
 test('catalogs-only on and off survive wizard refreshes', () => {
   for (const choice of [true, false]) {
     let saved;
