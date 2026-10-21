@@ -83,7 +83,7 @@
       const copy = cloneJson(group);
       const groupKey = mergeCollectionKey(group?.id || group?.title);
       const chosen = Array.isArray(folderSelections[groupKey]) ? folderSelections[groupKey].map(mergeCollectionKey) : null;
-      if (chosen && chosen.length) {
+      if (chosen) {
         const set = new Set(chosen);
         copy.folders = (copy.folders || []).filter(folder => set.has(mergeCollectionKey(folder?.id || folder?.title)));
       }
@@ -204,13 +204,13 @@
     return copy;
   }
 
-  async function rebuildLegacyAioExports(collection) {
+  async function loadLegacyAioCatalogs(collection) {
     const savedConfig = collection?.config && typeof collection.config === 'object' ? collection.config : {};
     if (savedConfig.aiSetupMode === 'custom') {
       throw new Error('This older setup used a custom AIOMetadata file that was not stored. Open Edit, re-upload that JSON once, then export it from Review. Future saved exports will be available here.');
     }
 
-    const [databaseText, catalogResponse, baseResponse] = await Promise.all([
+    const [databaseText, catalogResponse] = await Promise.all([
       fetch('/runtime/database.kaoxt.js', { cache: 'no-store' }).then(response => {
         if (!response.ok) throw new Error('Could not load The Kollection database.');
         return response.text();
@@ -219,16 +219,23 @@
         if (!response.ok) throw new Error('Could not load AIOMetadata catalogs.');
         return response.json();
       }),
-      fetch('/runtime/kaoxt-aio-base-config.json', { cache: 'no-store' }).then(response => {
-        if (!response.ok) throw new Error('Could not load the AIOMetadata base configuration.');
-        return response.json();
-      }),
     ]);
 
     const pack = filterSavedCollectionPack(parseKollectionDatabase(databaseText), savedConfig);
     const refs = collectAioCatalogRefs(pack);
     const library = Array.isArray(catalogResponse) ? catalogResponse : (catalogResponse?.catalogs || []);
-    const catalogs = filterAioCatalogs(library, refs);
+    return filterAioCatalogs(library, refs);
+  }
+
+  async function rebuildLegacyAioExports(collection) {
+    const savedConfig = collection?.config && typeof collection.config === 'object' ? collection.config : {};
+    const [catalogs, baseResponse] = await Promise.all([
+      loadLegacyAioCatalogs(collection),
+      fetch('/runtime/kaoxt-aio-base-config.json', { cache: 'no-store' }).then(response => {
+        if (!response.ok) throw new Error('Could not load the AIOMetadata base configuration.');
+        return response.json();
+      }),
+    ]);
     const chunks = [];
     const remaining = catalogs.slice();
     while (remaining.length) chunks.push(remaining.splice(0, 500));
@@ -262,7 +269,7 @@
     return configs;
   }
 
-  async function exportSavedAiMetadata(item, button) {
+  async function exportSavedAiMetadata(item, button, catalogsOnly = false) {
     const status = document.getElementById('accountSavedStatus');
     const id = String(item?.id || '').trim();
     if (!id) return;
@@ -281,8 +288,18 @@
         ? collection.config.aiometadataExports.filter(entry => entry?.config && typeof entry.config === 'object')
         : [];
 
-      const secrets = collection?.secrets && typeof collection.secrets === 'object' ? collection.secrets : {};
       const slug = exportSlug(collection?.name || item?.name);
+      if (catalogsOnly) {
+        const catalogs = exports.length
+          ? exports.flatMap(entry => entry.config.catalogs || [])
+          : await loadLegacyAioCatalogs(collection);
+        const payload = window.KollectionCatalogExport.buildPayload(catalogs);
+        downloadJson(`AIOMetadata-Catalogs-${slug}.json`, payload);
+        if (status) status.textContent = `Exported ${payload.catalogs.length} catalogs. In your existing AIOMetadata configuration, open Catalogs → Import → Merge, then save. Your Posters Plus URL, search settings, and API keys stay in that configuration.`;
+        return;
+      }
+
+      const secrets = collection?.secrets && typeof collection.secrets === 'object' ? collection.secrets : {};
       let configs = [];
 
       if (exports.length) {
@@ -607,6 +624,7 @@
     }
 
     let exportButton = null;
+    let catalogExportButton = null;
     if (complete) {
       exportButton = document.createElement('button');
       exportButton.className = 'account-secondary-button account-small-button';
@@ -614,6 +632,13 @@
       exportButton.textContent = 'Export AIOMetadata';
       exportButton.setAttribute('aria-label', `Export AIOMetadata for ${item.name || 'saved setup'}`);
       exportButton.addEventListener('click', () => exportSavedAiMetadata(item, exportButton));
+      catalogExportButton = document.createElement('button');
+      catalogExportButton.className = 'account-secondary-button account-small-button';
+      catalogExportButton.type = 'button';
+      catalogExportButton.textContent = 'Export catalogs only';
+      catalogExportButton.setAttribute('aria-label', `Export AIOMetadata catalogs only for ${item.name || 'saved setup'}`);
+      catalogExportButton.title = 'Merge these catalogs into an existing AIOMetadata configuration while keeping its poster and search settings.';
+      catalogExportButton.addEventListener('click', () => exportSavedAiMetadata(item, catalogExportButton, true));
     }
 
     const remove = document.createElement('button');
@@ -636,6 +661,7 @@
     });
 
     if (exportButton) actions.append(exportButton);
+    if (catalogExportButton) actions.append(catalogExportButton);
     actions.append(resume, remove);
     row.append(copy, actions);
     return { row, resume, badge, originMessage, meta, complete };
