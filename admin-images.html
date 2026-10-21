@@ -12,12 +12,12 @@
   <link rel="stylesheet" href="/shared.css?v=20261008-tap2" />
   <link rel="stylesheet" href="/admin/admin.css?v=20260906-1" />
   <link rel="stylesheet" href="/admin/admin-pages.css?v=20260907-4" />
-  <link rel="stylesheet" href="/admin/image-library.css?v=20261019-folder-button2" />
+  <link rel="stylesheet" href="/admin/image-library.css?v=20261021-folder-preview1" />
 
   <script src="/components.js?v=20261008-mentions1" defer></script>
   <script src="/set-up-collection/config.js?v=20260906-1" defer></script>
   <script src="/nuvio-auth/nuvio-auth.js?v=20261007-nav1" defer></script>
-  <script src="/admin/image-library.js?v=20261019-folder-delete1" defer></script>
+  <script src="/admin/image-library.js?v=20261021-folder-preview1" defer></script>
 </head>
 <body>
   <main class="page admin-page image-library-page">
@@ -131,6 +131,13 @@
               <input id="uploadFolder" name="folder" placeholder="Adam Sandler" autocomplete="off" />
               <small>May include nested folders, e.g. <code>Marvel/Phase One</code>.</small>
             </label>
+
+            <section id="folderArtwork" class="folder-artwork" aria-labelledby="folderArtworkHeading" hidden>
+              <h4 id="folderArtworkHeading">Current Folder</h4>
+              <p id="folderArtworkPath" class="upload-path-preview"></p>
+              <p id="folderArtworkStatus" class="folder-artwork-status" role="status"></p>
+              <div id="folderArtworkGrid" class="image-grid folder-artwork-grid"></div>
+            </section>
 
             <div class="upload-artwork-grid">
               <label class="artwork-file-box">

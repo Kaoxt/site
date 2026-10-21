@@ -135,6 +135,24 @@
   gap: 12px;
 }
 
+.folder-artwork {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding: 16px 0;
+  border-block: 1px solid rgba(255,255,255,.08);
+}
+
+.folder-artwork[hidden] { display: none !important; }
+.folder-artwork h4 { margin: 0 0 6px; font-size: 16px; }
+.folder-artwork p { margin: 0; overflow-wrap: anywhere; }
+.folder-artwork .folder-artwork-status { margin-top: 6px; color: var(--muted, #a7acb8); font-size: 13px; }
+.folder-artwork .folder-artwork-grid { padding: 14px 0 0; }
+.folder-artwork-grid:empty { display: none; }
+.folder-artwork .image-card { display: flex; flex-direction: column; }
+.folder-artwork .image-card-body { display: flex; flex: 1; flex-direction: column; }
+.folder-artwork .image-card-actions { margin-top: auto; }
+body.light .folder-artwork { border-color: rgba(0,0,0,.08); }
+
 .artwork-file-box {
   position: relative;
   min-height: 125px;

@@ -9,6 +9,7 @@
     filtered: [],
     visible: 60,
     loading: false,
+    loadFailed: false,
   };
 
   const el = {
@@ -37,6 +38,10 @@
     uploadFolderSelect: $('uploadFolderSelect'),
     newFolderField: $('newFolderField'),
     uploadFolder: $('uploadFolder'),
+    folderArtwork: $('folderArtwork'),
+    folderArtworkPath: $('folderArtworkPath'),
+    folderArtworkStatus: $('folderArtworkStatus'),
+    folderArtworkGrid: $('folderArtworkGrid'),
     deleteFolderButton: $('deleteFolderButton'),
     coverFile: $('coverFile'),
     backdropFile: $('backdropFile'),
@@ -205,6 +210,8 @@
 
   async function loadLibrary() {
     state.loading = true;
+    state.loadFailed = false;
+    renderFolderArtwork();
     state.visible = 60;
     clearMessage(el.libraryMessage);
     el.imageGrid.innerHTML = '<div class="library-loading">Loading artwork from R2…</div>';
@@ -233,6 +240,7 @@
       el.librarySummary.textContent =
         `${state.images.length.toLocaleString()} image files across ${folders.size.toLocaleString()} artwork folders.`;
     } catch (error) {
+      state.loadFailed = true;
       state.images = [];
       state.filtered = [];
       el.imageGrid.innerHTML = '';
@@ -241,6 +249,7 @@
       el.librarySummary.textContent = 'Image library unavailable.';
     } finally {
       state.loading = false;
+      renderFolderArtwork();
       el.refreshButton.disabled = false;
     }
   }
@@ -490,6 +499,42 @@
     return cleanDisplayPart(el.uploadFolderSelect.value);
   }
 
+  function renderFolderArtwork() {
+    const category = getUploadCategory();
+    const folder = getUploadFolder();
+    el.folderArtwork.hidden = !category || !folder;
+    el.folderArtworkGrid.innerHTML = '';
+    el.folderArtworkPath.textContent = '';
+    el.folderArtworkStatus.textContent = '';
+    el.folderArtwork.setAttribute('aria-busy', String(state.loading));
+    if (el.folderArtwork.hidden) return;
+
+    el.folderArtworkPath.textContent = `images/${category}/${folder}/`;
+    if (state.loading || state.loadFailed) {
+      el.folderArtworkStatus.textContent = state.loading
+        ? 'Loading saved artwork…'
+        : 'Saved artwork could not be loaded. Use Refresh to try again.';
+      return;
+    }
+
+    const directory = `images/${category}/${folder}`;
+    const order = ['cover.webp', 'backdrop.webp', 'logo.webp'];
+    const rank = (item) => {
+      const index = order.indexOf(item.filename);
+      return index < 0 ? order.length : index;
+    };
+    const images = state.images
+      // Match the whole directory, including nested paths, not just its name.
+      .filter((item) => item.key.slice(0, item.key.lastIndexOf('/')) === directory)
+      .sort((a, b) => rank(a) - rank(b) || a.filename.localeCompare(b.filename));
+
+    el.folderArtworkStatus.textContent = images.length
+      ? `${images.length.toLocaleString()} saved image${images.length === 1 ? '' : 's'} in this folder.`
+      : 'No images uploaded to this folder yet.';
+    el.folderArtworkGrid.innerHTML = images.map(cardHtml).join('');
+    bindCopyButtons(el.folderArtworkGrid);
+  }
+
   function updateUploadPreview() {
     const category = getUploadCategory() || 'Category';
     const folder = getUploadFolder() || 'Folder';
@@ -502,6 +547,7 @@
 
     el.uploadPathPreview.textContent =
       `images/${category}/${folder}/${names.length ? names.join(', ') : '…'}`;
+    renderFolderArtwork();
   }
 
   [
@@ -696,6 +742,7 @@
         ];
         renderRecent();
         applyFilters();
+        renderFolderArtwork();
       }
 
       const links = (data?.files || []).map((item) =>
