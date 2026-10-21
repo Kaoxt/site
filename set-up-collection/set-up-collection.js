@@ -53,6 +53,7 @@
     aiHostMode: '',
     aiSelfHostUrl: '',
     aiSetupMode: 'built-in',
+    aiCatalogModeOnly: null,
     aiCustomFileName: '',
     aiCustomConfig: null,
     aiCustomCatalogLibrary: [],
@@ -208,6 +209,7 @@
         aiHostMode: state.aiHostMode,
         aiSelfHostUrl: state.aiSelfHostUrl,
         aiSetupMode: state.aiSetupMode,
+        aiCatalogModeOnly: state.aiCatalogModeOnly,
         aiCustomFileName: state.aiCustomFileName,
         aiCustomConfig: state.aiCustomConfig,
         aiCustomCatalogLibrary: state.aiCustomCatalogLibrary,
@@ -381,6 +383,8 @@
     }
 
     state.aiSetupMode = config.aiSetupMode === 'custom' ? 'custom' : 'built-in';
+    const savedCatalogMode = config.aiCatalogModeOnly ?? config.aiometadataExports?.[0]?.config?.catalogModeOnly;
+    state.aiCatalogModeOnly = savedCatalogMode == null ? null : storedBoolean(savedCatalogMode, false);
     state.aiHostPreference = String(config.aiHostPreference || state.aiHostPreference || '');
     state.aiHostMode = String(config.aiHostMode || state.aiHostMode || '');
     state.aiSelfHostUrl = String(config.aiSelfHostUrl || state.aiSelfHostUrl || '');
@@ -1222,6 +1226,7 @@
 
   function prepareAiConfig(baseConfig, catalogs, index) {
     const config = jsonClone(state.aiCustomConfig || baseConfig || {});
+    config.catalogModeOnly = storedBoolean(state.aiCatalogModeOnly ?? config.catalogModeOnly, false);
     // Also cover required catalogs restored from a pre-fix wizard session.
     config.catalogs = catalogs.map(catalog => ({ ...jsonClone(catalog), enabled: true }));
     if (state.betterPostersEnabled && window.KollectionBetterPostersSettings) {
@@ -1257,6 +1262,10 @@
     if ('lastModified' in config) config.lastModified = now;
     if ('configVersion' in config) config.configVersion = now + index + 1;
     return config;
+  }
+
+  function currentAiCatalogModeOnly() {
+    return storedBoolean(state.aiCatalogModeOnly ?? state.aiCustomConfig?.catalogModeOnly ?? state.aiBaseConfig?.catalogModeOnly, false);
   }
 
   function aioExportSlug() {
@@ -1319,6 +1328,7 @@
   }
 
   window.KollectionAioExport = Object.freeze({
+    getCatalogModeOnly: currentAiCatalogModeOnly,
     getStoredExports: getStoredAioExports,
     downloadCurrent: downloadCurrentAioExports,
   });
@@ -2660,6 +2670,15 @@
           <small>Paste the base URL for your AIOMetadata instance. The Kollection will use this host when creating the configuration.</small>
         </div>
         <div class="smart-overlay-option" style="margin-top:18px">
+          <label class="toggle-row" for="aiCatalogModeOnly">
+            <input id="aiCatalogModeOnly" type="checkbox" ${currentAiCatalogModeOnly() ? 'checked' : ''} aria-describedby="aiCatalogModeOnlyHelp">
+            <span>
+              <b>Catalogs only</b>
+              <small id="aiCatalogModeOnlyHelp">Use AIOMetadata for collection catalogs. Keep another metadata add-on enabled in Nuvio for title details, cast, and episodes.</small>
+            </span>
+          </label>
+        </div>
+        <div class="smart-overlay-option" style="margin-top:18px">
           <div class="smart-overlay-heading">
             <div>
               <span class="badge">Optional</span>
@@ -2699,6 +2718,12 @@
     $('#customTab').onclick = () => { state.aiSetupMode = 'custom'; state.backup = null; renderAi(); };
     $('#mdblist').oninput = e => { state.mdblistKey = e.target.value.trim(); state.backup = null; };
     $('#tmdb').oninput = e => { state.tmdbKey = e.target.value.trim(); state.backup = null; };
+    $('#aiCatalogModeOnly').onchange = e => {
+      state.aiCatalogModeOnly = e.target.checked;
+      state.aiExportConfigs = [];
+      state.backup = null;
+      persistWizardSession();
+    };
     $('#betterPostersEnabled').onchange = e => {
       state.betterPostersEnabled = e.target.checked;
       if (window.KollectionBetterPostersSettings) {
@@ -2777,6 +2802,7 @@
     $('#nextBtn').onclick = () => {
       state.mdblistKey = $('#mdblist').value.trim();
       state.tmdbKey = $('#tmdb').value.trim();
+      state.aiCatalogModeOnly = Boolean($('#aiCatalogModeOnly')?.checked);
       state.betterPostersEnabled = Boolean($('#betterPostersEnabled')?.checked);
       if (state.betterPostersEnabled && window.KollectionBetterPostersSettings) {
         state.betterPostersSettings = window.KollectionBetterPostersSettings.normalize(
@@ -3262,8 +3288,8 @@
         </div>
         <div class="summary">
           <div class="summary-item"><span class="icon">N</span><div><b>${esc(state.profileName)}</b><span>Nuvio profile ${state.profileId}; add-ons target profile ${state.addonProfileId || state.profileId}.</span></div></div>
-          <div class="summary-item"><span class="icon">A</span><div><b>${state.aiNeededCatalogs.length} AIOMetadata catalogs</b><span>${state.aiSetupMode === 'custom' ? `Using ${esc(state.aiCustomFileName)} as the configuration base. ` : ''}Planned across ${state.aiChunks.length} configuration${state.aiChunks.length === 1 ? '' : 's'} using your selected AIOMetadata host.</span></div></div>
-          <div class="summary-item"><span class="icon">P</span><div><b>Better Posters · ${state.betterPostersEnabled ? 'Enabled' : 'Off'}</b><span>${state.betterPostersEnabled ? `Your collection will use Better Posters across Home rows, folders, and AIOMetadata library/meta posters. ${esc(window.KollectionBetterPostersSettings?.label(state.betterPostersSettings || window.KollectionBetterPostersSettings?.readLocal?.() || {}) || 'Poster settings selected.')}` : 'Standard AIOMetadata poster behavior will be used. You can enable Better Posters during setup later.'}</span></div></div>
+          <div class="summary-item"><span class="icon">A</span><div><b>${state.aiNeededCatalogs.length} AIOMetadata catalogs · ${currentAiCatalogModeOnly() ? 'Catalogs only' : 'Catalogs and metadata'}</b><span>${state.aiSetupMode === 'custom' ? `Using ${esc(state.aiCustomFileName)} as the configuration base. ` : ''}Planned across ${state.aiChunks.length} configuration${state.aiChunks.length === 1 ? '' : 's'} using your selected AIOMetadata host. ${currentAiCatalogModeOnly() ? 'Another enabled metadata add-on will supply title details and episodes.' : ''}</span></div></div>
+          <div class="summary-item"><span class="icon">P</span><div><b>Better Posters · ${state.betterPostersEnabled ? 'Enabled' : 'Off'}</b><span>${state.betterPostersEnabled ? `${currentAiCatalogModeOnly() ? 'Your collection catalogs will use Better Posters. Title-detail posters depend on your other metadata add-on.' : 'Your collection will use Better Posters across Home rows, folders, and AIOMetadata library/meta posters.'} ${esc(window.KollectionBetterPostersSettings?.label(state.betterPostersSettings || window.KollectionBetterPostersSettings?.readLocal?.() || {}) || 'Poster settings selected.')}` : 'Standard AIOMetadata poster behavior will be used. You can enable Better Posters during setup later.'}</span></div></div>
           <div class="summary-item"><span class="icon">B</span><div><b>${state.bingecatSkipped ? 'Bingecat skipped' : (bcNeeded ? `Bingecat · ${bc.length} recommendation catalogs` : 'Bingecat not needed')}</b><span>${state.bingecatSkipped ? 'For You Bingecat placeholders will be removed.' : (bcNeeded ? `Only your selected recommendation catalogs will appear in For You.` : 'No Bingecat catalogs are included in your selected collection, so its add-on will not be installed.')}</span></div></div>
           <div class="summary-item"><span class="icon">K</span><div><b>The Kollection</b><span>${selectedPack.length} of ${state.collectionPack?.length || 0} sections selected · ${selectedFolders} folders included. ${setupUpdatesExisting ? `The previous setup will be replaced with ${previewCount} updated groups.` : `This profile goes from ${existingCount} to ${previewCount} groups after the ID-aware merge.`}</span></div></div>
         </div>
@@ -3404,7 +3430,7 @@
       `The selected Nuvio profile now has ${selectedPack.length} selected The Kollection section${selectedPack.length === 1 ? '' : 's'} and the required AIOMetadata catalog configuration${state.aiInstalls.length === 1 ? '' : 's'}${bcNeeded ? ', with your personal Bingecat recommendations wired into For You.' : ''}`,
       `<div class="card"><div class="done-mark">✓</div>
         <div class="summary">
-          <div class="summary-item"><span class="icon">✓</span><div><b>AIOMetadata ready</b><span>${state.aiInstalls.length} configuration${state.aiInstalls.length === 1 ? '' : 's'} installed for ${state.aiNeededCatalogs.length} required catalogs.</span></div></div>
+          <div class="summary-item"><span class="icon">✓</span><div><b>AIOMetadata ready · ${currentAiCatalogModeOnly() ? 'Catalogs only' : 'Catalogs and metadata'}</b><span>${state.aiInstalls.length} configuration${state.aiInstalls.length === 1 ? '' : 's'} installed for ${state.aiNeededCatalogs.length} required catalogs.</span></div></div>
           <div class="summary-item"><span class="icon">✓</span><div><b>${bcStatus}</b><span>${bcDescription}</span></div></div>
           <div class="summary-item"><span class="icon">✓</span><div><b>Nuvio synced</b><span>${selectedPack.length} selected The Kollection sections were synced to profile ${state.profileId}.</span></div></div>
           <div class="summary-item"><span class="icon">✓</span><div><b>Saved automatically</b><span>${esc(savedSetupName)} is saved under Your setups and linked to ${esc(state.profileName || `profile ${state.profileId}`)}.</span></div></div>
@@ -3414,7 +3440,7 @@
     $('#recordBtn').onclick = () => downloadJson(`the-kollection-setup-${new Date().toISOString().slice(0,10)}.json`, {
       completedAt: new Date().toISOString(),
       profile: { id: state.profileId, name: state.profileName },
-      aiometadata: { instances: state.aiInstalls.length, catalogs: state.aiNeededCatalogs.length, source: state.aiSetupMode, customFile: state.aiCustomFileName || null },
+      aiometadata: { instances: state.aiInstalls.length, catalogs: state.aiNeededCatalogs.length, catalogModeOnly: currentAiCatalogModeOnly(), source: state.aiSetupMode, customFile: state.aiCustomFileName || null },
       bingecat: { skipped: state.bingecatSkipped, installed: bcNeeded, addonId: bcNeeded ? state.bingecatAddonId : null, nonSearchCatalogs: bcNeeded ? bingecatDisplayCatalogs().length : 0 },
       selection: selectedPack.map(group => ({ id: group.id, title: group.title, folders: (group.folders || []).length })),
       collections: { before: state.existingCollections.length, after: state.finalCollections?.length || 0 },
@@ -3476,6 +3502,7 @@
       tmdbKey: '',
       aiHostPreference: CFG.aiometadataHosts?.[0]?.url || '',
       aiSetupMode: 'built-in',
+      aiCatalogModeOnly: null,
       aiCustomFileName: '',
       aiCustomConfig: null,
       aiCustomCatalogLibrary: [],

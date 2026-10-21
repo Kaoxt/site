@@ -5,6 +5,7 @@ import vm from 'node:vm';
 
 const source = await readFile(new URL('../set-up-collection/set-up-collection.js', import.meta.url), 'utf8');
 const editor = await readFile(new URL('../set-up-collection/folder-source-editor.js', import.meta.url), 'utf8');
+const booleanHelper = source.slice(source.indexOf('  function storedBoolean('), source.indexOf('  const steps ='));
 function fn(text, name, next) { return text.slice(text.indexOf(`  function ${name}(`), text.indexOf(`  function ${next}(`)); }
 const context = vm.createContext({ TextDecoder, Uint8Array, atob });
 vm.runInContext(fn(source, 'normalizeAioCatalogType', 'synthesizeCatalog') + fn(source, 'repointAioSources', 'bingecatCatalogRank') + "function isBingecatSource(s) { return String(s?.addonId || '').startsWith('com.aicat.'); }", context);
@@ -57,7 +58,7 @@ test('zero-install updates stop before any collection or add-on mutations', asyn
 test('Better Posters off clears inherited configuration without altering the source config', () => {
   const base = { posterRatingProvider: 'custom', customPosterUrlPattern: 'https://btttr.cc/old', enableRatingPostersForLibrary: true, kollectionBetterPosters: { enabled: true }, kollectionPosters: {}, catalogs: [] };
   const c = vm.createContext({ state: { betterPostersEnabled: false, aiCustomConfig: base }, jsonClone: value => structuredClone(value), window: {} });
-  vm.runInContext(fn(source, 'prepareAiConfig', 'aioExportSlug'), c);
+  vm.runInContext(booleanHelper + fn(source, 'prepareAiConfig', 'aioExportSlug'), c);
   const config = vm.runInContext('prepareAiConfig({}, [{ id: "movies", enableRatingPosters: true }], 0)', c);
   assert.equal(config.posterRatingProvider, 'none');
   assert.equal(config.customPosterUrlPattern, '');
@@ -88,7 +89,7 @@ test('selected collection sources enable disabled imported catalogs without chan
 test('provisioning also enables required catalogs restored from an older wizard session', () => {
   const catalogs = [{ id: 'streaming.nfx', type: 'movie', enabled: false, showInHome: false }];
   const c = vm.createContext({ state: { betterPostersEnabled: false }, jsonClone: value => structuredClone(value), window: {}, catalogs });
-  vm.runInContext(fn(source, 'prepareAiConfig', 'aioExportSlug'), c);
+  vm.runInContext(booleanHelper + fn(source, 'prepareAiConfig', 'aioExportSlug'), c);
   const config = vm.runInContext('prepareAiConfig({}, catalogs, 0)', c);
   assert.equal(config.catalogs[0].enabled, true);
   assert.equal(config.catalogs[0].showInHome, false);

@@ -14,6 +14,7 @@
     profileId: null,
     profileName: '',
     aiSetupMode: 'built-in',
+    aiCatalogModeOnly: null,
     aiHostPreference: '',
     aiHostMode: '',
     aiSelfHostUrl: '',
@@ -98,6 +99,13 @@
     const customFile = $('.file-status b');
     if (customFile) snapshot.aiCustomFileName = customFile.textContent.trim();
 
+    if (!restoring) {
+      const catalogToggle = $('#aiCatalogModeOnly');
+      const catalogMode = window.KollectionAioExport?.getCatalogModeOnly?.();
+      if (catalogToggle) snapshot.aiCatalogModeOnly = Boolean(catalogToggle.checked);
+      else if (typeof catalogMode === 'boolean') snapshot.aiCatalogModeOnly = catalogMode;
+    }
+
     const posterToggle = $('#betterPostersEnabled');
     if (posterToggle) snapshot.betterPostersEnabled = Boolean(posterToggle.checked);
     const betterPostersSettingsJson = $('#betterPostersSettingsJson');
@@ -133,6 +141,7 @@
     return {
       version: 6,
       aiSetupMode: snapshot.aiSetupMode === 'custom' ? 'custom' : 'built-in',
+      aiCatalogModeOnly: snapshot.aiCatalogModeOnly == null ? null : storedBoolean(snapshot.aiCatalogModeOnly, false),
       aiHostPreference: snapshot.aiHostPreference || '',
       aiHostMode: snapshot.aiHostMode || '',
       aiSelfHostUrl: snapshot.aiSelfHostUrl || '',
@@ -371,6 +380,12 @@
     }
 
     if (step === 2) {
+      const catalogToggle = $('#aiCatalogModeOnly');
+      if (catalogToggle && snapshot.aiCatalogModeOnly != null) {
+        const desiredMode = storedBoolean(snapshot.aiCatalogModeOnly, false);
+        catalogToggle.checked = desiredMode;
+        dispatchChange(catalogToggle);
+      }
       const posterToggle = $('#betterPostersEnabled');
       if (posterToggle) {
         const desiredEnabled = storedBoolean(snapshot.betterPostersEnabled, false);
@@ -513,6 +528,8 @@
       };
       // Preserve the saved on/off value exactly, including older string values like "false".
       snapshot.betterPostersEnabled = storedBoolean(snapshot.betterPostersEnabled, false);
+      const savedCatalogMode = item?.config?.aiCatalogModeOnly ?? item?.config?.aiometadataExports?.[0]?.config?.catalogModeOnly;
+      snapshot.aiCatalogModeOnly = savedCatalogMode == null ? null : storedBoolean(savedCatalogMode, false);
       collectionRestoreApplied = false;
 
       if (updateExistingSetup) {

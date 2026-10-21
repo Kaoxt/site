@@ -163,7 +163,7 @@ test('retrying a shared-profile update still retires an old installation after i
   assert.equal(h.state.previousAiMetadataAddons.length, 1);
 });
 
-function flowHarness({ update = false, failConfirmation = false, posters = false } = {}) {
+function flowHarness({ update = false, failConfirmation = false, posters = false, catalogOnly = false } = {}) {
   const legacyId = 'kp0_' + Buffer.from('mdblist.one_movie').toString('base64url');
   const pack = [{ id: 'group', title: 'My group', folders: [folder(update ? 'tv.kollection.posters.old' : 'aio-metadata', update ? legacyId : 'mdblist.one')] }];
   const events = [], savedConfigs = [], downloads = [];
@@ -171,7 +171,7 @@ function flowHarness({ update = false, failConfirmation = false, posters = false
     profileId: 3, addonProfileId: 3, profiles: [], backup: {}, collectionPack: pack,
     previousAiMetadataAddons: [], previousPosterBridgeAddons: update ? [bridge] : [],
     existingCollections: [], aiNeededCatalogs: [{ id: 'mdblist.one', type: 'movie', displayType: 'movie' }],
-    aiBaseConfig: {}, betterPostersEnabled: posters, betterPostersSettings: {},
+    aiBaseConfig: {}, aiCatalogModeOnly: catalogOnly, betterPostersEnabled: posters, betterPostersSettings: {},
     aiCustomConfig: null, aiExportConfigs: [],
   };
   let rows = update ? [bridge] : [], synced = [];
@@ -211,9 +211,9 @@ function flowHarness({ update = false, failConfirmation = false, posters = false
     run: code => vm.runInContext(code, context) };
 }
 
-for (const update of [false, true]) for (const posters of [false, true]) {
-  test(`${update ? 'legacy migration' : 'fresh setup'} installs and exports matching direct routes with Better Posters ${posters ? 'on' : 'off'}`, async () => {
-    const h = flowHarness({ update, posters });
+for (const update of [false, true]) for (const posters of [false, true]) for (const catalogOnly of [false, true]) {
+  test(`${update ? 'legacy migration' : 'fresh setup'} installs and exports matching direct routes with Better Posters ${posters ? 'on' : 'off'} and catalogs only ${catalogOnly ? 'on' : 'off'}`, async () => {
+    const h = flowHarness({ update, posters, catalogOnly });
     await h.run('installEverything()');
     assert.equal(h.state.installCompleted, true);
     assert.deepEqual(h.rows().map(item => item.name), ['AIOMetadata']);
@@ -228,6 +228,7 @@ for (const update of [false, true]) for (const posters of [false, true]) {
     assert.deepEqual(h.downloads[0].data, h.synced(), 'Nuvio imports the exact installed array');
     assert.deepEqual(h.downloads[1].data, h.savedConfigs[0], 'AIOMetadata imports the exact provisioned config');
     assert.equal(Boolean(h.savedConfigs[0].customPosterUrlPattern), posters);
+    assert.equal(h.savedConfigs[0].catalogModeOnly, catalogOnly);
     assert.doesNotMatch(JSON.stringify(h.downloads), /posters-addon|tv\.kollection\.posters\.|kp0_/);
   });
 }
@@ -245,7 +246,7 @@ test('all runtime catalogs route directly across split manifests with bare or su
   const library = JSON.parse(await readFile(new URL('../runtime/kaoxt-aio-catalogs.json', import.meta.url), 'utf8'));
   for (const suffix of [false, true]) {
     const configs = [];
-    const state = { aiBaseConfig: {}, betterPostersEnabled: false };
+    const state = { aiBaseConfig: {}, aiCatalogModeOnly: true, betterPostersEnabled: false };
     const context = vm.createContext({
       window: {}, state, CFG: { aiometadataHosts: [{ url: 'https://aio.example/', cap: 250 }] },
       TextDecoder, Uint8Array, atob, jsonClone: copy, normalizeUrl: x => x, normalizeHost: x => x, loading() {},
@@ -255,7 +256,7 @@ test('all runtime catalogs route directly across split manifests with bare or su
         id: suffix ? `${item.id}_${item.type}` : item.id, type: item.displayType || item.type,
       })) }),
     });
-    vm.runInContext(runtime + section('  function normalizeAioCatalogType(', '  async function chooseAiHost(') +
+    vm.runInContext(runtime + section('  function storedBoolean(', '  const steps =') + section('  function normalizeAioCatalogType(', '  async function chooseAiHost(') +
       section('  function chunkAioCatalogs(', '  function aioExportSlug(') +
       section('  async function provisionAiMetadata()', '  function collectionAddonIds(') +
       section('  function repointAioSources(', '  function bingecatCatalogRank(') +
@@ -265,6 +266,7 @@ test('all runtime catalogs route directly across split manifests with bare or su
     assert.equal(state.aiNeededCatalogs.length, 482);
     const ai = await vm.runInContext('provisionAiMetadata()', context);
     assert.equal(ai.installs.length, 2);
+    assert.ok(configs.every(config => config.catalogModeOnly === true), 'each split installation honors catalogs-only mode');
     context.ai = ai;
     vm.runInContext('repointAioSources(window.NUVIO_DATABASE, ai.catalogRoutes, ai.firstManifestId)', context);
     const owners = new Map();

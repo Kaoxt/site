@@ -5,13 +5,14 @@ import vm from 'node:vm';
 
 const source = await readFile(new URL('../set-up-collection/saved-setup.js', import.meta.url), 'utf8');
 
-function harness(bingecatSnapshot) {
+function harness(bingecatSnapshot, catalogModeSnapshot) {
   let checks = [];
   const requests = [];
   const listeners = new Map();
   const window = {
     location: { search: '', href: 'https://kollection.tv/set-up-collection' },
     KollectionBingecatSetup: bingecatSnapshot ? { snapshot: bingecatSnapshot } : undefined,
+    KollectionAioExport: catalogModeSnapshot ? { getCatalogModeOnly: catalogModeSnapshot } : undefined,
     KollectionNuvioAuth: { getSession: async () => ({ authenticated: true }) },
     addEventListener: (name, listener) => listeners.set(name, listener),
     dispatchEvent() {},
@@ -101,4 +102,14 @@ test('saved setup retains both a selected subset and an explicit empty Bingecat 
   await h.api.saveApplied(options);
   assert.deepEqual(h.requests[0].config.bingecatSelection, { manifestUrl: url, keys: ['ai:movie', 'latest:series'] });
   assert.deepEqual(h.requests[1].config.bingecatSelection, { manifestUrl: url, keys: [] });
+});
+
+test('catalogs-only choice is saved from wizard state even after leaving the AIOMetadata step', async () => {
+  let catalogOnly = true;
+  const h = harness(undefined, () => catalogOnly);
+  await h.api.prepareInstall(options);
+  assert.equal(h.requests[0].config.aiCatalogModeOnly, true);
+  catalogOnly = false;
+  await h.api.saveApplied(options);
+  assert.equal(h.requests[1].config.aiCatalogModeOnly, false);
 });
