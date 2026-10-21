@@ -386,6 +386,9 @@
     }
     state.bingecatSkipped = Boolean(config.bingecatSkipped);
     state.bingecatManifestUrl = String(config.bingecatManifestUrl || '');
+    state.bingecatManifest = null;
+    state.bingecatAddonId = '';
+    state.bingecatCatalogs = Array.isArray(config.bingecatCatalogs) ? jsonClone(config.bingecatCatalogs) : [];
     state.backup = null;
     state.previewCollections = null;
     state.finalCollections = null;
@@ -1522,7 +1525,59 @@
     return 10;
   }
 
+  // Placeholder sources in the pack (the creator's own catalogs) -> BingeCat API kind + type.
+  // Mapped by comparing them with the creator's catalogs from GET /api/v1/profiles/{id}/catalogs.
+  const BINGECAT_PLACEHOLDER_KINDS = {
+    aicat_list_94475: ['ai', 'movie'],
+    aicat_list_94476: ['ai', 'series'],
+    aicat_list_94477: ['because_watched', 'movie'],
+    aicat_list_94478: ['because_watched', 'series'],
+    aicat_random_public_movie: ['random_public', 'movie'],
+    aicat_random_public_series: ['random_public', 'series'],
+    aicat_placeholder_movie_1: ['ai', 'movie'],
+    aicat_placeholder_series_1: ['ai', 'series'],
+    aicat_placeholder_movie_2: ['because_watched', 'movie'],
+    aicat_placeholder_series_2: ['because_watched', 'series'],
+    aicat_placeholder_movie_3: ['random_public', 'movie'],
+    aicat_placeholder_series_3: ['random_public', 'series'],
+  };
+
+  function rewriteBingecatByKind(collections, addonId, manifestCatalogs) {
+    // The API returns one catalog per kind x type; with aliases take the first by position.
+    const byKind = new Map();
+    for (const c of [...manifestCatalogs].filter(c => c?.id && c.kind && !c.isSearch).sort((a, b) => Number(a.position || 0) - Number(b.position || 0))) {
+      const key = `${c.kind}:${String(c.type).toLowerCase()}`;
+      if (!byKind.has(key)) byKind.set(key, c.id);
+    }
+    const rewriteList = (list) => {
+      if (!Array.isArray(list)) return;
+      for (let i = 0; i < list.length; i++) {
+        const s = list[i];
+        if (!isBingecatSource(s)) continue;
+        const [kind, type] = BINGECAT_PLACEHOLDER_KINDS[s.catalogId] || [];
+        const nextId = byKind.get(`${kind}:${type}`);
+        if (!nextId) {
+          // No catalog for this kind (recommendation off, or an unknown placeholder): drop it,
+          // never leave the creator's personal catalog id behind.
+          list.splice(i, 1); i -= 1; continue;
+        }
+        s.addonId = addonId;
+        s.catalogId = nextId;
+      }
+    };
+    (collections || []).forEach(c => {
+      (c.folders || []).forEach(f => {
+        rewriteList(f.sources);
+        rewriteList(f.catalogSources);
+      });
+    });
+  }
+
   function rewriteBingecatInCollections(collections, addonId, manifestCatalogs) {
+    // Connected through BingeCat login: the catalogs carry a kind, so match on kind + type, not on name order.
+    if (addonId && (manifestCatalogs || []).length && manifestCatalogs.some(c => c && c.kind)) {
+      return rewriteBingecatByKind(collections, addonId, manifestCatalogs);
+    }
     const catalogs = (manifestCatalogs || [])
       .map((c, index) => ({ c, index }))
       .filter(x => x.c && !x.c.isSearch)
@@ -1600,15 +1655,27 @@
     }
     const manifest = await fetchAddonManifest(normalized, true);
     if (!manifest?.id || !Array.isArray(manifest.catalogs)) throw new Error('That URL did not look like a valid Bingecat addon manifest.');
+    // Keep API kind metadata for the same saved manifest while refreshing its catalog list.
+    // A pasted replacement URL must never inherit mappings from a previous account.
+    if (normalized === state.bingecatManifestUrl) {
+      const known = new Map((state.bingecatCatalogs || []).map(c => [c.id, c]));
+      manifest.catalogs = manifest.catalogs.map(c => known.get(c.id)?.kind
+        ? { ...c, kind: known.get(c.id).kind, position: known.get(c.id).position } : c);
+    }
+    return adoptBingecatManifest(normalized, manifest);
+  }
+
+  function adoptBingecatManifest(url, manifest) {
     const nonSearch = manifest.catalogs.filter(c => c && !c.isSearch);
     const movies = nonSearch.filter(c => String(c.type).toLowerCase() === 'movie');
     const series = nonSearch.filter(c => String(c.type).toLowerCase() === 'series');
     if (!movies.length || !series.length) throw new Error('That manifest did not expose both movie and series recommendation catalogs.');
     state.bingecatSkipped = false;
-    state.bingecatManifestUrl = normalized;
+    state.bingecatManifestUrl = url;
     state.bingecatManifest = manifest;
     state.bingecatAddonId = manifest.id;
     state.bingecatCatalogs = manifest.catalogs;
+    persistWizardSession();
     return manifest;
   }
 
@@ -1860,7 +1927,7 @@
         <div class="hero-checks">
           <div class="hero-check"><i>1</i><b>Connect Nuvio</b><span>Choose the account and profile that should receive The Kollection during setup.</span></div>
           <div class="hero-check"><i>2</i><b>Prepare AIOMetadata</b><span>Use the built-in configuration or provide your own AIOMetadata JSON file.</span></div>
-          <div class="hero-check"><i>3</i><b>Choose recommendations</b><span>Connect your personal Bingecat manifest or skip Bingecat entirely.</span></div>
+          <div class="hero-check"><i>3</i><b>Choose recommendations</b><span>Connect your Bingecat account or skip recommendations.</span></div>
         </div>
         <div class="actions right"><button class="btn" id="startBtn">Start setup</button></div>
       </div>`);
@@ -2646,7 +2713,142 @@
     };
   }
 
+  // Saved setups only receive manifest/catalog data, never OAuth credentials.
+  window.KollectionBingecatSetup = Object.freeze({
+    snapshot: () => ({
+      bingecatSkipped: state.bingecatSkipped,
+      bingecatManifestUrl: state.bingecatManifestUrl,
+      bingecatCatalogs: (state.bingecatCatalogs || []).map(c => ({
+        id: c.id, type: c.type, name: c.name, kind: c.kind, position: c.position, isSearch: Boolean(c.isSearch),
+      })),
+    }),
+  });
+  let bingecatViewVersion = 0;
+  let bingecatChooseAccount = false;
+
+  const BINGECAT_KIND_LABELS = {
+    ai: 'AI recommendations',
+    because_watched: 'Because you watched',
+    latest: 'Latest for you',
+    list_for_you: 'List for you',
+    random_public: 'Random public lists',
+  };
+  const BINGECAT_STATE_LABELS = { ready: 'Ready', building: 'Building', needs_history: 'Needs history', disabled: 'Off', error: 'Error' };
+  const BINGECAT_NUVIO_LABELS = { ready: 'Linked', needs_profile_selection: 'Choose a Nuvio profile in BingeCat', not_linked: 'Not linked yet' };
+
+  function bingecatLink(url, label) {
+    return /^https:\/\//i.test(String(url || '')) ? ` <a href="${esc(url)}" target="_blank" rel="noopener">${esc(label)}</a>` : '';
+  }
+
+  function bingecatStatusHtml(profile, recommendations) {
+    const nuvio = profile?.nuvio || {};
+    const nuvioOk = nuvio.state === 'ready';
+    const rows = (recommendations || []).map(r => {
+      const needsAction = ['needs_history', 'disabled', 'error'].includes(r.state);
+      const history = r.state === 'needs_history' && r.history ? ` (${r.history.count}/${r.history.required})` : '';
+      const label = `${BINGECAT_KIND_LABELS[r.kind] || r.kind} · ${r.content_type === 'series' ? 'Series' : 'Movies'}`;
+      return `<div class="status-row"><div><b>${esc(label)}</b><span>${esc(r.message || '')}${needsAction ? bingecatLink(r.action_url, 'Open BingeCat') : ''}</span></div><span class="badge ${r.state === 'ready' ? 'good' : needsAction ? 'warn' : ''}">${esc(BINGECAT_STATE_LABELS[r.state] || r.state)}${esc(history)}</span></div>`;
+    }).join('');
+    return `<div class="status-row"><div><b>Nuvio link in BingeCat</b><span>${esc(BINGECAT_NUVIO_LABELS[nuvio.state] || nuvio.state || 'Unknown')}${nuvioOk ? '' : bingecatLink(nuvio.action_url, 'Open BingeCat')}</span></div><span class="badge ${nuvioOk ? 'good' : 'warn'}">${nuvioOk ? 'Linked' : 'Action needed'}</span></div>${rows}`;
+  }
+
+  async function disconnectBingecat() {
+    bingecatViewVersion++;
+    await window.BingecatConnect.logout();
+    state.bingecatManifestUrl = '';
+    state.bingecatManifest = null;
+    state.bingecatAddonId = '';
+    state.bingecatCatalogs = [];
+    state.backup = null;
+    persistWizardSession();
+    if (state.step === 3) renderBingecat();
+  }
+
+  // Connected through BingeCat login: pick a profile, show what BingeCat can serve, then adopt its manifest.
+  async function renderBingecatAccount(profileId) {
+    const bc = window.BingecatConnect;
+    const viewVersion = ++bingecatViewVersion;
+    loading('Loading your BingeCat account…');
+    try {
+      const profiles = await bc.profiles();
+      if (!profiles.length) throw new Error('This BingeCat account has no profiles.');
+      const profile = profiles.find(p => p.id === (profileId || bc.getProfileId())) || profiles.find(p => p.is_main) || profiles[0];
+      bc.setProfileId(profile.id);
+      const live = await bc.overview(profile.id);
+      if (state.step !== 3 || viewVersion !== bingecatViewVersion) return;
+      const catalogs = live.catalogs;
+      host.innerHTML = panel('STEP 4 · BINGECAT', 'Your BingeCat account is connected', 'Choose the BingeCat profile to use. Recommendation catalogs that are not ready yet are shown with what is missing.',
+        `<div class="card">
+          ${profiles.length > 1
+            ? `<div class="field"><label for="bcProfile">BingeCat profile</label><select id="bcProfile">${profiles.map(p => `<option value="${esc(p.id)}" ${p.id === profile.id ? 'selected' : ''}>${esc(p.name || `Profile ${p.id}`)}${p.is_main ? ' (main)' : ''}</option>`).join('')}</select></div>`
+            : `<div class="status-row"><div><b>${esc(profile.name || 'BingeCat profile')}</b><span>BingeCat profile</span></div><span class="badge good">Connected</span></div>`}
+          ${bingecatStatusHtml(profile, live.recommendations)}
+          <div class="catalog-list" style="margin-top:16px">${catalogs.slice(0, 8).map(c => `<div class="catalog-row"><div><b>${esc(c.name || c.id)}</b><small>${esc(c.id)}</small></div><span class="badge">${esc(c.type || '')}</span></div>`).join('')}</div>
+          <div class="actions"><button class="ghost" id="backBtn">Back</button><div class="action-group"><button class="ghost" id="skipBtn">Skip Bingecat</button><button class="ghost" id="bcDisconnectBtn">Disconnect BingeCat</button><button class="btn" id="bcUseBtn">Use this profile</button></div></div>
+        </div>`);
+      $('#backBtn').onclick = () => setStep(2);
+      $('#bcDisconnectBtn').onclick = disconnectBingecat;
+      $('#skipBtn').onclick = () => {
+        state.bingecatSkipped = true;
+        state.bingecatManifestUrl = '';
+        state.bingecatManifest = null;
+        state.bingecatAddonId = '';
+        state.bingecatCatalogs = [];
+        state.backup = null;
+        renderBingecat();
+      };
+      const select = $('#bcProfile');
+      if (select) select.onchange = () => renderBingecatAccount(Number(select.value));
+      $('#bcUseBtn').onclick = () => {
+        try {
+          if (!live.manifest?.id || !live.manifest?.url) throw new Error('BingeCat did not return a manifest for this profile.');
+          adoptBingecatManifest(live.manifest.url, {
+            id: live.manifest.id,
+            name: 'Bingecat',
+            catalogs: catalogs.map(c => ({ id: c.id, type: c.type, name: c.name, kind: c.kind || 'unknown', position: c.position, isSearch: false })),
+          });
+          state.backup = null;
+          renderBingecat();
+          alert('Bingecat connected.', 'success');
+        } catch (e) { alert(e.message, 'error'); }
+      };
+    } catch (e) {
+      if (state.step !== 3 || viewVersion !== bingecatViewVersion) return;
+      if (e.reconnect) {
+        renderBingecat();
+      } else {
+        host.innerHTML = panel('STEP 4 · BINGECAT', 'Could not load your BingeCat account', '',
+          `<div class="card"><div class="actions"><button class="ghost" id="backBtn">Back</button><div class="action-group"><button class="ghost" id="bcDisconnectBtn">Disconnect BingeCat</button><button class="btn" id="bcRetryBtn">Try again</button></div></div></div>`);
+        $('#backBtn').onclick = () => setStep(2);
+        $('#bcDisconnectBtn').onclick = disconnectBingecat;
+        $('#bcRetryBtn').onclick = () => renderBingecatAccount(profileId);
+      }
+      alert(e.message, 'error');
+    }
+  }
+
   function renderBingecat() {
+    persistWizardSession();
+    bingecatViewVersion++;
+    const bc = window.BingecatConnect;
+    // Restored manifests stay selected until the user explicitly connects a different account.
+    const connectable = Boolean(bc?.configured);
+    const callback = connectable ? bc.takePending() : null;
+    if (callback) {
+      loading('Connecting your BingeCat account…');
+      callback.then(() => null, error => error).then(error => {
+        if (state.step !== 3) return;
+        if (!error) bingecatChooseAccount = true;
+        renderBingecat();
+        if (error) alert(error.message, 'error');
+      });
+      return;
+    }
+    const connected = connectable && bc.isConnected() && (!setupHasSavedId || bingecatChooseAccount);
+    if (connected && !state.bingecatSkipped && !state.bingecatManifest?.id) {
+      renderBingecatAccount();
+      return;
+    }
     const skipped = state.bingecatSkipped;
     const ready = Boolean(state.bingecatManifest?.id) && !skipped;
     const catalogs = bingecatDisplayCatalogs();
@@ -2654,19 +2856,27 @@
     const seriesCount = catalogs.filter(c => String(c.type).toLowerCase() === 'series').length;
     const bingecatConfigureUrl = 'https://bingecat.com/stremio/configure';
     host.innerHTML = panel('STEP 4 · BINGECAT', skipped ? 'Bingecat is skipped' : (ready ? 'Your personal Bingecat manifest is ready' : 'Connect Bingecat recommendations'),
-      skipped ? 'The For You Bingecat placeholders will be removed and the rest of The Kollection will still be set up normally.' : (ready ? 'Set Up Collection will install this personal manifest and rewrite the For You sources to its add-on ID and catalog IDs.' : 'Bingecat is optional. Open its setup page, configure your recommendations, then paste the install URL back here.'),
+      skipped ? 'The For You Bingecat placeholders will be removed and the rest of The Kollection will still be set up normally.' : (ready ? 'Set Up Collection will install this personal manifest and rewrite the For You sources to its add-on ID and catalog IDs.' : (connectable ? 'Bingecat is optional. Sign in to Bingecat to connect your recommendations, or paste your install URL instead.' : 'Bingecat is optional. Open its setup page, configure your recommendations, then paste the install URL back here.')),
       `<div class="card">
         ${skipped ? `
           <div class="callout">Bingecat is optional. Your setup will continue without personalized For You recommendation catalogs.</div>
           <div class="actions"><button class="ghost" id="backBtn">Back</button><div class="action-group"><button class="ghost" id="useBtn">Use Bingecat</button><button class="btn" id="nextBtn">Customize collection</button></div></div>` : ready ? `
           <div class="status-row"><div><b>${esc(state.bingecatManifest.name || 'Bingecat')}</b><span>${esc(state.bingecatAddonId)} · ${movieCount} movie + ${seriesCount} series recommendation catalogs</span></div><span class="badge good">Verified</span></div>
           <div class="catalog-list" style="margin-top:16px">${catalogs.slice(0, 8).map(c => `<div class="catalog-row"><div><b>${esc(c.name || c.id)}</b><small>${esc(c.id)}</small></div><span class="badge">${esc(c.type || '')}</span></div>`).join('')}</div>
-          <div class="actions"><button class="ghost" id="backBtn">Back</button><div class="action-group"><button class="ghost" id="skipBtn">Skip Bingecat</button><button class="ghost" id="changeBtn">Use a different manifest</button><button class="btn" id="nextBtn">Customize collection</button></div></div>` : `
-          <div class="callout"><strong>1. Open Bingecat setup.</strong> If you are already signed in, Bingecat should take you directly to its configuration page. Configure your recommendations and use its <strong>Copy Install URL</strong> action.</div>
+          <input type="hidden" id="bcUrl" value="${esc(state.bingecatManifestUrl)}">
+          ${connected ? '<div id="bcLive" style="margin-top:16px"></div>' : ''}
+          <div class="actions"><button class="ghost" id="backBtn">Back</button><div class="action-group"><button class="ghost" id="skipBtn">Skip Bingecat</button>${connected ? '<button class="ghost" id="bcDisconnectBtn">Disconnect BingeCat</button>' : ''}<button class="ghost" id="changeBtn">${connected ? 'Change profile' : 'Use a different manifest'}</button><button class="btn" id="nextBtn">Customize collection</button></div></div>` : `
+          ${connectable ? `<div class="callout"><strong>Connect with Bingecat.</strong> Sign in to Bingecat and approve access. You come straight back here, and nothing needs to be pasted.</div>
+          <div class="inline" style="margin-top:16px"><button class="btn" id="bcConnectBtn" type="button">Connect with Bingecat</button><button class="ghost" id="bcCreateBtn" type="button">New to Bingecat? Create an account</button></div>
+          ` : ''}
+          ${connectable ? '<details style="margin-top:20px"><summary>Use an install URL instead</summary>' : ''}
+          <div class="callout" style="margin-top:16px"><strong>1. Open Bingecat setup.</strong> If you are already signed in, Bingecat should take you directly to its configuration page. Configure your recommendations and use its <strong>Copy Install URL</strong> action.</div>
           <div class="inline" style="margin-top:16px"><a class="btn secondary" href="${esc(bingecatConfigureUrl)}" target="_blank" rel="noopener">Open Bingecat setup</a></div>
           <div class="callout" style="margin-top:16px"><strong>2. Return here and connect it.</strong> Use Paste &amp; Connect for the quickest setup, or paste the URL manually below.</div>
           <div class="field" style="margin-top:18px"><label for="bcUrl">Bingecat install URL</label><input id="bcUrl" type="url" value="${esc(state.bingecatManifestUrl)}" placeholder="https://…/manifest.json" autocomplete="off"><small>The Kollection only needs your personal manifest URL. Your Bingecat password is never requested or stored.</small></div>
-          <div class="actions"><button class="ghost" id="backBtn">Back</button><div class="action-group"><button class="ghost" id="skipBtn">Skip Bingecat</button><button class="ghost" id="pasteBingecatBtn" type="button">Paste &amp; Connect</button><button class="btn" id="verifyBtn">Connect Bingecat</button></div></div>`}
+          <div class="inline" style="margin-top:16px"><button class="ghost" id="pasteBingecatBtn" type="button">Paste &amp; Connect</button><button class="btn" id="verifyBtn">Use install URL</button></div>
+          ${connectable ? '</details>' : ''}
+          <div class="actions"><button class="ghost" id="backBtn">Back</button><button class="ghost" id="skipBtn">Skip Bingecat</button></div>`}
       </div>`);
     $('#backBtn').onclick = () => setStep(2);
     const skip = async () => {
@@ -2693,6 +2903,17 @@
     }
     $('#skipBtn').onclick = skip;
     if (ready) {
+      if (connected) {
+        $('#bcDisconnectBtn').onclick = disconnectBingecat;
+        const liveTarget = $('#bcLive');
+        Promise.all([bc.profiles(), bc.overview(bc.getProfileId())]).then(([profiles, live]) => {
+          const target = liveTarget?.isConnected ? liveTarget : null;
+          if (target) target.innerHTML = bingecatStatusHtml(profiles.find(p => p.id === bc.getProfileId()), live.recommendations);
+        }).catch(error => {
+          const target = liveTarget?.isConnected ? liveTarget : null;
+          if (target) target.innerHTML = `<div class="callout warn">${esc(error.reconnect ? error.message : 'Could not load the current BingeCat status.')}</div>`;
+        });
+      }
       $('#changeBtn').onclick = () => {
         state.bingecatManifest = null;
         state.bingecatAddonId = '';
@@ -2744,6 +2965,43 @@
     }
 
     $('#verifyBtn').onclick = () => connectBingecat($('#bcUrl').value);
+    if (connectable) {
+      const connectBtn = $('#bcConnectBtn');
+      const startLogin = (create) => {
+        const waiting = bc.login({ create });
+        if (!create) {
+          connectBtn.disabled = true;
+          connectBtn.textContent = 'Waiting for Bingecat…';
+        }
+        waiting.then(connected => {
+          if (state.step !== 3 || connected === null) return; // full-page redirect is under way
+          if (connected) {
+            bingecatChooseAccount = true;
+            state.bingecatSkipped = false;
+            state.bingecatManifest = null;
+            state.bingecatManifestUrl = '';
+            state.bingecatAddonId = '';
+            state.bingecatCatalogs = [];
+            loading('Connecting your BingeCat account…');
+          }
+          renderBingecat();
+        }, e => {
+          if (state.step !== 3) return;
+          renderBingecat();
+          alert(e.message || 'Could not start the BingeCat sign-in.', 'error');
+        });
+      };
+      connectBtn.onclick = () => startLogin(false);
+      $('#bcCreateBtn').onclick = () => startLogin(true);
+      // A sign-in that finishes after its popup closed (signup in a new tab) reports here.
+      bc.onConnected = (error) => {
+        if (!$('#bcConnectBtn')) return;
+        if (state.step !== 3) return;
+        if (!error) bingecatChooseAccount = true;
+        renderBingecat();
+        if (error) alert(error.message, 'error');
+      };
+    }
   }
 
   function renderCustomize() {

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" href="/favicon.ico?v=3" sizes="any">
+  <title>Bingecat · The Kollection</title>
+  <style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#050608;color:#e8e8ee;font:15px/1.5 system-ui,sans-serif;text-align:center;padding:24px;box-sizing:border-box}</style>
+</head>
+<body>
+  <p id="msg">Connecting Bingecat…</p>
+  <script>
+  // OAuth redirect target for "Connect with Bingecat". Hands {code, state, error} to the
+  // Kollection tab that started the sign-in (popup opener via postMessage, or any tab via
+  // BroadcastChannel); that tab checks state and exchanges the code. Without an answer
+  // it continues on the setup page, which handles the callback itself.
+  (() => {
+    const params = new URLSearchParams(window.location.search);
+    const result = { type: 'bingecat-connect:callback', code: params.get('code'), state: params.get('state'), error: params.get('error') };
+    // Remove the one-time code from the visible history while delivering it.
+    const callbackQuery = window.location.search;
+    window.history.replaceState(null, '', window.location.pathname);
+    if (!result.state || (!result.code && !result.error)) {
+      document.getElementById('msg').textContent = 'No Bingecat sign-in is pending. Return to The Kollection and connect again.';
+      return;
+    }
+    const channel = 'BroadcastChannel' in window ? new BroadcastChannel('bingecat-connect') : null;
+    const fallback = setTimeout(() => {
+      channel?.close();
+      window.location.replace(`/set-up-collection/bingecat${callbackQuery}`);
+    }, 1500);
+    const acked = data => {
+      if (data?.type !== 'bingecat-connect:ack' || data.state !== result.state) return;
+      clearTimeout(fallback);
+      channel?.close();
+      document.getElementById('msg').textContent = 'Sign-in returned to The Kollection. You can close this tab and continue there.';
+      window.close();
+    };
+    window.addEventListener('message', event => { if (event.origin === window.location.origin) acked(event.data); });
+    if (channel) channel.onmessage = event => acked(event.data);
+    try { window.opener?.postMessage(result, window.location.origin); } catch {}
+    channel?.postMessage(result);
+  })();
+  </script>
+</body>
+</html>

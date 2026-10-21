@@ -17,6 +17,8 @@ window.KOLLECTION_CONFIG = {
   ],
 
   bingecatUrl: 'https://bingecat.com/',
+  // Public OAuth client for "Connect with Bingecat" (PKCE, no secret).
+  bingecatClientId: 'bca_n6jAdJtv5V7ceqRZ8nMHkV-F75p7uqmF',
   collectionTitle: 'The Kollection',
   recommendationFolderTitles: ['For You', 'Recommend For You'],
 };

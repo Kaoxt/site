@@ -23,6 +23,7 @@
     betterPostersSettings: null,
     bingecatSkipped: false,
     bingecatManifestUrl: '',
+    bingecatCatalogs: [],
     selectedCollectionGroupIds: [],
     knownCollectionGroupIds: [],
     selectedCollectionFolderIds: {},
@@ -103,8 +104,13 @@
       try { snapshot.betterPostersSettings = JSON.parse(betterPostersSettingsJson.value); } catch {}
     }
 
+    const bingecat = window.KollectionBingecatSetup?.snapshot?.();
+    if (bingecat) Object.assign(snapshot, bingecat);
     const bcUrl = $('#bcUrl');
-    if (bcUrl?.value?.trim()) snapshot.bingecatManifestUrl = bcUrl.value.trim();
+    if (bcUrl?.value?.trim()) {
+      if (bcUrl.value.trim() !== snapshot.bingecatManifestUrl) snapshot.bingecatCatalogs = [];
+      snapshot.bingecatManifestUrl = bcUrl.value.trim();
+    }
 
     const panelText = $('#panelHost')?.textContent || '';
     if (/Bingecat is skipped/i.test(panelText)) snapshot.bingecatSkipped = true;
@@ -137,6 +143,7 @@
         : null,
       bingecatSkipped: Boolean(snapshot.bingecatSkipped),
       bingecatManifestUrl: snapshot.bingecatManifestUrl || '',
+      bingecatCatalogs: JSON.parse(JSON.stringify(snapshot.bingecatCatalogs || [])),
       selectedCollectionGroupIds: Array.isArray(snapshot.selectedCollectionGroupIds)
         ? snapshot.selectedCollectionGroupIds.slice()
         : [],

@@ -5,12 +5,13 @@ import vm from 'node:vm';
 
 const source = await readFile(new URL('../set-up-collection/saved-setup.js', import.meta.url), 'utf8');
 
-function harness() {
+function harness(bingecatSnapshot) {
   let checks = [];
   const requests = [];
   const listeners = new Map();
   const window = {
     location: { search: '', href: 'https://kollection.tv/set-up-collection' },
+    KollectionBingecatSetup: bingecatSnapshot ? { snapshot: bingecatSnapshot } : undefined,
     KollectionNuvioAuth: { getSession: async () => ({ authenticated: true }) },
     addEventListener: (name, listener) => listeners.set(name, listener),
     dispatchEvent() {},
@@ -73,4 +74,19 @@ test('captures an intentionally cleared selection', async () => {
   await h.api.prepareInstall(options);
   assert.deepEqual(h.requests[0].config.selectedCollectionGroupIds, []);
   assert.deepEqual(h.requests[0].config.knownCollectionGroupIds, ['movies']);
+});
+
+
+test('saves Bingecat catalog kinds with the selected manifest and clears them when skipped', async () => {
+  let bingecat = { bingecatManifestUrl: 'https://bingecat.com/stremio/personal/manifest.json', bingecatSkipped: false,
+    bingecatCatalogs: [{ id: 'personal-ai', type: 'movie', kind: 'ai', position: 0 }] };
+  const h = harness(() => bingecat);
+  await h.api.prepareInstall(options);
+  assert.equal(h.requests[0].config.bingecatCatalogs[0].kind, 'ai');
+  assert.equal(h.requests[0].config.bingecatManifestUrl, bingecat.bingecatManifestUrl);
+  bingecat = { bingecatManifestUrl: '', bingecatSkipped: true, bingecatCatalogs: [] };
+  await h.api.saveApplied(options);
+  assert.equal(h.requests[1].config.bingecatManifestUrl, '');
+  assert.equal(h.requests[1].config.bingecatSkipped, true);
+  assert.deepEqual(h.requests[1].config.bingecatCatalogs, []);
 });

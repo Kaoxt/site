@@ -82,3 +82,17 @@ The runtime sync workflow may still refresh these AIOMetadata helper assets from
 
 Changes to the collection database itself should be made in this repository so Kollection-specific fixes cannot be reverted by an upstream sync.
 
+
+## Bingecat account connection
+
+Step 4 supports the registered Bingecat public OAuth client using authorization code + PKCE. The builder stays open during popup sign-in, with a full-page redirect fallback for blocked popups and account creation. The root `bingecat-callback.html` must remain deployed; both the popup and setup callback URLs must be registered with Bingecat for the site origin.
+
+The connection reads profiles, catalog IDs, and recommendation status. OAuth tokens stay in browser storage and are excluded from saved setups; saved setups retain the selected manifest and catalog kind metadata. Manual manifest entry and skipping Bingecat remain available. Disconnect revokes the Bingecat app grant (across devices).
+
+Run the focused connection and setup checks with:
+
+```bash
+node --test tests/bingecat*.test.mjs tests/saved-setup-capture.test.mjs tests/saved-setup-reuse.test.mjs tests/setup-*.test.mjs
+```
+
+An actual Bingecat login/consent still requires a user account on a registered origin.

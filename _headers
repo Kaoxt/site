@@ -86,3 +86,11 @@
   Content-Security-Policy: script-src 'self'; script-src-attr 'none'
 /discussions.html
   Content-Security-Policy: script-src 'self'; script-src-attr 'none'
+
+# OAuth codes are single-use and must not be cached.
+/bingecat-callback
+  Cache-Control: no-store
+  Referrer-Policy: no-referrer
+/bingecat-callback.html
+  Cache-Control: no-store
+  Referrer-Policy: no-referrer
