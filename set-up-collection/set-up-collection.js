@@ -62,7 +62,6 @@
     aiChunks: [],
     aiExportConfigs: [],
     aiInstalls: [],
-    posterBridgeInstalls: [],
     betterPostersEnabled: false,
     betterPostersSettings: null,
 
@@ -194,6 +193,7 @@
     try {
       const payload = {
         savedAt: Date.now(),
+        aioRoutingVersion: 1,
         step: state.step,
         profileId: state.profileId,
         profileName: state.profileName,
@@ -216,7 +216,7 @@
         aiNeededCatalogs: state.aiNeededCatalogs,
         aiChunks: state.aiChunks,
         aiInstalls: state.aiInstalls,
-        posterBridgeInstalls: state.posterBridgeInstalls,
+        aiExportConfigs: state.aiExportConfigs,
         betterPostersEnabled: state.betterPostersEnabled,
         betterPostersSettings: state.betterPostersSettings,
         collectionPack: state.collectionPack,
@@ -282,6 +282,13 @@
       const copy = { ...payload };
       delete copy.savedAt;
       delete copy.step;
+      if (copy.aioRoutingVersion !== 1) {
+        copy.backup = null;
+        copy.finalCollections = null;
+        copy.installCompleted = false;
+      }
+      delete copy.aioRoutingVersion;
+      delete copy.posterBridgeInstalls;
       Object.assign(state, copy);
       return true;
     } catch {
@@ -934,8 +941,8 @@
     return removeStaleAddons(state.previousAiMetadataAddons, nextInstalls, 'AIOMetadata');
   }
 
-  async function pullCollections() {
-    const data = await rpc('sync_pull_collections', { p_profile_id: state.profileId });
+  async function pullCollections(profileId = state.profileId) {
+    const data = await rpc('sync_pull_collections', { p_profile_id: profileId });
     const rows = Array.isArray(data) ? data : [];
     return rows.length ? (rows[0].collections_json ?? []) : [];
   }
@@ -1298,6 +1305,15 @@
     return true;
   }
 
+  function downloadCurrentNuvioCollections() {
+    if (!state.installCompleted || !Array.isArray(state.finalCollections) || !state.finalCollections.length) {
+      alert('Complete setup to export the matching Nuvio collections.', 'error');
+      return false;
+    }
+    downloadJson(`Nuvio-${aioExportSlug()}.json`, state.finalCollections);
+    return true;
+  }
+
   window.KollectionAioExport = Object.freeze({
     getStoredExports: getStoredAioExports,
     downloadCurrent: downloadCurrentAioExports,
@@ -1431,90 +1447,80 @@
     return { installs, catalogIdToAddonId, catalogRoutes, firstManifestId };
   }
 
-  function encodePosterBridgeValue(value) {
-    const bytes = new TextEncoder().encode(String(value || ''));
-    let binary = '';
-    for (const byte of bytes) binary += String.fromCharCode(byte);
-    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-  }
-
-  function posterBridgeCatalogId(catalogId) {
-    return `kp0_${encodePosterBridgeValue(catalogId)}`;
-  }
-
-  function posterBridgeManifestUrl(upstream) {
-    const helper = window.KollectionBetterPostersSettings;
-    const betterPostersConfigId = state.betterPostersEnabled && helper
-      ? helper.configId(helper.normalize(state.betterPostersSettings || helper.readLocal() || {}))
-      : '';
-    const token = encodePosterBridgeValue(JSON.stringify({
-      v: 6,
-      upstream,
-      collectionOnly: true,
-      passthroughPosters: true,
-      betterPostersConfigId,
-    }));
-    return `${window.location.origin}/api/posters-addon/${token}/manifest.json`;
-  }
-
-  async function provisionPosterBridges(ai) {
-    // Nuvio resolves Collection folders by addon ID first. Multiple AIOMetadata
-    // installs share the same manifest ID, so a folder can silently hit the
-    // wrong instance even though Home is using the correct one. Give each
-    // generated AIOMetadata instance a unique collection-only bridge identity.
-    // The bridge preserves AIOMetadata's Better Posters URLs when present and
-    // applies the same /bp/{configId}/... route as a fallback when a folder
-    // catalog returns plain artwork. This keeps Home and folder rows consistent.
-    const installs = [];
-    const bridgeByInstallUrl = new Map();
-
-    for (let i = 0; i < (ai.installs || []).length; i++) {
-      const upstream = ai.installs[i];
-      const url = posterBridgeManifestUrl(upstream.url);
-      const manifest = await fetchAddonManifest(url);
-      if (!manifest?.id || !Array.isArray(manifest.catalogs)) {
-        throw new Error('Could not create the Kollection collection poster route.');
+  function collectionAddonIds(collections) {
+    const ids = new Set();
+    for (const group of collections || []) {
+      for (const folder of group.folders || []) {
+        for (const source of [...(folder.sources || []), ...(folder.catalogSources || [])]) {
+          if (source && (!source.provider || source.provider === 'addon') && source.addonId) ids.add(source.addonId);
+        }
       }
+    }
+    return ids;
+  }
 
-      const bridge = {
-        url,
-        name: (ai.installs || []).length > 1 ? `Kollection Poster Bridge (${i + 1})` : 'Kollection Poster Bridge',
-        addonId: manifest.id,
-        upstreamUrl: upstream.url,
-        upstreamCatalogs: upstream.catalogs || [],
-        manifestCatalogs: manifest.catalogs,
-      };
-      installs.push(bridge);
-      bridgeByInstallUrl.set(upstream.url, bridge);
+  async function prepareDirectAioInstallation(ai) {
+    // Nuvio can find disjoint catalogs across add-ons sharing a manifest ID.
+    // The same ID/type/catalog in two configurations cannot identify which
+    // configuration's artwork/settings a folder should use.
+    const required = new Map();
+    const routeKey = (addonId, catalog) => JSON.stringify([addonId, catalog.type, catalog.id]);
+    const collision = catalog => new Error(`AIOMetadata catalog "${catalog.id}" (${catalog.type}) is also enabled in another configuration with the same add-on ID. Keep this catalog in only one enabled AIOMetadata configuration, or use a Nuvio profile with its own add-ons. Your collection has not been changed.`);
+    const nextUrls = new Set(ai.installs.map(item => addonUrlKey(item.url)));
+    for (const install of ai.installs) {
+      for (const catalog of install.catalogs || []) {
+        const key = routeKey(install.addonId, catalog);
+        if (required.has(key) && required.get(key) !== addonUrlKey(install.url)) throw collision(catalog);
+        required.set(key, addonUrlKey(install.url));
+      }
     }
 
-    const routes = {};
-    for (const [sourceKey, upstreamRoute] of Object.entries(ai.catalogRoutes || {})) {
-      const install = (ai.installs || []).find(item =>
-        (item.catalogs || []).some(catalog =>
-          String(catalog?.id || '') === String(upstreamRoute?.catalogId || '') &&
-          normalizeAioCatalogType(catalog?.type) === normalizeAioCatalogType(upstreamRoute?.type)
-        )
-      );
-      const bridge = install ? bridgeByInstallUrl.get(install.url) : null;
-      if (!bridge) continue;
-
-      const wrappedId = posterBridgeCatalogId(upstreamRoute.catalogId);
-      const wrappedCatalog = bridge.manifestCatalogs.find(catalog =>
-        String(catalog?.id || '') === wrappedId &&
-        normalizeAioCatalogType(catalog?.type) === normalizeAioCatalogType(upstreamRoute?.type)
-      );
-      if (!wrappedCatalog) continue;
-
-      routes[sourceKey] = {
-        addonId: bridge.addonId,
-        catalogId: wrappedCatalog.id,
-        type: wrappedCatalog.type,
-      };
+    // A primary add-on list may also serve other profiles. Keep any legacy
+    // route those profiles still reference; only migrate the selected profile.
+    const target = Number(state.addonProfileId || state.profileId);
+    const sharedProfiles = (state.profiles || []).filter(profile =>
+      profile.id !== Number(state.profileId) && (profile.usesPrimaryAddons ? 1 : profile.id) === target
+    );
+    const sharedCollections = await Promise.all(sharedProfiles.map(profile => pullCollections(profile.id)));
+    const protectedIds = collectionAddonIds(sharedCollections.flat());
+    const previous = setupUpdatesExisting
+      ? [...state.previousAiMetadataAddons, ...state.previousPosterBridgeAddons]
+      : [];
+    const previousUrls = new Set(previous.map(item => addonUrlKey(item.url)));
+    const retiredUrls = new Set();
+    const current = await listAddons();
+    for (const addon of current) {
+      const key = addonUrlKey(addon.url);
+      if (nextUrls.has(key)) continue;
+      const candidate = previousUrls.has(key);
+      if (candidate && !protectedIds.size) {
+        retiredUrls.add(key);
+        continue;
+      }
+      if (!candidate && !storedBoolean(addon.enabled, true)) continue;
+      let manifest;
+      try {
+        const url = new URL(normalizeUrl(addon.url));
+        if (!/\/manifest\.json$/i.test(url.pathname)) url.pathname = url.pathname.replace(/\/+$/, '') + '/manifest.json';
+        manifest = await fetchAddonManifest(url.href);
+        if (!manifest?.id || !Array.isArray(manifest.catalogs)) throw new Error('Invalid manifest');
+      } catch {
+        if (candidate || isKollectionAiMetadataAddon(addon)) {
+          throw new Error(`Could not verify the existing ${addon.name || 'AIOMetadata'} configuration. Retry when its manifest is available. Your collection and add-ons have not been changed.`);
+        }
+        continue;
+      }
+      if (candidate && !protectedIds.has(manifest.id)) {
+        retiredUrls.add(key);
+        continue;
+      }
+      if (!storedBoolean(addon.enabled, true)) continue;
+      for (const catalog of manifest.catalogs) {
+        if (required.has(routeKey(manifest.id, catalog))) throw collision(catalog);
+      }
     }
-
-    state.posterBridgeInstalls = installs;
-    return { installs, routes };
+    state.previousAiMetadataAddons = previous.filter(item => retiredUrls.has(addonUrlKey(item.url)) && isKollectionAiMetadataAddon(item));
+    state.previousPosterBridgeAddons = previous.filter(item => retiredUrls.has(addonUrlKey(item.url)) && isKollectionPosterBridgeAddon(item));
   }
 
   function repointAioSources(collections, routes, firstManifestId) {
@@ -1781,13 +1787,12 @@
     if (!ai.installs.length && (state.aiNeededCatalogs.length || state.previousAiMetadataAddons.length)) {
       throw new Error('No AIOMetadata configuration was created. Your existing collection and add-ons have not been changed. Reload the setup and try again.');
     }
-    const posterBridge = await provisionPosterBridges(ai);
+    await prepareDirectAioInstallation(ai);
 
     const bcNeeded = shouldInstallBingecat(selectedCollectionPack());
     loading(bcNeeded ? 'Installing AIOMetadata and Bingecat in Nuvio…' : 'Installing AIOMetadata in Nuvio…');
     const requiredAddons = [
       ...ai.installs.map((item, i) => ({ ...item, name: ai.installs.length > 1 ? `AIOMetadata (${i + 1})` : 'AIOMetadata' })),
-      ...posterBridge.installs,
     ];
     const selectedPack = selectedCollectionPack();
     if (shouldInstallBingecat(selectedPack)) {
@@ -1796,7 +1801,7 @@
     await installAddons(requiredAddons);
 
     const finalPack = jsonClone(selectedPack);
-    repointAioSources(finalPack, posterBridge.routes, ai.firstManifestId);
+    repointAioSources(finalPack, ai.catalogRoutes, ai.firstManifestId);
     rewriteBingecatInCollections(finalPack, state.bingecatAddonId, state.bingecatCatalogs, activeBingecatSelection());
     state.finalCollections = setupUpdatesExisting
       ? finalPack
@@ -1811,7 +1816,7 @@
     if (setupUpdatesExisting) {
       loading('Removing previous Kollection metadata routes…');
       await removePreviousAiMetadataAddons(ai.installs);
-      await removePreviousPosterBridgeAddons(posterBridge.installs);
+      await removePreviousPosterBridgeAddons([]);
     }
     await verifyInstalledAddons(requiredAddons);
     state.installCompleted = true;
@@ -3362,7 +3367,7 @@
           <div class="summary-item"><span class="icon">✓</span><div><b>Nuvio synced</b><span>${selectedPack.length} selected The Kollection sections were synced to profile ${state.profileId}.</span></div></div>
           <div class="summary-item"><span class="icon">✓</span><div><b>Saved automatically</b><span>${esc(savedSetupName)} is saved under Your setups and linked to ${esc(state.profileName || `profile ${state.profileId}`)}.</span></div></div>
         </div>
-        <div class="actions"><button class="ghost" id="recordBtn">Download setup record</button><button class="ghost" id="doneAioExportBtn">Export AIOMetadata</button><a class="btn" href="https://nuvio.tv/" target="_blank" rel="noopener">Open Nuvio</a></div>
+        <div class="actions"><button class="ghost" id="recordBtn">Download setup record</button><button class="ghost" id="doneNuvioExportBtn">Export Nuvio collections</button><button class="ghost" id="doneAioExportBtn">Export AIOMetadata</button><a class="btn" href="https://nuvio.tv/" target="_blank" rel="noopener">Open Nuvio</a></div>
       </div>`);
     $('#recordBtn').onclick = () => downloadJson(`the-kollection-setup-${new Date().toISOString().slice(0,10)}.json`, {
       completedAt: new Date().toISOString(),
@@ -3372,6 +3377,7 @@
       selection: selectedPack.map(group => ({ id: group.id, title: group.title, folders: (group.folders || []).length })),
       collections: { before: state.existingCollections.length, after: state.finalCollections?.length || 0 },
     });
+    $('#doneNuvioExportBtn').onclick = () => downloadCurrentNuvioCollections();
     $('#doneAioExportBtn').onclick = () => downloadCurrentAioExports();
   }
 
@@ -3436,7 +3442,6 @@
       aiNeededCatalogs: [],
       aiChunks: [],
       aiInstalls: [],
-      posterBridgeInstalls: [],
       betterPostersEnabled: false,
       betterPostersSettings: null,
       collectionPack: null,

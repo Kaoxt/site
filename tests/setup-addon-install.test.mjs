@@ -8,7 +8,6 @@ const section = (start, end) => source.slice(source.indexOf(start), source.index
 const copy = value => JSON.parse(JSON.stringify(value));
 const required = [
   { url: 'https://metadata.example/stremio/new/manifest.json', name: 'AIOMetadata' },
-  { url: 'https://kollection.tv/api/posters-addon/new/manifest.json', name: 'Kollection Poster Bridge' },
   { url: 'https://bingecat.com/personal/manifest.json', name: 'Bingecat' },
 ];
 
@@ -50,7 +49,7 @@ test('fresh setup syncs every required add-on together and preserves unrelated s
   assert.equal(h.writes[0].p_origin_client_id, 'kollection-web-test');
   assert.deepEqual(h.rows()[0], existing);
   assert.deepEqual(h.rows().slice(1).map(x => [x.name, x.enabled, x.sort_order]), [
-    ['AIOMetadata', true, 8], ['Kollection Poster Bridge', true, 9], ['Bingecat', true, 10],
+    ['AIOMetadata', true, 8], ['Bingecat', true, 9],
   ]);
   assert.equal(h.reads.length, 2, 'installation must read back the saved rows');
   for (const read of h.reads) {
@@ -112,7 +111,7 @@ test('retiring old metadata uses sync and keeps required and unrelated add-ons',
   h.context.previous = [old]; h.context.required = required;
   await h.run('removeStaleAddons(previous, required, "AIOMetadata")');
   assert.equal(h.writes.length, 1);
-  assert.equal(h.rows().length, 4);
+  assert.equal(h.rows().length, 3);
   assert.equal(h.rows()[0].enabled, false);
   await h.run('verifyInstalledAddons(required)');
 });
@@ -124,7 +123,7 @@ function installationHarness(failAt = '') {
     state, setupUpdatesExisting: true, window: {}, jsonClone: copy, loading: () => {},
     ensureSelectedProfileEligible: async () => true, refreshAddonProfile: async () => {},
     provisionAiMetadata: async () => ({ installs: [required[0]], firstManifestId: 'aio-metadata' }),
-    provisionPosterBridges: async () => ({ installs: [required[1]], routes: {} }),
+    prepareDirectAioInstallation: async () => {},
     selectedCollectionPack: () => [{ id: 'collection' }], shouldInstallBingecat: () => false, activeBingecatSelection: () => null,
     installAddons: async () => { events.push('addons'); if (failAt === 'install') throw new Error('unconfirmed'); },
     repointAioSources: () => {}, rewriteBingecatInCollections: () => {}, stableCollectionJson: JSON.stringify,
@@ -165,7 +164,7 @@ function provisionHarness(manifest) {
     prepareAiConfig: (base, catalogs) => ({ catalogs }), saveAioConfig: async () => ({ installUrl: required[0].url }),
     fetchAddonManifest: async () => { if (manifest instanceof Error) throw manifest; return manifest; },
   });
-  vm.runInContext(section('  async function provisionAiMetadata()', '  function encodePosterBridgeValue('), context);
+  vm.runInContext(section('  async function provisionAiMetadata()', '  function collectionAddonIds('), context);
   return { state, run: () => vm.runInContext('provisionAiMetadata()', context) };
 }
 

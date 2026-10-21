@@ -98,24 +98,6 @@ test('existing saved setups use a Configure modal for Better Posters', async () 
   assert.match(nativeUi, /native Trend Tags exactly as supplied by btttr\.cc/);
 });
 
-test('collection folders use unique bridge addon IDs while preserving AIOMetadata poster URLs', async () => {
-  const source = await readFile(new URL('../set-up-collection/set-up-collection.js', import.meta.url), 'utf8');
-  const start = source.indexOf('async function provisionPosterBridges(ai)');
-  const end = source.indexOf('function repointAioSources', start);
-  const block = source.slice(start, end);
-  assert.match(block, /posterBridgeManifestUrl\(upstream\.url\)/);
-  assert.match(source, /betterPostersConfigId/);
-  assert.match(source, /v: 6/);
-  assert.match(block, /fetchAddonManifest\(url\)/);
-  assert.match(block, /bridgeByInstallUrl/);
-  assert.match(block, /posterBridgeCatalogId\(upstreamRoute\.catalogId\)/);
-  assert.match(block, /state\.posterBridgeInstalls = installs/);
-  assert.match(source, /aioCatalogRouteKey\(catalogId, source\.type\)/);
-  assert.match(source, /source\.provider = 'addon'/);
-  assert.match(source, /manifestCatalogs = manifest\.catalogs/);
-  assert.match(source, /routeMatch\(catalog, manifestCatalogs\)/);
-});
-
 test('catalog provisioning keeps movie and series routes distinct', async () => {
   const source = await readFile(new URL('../set-up-collection/set-up-collection.js', import.meta.url), 'utf8');
   assert.match(source, /function aioCatalogRouteKey\(id, type\)/);

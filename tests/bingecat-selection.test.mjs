@@ -64,7 +64,7 @@ function installHarness(keys) {
     listAddons: async () => [], pullCollections: async () => structuredClone(synced),
     isKollectionAiMetadataAddon: () => false, isKollectionPosterBridgeAddon: () => false,
     collectAioCatalogRefs: () => [], filterAioCatalogs: () => [], chunkAioCatalogs: () => [], normalizeHost: x => x,
-    provisionAiMetadata: async () => ({ installs: [] }), provisionPosterBridges: async () => ({ installs: [], routes: {} }),
+    provisionAiMetadata: async () => ({ installs: [] }), prepareDirectAioInstallation: async () => {},
     loading() {}, installAddons: async required => installs.push(...required.map(item => item.url)), verifyInstalledAddons: async () => {}, repointAioSources() {},
     pushCollections: async value => { synced = structuredClone(value); }, stableCollectionJson: JSON.stringify,
     removePreviousAiMetadataAddons: async () => {}, removePreviousPosterBridgeAddons: async () => {},

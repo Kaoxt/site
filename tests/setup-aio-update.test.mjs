@@ -14,9 +14,12 @@ test('installed bridge sources produce AIOMetadata catalogs and route to the new
   context.pack = [{ folders: [{ sources: [{ provider: 'addon', addonId: 'tv.kollection.posters.old', catalogId: wrapped, type: 'movie' }], catalogSources: [{ addonId: 'tv.kollection.posters.old', catalogId: wrapped, type: 'movie' }] }] }];
   const refs = vm.runInContext('collectAioCatalogRefs(pack)', context);
   assert.deepEqual(JSON.parse(JSON.stringify(refs)), [{ manifestId: 'mdblist.190242_movie', type: 'movie' }]);
-  context.routes = { 'mdblist.190242_movie|movie': { addonId: 'tv.kollection.posters.new', catalogId: wrapped, type: 'movie' } };
+  context.routes = { 'mdblist.190242_movie|movie': { addonId: 'aio-metadata', catalogId: 'mdblist.190242_movie', type: 'movie' } };
   vm.runInContext('repointAioSources(pack, routes, "aio-metadata")', context);
-  for (const list of ['sources', 'catalogSources']) assert.equal(context.pack[0].folders[0][list][0].addonId, 'tv.kollection.posters.new');
+  for (const list of ['sources', 'catalogSources']) {
+    assert.equal(context.pack[0].folders[0][list][0].addonId, 'aio-metadata');
+    assert.equal(context.pack[0].folders[0][list][0].catalogId, 'mdblist.190242_movie');
+  }
 });
 
 test('invalid bridge routes stop setup instead of silently dropping required catalogs', () => {
@@ -44,7 +47,7 @@ test('zero-install updates stop before any collection or add-on mutations', asyn
     ensureSelectedProfileEligible: async () => true,
     refreshAddonProfile: async () => {},
     provisionAiMetadata: async () => ({ installs: [] }),
-    provisionPosterBridges: async () => { mutations++; },
+    prepareDirectAioInstallation: async () => { mutations++; },
   });
   vm.runInContext(source.slice(start, end), c);
   await assert.rejects(vm.runInContext('installEverything()', c), /No AIOMetadata configuration was created/);
