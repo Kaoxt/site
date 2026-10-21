@@ -781,7 +781,7 @@
     });
   }
 
-  async function createNuvioProfile(name, usesPrimaryAddons = true) {
+  async function createNuvioProfile(name, usesPrimaryAddons = false) {
     if ((state.profiles || []).length >= 6) throw new Error('Nuvio supports up to six profiles on an account.');
     const used = new Set((state.profiles || []).map(p => p.id));
     const nextId = [2, 3, 4, 5, 6].find(id => !used.has(id));
@@ -2194,7 +2194,7 @@
           </div>
           ${state.profileCreateOpen ? `<div class="profile-create-card">
             <div class="field"><label for="newProfileName">Profile name</label><input id="newProfileName" type="text" maxlength="40" placeholder="New profile"></div>
-            <label class="toggle-row"><input id="inheritPrimary" type="checkbox" checked><span><b>Use Profile 1 add-ons</b><small>Recommended if you want this profile to share the primary profile’s add-ons.</small></span></label>
+            <label class="toggle-row"><input id="inheritPrimary" type="checkbox"><span><b>Use Profile 1 add-ons</b><small>Off by default. Turn on to share Profile 1’s add-ons.</small></span></label>
             <div class="actions compact"><button class="ghost" id="cancelProfileBtn" type="button">Cancel</button><button class="btn" id="createProfileBtn" type="button">Create profile</button></div>
           </div>` : ''}
           <div class="actions"><button class="ghost" id="backBtn">Back</button><button class="btn" id="nextBtn" disabled>Continue</button></div>`}
