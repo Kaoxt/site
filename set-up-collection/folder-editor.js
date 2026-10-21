@@ -613,7 +613,7 @@
             const on = available && selected.has(key);
             return `<div class="folder-edit-card-wrap ${available ? '' : 'bingecat-unavailable'}" data-order-key="${esc(key)}">
               <button class="folder-edit-card ${on ? 'selected' : 'removed'}" type="button" data-folder-key="${esc(key)}" data-folder-available="${available ? 'true' : 'false'}" aria-pressed="${on ? 'true' : 'false'}" ${available ? '' : 'disabled'}>
-                <span class="folder-edit-image">
+                <span class="folder-edit-image" data-tile-shape="${esc(String(folder.tileShape || '').toUpperCase())}">
                   ${cardImage(group, folder, esc)}
                   <span class="folder-edit-shade" aria-hidden="true"></span>
                   <span class="folder-edit-state" aria-hidden="true">${on ? '✓' : '×'}</span>

@@ -16,7 +16,7 @@ const fixture = {
       { id: 'comedy', title: 'Comedy', tileShape: 'POSTER', sources: [] },
       { id: 'for-you', title: 'For You', sources: [] },
     ] },
-    { id: 'series', title: 'Series', folders: [{ id: 'drama', title: 'Drama', sources: [] }] },
+    { id: 'series', title: 'Series', folders: [{ id: 'drama', title: 'Drama', tileShape: 'square', sources: [] }] },
     { id: 'empty', title: 'Empty', folders: [] },
   ],
   selectedCollectionGroupIds: ['movies', 'series', 'empty'],
@@ -82,6 +82,11 @@ for (const [name, engine, mobile] of [
       };
       const count = async text => assert.equal(await page.locator('#folderEditCount').textContent(), text);
       const pressed = async (id, on) => assert.equal(await page.locator(`[data-folder-key="${id}"]`).getAttribute('aria-pressed'), String(on));
+      const aspectRatio = async (selector, expected) => {
+        const box = await page.locator(selector).boundingBox();
+        assert.ok(box && box.width > 0 && box.height > 0, `${selector} must be visible`);
+        assert.ok(Math.abs(box.width / box.height - expected) < 0.02, `${selector} should have aspect ratio ${expected}, got ${box.width / box.height}`);
+      };
 
       await activate('[data-edit-group="movies"]');
       assert.deepEqual(errors, [], 'opening the editor must bind every control without throwing');
@@ -89,6 +94,15 @@ for (const [name, engine, mobile] of [
       await pressed('action', true);
       await pressed('comedy', false);
       assert.equal(await page.locator('[data-folder-key="for-you"]').isDisabled(), true);
+      await aspectRatio('[data-folder-key="comedy"] .folder-edit-image', 2 / 3);
+      await aspectRatio('[data-folder-key="action"] .folder-edit-image', 16 / 9);
+      await aspectRatio('[data-folder-key="for-you"] .folder-edit-image', 16 / 9);
+      await activate('[data-order-key="comedy"] .folder-source-edit');
+      await aspectRatio('.folder-artwork-preview-frame.cover', 2 / 3);
+      await activate('.folder-source-close');
+      await activate('[data-order-key="action"] .folder-source-edit');
+      await aspectRatio('.folder-artwork-preview-frame.cover', 16 / 9);
+      await activate('.folder-source-close');
       // Click/tap descendants, as a user would on the artwork and status badge.
       await activate('[data-folder-key="comedy"] .folder-edit-art');
       await count('2 of 3 folders selected');
@@ -129,6 +143,12 @@ for (const [name, engine, mobile] of [
       assert.equal(await page.locator('#folderSortMode').inputValue(), 'custom');
       assert.deepEqual(await page.locator('.folder-edit-card').evaluateAll(cards => cards.map(card => card.dataset.folderKey)), ['comedy', 'action', 'for-you']);
       await activate('#doneEditingBottomBtn');
+      await activate('[data-edit-group="series"]');
+      await aspectRatio('[data-folder-key="drama"] .folder-edit-image', 1);
+      await activate('[data-order-key="drama"] .folder-source-edit');
+      await aspectRatio('.folder-artwork-preview-frame.cover', 1);
+      await activate('.folder-source-close');
+      await activate('#doneEditingBtn');
       await activate('[data-edit-group="empty"]');
       await activate('#selectAllFolders');
       await activate('#clearFolders');
@@ -151,6 +171,8 @@ for (const [name, engine, mobile] of [
       assert.deepEqual(saved.collectionCategoryOrder, fixture.collectionCategoryOrder);
       const action = saved.collectionPack.find(group => group.id === 'movies').folders.find(folder => folder.id === 'action');
       assert.equal(action.tileShape, 'LANDSCAPE');
+      assert.equal(saved.collectionPack[0].folders.find(folder => folder.id === 'comedy').tileShape, 'POSTER');
+      assert.equal(saved.collectionPack[1].folders[0].tileShape, 'square');
       assert.equal(action.hideTitle, true);
       assert.deepEqual(action.sources, fixture.collectionPack[0].folders[0].sources);
       assert.equal(action.coverImageUrl, fixture.collectionFolderSourceOverrides['movies::action'].artwork.coverImageUrl);

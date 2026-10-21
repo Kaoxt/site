@@ -252,6 +252,7 @@
     root.querySelector('#folderSourceType').value = existing.type || 'all';
     root.querySelector('#folderSourceName').value = existing.name || '';
     root.querySelector('#folderCoverImage').value = artwork.coverImageUrl || '';
+    root.querySelector('.folder-artwork-preview-frame.cover').dataset.tileShape = String(folder.tileShape || '').toUpperCase();
     root.querySelector('#folderCoverEmoji').value = artwork.coverEmoji || '';
     root.querySelector('#folderTitleLogo').value = artwork.titleLogoUrl || '';
     root.querySelector('#folderHeroBackdrop').value = artwork.heroBackdropUrl || '';
