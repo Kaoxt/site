@@ -96,3 +96,9 @@ node --test tests/bingecat*.test.mjs tests/saved-setup-capture.test.mjs tests/sa
 ```
 
 An actual Bingecat login/consent still requires a user account on a registered origin.
+
+## Editing installed AIOMetadata configurations
+
+Step 3 requires a separate AIOMetadata password and confirmation (at least six characters). The same chosen password is sent to each configuration created for that setup. It stays in memory only: Kollection does not put it in browser storage, saved account data, or exports. After a reload, unfinished installations ask for the password again before provisioning.
+
+The completion screen, downloaded setup record, and Account → Your setups retain each installed configuration’s UUID, host, and direct configure link. Account controls are read-only until the user opens AIOMetadata and signs in there. Older installations without retained credentials display a replacement notice; they are never silently reset. Update Existing still creates a replacement configuration, so users who edit settings directly in AIOMetadata should export that configuration and use **Use my JSON file** before updating through Kollection.

@@ -589,6 +589,12 @@
     originMessage.className = 'account-origin-message';
     originMessage.hidden = true;
     copy.append(titleRow, meta, originMessage);
+    if (complete || item.config?.aiometadataConfigurations?.length) {
+      const access = document.createElement('details');
+      access.className = 'aio-access-details';
+      access.innerHTML = '<summary>AIOMetadata settings</summary>' + window.KollectionAioAccess.markup(item.config?.aiometadataConfigurations, { legacy: true });
+      copy.append(access);
+    }
 
     const actions = document.createElement('div');
     actions.className = 'account-saved-actions';

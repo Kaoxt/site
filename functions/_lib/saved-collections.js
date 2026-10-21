@@ -2,7 +2,7 @@ const MAX_CONFIG_BYTES = 512 * 1024;
 const SECRET_FIELD = '__kollectionEncryptedSecrets';
 const SENSITIVE_KEYS = new Set([
   'password', 'accessToken', 'refreshToken', 'token', 'secret', 'apiKey', 'apikey',
-  'mdblistKey', 'tmdbKey', 'authorization', 'cookie'
+  'mdblistKey', 'tmdbKey', 'aiConfigPassword', 'aiConfigPasswordConfirm', 'authorization', 'cookie'
 ].map((v) => v.toLowerCase()));
 
 export function requireDb(env) {

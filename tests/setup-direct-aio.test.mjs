@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import vm from 'node:vm';
 
+const accessSource = await readFile(new URL('../set-up-collection/aiometadata-access.js', import.meta.url), 'utf8');
 const source = await readFile(new URL('../set-up-collection/set-up-collection.js', import.meta.url), 'utf8');
 const section = (start, end) => source.slice(source.indexOf(start), source.indexOf(end));
 const copy = value => JSON.parse(JSON.stringify(value));
@@ -182,7 +183,7 @@ function flowHarness({ update = false, failConfirmation = false, posters = false
     ensureSelectedProfileEligible: async () => true, refreshAddonProfile: async () => {},
     chooseAiHost: async () => 'https://aio.example/',
     chunkAioCatalogs: catalogs => [{ host: 'https://aio.example/', catalogs }],
-    saveAioConfig: async (host, config) => { savedConfigs.push(copy(config)); return { installUrl: install('new', []).url }; },
+    saveAioConfig: async (host, config) => { savedConfigs.push(copy(config)); return { userUUID: '12d56b78-1234-4123-a123-123456789abc', installUrl: install('new', []).url }; },
     fetchAddonManifest: async url => {
       assert.equal(url, install('new', []).url, 'new setup never requests a bridge');
       return { id: 'aio-metadata', name: 'AIOMetadata', catalogs: [catalog('mdblist.one_movie')] };
@@ -198,6 +199,8 @@ function flowHarness({ update = false, failConfirmation = false, posters = false
     verifyInstalledAddons: async required => { events.push('verify'); assert.ok(required.every(item => rows.some(row => row.url === item.url))); },
     downloadJson: (name, data) => downloads.push({ name, data: copy(data) }), alert: message => { throw new Error(message); },
   });
+  context.document = { addEventListener() {} };
+  vm.runInContext(accessSource, context);
   vm.runInContext(section('  function storedBoolean(', '  const steps =') +
     section('  function addonUrlKey(', '  async function refreshAddonProfile(') +
     section('  function isKollectionAiMetadataAddon(', '  async function removeStaleAddons(') +
@@ -251,11 +254,14 @@ test('all runtime catalogs route directly across split manifests with bare or su
       window: {}, state, CFG: { aiometadataHosts: [{ url: 'https://aio.example/', cap: 250 }] },
       TextDecoder, Uint8Array, atob, jsonClone: copy, normalizeUrl: x => x, normalizeHost: x => x, loading() {},
       chooseAiHost: async () => 'https://aio.example/',
-      saveAioConfig: async (host, config) => { configs.push(copy(config)); return { installUrl: `https://aio.example/${configs.length}/manifest.json` }; },
+      saveAioConfig: async (host, config) => { configs.push(copy(config)); return { userUUID: `12d56b78-1234-4123-a123-${String(configs.length).padStart(12, '0')}`, installUrl: `https://aio.example/${configs.length}/manifest.json` }; },
       fetchAddonManifest: async url => ({ id: 'aio-metadata', catalogs: configs[Number(new URL(url).pathname.split('/')[1]) - 1].catalogs.map(item => ({
         id: suffix ? `${item.id}_${item.type}` : item.id, type: item.displayType || item.type,
       })) }),
     });
+    context.URL = URL;
+    context.document = { addEventListener() {} };
+    vm.runInContext(accessSource, context);
     vm.runInContext(runtime + section('  function storedBoolean(', '  const steps =') + section('  function normalizeAioCatalogType(', '  async function chooseAiHost(') +
       section('  function chunkAioCatalogs(', '  function aioExportSlug(') +
       section('  async function provisionAiMetadata()', '  function collectionAddonIds(') +
