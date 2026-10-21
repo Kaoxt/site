@@ -153,7 +153,8 @@
       return;
     }
 
-    if (resetButton) resetButton.hidden = false;
+    // Match the wizard toolbar: there is nothing to restart on Overview.
+    if (resetButton) resetButton.hidden = step === 0;
     if (!saveButton) return;
 
     if (hasSavedSetup) {
