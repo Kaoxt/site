@@ -8,9 +8,9 @@
   "sfw": false,
   "hideUnreleasedDigital": false,
   "providers": {
-    "movie": "imdb",
+    "movie": "tmdb",
     "series": "tvdb",
-    "anime": "mal",
+    "anime": "kitsu",
     "anime_id_provider": "imdb",
     "forceAnimeForDetectedImdb": false
   },
@@ -26,8 +26,8 @@
       "logo": "tmdb"
     },
     "anime": {
-      "poster": "imdb",
-      "background": "imdb",
+      "poster": "anilist",
+      "background": "anilist",
       "logo": "imdb"
     },
     "englishArtOnly": false
@@ -59,7 +59,7 @@
   "ageRating": "None",
   "searchEnabled": true,
   "search": {
-    "enabled": true,
+    "enabled": false,
     "ai_enabled": false,
     "providers": {
       "movie": "tmdb.search",
@@ -103,12 +103,11 @@
     "dpe",
     "mub"
   ],
-  "lastModified": 1786159542412,
-  "configVersion": 1786159542413,
+  "lastModified": 0,
+  "configVersion": 1,
   "catalogSetupComplete": true,
   "showDisabledCatalogs": false,
   "hideUnreleasedDigitalSearch": false,
-  "configHash": "59b83c90d5eb1346",
   "timezone": "America/Chicago",
   "customPosterUrlPattern": "",
   "tags": [
@@ -206,13 +205,28 @@
     },
     {
       "name": "Networks",
-      "color": "cyan"
+      "color": "amber"
     },
     {
       "name": "Streaming",
       "color": "cyan"
+    },
+    {
+      "name": "World",
+      "color": "cyan"
+    },
+    {
+      "name": "MGM+",
+      "color": "amber"
+    },
+    {
+      "name": "AMC+",
+      "color": "cyan"
     }
   ],
   "catalogModeOnly": false,
-  "posterRatingProvider": "none"
+  "posterRatingProvider": "none",
+  "usePosterProxy": false,
+  "customThumbnailUrlPattern": "",
+  "hideStremioCatalogs": false
 }

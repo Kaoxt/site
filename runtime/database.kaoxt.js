@@ -1,10 +1,10 @@
 window.NUVIO_DATABASE = [
   {
-    "id": "f08ce9d6-429d-4c75-83f8-1d4d5eae096e-community",
+    "id": "collection-a8e578fc-community",
     "title": "Discover",
     "folders": [
       {
-        "id": "a0bde699-39ca-43a0-8bc9-d0d02348393b",
+        "id": "folder-c58a114d",
         "title": "Trending",
         "sources": [
           {
@@ -12,14 +12,14 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.190242"
+            "catalogId": "mdblist.206584"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.88434"
+            "catalogId": "mdblist.207259"
           }
         ],
         "hideTitle": true,
@@ -31,35 +31,35 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.190242"
+            "catalogId": "mdblist.206584"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.88434"
+            "catalogId": "mdblist.207259"
           }
         ],
-        "focusGifEnabled": true,
+        "focusGifEnabled": false,
         "heroBackdropUrl": "https://kollection.tv/images/Discover/Trending/backdrop.webp"
       },
       {
-        "id": "folder-a1e97b25",
+        "id": "folder-dbdc2ef9",
         "title": "Popular",
         "sources": [
           {
             "type": "movie",
-            "genre": "",
+            "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.161766"
+            "catalogId": "mdblist.221823"
           },
           {
             "type": "series",
-            "genre": "",
+            "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.161767"
+            "catalogId": "mdblist.221824"
           }
         ],
         "hideTitle": true,
@@ -69,20 +69,22 @@ window.NUVIO_DATABASE = [
         "catalogSources": [
           {
             "type": "movie",
+            "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.161766"
+            "catalogId": "mdblist.221823"
           },
           {
             "type": "series",
+            "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.161767"
+            "catalogId": "mdblist.221824"
           }
         ],
         "focusGifEnabled": false,
         "heroBackdropUrl": "https://kollection.tv/images/Discover/Popular/backdrop.webp"
       },
       {
-        "id": "6bb2f5f4-5935-49f9-b8e8-1b5b80799816",
+        "id": "folder-033d0a1f",
         "title": "Latest Releases",
         "sources": [
           {
@@ -90,14 +92,14 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.86934"
+            "catalogId": "mdblist.207268"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.86710"
+            "catalogId": "mdblist.208593"
           }
         ],
         "hideTitle": true,
@@ -109,20 +111,20 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.86934"
+            "catalogId": "mdblist.207268"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.86710"
+            "catalogId": "mdblist.208593"
           }
         ],
-        "focusGifEnabled": true,
+        "focusGifEnabled": false,
         "heroBackdropUrl": "https://kollection.tv/images/Discover/Premieres/backdrop.webp"
       },
       {
-        "id": "a463fa8f-1e2d-41f5-b87f-a48d4918d383",
+        "id": "folder-3db9d525",
         "title": "Top Rated",
         "sources": [
           {
@@ -130,14 +132,14 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.101881"
+            "catalogId": "mdblist.207276"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.101882"
+            "catalogId": "mdblist.207277"
           }
         ],
         "hideTitle": true,
@@ -149,103 +151,109 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.101881"
+            "catalogId": "mdblist.207276"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.101882"
+            "catalogId": "mdblist.207277"
           }
         ],
-        "focusGifEnabled": true,
+        "focusGifEnabled": false,
         "heroBackdropUrl": "https://kollection.tv/images/Discover/Top%20Rated/backdrop.webp"
       },
       {
-        "id": "b72a9b5a-0f62-439f-87e3-75af3a0169ad",
+        "id": "folder-fa48b826",
         "title": "For You",
         "sources": [
           {
             "type": "movie",
             "genre": "",
-            "addonId": "com.aicat.464cfc5f-1086-42ed-841b-218d842253b2.nuvio",
+            "addonId": "com.aicat.kollection-placeholder.nuvio",
             "provider": "addon",
-            "catalogId": "aicat_list_94475"
+            "catalogId": "aicat_placeholder_movie_1"
           },
           {
             "type": "series",
             "genre": "",
-            "addonId": "com.aicat.464cfc5f-1086-42ed-841b-218d842253b2.nuvio",
+            "addonId": "com.aicat.kollection-placeholder.nuvio",
             "provider": "addon",
-            "catalogId": "aicat_list_94476"
+            "catalogId": "aicat_placeholder_series_1"
           },
           {
             "type": "movie",
             "genre": "",
-            "addonId": "com.aicat.464cfc5f-1086-42ed-841b-218d842253b2.nuvio",
+            "addonId": "com.aicat.kollection-placeholder.nuvio",
             "provider": "addon",
-            "catalogId": "aicat_list_94477"
+            "catalogId": "aicat_placeholder_movie_2"
           },
           {
             "type": "series",
             "genre": "",
-            "addonId": "com.aicat.464cfc5f-1086-42ed-841b-218d842253b2.nuvio",
+            "addonId": "com.aicat.kollection-placeholder.nuvio",
             "provider": "addon",
-            "catalogId": "aicat_list_94478"
+            "catalogId": "aicat_placeholder_series_2"
           },
           {
             "type": "movie",
             "genre": "",
-            "addonId": "com.aicat.464cfc5f-1086-42ed-841b-218d842253b2.nuvio",
+            "addonId": "com.aicat.kollection-placeholder.nuvio",
             "provider": "addon",
-            "catalogId": "aicat_random_public_movie"
+            "catalogId": "aicat_placeholder_movie_3"
           },
           {
             "type": "series",
             "genre": "",
-            "addonId": "com.aicat.464cfc5f-1086-42ed-841b-218d842253b2.nuvio",
+            "addonId": "com.aicat.kollection-placeholder.nuvio",
             "provider": "addon",
-            "catalogId": "aicat_random_public_series"
+            "catalogId": "aicat_placeholder_series_3"
           }
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Discover/For%20You/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Discover/For%20You/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Discover/Recommended%20For%20You/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Discover/Recommended%20For%20You/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
-            "addonId": "com.aicat.464cfc5f-1086-42ed-841b-218d842253b2.nuvio",
-            "catalogId": "aicat_list_94475"
+            "genre": "",
+            "addonId": "com.aicat.kollection-placeholder.nuvio",
+            "catalogId": "aicat_placeholder_movie_1"
           },
           {
             "type": "series",
-            "addonId": "com.aicat.464cfc5f-1086-42ed-841b-218d842253b2.nuvio",
-            "catalogId": "aicat_list_94476"
+            "genre": "",
+            "addonId": "com.aicat.kollection-placeholder.nuvio",
+            "catalogId": "aicat_placeholder_series_1"
           },
           {
             "type": "movie",
-            "addonId": "com.aicat.464cfc5f-1086-42ed-841b-218d842253b2.nuvio",
-            "catalogId": "aicat_list_94477"
+            "genre": "",
+            "addonId": "com.aicat.kollection-placeholder.nuvio",
+            "catalogId": "aicat_placeholder_movie_2"
           },
           {
             "type": "series",
-            "addonId": "com.aicat.464cfc5f-1086-42ed-841b-218d842253b2.nuvio",
-            "catalogId": "aicat_list_94478"
+            "genre": "",
+            "addonId": "com.aicat.kollection-placeholder.nuvio",
+            "catalogId": "aicat_placeholder_series_2"
           },
           {
             "type": "movie",
-            "addonId": "com.aicat.464cfc5f-1086-42ed-841b-218d842253b2.nuvio",
-            "catalogId": "aicat_random_public_movie"
+            "genre": "",
+            "addonId": "com.aicat.kollection-placeholder.nuvio",
+            "catalogId": "aicat_placeholder_movie_3"
           },
           {
             "type": "series",
-            "addonId": "com.aicat.464cfc5f-1086-42ed-841b-218d842253b2.nuvio",
-            "catalogId": "aicat_random_public_series"
+            "genre": "",
+            "addonId": "com.aicat.kollection-placeholder.nuvio",
+            "catalogId": "aicat_placeholder_series_3"
           }
         ],
-        "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kollection.tv/images/Discover/For%20You/backdrop.webp"
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Discover/Recommended%20For%20You/backdrop.webp"
       }
     ],
     "pinToTop": true,
@@ -327,6 +335,9 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Netflix/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Netflix/cover.webp",
         "catalogSources": [
@@ -437,6 +448,9 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Apple%20TV/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Apple%20TV/cover.webp",
         "catalogSources": [
@@ -513,6 +527,13 @@ window.NUVIO_DATABASE = [
             "catalogId": "mdblist.89649"
           },
           {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.228794"
+          },
+          {
             "type": "all",
             "genre": "None",
             "addonId": "aio-metadata",
@@ -550,6 +571,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/HBO%20Max/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/HBO%20Max/cover.webp",
         "catalogSources": [
@@ -576,6 +599,12 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "catalogId": "mdblist.89649"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.228794"
           },
           {
             "type": "all",
@@ -645,10 +674,10 @@ window.NUVIO_DATABASE = [
           },
           {
             "type": "movie",
-            "genre": "None",
+            "genre": "Action",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.179354"
+            "catalogId": "mdblist.200264"
           },
           {
             "type": "series",
@@ -695,6 +724,9 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Disney%2B/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Disney%2B/cover.webp",
         "catalogSources": [
@@ -724,9 +756,9 @@ window.NUVIO_DATABASE = [
           },
           {
             "type": "movie",
-            "genre": "None",
+            "genre": "Action",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.179354"
+            "catalogId": "mdblist.200264"
           },
           {
             "type": "series",
@@ -817,6 +849,9 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Prime/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Prime/cover.webp",
         "catalogSources": [
@@ -923,6 +958,9 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Paramount%2B/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Paramount%2B/cover.webp",
         "catalogSources": [
@@ -1034,6 +1072,9 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Peacock/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Peacock/cover.webp",
         "catalogSources": [
@@ -1132,6 +1173,9 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Hulu/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Hulu/cover.webp",
         "catalogSources": [
@@ -1176,6 +1220,168 @@ window.NUVIO_DATABASE = [
         "heroBackdropUrl": "https://kollection.tv/images/Streaming%20Platforms/Hulu/backdrop.webp"
       },
       {
+        "id": "folder-71bb0678",
+        "title": "AMC+",
+        "sources": [
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "flixpatrol.amc.us.all"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.229287"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.229870"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.228812"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.228813"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/AMC%2B/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/AMC%2B/cover.webp",
+        "catalogSources": [
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "flixpatrol.amc.us.all"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.229287"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.229870"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.228812"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.228813"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Streaming%20Platforms/AMC%2B/backdrop.webp"
+      },
+      {
+        "id": "folder-a6d8c582",
+        "title": "MGM+",
+        "sources": [
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "flixpatrol.mgm.us.all"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.230029"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.230034"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.230024"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.230020"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/MGM%2B/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/MGM%2B/cover.webp",
+        "catalogSources": [
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "flixpatrol.mgm.us.all"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.230029"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.230034"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.230024"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.230020"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Streaming%20Platforms/MGM%2B/backdrop.webp"
+      },
+      {
         "id": "6d5be2e5-b910-4150-ad97-f5b36f8df586",
         "title": "Shudder",
         "sources": [
@@ -1217,6 +1423,9 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Shudder/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Shudder/cover.webp",
         "catalogSources": [
@@ -1289,6 +1498,9 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Discovery%2B/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Discovery%2B/cover.webp",
         "catalogSources": [
@@ -1369,6 +1581,9 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/Crunchyroll/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/Crunchyroll/cover.webp",
         "catalogSources": [
@@ -1443,17 +1658,12 @@ window.NUVIO_DATABASE = [
             "addonId": "aio-metadata",
             "provider": "addon",
             "catalogId": "streaming.mub_movie"
-          },
-          {
-            "type": "series",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "streaming.mub_series"
           }
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Streaming%20Platforms/MUBI/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Streaming%20Platforms/MUBI/cover.webp",
         "catalogSources": [
@@ -1480,12 +1690,6 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "catalogId": "streaming.mub_movie"
-          },
-          {
-            "type": "series",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "streaming.mub_series"
           }
         ],
         "focusGifEnabled": true,
@@ -1510,25 +1714,21 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.128037"
+            "catalogId": "mdblist.208490"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.128029"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.114416"
+            "catalogId": "mdblist.208495"
           }
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Genres/Action/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Genres/Action/cover.webp",
         "catalogSources": [
@@ -1536,483 +1736,17 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.128037"
+            "catalogId": "mdblist.208490"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.128029"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.114416"
+            "catalogId": "mdblist.208495"
           }
         ],
         "focusGifEnabled": true,
         "heroBackdropUrl": "https://kollection.tv/images/Genres/Action/backdrop.webp"
-      },
-      {
-        "id": "60b0411b-7925-4b34-a453-3685dbb3d8c5",
-        "title": "Sci-Fi",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.128047"
-          },
-          {
-            "type": "series",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.128048"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.98632"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Genres/Sci-Fi/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Genres/Sci-Fi/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.128047"
-          },
-          {
-            "type": "series",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.128048"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.98632"
-          }
-        ],
-        "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kollection.tv/images/Genres/Sci-Fi/backdrop.webp"
-      },
-      {
-        "id": "5cc2f782-663c-4e2b-9188-f274bcb2b7b0",
-        "title": "Fantasy",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.98643"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.145739"
-          },
-          {
-            "type": "series",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.145740"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Genres/Fantasy/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Genres/Fantasy/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.98643"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.145739"
-          },
-          {
-            "type": "series",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.145740"
-          }
-        ],
-        "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kollection.tv/images/Genres/Fantasy/backdrop.webp"
-      },
-      {
-        "id": "f953a671-ace5-450d-9c70-6e91a735864f",
-        "title": "Thriller",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.128049"
-          },
-          {
-            "type": "series",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.128050"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.98636"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Genres/Thriller/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Genres/Thriller/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.128049"
-          },
-          {
-            "type": "series",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.128050"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.98636"
-          }
-        ],
-        "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kollection.tv/images/Genres/Thriller/backdrop.webp"
-      },
-      {
-        "id": "33467c13-23cc-4f78-92dd-3932598adc33",
-        "title": "Horror",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.128045"
-          },
-          {
-            "type": "series",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.128046"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "letterboxd.pSgSC"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.53741"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.59551"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.184733"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.163125"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.184739"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.59789"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.85225"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.184728"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.159952"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.184732"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.159929"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "letterboxd.fNDgc"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.59780"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Genres/Horror/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Genres/Horror/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.128045"
-          },
-          {
-            "type": "series",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.128046"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "letterboxd.pSgSC"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.53741"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.59551"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.184733"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.163125"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.184739"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.59789"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.85225"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.184728"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.159952"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.184732"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.159929"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "letterboxd.fNDgc"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.59780"
-          }
-        ],
-        "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kollection.tv/images/Genres/Horror/backdrop.webp"
-      },
-      {
-        "id": "19975918-d59a-426d-852a-fa30c2236ec1",
-        "title": "Drama",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.128043"
-          },
-          {
-            "type": "series",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.128044"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.98638"
-          },
-          {
-            "type": "series",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.75563"
-          },
-          {
-            "type": "series",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.64079"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Genres/Drama/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Genres/Drama/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.128043"
-          },
-          {
-            "type": "series",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.128044"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.98638"
-          },
-          {
-            "type": "series",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.75563"
-          },
-          {
-            "type": "series",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.64079"
-          }
-        ],
-        "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kollection.tv/images/Genres/Drama/backdrop.webp"
       },
       {
         "id": "3ea8222f-9173-43ec-b60d-ef9085d669c7",
@@ -2023,21 +1757,14 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.128035"
+            "catalogId": "mdblist.222280"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.128034"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.98644"
+            "catalogId": "mdblist.222281"
           },
           {
             "type": "movie",
@@ -2126,6 +1853,9 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Genres/Animation/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Genres/Animation/cover.webp",
         "catalogSources": [
@@ -2133,19 +1863,13 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.128035"
+            "catalogId": "mdblist.222280"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.128034"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.98644"
+            "catalogId": "mdblist.222281"
           },
           {
             "type": "movie",
@@ -2224,6 +1948,62 @@ window.NUVIO_DATABASE = [
         "heroBackdropUrl": "https://kollection.tv/images/Genres/Animation/backdrop.webp"
       },
       {
+        "id": "190240d4-244b-41bd-a6f1-fb7599702b9b",
+        "title": "Anime",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.222283"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.222284"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.159694"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Anime/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Anime/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.222283"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.222284"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.159694"
+          }
+        ],
+        "focusGifEnabled": true,
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Anime/backdrop.webp"
+      },
+      {
         "id": "1c8f20af-b2fe-4afa-8511-88c0c605a686",
         "title": "Comedy",
         "sources": [
@@ -2232,25 +2012,21 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.128040"
+            "catalogId": "mdblist.222407"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.128041"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.98637"
+            "catalogId": "mdblist.228718"
           }
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Genres/Comedy/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Genres/Comedy/cover.webp",
         "catalogSources": [
@@ -2258,23 +2034,85 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.128040"
+            "catalogId": "mdblist.222407"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.128041"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.98637"
+            "catalogId": "mdblist.228718"
           }
         ],
         "focusGifEnabled": true,
         "heroBackdropUrl": "https://kollection.tv/images/Genres/Comedy/backdrop.webp"
+      },
+      {
+        "id": "folder-b161eab1",
+        "title": "Crime",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.229279"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.229280"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.230563"
+          },
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.kaoxt.true-crime"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Crime/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Crime/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.229279"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.229280"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.230563"
+          },
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.kaoxt.true-crime"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Crime/backdrop.webp"
       },
       {
         "id": "d958627f-4128-4706-a96d-615b77214996",
@@ -2285,21 +2123,21 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.128027"
+            "catalogId": "mdblist.228725"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.128028"
+            "catalogId": "mdblist.228726"
           },
           {
-            "type": "movie",
+            "type": "all",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.6340"
+            "catalogId": "mdblist.kaoxt.true-crime"
           },
           {
             "type": "all",
@@ -2332,6 +2170,9 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Genres/Documentary/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Genres/Documentary/cover.webp",
         "catalogSources": [
@@ -2339,19 +2180,19 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.128027"
+            "catalogId": "mdblist.228725"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.128028"
+            "catalogId": "mdblist.228726"
           },
           {
-            "type": "movie",
+            "type": "all",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.6340"
+            "catalogId": "mdblist.kaoxt.true-crime"
           },
           {
             "type": "all",
@@ -2382,6 +2223,427 @@ window.NUVIO_DATABASE = [
         "heroBackdropUrl": "https://kollection.tv/images/Genres/Documentary/backdrop.webp"
       },
       {
+        "id": "19975918-d59a-426d-852a-fa30c2236ec1",
+        "title": "Drama",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.228730"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.228731"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.75563"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.64079"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Drama/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Drama/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.228730"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.228731"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.75563"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.64079"
+          }
+        ],
+        "focusGifEnabled": true,
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Drama/backdrop.webp"
+      },
+      {
+        "id": "folder-70b8dd85",
+        "title": "Family",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.230000"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.230004"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Family/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Family/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.230000"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.230004"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Family/backdrop.webp"
+      },
+      {
+        "id": "5cc2f782-663c-4e2b-9188-f274bcb2b7b0",
+        "title": "Fantasy",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.228774"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.228775"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Fantasy/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Fantasy/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.228774"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.228775"
+          }
+        ],
+        "focusGifEnabled": true,
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Fantasy/backdrop.webp"
+      },
+      {
+        "id": "33467c13-23cc-4f78-92dd-3932598adc33",
+        "title": "Horror",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.228776"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.228777"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.53741"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.59551"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.59780"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.184732"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.184733"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.184728"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.184739"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.85225"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.159952"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.163125"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.59789"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.205389"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "letterboxd.fNDgc"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Horror/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Horror/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.228776"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.228777"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.53741"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.59551"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.59780"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.184732"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.184733"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.184728"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.184739"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.85225"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.159952"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.163125"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.59789"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.205389"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "letterboxd.fNDgc"
+          }
+        ],
+        "focusGifEnabled": true,
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Horror/backdrop.webp"
+      },
+      {
+        "id": "folder-aa1d47d6",
+        "title": "Music",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.228810"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.228811"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.230052"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Music/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Music/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.228810"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.228811"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.230052"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Music/backdrop.webp"
+      },
+      {
         "id": "eacfc1c3-282c-4c49-8e07-03c5e7c16558",
         "title": "Mystery",
         "sources": [
@@ -2390,25 +2652,21 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.2416"
+            "catalogId": "mdblist.228778"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.6614"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.130016"
+            "catalogId": "mdblist.228782"
           }
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Genres/Mystery/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Genres/Mystery/cover.webp",
         "catalogSources": [
@@ -2416,19 +2674,13 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.2416"
+            "catalogId": "mdblist.228778"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.6614"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.130016"
+            "catalogId": "mdblist.228782"
           }
         ],
         "focusGifEnabled": true,
@@ -2443,25 +2695,21 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.128262"
+            "catalogId": "mdblist.228784"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.128265"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.98639"
+            "catalogId": "mdblist.228785"
           }
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Genres/Romance/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Genres/Romance/cover.webp",
         "catalogSources": [
@@ -2469,23 +2717,103 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.128262"
+            "catalogId": "mdblist.228784"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.128265"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.98639"
+            "catalogId": "mdblist.228785"
           }
         ],
         "focusGifEnabled": true,
         "heroBackdropUrl": "https://kollection.tv/images/Genres/Romance/backdrop.webp"
+      },
+      {
+        "id": "60b0411b-7925-4b34-a453-3685dbb3d8c5",
+        "title": "Sci-Fi",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.228786"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.228787"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Sci-Fi/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Sci-Fi/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.228786"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.228787"
+          }
+        ],
+        "focusGifEnabled": true,
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Sci-Fi/backdrop.webp"
+      },
+      {
+        "id": "f953a671-ace5-450d-9c70-6e91a735864f",
+        "title": "Thriller",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.228796"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.228797"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Genres/Thriller/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Genres/Thriller/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.228796"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.228797"
+          }
+        ],
+        "focusGifEnabled": true,
+        "heroBackdropUrl": "https://kollection.tv/images/Genres/Thriller/backdrop.webp"
       },
       {
         "id": "c84ef744-e269-4853-9c05-0d10aee204da",
@@ -2504,13 +2832,6 @@ window.NUVIO_DATABASE = [
             "addonId": "aio-metadata",
             "provider": "addon",
             "catalogId": "mdblist.6625"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.98641"
           },
           {
             "type": "movie",
@@ -2536,6 +2857,9 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Genres/War/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Genres/War/cover.webp",
         "catalogSources": [
@@ -2550,12 +2874,6 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "catalogId": "mdblist.6625"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.98641"
           },
           {
             "type": "movie",
@@ -2588,7 +2906,14 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.55355"
+            "catalogId": "mdblist.228798"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.228803"
           },
           {
             "type": "movie",
@@ -2600,6 +2925,9 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
         "titleLogoUrl": "https://kollection.tv/images/Genres/Western/logo.webp",
         "coverImageUrl": "https://kollection.tv/images/Genres/Western/cover.webp",
         "catalogSources": [
@@ -2607,7 +2935,13 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.55355"
+            "catalogId": "mdblist.228798"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.228803"
           },
           {
             "type": "movie",
@@ -2618,541 +2952,920 @@ window.NUVIO_DATABASE = [
         ],
         "focusGifEnabled": true,
         "heroBackdropUrl": "https://kollection.tv/images/Genres/Western/backdrop.webp"
-      },
-      {
-        "id": "190240d4-244b-41bd-a6f1-fb7599702b9b",
-        "title": "Anime",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.88468"
-          },
-          {
-            "type": "series",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.88469"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.159694"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Genres/Anime/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Genres/Anime/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.88468"
-          },
-          {
-            "type": "series",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.88469"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.159694"
-          }
-        ],
-        "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kollection.tv/images/Genres/Anime/backdrop.webp"
       }
     ],
     "pinToTop": true,
-    "viewMode": "ROWS",
+    "viewMode": "TABBED_GRID",
     "showAllTab": false,
     "focusGlowEnabled": false
   },
   {
-    "id": "collection-999d0cd8-community",
-    "title": "Studios",
+    "id": "0dc7d1d1-86e4-4f3a-90dd-789786af4abe-community",
+    "title": "Networks",
     "folders": [
       {
-        "id": "folder-e6661e6a",
-        "title": "Marvel Studios",
+        "id": "folder-6836e0ca",
+        "title": "A&E",
         "sources": [
           {
-            "type": "movie",
+            "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.179354"
+            "catalogId": "mdblist.3438"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/A%26E/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/A%26E/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.3438"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/A%26E/backdrop.webp"
+      },
+      {
+        "id": "35f18e51-00a4-486e-a2f1-0a4caeeb076e",
+        "title": "ABC",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.3375"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/ABC/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/ABC/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.3375"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/ABC/backdrop.webp"
+      },
+      {
+        "id": "folder-b03184fd",
+        "title": "Adult Swim",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.3439"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/Adult%20Swim/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/Adult%20Swim/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.3439"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/Adult%20Swim/backdrop.webp"
+      },
+      {
+        "id": "folder-257ccaab",
+        "title": "AMC",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.3378"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/AMC/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/AMC/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.3378"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/AMC/backdrop.webp"
+      },
+      {
+        "id": "folder-9a57af38",
+        "title": "Animal Planet",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.38513"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/Animal%20Planet/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/Animal%20Planet/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.38513"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/Animal%20Planet/backdrop.webp"
+      },
+      {
+        "id": "folder-52e03773",
+        "title": "BBC",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.3441"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/BBC/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/BBC/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.3441"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/BBC/backdrop.webp"
+      },
+      {
+        "id": "folder-6ff9067b",
+        "title": "Bravo",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.2579"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/Bravo/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/Bravo/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.2579"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/Bravo/backdrop.webp"
+      },
+      {
+        "id": "folder-15a7e565",
+        "title": "Cartoon Network",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.2564"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.183851"
+            "catalogId": "mdblist.68839"
           }
         ],
         "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Studios/Marvel/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Studios/Marvel/cover.webp",
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/Cartoon%20Network/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/Cartoon%20Network/cover.webp",
         "catalogSources": [
           {
-            "type": "movie",
+            "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.179354"
+            "catalogId": "mdblist.2564"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.183851"
+            "catalogId": "mdblist.68839"
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Studios/Marvel/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/Cartoon%20Network/backdrop.webp"
       },
       {
-        "id": "folder-6b38658a",
-        "title": "DC Studios",
+        "id": "folder-c10aac47",
+        "title": "CBS",
         "sources": [
           {
-            "type": "movie",
+            "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.184042"
-          },
-          {
-            "type": "all",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.92861"
+            "catalogId": "mdblist.3376"
           }
         ],
         "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Studios/DC/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Studios/DC/cover.webp",
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/CBS/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/CBS/cover.webp",
         "catalogSources": [
           {
-            "type": "movie",
+            "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.184042"
-          },
-          {
-            "type": "all",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.92861"
+            "catalogId": "mdblist.3376"
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Studios/DC/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/CBS/backdrop.webp"
       },
       {
-        "id": "folder-9a87647e",
-        "title": "Disney",
+        "id": "folder-3167f5ce",
+        "title": "Channel 4",
         "sources": [
           {
-            "type": "movie",
+            "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.159700"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.47292"
+            "catalogId": "mdblist.74626"
           }
         ],
         "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Studios/Disney/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Studios/Disney/cover.webp",
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/Channel%204/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/Channel%204/cover.webp",
         "catalogSources": [
           {
-            "type": "movie",
+            "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.159700"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.47292"
+            "catalogId": "mdblist.74626"
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Studios/Disney/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/Channel%204/backdrop.webp"
       },
       {
-        "id": "folder-77e07c3e",
-        "title": "Sony Pictures",
+        "id": "folder-ed5e8721",
+        "title": "Comedy Central",
         "sources": [
           {
-            "type": "movie",
+            "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.145729"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.31333"
+            "catalogId": "mdblist.27755"
           }
         ],
         "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Studios/Sony%20Pictures/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Studios/Sony%20Pictures/cover.webp",
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/Comedy%20Central/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/Comedy%20Central/cover.webp",
         "catalogSources": [
           {
-            "type": "movie",
+            "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.145729"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.31333"
+            "catalogId": "mdblist.27755"
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Studios/Sony%20Pictures/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/Comedy%20Central/backdrop.webp"
       },
       {
-        "id": "folder-b761b955",
-        "title": "Warner Brothers",
+        "id": "folder-76a1311c",
+        "title": "Discovery",
         "sources": [
           {
-            "type": "movie",
+            "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.159685"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.62561"
+            "catalogId": "mdblist.3270"
           }
         ],
         "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Studios/Warner%20Brothers/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Studios/Warner%20Brothers/cover.webp",
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/Discovery/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/Discovery/cover.webp",
         "catalogSources": [
           {
-            "type": "movie",
+            "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.159685"
-          },
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.62561"
+            "catalogId": "mdblist.3270"
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Studios/Warner%20Brothers/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/Discovery/backdrop.webp"
       },
       {
-        "id": "folder-3d7824cd",
-        "title": "Universal",
+        "id": "folder-77474c92",
+        "title": "ESPN",
         "sources": [
           {
-            "type": "movie",
+            "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.169256"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Studios/Universal/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Studios/Universal/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.169256"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Studios/Universal/backdrop.webp"
-      },
-      {
-        "id": "folder-484b9c00",
-        "title": "Paramount",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.159687"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Studios/Paramount/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Studios/Paramount/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.159687"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Studios/Paramount/backdrop.webp"
-      },
-      {
-        "id": "folder-55bdfdbd",
-        "title": "20th Century Studios",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.159689"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Studios/20th%20Century/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Studios/20th%20Century/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.159689"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Studios/20th%20Century/backdrop.webp"
-      },
-      {
-        "id": "folder-a650bdfa",
-        "title": "A24",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.159693"
+            "catalogId": "mdblist.138559"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.185927"
+            "catalogId": "mdblist.107144"
           }
         ],
         "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Studios/A24/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Studios/A24/cover.webp",
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/ESPN/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/ESPN/cover.webp",
         "catalogSources": [
           {
-            "type": "movie",
+            "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.159693"
+            "catalogId": "mdblist.138559"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.185927"
+            "catalogId": "mdblist.107144"
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Studios/A24/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/ESPN/backdrop.webp"
       },
       {
-        "id": "0aafb59e-5e2d-4c9e-b4d6-f6b0401200e1",
-        "title": "Blumhouse",
+        "id": "folder-1b1c5d2f",
+        "title": "Fox",
         "sources": [
           {
-            "type": "movie",
+            "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.96197"
+            "catalogId": "mdblist.3442"
           }
         ],
         "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Studios/Blumhouse/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Studios/Blumhouse/cover.webp",
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/Fox/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/Fox/cover.webp",
         "catalogSources": [
           {
-            "type": "movie",
+            "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.96197"
-          }
-        ],
-        "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kollection.tv/images/Studios/Blumhouse/backdrop.webp"
-      },
-      {
-        "id": "folder-6a0e51aa",
-        "title": "MGM",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.159684"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Studios/MGM/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Studios/MGM/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.159684"
+            "catalogId": "mdblist.3442"
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Studios/MGM/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/Fox/backdrop.webp"
       },
       {
-        "id": "folder-c6afa09b",
-        "title": "Pixar",
+        "id": "folder-ff90f005",
+        "title": "FX",
         "sources": [
           {
-            "type": "movie",
+            "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.159678"
+            "catalogId": "mdblist.3379"
           }
         ],
         "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Studios/Pixar/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Studios/Pixar/cover.webp",
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/FX/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/FX/cover.webp",
         "catalogSources": [
           {
-            "type": "movie",
+            "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.159678"
+            "catalogId": "mdblist.3379"
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Studios/Pixar/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/FX/backdrop.webp"
       },
       {
-        "id": "folder-bbb946bc",
-        "title": "Illumination",
+        "id": "folder-bfd926ba",
+        "title": "HBO",
         "sources": [
           {
-            "type": "movie",
+            "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.159699"
+            "catalogId": "mdblist.3086"
           }
         ],
         "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Studios/Illumination/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Studios/Illumination/cover.webp",
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/HBO/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/HBO/cover.webp",
         "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.3086"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/HBO/backdrop.webp"
+      },
+      {
+        "id": "folder-7b5b9a36",
+        "title": "HGTV",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.5035"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/HGTV/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/HGTV/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.5035"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/HGTV/backdrop.webp"
+      },
+      {
+        "id": "folder-cb65db7a",
+        "title": "History",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.76775"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/History/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/History/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.76775"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/History/backdrop.webp"
+      },
+      {
+        "id": "folder-8d38ac55",
+        "title": "MTV",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.3563"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/MTV/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/MTV/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.3563"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/MTV/backdrop.webp"
+      },
+      {
+        "id": "folder-2bcd13d8",
+        "title": "National Geographic",
+        "sources": [
           {
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.159699"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Studios/Illumination/backdrop.webp"
-      },
-      {
-        "id": "folder-fa1c7df1",
-        "title": "DreamWorks",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "",
-            "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.159680"
+            "catalogId": "mdblist.4325"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.186150"
+            "catalogId": "mdblist.3682"
           }
         ],
         "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Studios/DreamWorks/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Studios/DreamWorks/cover.webp",
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/National%20Geographic/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/National%20Geographic/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
+            "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.159680"
+            "catalogId": "mdblist.4325"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.186150"
+            "catalogId": "mdblist.3682"
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Studios/DreamWorks/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/National%20Geographic/backdrop.webp"
+      },
+      {
+        "id": "665f979d-07c3-40d7-8af1-cbe756cf92af",
+        "title": "NBC",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.3437"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/NBC/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/NBC/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.3437"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/NBC/backdrop.webp"
+      },
+      {
+        "id": "folder-74f9b5c8",
+        "title": "Nickelodeon",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.31164"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.186142"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/Nickelodeon/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/Nickelodeon/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.31164"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.186142"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/Nickelodeon/backdrop.webp"
+      },
+      {
+        "id": "folder-2eda6205",
+        "title": "PBS",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.105539"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.111185"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.47084"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/PBS/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/PBS/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.105539"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.111185"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.47084"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/PBS/backdrop.webp"
+      },
+      {
+        "id": "folder-43b0a65a",
+        "title": "Showtime",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.79806"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/Showtime/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/Showtime/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.79806"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/Showtime/backdrop.webp"
+      },
+      {
+        "id": "folder-5098bf58",
+        "title": "Starz",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.3380"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/Starz/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/Starz/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.3380"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/Starz/backdrop.webp"
+      },
+      {
+        "id": "folder-99bb2b88",
+        "title": "Syfy",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.133234"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/Syfy/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/Syfy/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.133234"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/SYFY/backdrop.webp"
+      },
+      {
+        "id": "folder-6fbd3e7e",
+        "title": "The CW",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.3435"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.199785"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/CW/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/CW/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.3435"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.199785"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/CW/backdrop.webp"
+      },
+      {
+        "id": "folder-a847a538",
+        "title": "TLC",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.51871"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/TLC/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/TLC/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.51871"
+          }
+        ],
+        "focusGifEnabled": false
+      },
+      {
+        "id": "folder-c5801158",
+        "title": "TNT",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.3436"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/TNT/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/TNT/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.3436"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/TNT/backdrop.webp"
+      },
+      {
+        "id": "folder-baa417e5",
+        "title": "USA Network",
+        "sources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.3724"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Networks/USA/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Networks/USA/cover.webp",
+        "catalogSources": [
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.3724"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Networks/USA/backdrop.webp"
       }
     ],
     "pinToTop": true,
-    "viewMode": "FOLLOW_LAYOUT",
+    "viewMode": "TABBED_GRID",
     "showAllTab": false,
     "focusGlowEnabled": false
   },
@@ -3160,6 +3873,33 @@ window.NUVIO_DATABASE = [
     "id": "1f105a34-b5dd-4820-8d1f-f2ce942700fc-community",
     "title": "Franchises",
     "folders": [
+      {
+        "id": "170e92cc-e50a-4cdf-875c-22744a9df4a9",
+        "title": "Dune",
+        "sources": [
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.207296"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Dune/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Dune/cover.webp",
+        "catalogSources": [
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.207296"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Dune/backdrop.webp"
+      },
       {
         "id": "788e5f62-89e3-4e60-a89f-86d763861c67",
         "title": "Lord of the Rings",
@@ -3186,33 +3926,6 @@ window.NUVIO_DATABASE = [
         ],
         "focusGifEnabled": true,
         "heroBackdropUrl": "https://kollection.tv/images/Franchises/The%20Lord%20of%20the%20Rings/backdrop.webp"
-      },
-      {
-        "id": "170e92cc-e50a-4cdf-875c-22744a9df4a9",
-        "title": "Dune",
-        "sources": [
-          {
-            "type": "all",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.159893"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Franchises/Dune/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Franchises/Dune/cover.webp",
-        "catalogSources": [
-          {
-            "type": "all",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.159893"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Dune/backdrop.webp"
       },
       {
         "id": "b0543d15-2352-4844-8149-da49211e09c9",
@@ -3290,23 +4003,23 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.102982"
+            "catalogId": "mdblist.204570"
           }
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Franchises/Jurrasic%20Park/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Franchises/Jurrasic%20Park/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Franchises/Jurassic%20Park/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Franchises/Jurassic%20Park/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.102982"
+            "catalogId": "mdblist.204570"
           }
         ],
         "focusGifEnabled": true,
-        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Jurrasic%20Park/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Franchises/Jurassic%20Park/backdrop.webp"
       },
       {
         "id": "c72f4077-8c3c-4e64-888d-44632ab464bd",
@@ -3314,7 +4027,7 @@ window.NUVIO_DATABASE = [
         "sources": [
           {
             "type": "movie",
-            "genre": "",
+            "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
             "catalogId": "mdblist.198488"
@@ -3341,6 +4054,7 @@ window.NUVIO_DATABASE = [
         "catalogSources": [
           {
             "type": "movie",
+            "genre": "None",
             "addonId": "aio-metadata",
             "catalogId": "mdblist.198488"
           },
@@ -3369,7 +4083,7 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.102976"
+            "catalogId": "mdblist.228768"
           },
           {
             "type": "series",
@@ -3388,7 +4102,7 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.102976"
+            "catalogId": "mdblist.228768"
           },
           {
             "type": "series",
@@ -3436,7 +4150,7 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.102983"
+            "catalogId": "mdblist.205382"
           }
         ],
         "hideTitle": true,
@@ -3448,7 +4162,7 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.102983"
+            "catalogId": "mdblist.205382"
           }
         ],
         "focusGifEnabled": true,
@@ -3460,10 +4174,10 @@ window.NUVIO_DATABASE = [
         "sources": [
           {
             "type": "movie",
-            "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.159896"
+            "catalogId": "mdblist.221803",
+            "genre": ""
           }
         ],
         "hideTitle": true,
@@ -3473,9 +4187,9 @@ window.NUVIO_DATABASE = [
         "catalogSources": [
           {
             "type": "movie",
-            "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.159896"
+            "catalogId": "mdblist.221803",
+            "genre": ""
           }
         ],
         "focusGifEnabled": true,
@@ -3678,7 +4392,7 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.102973"
+            "catalogId": "mdblist.206244"
           }
         ],
         "hideTitle": true,
@@ -3690,7 +4404,7 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.102973"
+            "catalogId": "mdblist.206244"
           }
         ],
         "focusGifEnabled": true,
@@ -3813,7 +4527,7 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.159929"
+            "catalogId": "mdblist.205389"
           }
         ],
         "hideTitle": true,
@@ -3825,7 +4539,7 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.159929"
+            "catalogId": "mdblist.205389"
           }
         ],
         "focusGifEnabled": true,
@@ -3865,6 +4579,541 @@ window.NUVIO_DATABASE = [
     "focusGlowEnabled": false
   },
   {
+    "id": "collection-999d0cd8-community",
+    "title": "Studios",
+    "folders": [
+      {
+        "id": "folder-e6661e6a",
+        "title": "Marvel Studios",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.200264"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.183851"
+          },
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.206891"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/Marvel/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/Marvel/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.200264"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.183851"
+          },
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.206891"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/Marvel/backdrop.webp"
+      },
+      {
+        "id": "folder-6b38658a",
+        "title": "DC Studios",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.228794"
+          },
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.92861"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/DC/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/DC/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.228794"
+          },
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.92861"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/DC/backdrop.webp"
+      },
+      {
+        "id": "folder-9a87647e",
+        "title": "Disney",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.159700"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.47292"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/Disney/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/Disney/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.159700"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.47292"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/Disney/backdrop.webp"
+      },
+      {
+        "id": "folder-77e07c3e",
+        "title": "Sony Pictures",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.145729"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.31333"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/Sony%20Pictures/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/Sony%20Pictures/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.145729"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.31333"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/Sony%20Pictures/backdrop.webp"
+      },
+      {
+        "id": "folder-b761b955",
+        "title": "Warner Brothers",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.159685"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.62561"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/Warner%20Brothers/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/Warner%20Brothers/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.159685"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.62561"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/Warner%20Brothers/backdrop.webp"
+      },
+      {
+        "id": "folder-3d7824cd",
+        "title": "Universal",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.169256"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/Universal/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/Universal/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.169256"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/Universal/backdrop.webp"
+      },
+      {
+        "id": "folder-484b9c00",
+        "title": "Paramount",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.159687"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/Paramount/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/Paramount/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.159687"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/Paramount/backdrop.webp"
+      },
+      {
+        "id": "folder-55bdfdbd",
+        "title": "20th Century Studios",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.159689"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/20th%20Century/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/20th%20Century/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.159689"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/20th%20Century/backdrop.webp"
+      },
+      {
+        "id": "folder-a650bdfa",
+        "title": "A24",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.159693"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.185927"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/A24/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/A24/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.159693"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.185927"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/A24/backdrop.webp"
+      },
+      {
+        "id": "0aafb59e-5e2d-4c9e-b4d6-f6b0401200e1",
+        "title": "Blumhouse",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.96197"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/Blumhouse/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/Blumhouse/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.96197"
+          }
+        ],
+        "focusGifEnabled": true,
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/Blumhouse/backdrop.webp"
+      },
+      {
+        "id": "folder-6a0e51aa",
+        "title": "MGM",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.159684"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/MGM/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/MGM/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.159684"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/MGM/backdrop.webp"
+      },
+      {
+        "id": "folder-c6afa09b",
+        "title": "Pixar",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.159678"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/Pixar/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/Pixar/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.159678"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/Pixar/backdrop.webp"
+      },
+      {
+        "id": "folder-bbb946bc",
+        "title": "Illumination",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.159699"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/Illumination/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/Illumination/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.159699"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/Illumination/backdrop.webp"
+      },
+      {
+        "id": "folder-fa1c7df1",
+        "title": "DreamWorks",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.159680"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.186150"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "LANDSCAPE",
+        "coverEmoji": "",
+        "focusGifUrl": "",
+        "heroVideoUrl": "",
+        "titleLogoUrl": "https://kollection.tv/images/Studios/DreamWorks/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Studios/DreamWorks/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.159680"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.186150"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Studios/DreamWorks/backdrop.webp"
+      }
+    ],
+    "pinToTop": true,
+    "viewMode": "FOLLOW_LAYOUT",
+    "showAllTab": false,
+    "backdropImageUrl": "",
+    "focusGlowEnabled": false
+  },
+  {
     "id": "940a3bf9-f385-4633-9bf8-07f9392facbd-community",
     "title": "Decades",
     "folders": [
@@ -3877,14 +5126,28 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.55170"
+            "catalogId": "mdblist.208247"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.55695"
+            "catalogId": "mdblist.208303"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208273"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208316"
           }
         ],
         "hideTitle": true,
@@ -3896,13 +5159,25 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.55170"
+            "catalogId": "mdblist.208247"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.55695"
+            "catalogId": "mdblist.208303"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208273"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208316"
           }
         ],
         "focusGifEnabled": false,
@@ -3917,14 +5192,28 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.55171"
+            "catalogId": "mdblist.208249"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.55696"
+            "catalogId": "mdblist.208304"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208276"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208318"
           }
         ],
         "hideTitle": true,
@@ -3936,13 +5225,25 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.55171"
+            "catalogId": "mdblist.208249"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.55696"
+            "catalogId": "mdblist.208304"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208276"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208318"
           }
         ],
         "focusGifEnabled": true,
@@ -3957,14 +5258,28 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.55172"
+            "catalogId": "mdblist.208250"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.55697"
+            "catalogId": "mdblist.208306"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208289"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208317"
           }
         ],
         "hideTitle": true,
@@ -3976,13 +5291,25 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.55172"
+            "catalogId": "mdblist.208250"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.55697"
+            "catalogId": "mdblist.208306"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208289"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208317"
           }
         ],
         "focusGifEnabled": false,
@@ -3997,14 +5324,28 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.55173"
+            "catalogId": "mdblist.208253"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.55698"
+            "catalogId": "mdblist.208309"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208295"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208320"
           }
         ],
         "hideTitle": true,
@@ -4016,13 +5357,25 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.55173"
+            "catalogId": "mdblist.208253"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.55698"
+            "catalogId": "mdblist.208309"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208295"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208320"
           }
         ],
         "focusGifEnabled": false,
@@ -4037,14 +5390,28 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.55174"
+            "catalogId": "mdblist.208254"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.55699"
+            "catalogId": "mdblist.208311"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208296"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208321"
           }
         ],
         "hideTitle": true,
@@ -4056,13 +5423,25 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.55174"
+            "catalogId": "mdblist.208254"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.55699"
+            "catalogId": "mdblist.208311"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208296"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208321"
           }
         ],
         "focusGifEnabled": false,
@@ -4077,14 +5456,28 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.55175"
+            "catalogId": "mdblist.208256"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.55700"
+            "catalogId": "mdblist.208314"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208297"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208322"
           }
         ],
         "hideTitle": true,
@@ -4096,13 +5489,25 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.55175"
+            "catalogId": "mdblist.208256"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.55700"
+            "catalogId": "mdblist.208314"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208297"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208322"
           }
         ],
         "focusGifEnabled": true,
@@ -4117,14 +5522,28 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.55694"
+            "catalogId": "mdblist.208260"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.41407"
+            "catalogId": "mdblist.208315"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208300"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.208324"
           }
         ],
         "hideTitle": true,
@@ -4136,13 +5555,25 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.55694"
+            "catalogId": "mdblist.208260"
           },
           {
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.41407"
+            "catalogId": "mdblist.208315"
+          },
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208300"
+          },
+          {
+            "type": "series",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.208324"
           }
         ],
         "focusGifEnabled": false,
@@ -4159,463 +5590,31 @@ window.NUVIO_DATABASE = [
     "title": "Actors",
     "folders": [
       {
-        "id": "folder-698f200a",
-        "title": "Leonardo DiCaprio",
+        "id": "folder-e81a2d69",
+        "title": "Adam Sandler",
         "sources": [
           {
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.159219"
+            "catalogId": "mdblist.158994"
           }
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Leonardo%20DiCaprio/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Leonardo%20DiCaprio/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Adam%20Sandler/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Adam%20Sandler/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.159219"
+            "catalogId": "mdblist.158994"
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Leonardo%20DiCaprio/backdrop.webp"
-      },
-      {
-        "id": "da36623e-de51-4b28-a545-9791189b36e4",
-        "title": "Ryan Gosling",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.157927"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Ryan%20Gosling/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Ryan%20Gosling/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.157927"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Ryan%20Gosling/backdrop.webp"
-      },
-      {
-        "id": "a0af08f2-fc36-4203-980b-719c8501c8c8",
-        "title": "Margot Robbie",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.nobnobz.actor-margot-robbie-u7b2hujgzk"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Margot%20Robbie/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Margot%20Robbie/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.nobnobz.actor-margot-robbie-u7b2hujgzk"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Margot%20Robbie/backdrop.webp"
-      },
-      {
-        "id": "8d40b54d-9b5e-47d8-a5cc-46d6c26bb970",
-        "title": "Timothee Chalamet",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.1397"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Timothee%20Chalamet/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Timothee%20Chalamet/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.1397"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Timothee%20Chalamet/backdrop.webp"
-      },
-      {
-        "id": "d5b1b282-b4b7-4e10-a3bd-93f14479e984",
-        "title": "Keanu Reeves",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.10320"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Keanu%20Reeves/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Keanu%20Reeves/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.10320"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Keanu%20Reeves/backdrop.webp"
-      },
-      {
-        "id": "folder-2f392682",
-        "title": "Jake Gyllenhaal",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.159477"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Jake%20Gyllenhaal/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Jake%20Gyllenhaal/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.159477"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Jake%20Gyllenhaal/backdrop.webp"
-      },
-      {
-        "id": "folder-c819a951",
-        "title": "Zendaya",
-        "sources": [
-          {
-            "type": "all",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.nobnobz.actor-zendaya-4q290mhw15"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Zendaya/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Zendaya/cover.webp",
-        "catalogSources": [
-          {
-            "type": "all",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.nobnobz.actor-zendaya-4q290mhw15"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Zendaya/backdrop.webp"
-      },
-      {
-        "id": "folder-04ca2636",
-        "title": "Matt Damon",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.159226"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Matt%20Damon/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Matt%20Damon/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.159226"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Matt%20Damon/backdrop.webp"
-      },
-      {
-        "id": "folder-9cdc32e1",
-        "title": "Morgan Freeman",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.nobnobz.actor-morgan-freeman-yt6gzriku9"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Morgan%20Freeman/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Morgan%20Freeman/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.nobnobz.actor-morgan-freeman-yt6gzriku9"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Morgan%20Freeman/backdrop.webp"
-      },
-      {
-        "id": "folder-4937964a",
-        "title": "Robert Downey Jr.",
-        "sources": [
-          {
-            "type": "all",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.nobnobz.actor-robert-downey-jr-ipilztlpuf"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Robert%20Downey%20Jr./logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Robert%20Downey%20Jr./cover.webp",
-        "catalogSources": [
-          {
-            "type": "all",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.nobnobz.actor-robert-downey-jr-ipilztlpuf"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Robert%20Downey%20Jr./backdrop.webp"
-      },
-      {
-        "id": "folder-dc9115b4",
-        "title": "Daniel Day-Lewis",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.116366"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Daniel%20Day-Lewis/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Daniel%20Day-Lewis/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.116366"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Daniel%20Day-Lewis/backdrop.webp"
-      },
-      {
-        "id": "folder-595d9dc3",
-        "title": "Robert De Niro",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.57176"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Robert%20De%20Niro/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Robert%20De%20Niro/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.57176"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Robert%20De%20Niro/backdrop.webp"
-      },
-      {
-        "id": "folder-51f990eb",
-        "title": "Cate Blanchett",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.120264"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Cate%20Blanchett/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Cate%20Blanchett/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.120264"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Cate%20Blanchett/backdrop.webp"
-      },
-      {
-        "id": "folder-5dcc3e3d",
-        "title": "Cillian Murphy",
-        "sources": [
-          {
-            "type": "all",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.53140"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Cillian%20Murphy/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Cillian%20Murphy/cover.webp",
-        "catalogSources": [
-          {
-            "type": "all",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.53140"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Cillian%20Murphy/backdrop.webp"
-      },
-      {
-        "id": "folder-aacc93cd",
-        "title": "Natalie Portman",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.100770"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Natalie%20Portman/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Natalie%20Portman/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.100770"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Natalie%20Portman/backdrop.webp"
-      },
-      {
-        "id": "folder-87aed621",
-        "title": "Brad Pitt",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.159009"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Brad%20Pitt/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Brad%20Pitt/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.159009"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Brad%20Pitt/backdrop.webp"
-      },
-      {
-        "id": "folder-650674bb",
-        "title": "Tom Hanks",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.15173"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Tom%20Hanks/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Tom%20Hanks/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.15173"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Tom%20Hanks/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Adam%20Sandler/backdrop.webp"
       },
       {
         "id": "folder-6113c0cf",
@@ -4645,139 +5644,85 @@ window.NUVIO_DATABASE = [
         "heroBackdropUrl": "https://kollection.tv/images/Actors/Anthony%20Hopkins/backdrop.webp"
       },
       {
-        "id": "folder-016a8e11",
-        "title": "Denzel Washington",
+        "id": "folder-d6b94629",
+        "title": "Ben Stiller",
         "sources": [
           {
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.nobnobz.actor-denzel-washington-xju1y5v0az"
+            "catalogId": "mdblist.159002"
           }
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Denzel%20Washington/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Denzel%20Washington/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Ben%20Stiller/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Ben%20Stiller/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.nobnobz.actor-denzel-washington-xju1y5v0az"
+            "catalogId": "mdblist.159002"
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Denzel%20Washington/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Ben%20Stiller/backdrop.webp"
       },
       {
-        "id": "folder-5f328239",
-        "title": "Meryl Streep",
+        "id": "folder-87aed621",
+        "title": "Brad Pitt",
         "sources": [
           {
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.nobnobz.actor-meryl-streep-iemrv3tagy"
+            "catalogId": "mdblist.159009"
           }
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Meryl%20Streep/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Meryl%20Streep/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Brad%20Pitt/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Brad%20Pitt/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.nobnobz.actor-meryl-streep-iemrv3tagy"
+            "catalogId": "mdblist.159009"
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Meryl%20Streep/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Brad%20Pitt/backdrop.webp"
       },
       {
-        "id": "folder-61eb8b1c",
-        "title": "Tom Cruise",
+        "id": "folder-51f990eb",
+        "title": "Cate Blanchett",
         "sources": [
           {
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.159263"
+            "catalogId": "mdblist.205497"
           }
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Tom%20Cruise/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Tom%20Cruise/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Cate%20Blanchett/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Cate%20Blanchett/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.159263"
+            "catalogId": "mdblist.205497"
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Tom%20Cruise/backdrop.webp"
-      },
-      {
-        "id": "folder-b5cd830e",
-        "title": "Scarlett Johansson",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.120679"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Scarlett%20Johansson/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Scarlett%20Johansson/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.120679"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Scarlett%20Johansson/backdrop.webp"
-      },
-      {
-        "id": "folder-c197ad79",
-        "title": "Liam Neeson",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.57219"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Liam%20Neeson/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Liam%20Neeson/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.57219"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Liam%20Neeson/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Cate%20Blanchett/backdrop.webp"
       },
       {
         "id": "folder-bd477e4c",
@@ -4807,301 +5752,31 @@ window.NUVIO_DATABASE = [
         "heroBackdropUrl": "https://kollection.tv/images/Actors/Christian%20Bale/backdrop.webp"
       },
       {
-        "id": "folder-29b6bff8",
-        "title": "Sydney Sweeney",
-        "sources": [
-          {
-            "type": "all",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.nobnobz.actor-sydney-sweeney-3zdzax5ny0"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Sydney%20Sweeney/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Sydney%20Sweeney/cover.webp",
-        "catalogSources": [
-          {
-            "type": "all",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.nobnobz.actor-sydney-sweeney-3zdzax5ny0"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Sydney%20Sweeney/backdrop.webp"
-      },
-      {
-        "id": "folder-61f0b7d0",
-        "title": "Dwayne Johnson",
+        "id": "folder-5dcc3e3d",
+        "title": "Cillian Murphy",
         "sources": [
           {
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.nobnobz.actor-dwayne-johnson-pln7vag1sz"
+            "catalogId": "mdblist.205494"
           }
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Dwayne%20Johnson/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Dwayne%20Johnson/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Cillian%20Murphy/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Cillian%20Murphy/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.nobnobz.actor-dwayne-johnson-pln7vag1sz"
+            "catalogId": "mdblist.205494"
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Dwayne%20Johnson/backdrop.webp"
-      },
-      {
-        "id": "folder-99f79b1b",
-        "title": "Jack Nicholson",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.57175"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Jack%20Nicholson/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Jack%20Nicholson/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.57175"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Jack%20Nicholson/backdrop.webp"
-      },
-      {
-        "id": "folder-199b6774",
-        "title": "Jenna Ortega",
-        "sources": [
-          {
-            "type": "all",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.nobnobz.actor-jenna-ortega-0wcv8pn3iq"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Jenna%20Ortega/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Jenna%20Ortega/cover.webp",
-        "catalogSources": [
-          {
-            "type": "all",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.nobnobz.actor-jenna-ortega-0wcv8pn3iq"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Jenna%20Ortega/backdrop.webp"
-      },
-      {
-        "id": "folder-b7b20d13",
-        "title": "Jim Carrey",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.nobnobz.actor-jim-carrey-1fhrrh8ere"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Jim%20Carrey/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Jim%20Carrey/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.nobnobz.actor-jim-carrey-1fhrrh8ere"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Jim%20Carrey/backdrop.webp"
-      },
-      {
-        "id": "folder-54e064f9",
-        "title": "Robin Williams",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.nobnobz.actor-robin-williams-3bawtwfjwi"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Robin%20Williams/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Robin%20Williams/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.nobnobz.actor-robin-williams-3bawtwfjwi"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Robin%20Williams/backdrop.webp"
-      },
-      {
-        "id": "folder-e81a2d69",
-        "title": "Adam Sandler",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.158994"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Adam%20Sandler/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Adam%20Sandler/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.158994"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Adam%20Sandler/backdrop.webp"
-      },
-      {
-        "id": "folder-57d61d4d",
-        "title": "Harrison Ford",
-        "sources": [
-          {
-            "type": "all",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.nobnobz.actor-harrison-ford-ej9u6jb6aa"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Harrison%20Ford/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Harrison%20Ford/cover.webp",
-        "catalogSources": [
-          {
-            "type": "all",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.nobnobz.actor-harrison-ford-ej9u6jb6aa"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Harrison%20Ford/backdrop.webp"
-      },
-      {
-        "id": "folder-143d00ec",
-        "title": "Jennifer Lawrence",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.159056"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Jennifer%20Lawrence/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Jennifer%20Lawrence/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.159056"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Jennifer%20Lawrence/backdrop.webp"
-      },
-      {
-        "id": "folder-1e9f37cb",
-        "title": "Nicolas Cage",
-        "sources": [
-          {
-            "type": "all",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.nobnobz.actor-nicolas-cage-kmd5lp4oqu"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Nicolas%20Cage/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Nicolas%20Cage/cover.webp",
-        "catalogSources": [
-          {
-            "type": "all",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.nobnobz.actor-nicolas-cage-kmd5lp4oqu"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Nicolas%20Cage/backdrop.webp"
-      },
-      {
-        "id": "folder-95a7efe9",
-        "title": "Florence Pugh",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.nobnobz.actor-florence-pugh-t50c8h9o4g"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Florence%20Pugh/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Florence%20Pugh/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.nobnobz.actor-florence-pugh-t50c8h9o4g"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Florence%20Pugh/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Cillian%20Murphy/backdrop.webp"
       },
       {
         "id": "folder-8041ee1e",
@@ -5131,6 +5806,411 @@ window.NUVIO_DATABASE = [
         "heroBackdropUrl": "https://kollection.tv/images/Actors/Daniel%20Craig/backdrop.webp"
       },
       {
+        "id": "folder-dc9115b4",
+        "title": "Daniel Day-Lewis",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.205473"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Daniel%20Day-Lewis/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Daniel%20Day-Lewis/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.205473"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Daniel%20Day-Lewis/backdrop.webp"
+      },
+      {
+        "id": "folder-016a8e11",
+        "title": "Denzel Washington",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.nobnobz.actor-denzel-washington-xju1y5v0az"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Denzel%20Washington/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Denzel%20Washington/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.nobnobz.actor-denzel-washington-xju1y5v0az"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Denzel%20Washington/backdrop.webp"
+      },
+      {
+        "id": "folder-61f0b7d0",
+        "title": "Dwayne Johnson",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.nobnobz.actor-dwayne-johnson-pln7vag1sz"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Dwayne%20Johnson/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Dwayne%20Johnson/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.nobnobz.actor-dwayne-johnson-pln7vag1sz"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Dwayne%20Johnson/backdrop.webp"
+      },
+      {
+        "id": "folder-95a7efe9",
+        "title": "Florence Pugh",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.nobnobz.actor-florence-pugh-t50c8h9o4g"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Florence%20Pugh/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Florence%20Pugh/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.nobnobz.actor-florence-pugh-t50c8h9o4g"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Florence%20Pugh/backdrop.webp"
+      },
+      {
+        "id": "folder-57d61d4d",
+        "title": "Harrison Ford",
+        "sources": [
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.nobnobz.actor-harrison-ford-ej9u6jb6aa"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Harrison%20Ford/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Harrison%20Ford/cover.webp",
+        "catalogSources": [
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.nobnobz.actor-harrison-ford-ej9u6jb6aa"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Harrison%20Ford/backdrop.webp"
+      },
+      {
+        "id": "folder-99f79b1b",
+        "title": "Jack Nicholson",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.205475"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Jack%20Nicholson/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Jack%20Nicholson/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.205475"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Jack%20Nicholson/backdrop.webp"
+      },
+      {
+        "id": "folder-2f392682",
+        "title": "Jake Gyllenhaal",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.159477"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Jake%20Gyllenhaal/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Jake%20Gyllenhaal/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.159477"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Jake%20Gyllenhaal/backdrop.webp"
+      },
+      {
+        "id": "folder-199b6774",
+        "title": "Jenna Ortega",
+        "sources": [
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.nobnobz.actor-jenna-ortega-0wcv8pn3iq"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Jenna%20Ortega/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Jenna%20Ortega/cover.webp",
+        "catalogSources": [
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.nobnobz.actor-jenna-ortega-0wcv8pn3iq"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Jenna%20Ortega/backdrop.webp"
+      },
+      {
+        "id": "folder-143d00ec",
+        "title": "Jennifer Lawrence",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.159056"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Jennifer%20Lawrence/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Jennifer%20Lawrence/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.159056"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Jennifer%20Lawrence/backdrop.webp"
+      },
+      {
+        "id": "folder-b7b20d13",
+        "title": "Jim Carrey",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.nobnobz.actor-jim-carrey-1fhrrh8ere"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Jim%20Carrey/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Jim%20Carrey/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.nobnobz.actor-jim-carrey-1fhrrh8ere"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Jim%20Carrey/backdrop.webp"
+      },
+      {
+        "id": "d5b1b282-b4b7-4e10-a3bd-93f14479e984",
+        "title": "Keanu Reeves",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.205500"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Keanu%20Reeves/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Keanu%20Reeves/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.205500"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Keanu%20Reeves/backdrop.webp"
+      },
+      {
+        "id": "folder-698f200a",
+        "title": "Leonardo DiCaprio",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.159219"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Leonardo%20DiCaprio/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Leonardo%20DiCaprio/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.159219"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Leonardo%20DiCaprio/backdrop.webp"
+      },
+      {
+        "id": "folder-c197ad79",
+        "title": "Liam Neeson",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.205498"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Liam%20Neeson/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Liam%20Neeson/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.205498"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Liam%20Neeson/backdrop.webp"
+      },
+      {
+        "id": "a0af08f2-fc36-4203-980b-719c8501c8c8",
+        "title": "Margot Robbie",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.nobnobz.actor-margot-robbie-u7b2hujgzk"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Margot%20Robbie/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Margot%20Robbie/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.nobnobz.actor-margot-robbie-u7b2hujgzk"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Margot%20Robbie/backdrop.webp"
+      },
+      {
+        "id": "folder-04ca2636",
+        "title": "Matt Damon",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.159226"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Matt%20Damon/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Matt%20Damon/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.159226"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Matt%20Damon/backdrop.webp"
+      },
+      {
         "id": "folder-4bc59ade",
         "title": "Matthew McConaughey",
         "sources": [
@@ -5158,31 +6238,112 @@ window.NUVIO_DATABASE = [
         "heroBackdropUrl": "https://kollection.tv/images/Actors/Matthew%20McConaughey/backdrop.webp"
       },
       {
-        "id": "folder-d6b94629",
-        "title": "Ben Stiller",
+        "id": "folder-5f328239",
+        "title": "Meryl Streep",
         "sources": [
           {
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.159002"
+            "catalogId": "mdblist.nobnobz.actor-meryl-streep-iemrv3tagy"
           }
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Actors/Ben%20Stiller/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Actors/Ben%20Stiller/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Meryl%20Streep/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Meryl%20Streep/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.159002"
+            "catalogId": "mdblist.nobnobz.actor-meryl-streep-iemrv3tagy"
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Actors/Ben%20Stiller/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Meryl%20Streep/backdrop.webp"
+      },
+      {
+        "id": "folder-9cdc32e1",
+        "title": "Morgan Freeman",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.nobnobz.actor-morgan-freeman-yt6gzriku9"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Morgan%20Freeman/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Morgan%20Freeman/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.nobnobz.actor-morgan-freeman-yt6gzriku9"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Morgan%20Freeman/backdrop.webp"
+      },
+      {
+        "id": "folder-aacc93cd",
+        "title": "Natalie Portman",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.205504"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Natalie%20Portman/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Natalie%20Portman/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.205504"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Natalie%20Portman/backdrop.webp"
+      },
+      {
+        "id": "folder-1e9f37cb",
+        "title": "Nicolas Cage",
+        "sources": [
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.nobnobz.actor-nicolas-cage-kmd5lp4oqu"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Nicolas%20Cage/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Nicolas%20Cage/cover.webp",
+        "catalogSources": [
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.nobnobz.actor-nicolas-cage-kmd5lp4oqu"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Nicolas%20Cage/backdrop.webp"
       },
       {
         "id": "folder-f3f66dc8",
@@ -5212,6 +6373,114 @@ window.NUVIO_DATABASE = [
         "heroBackdropUrl": "https://kollection.tv/images/Actors/Nicole%20Kidman/backdrop.webp"
       },
       {
+        "id": "folder-595d9dc3",
+        "title": "Robert De Niro",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.205491"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Robert%20De%20Niro/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Robert%20De%20Niro/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.205491"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Robert%20De%20Niro/backdrop.webp"
+      },
+      {
+        "id": "folder-4937964a",
+        "title": "Robert Downey Jr.",
+        "sources": [
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.nobnobz.actor-robert-downey-jr-ipilztlpuf"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Robert%20Downey%20Jr/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Robert%20Downey%20Jr/cover.webp",
+        "catalogSources": [
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.nobnobz.actor-robert-downey-jr-ipilztlpuf"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Robert%20Downey%20Jr/backdrop.webp"
+      },
+      {
+        "id": "folder-54e064f9",
+        "title": "Robin Williams",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.nobnobz.actor-robin-williams-3bawtwfjwi"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Robin%20Williams/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Robin%20Williams/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.nobnobz.actor-robin-williams-3bawtwfjwi"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Robin%20Williams/backdrop.webp"
+      },
+      {
+        "id": "da36623e-de51-4b28-a545-9791189b36e4",
+        "title": "Ryan Gosling",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.205469"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Ryan%20Gosling/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Ryan%20Gosling/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.205469"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Ryan%20Gosling/backdrop.webp"
+      },
+      {
         "id": "folder-b94a87e2",
         "title": "Ryan Reynolds",
         "sources": [
@@ -5237,10 +6506,172 @@ window.NUVIO_DATABASE = [
         ],
         "focusGifEnabled": false,
         "heroBackdropUrl": "https://kollection.tv/images/Actors/Ryan%20Reynolds/backdrop.webp"
+      },
+      {
+        "id": "folder-b5cd830e",
+        "title": "Scarlett Johansson",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.120679"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Scarlett%20Johansson/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Scarlett%20Johansson/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.120679"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Scarlett%20Johansson/backdrop.webp"
+      },
+      {
+        "id": "folder-29b6bff8",
+        "title": "Sydney Sweeney",
+        "sources": [
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.nobnobz.actor-sydney-sweeney-3zdzax5ny0"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Sydney%20Sweeney/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Sydney%20Sweeney/cover.webp",
+        "catalogSources": [
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.nobnobz.actor-sydney-sweeney-3zdzax5ny0"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Sydney%20Sweeney/backdrop.webp"
+      },
+      {
+        "id": "8d40b54d-9b5e-47d8-a5cc-46d6c26bb970",
+        "title": "Timothee Chalamet",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.205502"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Timothee%20Chalamet/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Timothee%20Chalamet/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.205502"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Timothee%20Chalamet/backdrop.webp"
+      },
+      {
+        "id": "folder-61eb8b1c",
+        "title": "Tom Cruise",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.159263"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Tom%20Cruise/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Tom%20Cruise/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.159263"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Tom%20Cruise/backdrop.webp"
+      },
+      {
+        "id": "folder-650674bb",
+        "title": "Tom Hanks",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.15173"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Tom%20Hanks/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Tom%20Hanks/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.15173"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Tom%20Hanks/backdrop.webp"
+      },
+      {
+        "id": "folder-c819a951",
+        "title": "Zendaya",
+        "sources": [
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.nobnobz.actor-zendaya-4q290mhw15"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Actors/Zendaya/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Actors/Zendaya/cover.webp",
+        "catalogSources": [
+          {
+            "type": "all",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.nobnobz.actor-zendaya-4q290mhw15"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Actors/Zendaya/backdrop.webp"
       }
     ],
     "pinToTop": true,
-    "viewMode": "FOLLOW_LAYOUT",
+    "viewMode": "TABBED_GRID",
     "showAllTab": false,
     "focusGlowEnabled": false
   },
@@ -5593,7 +7024,7 @@ window.NUVIO_DATABASE = [
       }
     ],
     "pinToTop": true,
-    "viewMode": "FOLLOW_LAYOUT",
+    "viewMode": "TABBED_GRID",
     "showAllTab": false,
     "focusGlowEnabled": false
   },
@@ -5629,6 +7060,33 @@ window.NUVIO_DATABASE = [
         "heroBackdropUrl": "https://kollection.tv/images/Directors/Christopher%20Nolan/backdrop.webp"
       },
       {
+        "id": "folder-8c39f57b",
+        "title": "David Fincher",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.159463"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Directors/David%20Fincher/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Directors/David%20Fincher/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.159463"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Directors/David%20Fincher/backdrop.webp"
+      },
+      {
         "id": "folder-48123f0e",
         "title": "Denis Villeneuve",
         "sources": [
@@ -5656,31 +7114,31 @@ window.NUVIO_DATABASE = [
         "heroBackdropUrl": "https://kollection.tv/images/Directors/Denis%20Villeneuve/backdrop.webp"
       },
       {
-        "id": "folder-bfbe1e61",
-        "title": "Steven Spielberg",
+        "id": "folder-04ddaf5b",
+        "title": "Guillermo del Toro",
         "sources": [
           {
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.159455"
+            "catalogId": "mdblist.159466"
           }
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Directors/Steven%20Spielberg/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Directors/Steven%20Spielberg/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Directors/Guillermo%20Del%20Toro/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Directors/Guillermo%20Del%20Toro/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.159455"
+            "catalogId": "mdblist.159466"
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Directors/Steven%20Spielberg/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Directors/Guillermo%20Del%20Toro/backdrop.webp"
       },
       {
         "id": "folder-b2fc478a",
@@ -5710,33 +7168,6 @@ window.NUVIO_DATABASE = [
         "heroBackdropUrl": "https://kollection.tv/images/Directors/James%20Cameron/backdrop.webp"
       },
       {
-        "id": "folder-97737281",
-        "title": "Ryan Coogler",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.180206"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Directors/Ryan%20Coogler/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Directors/Ryan%20Coogler/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.180206"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Directors/Ryan%20Coogler/backdrop.webp"
-      },
-      {
         "id": "folder-4a8b6b37",
         "title": "Martin Scorsese",
         "sources": [
@@ -5762,6 +7193,33 @@ window.NUVIO_DATABASE = [
         ],
         "focusGifEnabled": false,
         "heroBackdropUrl": "https://kollection.tv/images/Directors/Martin%20Scorsese/backdrop.webp"
+      },
+      {
+        "id": "folder-eb4d297f",
+        "title": "Paul Thomas Anderson",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.159464"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Directors/Paul%20Thomas%20Anderson/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Directors/Paul%20Thomas%20Anderson/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.159464"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Directors/Paul%20Thomas%20Anderson/backdrop.webp"
       },
       {
         "id": "folder-98f0447b",
@@ -5818,31 +7276,58 @@ window.NUVIO_DATABASE = [
         "heroBackdropUrl": "https://kollection.tv/images/Directors/Ridley%20Scott/backdrop.webp"
       },
       {
-        "id": "folder-eb4d297f",
-        "title": "Paul Thomas Anderson",
+        "id": "folder-97737281",
+        "title": "Ryan Coogler",
         "sources": [
           {
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.159464"
+            "catalogId": "mdblist.180206"
           }
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Directors/Paul%20Thomas%20Anderson/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Directors/Paul%20Thomas%20Anderson/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Directors/Ryan%20Coogler/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Directors/Ryan%20Coogler/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.159464"
+            "catalogId": "mdblist.180206"
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Directors/Paul%20Thomas%20Anderson/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Directors/Ryan%20Coogler/backdrop.webp"
+      },
+      {
+        "id": "folder-bfbe1e61",
+        "title": "Steven Spielberg",
+        "sources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "provider": "addon",
+            "catalogId": "mdblist.159455"
+          }
+        ],
+        "hideTitle": true,
+        "tileShape": "POSTER",
+        "titleLogoUrl": "https://kollection.tv/images/Directors/Steven%20Spielberg/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Directors/Steven%20Spielberg/cover.webp",
+        "catalogSources": [
+          {
+            "type": "movie",
+            "genre": "None",
+            "addonId": "aio-metadata",
+            "catalogId": "mdblist.159455"
+          }
+        ],
+        "focusGifEnabled": false,
+        "heroBackdropUrl": "https://kollection.tv/images/Directors/Steven%20Spielberg/backdrop.webp"
       },
       {
         "id": "folder-26abfb9e",
@@ -5870,69 +7355,15 @@ window.NUVIO_DATABASE = [
         ],
         "focusGifEnabled": false,
         "heroBackdropUrl": "https://kollection.tv/images/Directors/Wes%20Anderson/backdrop.webp"
-      },
-      {
-        "id": "folder-04ddaf5b",
-        "title": "Guillermo del Toro",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.159466"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Directors/Guillermo%20del%20Toro/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Directors/Guillermo%20del%20Toro/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.159466"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Directors/Guillermo%20del%20Toro/backdrop.webp"
-      },
-      {
-        "id": "folder-8c39f57b",
-        "title": "David Fincher",
-        "sources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "provider": "addon",
-            "catalogId": "mdblist.159463"
-          }
-        ],
-        "hideTitle": true,
-        "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/Directors/David%20Fincher/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Directors/David%20Fincher/cover.webp",
-        "catalogSources": [
-          {
-            "type": "movie",
-            "genre": "None",
-            "addonId": "aio-metadata",
-            "catalogId": "mdblist.159463"
-          }
-        ],
-        "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Directors/David%20Fincher/backdrop.webp"
       }
     ],
     "pinToTop": true,
-    "viewMode": "FOLLOW_LAYOUT",
+    "viewMode": "TABBED_GRID",
     "showAllTab": false,
     "focusGlowEnabled": false
   },
   {
-    "id": "collection-47e99b69",
+    "id": "collection-47e99b69-community",
     "title": "World",
     "folders": [
       {
@@ -5984,8 +7415,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "",
-        "coverImageUrl": "https://kollection.tv/images/World/Argentina/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/World/Argentina/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/Argentina/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6025,7 +7456,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": ""
+        "heroBackdropUrl": "https://kollection.tv/images/World/Argentina/backdrop.webp"
       },
       {
         "id": "folder-b07c655c",
@@ -6076,8 +7507,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "",
-        "coverImageUrl": "https://kollection.tv/images/World/Brazil/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/World/Brazil/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/Brazil/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6117,7 +7548,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": ""
+        "heroBackdropUrl": "https://kollection.tv/images/World/Brazil/backdrop.webp"
       },
       {
         "id": "folder-a9ee6fff",
@@ -6168,8 +7599,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "",
-        "coverImageUrl": "https://kollection.tv/images/World/China/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/World/China/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/China/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6209,7 +7640,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": ""
+        "heroBackdropUrl": "https://kollection.tv/images/World/China/backdrop.webp"
       },
       {
         "id": "folder-eca09e41",
@@ -6260,8 +7691,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "",
-        "coverImageUrl": "https://kollection.tv/images/World/France/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/World/France/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/France/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6301,7 +7732,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": ""
+        "heroBackdropUrl": "https://kollection.tv/images/World/France/backdrop.webp"
       },
       {
         "id": "folder-a366a04f",
@@ -6352,8 +7783,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "",
-        "coverImageUrl": "https://kollection.tv/images/World/Germany/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/World/Germany/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/Germany/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6393,7 +7824,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": ""
+        "heroBackdropUrl": "https://kollection.tv/images/World/Germany/backdrop.webp"
       },
       {
         "id": "folder-2f28cc7e",
@@ -6444,8 +7875,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "",
-        "coverImageUrl": "https://kollection.tv/images/World/India/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/World/India/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/India/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6485,7 +7916,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": ""
+        "heroBackdropUrl": "https://kollection.tv/images/World/India/backdrop.webp"
       },
       {
         "id": "folder-5bdbcb36",
@@ -6536,8 +7967,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "",
-        "coverImageUrl": "https://kollection.tv/images/World/Italy/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/World/Italy/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/Italy/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6577,7 +8008,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": ""
+        "heroBackdropUrl": "https://kollection.tv/images/World/Italy/backdrop.webp"
       },
       {
         "id": "folder-5d2103d7",
@@ -6628,8 +8059,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "",
-        "coverImageUrl": "https://kollection.tv/images/World/Japan/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/World/Japan/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/Japan/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6669,7 +8100,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": ""
+        "heroBackdropUrl": "https://kollection.tv/images/World/Japan/backdrop.webp"
       },
       {
         "id": "folder-c34d75ca",
@@ -6720,8 +8151,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "",
-        "coverImageUrl": "https://kollection.tv/images/World/Mexico/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/World/Mexico/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/Mexico/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6761,7 +8192,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": ""
+        "heroBackdropUrl": "https://kollection.tv/images/World/Mexico/backdrop.webp"
       },
       {
         "id": "folder-a1807bbb",
@@ -6812,8 +8243,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "",
-        "coverImageUrl": "https://kollection.tv/images/World/Nordic/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/World/Nordic/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/Nordic/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6853,7 +8284,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": ""
+        "heroBackdropUrl": "https://kollection.tv/images/World/Nordic/backdrop.webp"
       },
       {
         "id": "folder-c1a6f102",
@@ -6904,8 +8335,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "",
-        "coverImageUrl": "https://kollection.tv/images/World/Russia/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/World/Russia/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/Russia/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -6945,7 +8376,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": ""
+        "heroBackdropUrl": "https://kollection.tv/images/World/Russia/backdrop.webp"
       },
       {
         "id": "folder-6d771722",
@@ -7010,8 +8441,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "",
-        "coverImageUrl": "https://kollection.tv/images/World/South%20Korea/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/World/South%20Korea/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/South%20Korea/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -7063,7 +8494,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": ""
+        "heroBackdropUrl": "https://kollection.tv/images/World/South%20Korea/backdrop.webp"
       },
       {
         "id": "folder-38ad58e2",
@@ -7114,8 +8545,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "",
-        "coverImageUrl": "https://kollection.tv/images/World/Spain/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/World/Spain/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/Spain/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -7155,7 +8586,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": ""
+        "heroBackdropUrl": "https://kollection.tv/images/World/Spain/backdrop.webp"
       },
       {
         "id": "folder-76e97b6d",
@@ -7206,8 +8637,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "",
-        "coverImageUrl": "https://kollection.tv/images/World/T%C3%BCrkiye/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/World/T%C3%BCrkiye/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/T%C3%BCrkiye/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -7247,7 +8678,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": ""
+        "heroBackdropUrl": "https://kollection.tv/images/World/T%C3%BCrkiye/backdrop.webp"
       },
       {
         "id": "folder-f84c1325",
@@ -7326,8 +8757,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "",
-        "coverImageUrl": "https://kollection.tv/images/World/United%20Kingdom/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/World/United%20Kingdom/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/United%20Kingdom/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -7391,7 +8822,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": ""
+        "heroBackdropUrl": "https://kollection.tv/images/World/United%20Kingdom/backdrop.webp"
       },
       {
         "id": "folder-ee98388c",
@@ -7442,8 +8873,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "POSTER",
-        "titleLogoUrl": "https://kollection.tv/images/World/USA/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/World/USA/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/International%20Cinema/USA/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/International%20Cinema/USA/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -7483,11 +8914,11 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/World/USA/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/International%20Cinema/USA/backdrop.webp"
       }
     ],
     "pinToTop": true,
-    "viewMode": "FOLLOW_LAYOUT",
+    "viewMode": "TABBED_GRID",
     "showAllTab": false,
     "focusGlowEnabled": false
   },
@@ -7509,8 +8940,8 @@ window.NUVIO_DATABASE = [
         ],
         "hideTitle": true,
         "tileShape": "LANDSCAPE",
-        "titleLogoUrl": "https://kollection.tv/images/Based%20On/True%20Stories/logo.webp",
-        "coverImageUrl": "https://kollection.tv/images/Based%20On/True%20Stories/cover.webp",
+        "titleLogoUrl": "https://kollection.tv/images/Based%20On/True%20Events/logo.webp",
+        "coverImageUrl": "https://kollection.tv/images/Based%20On/True%20Events/cover.webp",
         "catalogSources": [
           {
             "type": "movie",
@@ -7520,7 +8951,7 @@ window.NUVIO_DATABASE = [
           }
         ],
         "focusGifEnabled": false,
-        "heroBackdropUrl": "https://kollection.tv/images/Based%20On/True%20Stories/backdrop.webp"
+        "heroBackdropUrl": "https://kollection.tv/images/Based%20On/True%20Events/backdrop.webp"
       },
       {
         "id": "folder-77392d45",
@@ -7531,7 +8962,7 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.28685"
+            "catalogId": "mdblist.208156"
           },
           {
             "type": "series",
@@ -7550,7 +8981,7 @@ window.NUVIO_DATABASE = [
             "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.28685"
+            "catalogId": "mdblist.208156"
           },
           {
             "type": "series",
@@ -7567,11 +8998,11 @@ window.NUVIO_DATABASE = [
         "title": "Video Games",
         "sources": [
           {
-            "type": "all",
+            "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mdblist.153099"
+            "catalogId": "letterboxd.aQmnG"
           }
         ],
         "hideTitle": true,
@@ -7580,10 +9011,10 @@ window.NUVIO_DATABASE = [
         "coverImageUrl": "https://kollection.tv/images/Based%20On/Video%20Games/cover.webp",
         "catalogSources": [
           {
-            "type": "all",
+            "type": "movie",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mdblist.153099"
+            "catalogId": "letterboxd.aQmnG"
           }
         ],
         "focusGifEnabled": false,
@@ -7658,7 +9089,7 @@ window.NUVIO_DATABASE = [
       }
     ],
     "pinToTop": true,
-    "viewMode": "FOLLOW_LAYOUT",
+    "viewMode": "TABBED_GRID",
     "showAllTab": false,
     "focusGlowEnabled": false
   },
@@ -7829,7 +9260,7 @@ window.NUVIO_DATABASE = [
       }
     ],
     "pinToTop": true,
-    "viewMode": "FOLLOW_LAYOUT",
+    "viewMode": "TABBED_GRID",
     "showAllTab": false,
     "focusGlowEnabled": false
   },
@@ -7846,7 +9277,7 @@ window.NUVIO_DATABASE = [
             "genre": "None",
             "addonId": "aio-metadata",
             "provider": "addon",
-            "catalogId": "mal.most_popular_anime"
+            "catalogId": "mdblist.206618"
           },
           {
             "type": "movie",
@@ -7865,7 +9296,7 @@ window.NUVIO_DATABASE = [
             "type": "series",
             "genre": "None",
             "addonId": "aio-metadata",
-            "catalogId": "mal.most_popular_anime"
+            "catalogId": "mdblist.206618"
           },
           {
             "type": "movie",
@@ -8306,7 +9737,7 @@ window.NUVIO_DATABASE = [
       }
     ],
     "pinToTop": true,
-    "viewMode": "FOLLOW_LAYOUT",
+    "viewMode": "TABBED_GRID",
     "showAllTab": false,
     "focusGlowEnabled": false
   }
