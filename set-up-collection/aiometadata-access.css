@@ -1,0 +1,16 @@
+.aio-access { margin-top: 20px; text-align: left; min-width: 0; }
+.aio-access h3 { margin: 0 0 8px; font-size: 1rem; }
+.aio-access p, .aio-access-note { color: #aeb7c8; font-size: .85rem; line-height: 1.55; }
+.aio-access-config { display: grid; gap: 8px; margin: 12px 0; padding: 16px; border: 1px solid rgba(255,255,255,.13); border-radius: 12px; background: rgba(255,255,255,.025); min-width: 0; }
+.aio-access-host { color: #aeb7c8; font-size: .8rem; overflow-wrap: anywhere; }
+.aio-access-label { margin-top: 4px; font-size: .75rem; font-weight: 700; }
+.aio-access-config code { display: block; font-size: .86rem; overflow-wrap: anywhere; user-select: text; -webkit-user-select: text; }
+.aio-access-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.aio-access-actions button, .aio-access-actions a { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 9px 13px; border: 1px solid #e8ebf1; border-radius: 10px; background: #f3f5f9; color: #171b24; font: inherit; font-size: .8rem; font-weight: 650; text-decoration: none; cursor: pointer; }
+.aio-access-actions :is(button,a):focus-visible { outline: 2px solid #a5b4fc; outline-offset: 3px; }
+.aio-access-status { font-size: .85rem; color: #cbd5e1; }
+.aio-access-details { margin-top: 14px; }
+.aio-access-details > summary { cursor: pointer; font-size: .85rem; font-weight: 650; padding: 8px 0; }
+.aio-password-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+.aio-password-fields .field { min-width: 0; }
+@media (max-width: 540px) { .aio-password-fields { grid-template-columns: 1fr; gap: 0; } }

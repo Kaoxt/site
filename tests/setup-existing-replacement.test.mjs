@@ -39,7 +39,7 @@ test('Update Existing targets the profile linked to the selected saved setup', (
 test('new runtime categories are selected automatically during Update Existing', () => {
   assert.match(savedSetupSource, /knownCollectionGroupIds/);
   assert.match(savedSetupSource, /autoSelectNewCollectionGroups: updateExistingSetup/);
-  assert.match(savedSetupSource, /version: 6/);
+  assert.match(savedSetupSource, /version: 7/);
   assert.match(setupSource, /LEGACY_KNOWN_COLLECTION_GROUP_IDS/);
   assert.match(setupSource, /if \(key && !known\.has\(key\)\) selected\.add\(key\)/);
 });

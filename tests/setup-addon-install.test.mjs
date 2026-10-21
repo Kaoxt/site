@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import vm from 'node:vm';
 
+const accessSource = await readFile(new URL('../set-up-collection/aiometadata-access.js', import.meta.url), 'utf8');
 const source = await readFile(new URL('../set-up-collection/set-up-collection.js', import.meta.url), 'utf8');
 const section = (start, end) => source.slice(source.indexOf(start), source.indexOf(end));
 const copy = value => JSON.parse(JSON.stringify(value));
@@ -161,9 +162,13 @@ function provisionHarness(manifest) {
     normalizeAioCatalogType: x => x, aioCatalogRouteKey: (id, type) => `${id}|${type}`,
     chooseAiHost: async () => 'https://metadata.example/',
     chunkAioCatalogs: catalogs => [{ host: 'https://metadata.example/', catalogs }],
-    prepareAiConfig: (base, catalogs) => ({ catalogs }), saveAioConfig: async () => ({ installUrl: required[0].url }),
+    prepareAiConfig: (base, catalogs) => ({ catalogs }), saveAioConfig: async () => ({ userUUID: '12d56b78-1234-4123-a123-123456789abc', installUrl: required[0].url }),
     fetchAddonManifest: async () => { if (manifest instanceof Error) throw manifest; return manifest; },
   });
+  context.window = {};
+  context.URL = URL;
+  context.document = { addEventListener() {} };
+  vm.runInContext(accessSource, context);
   vm.runInContext(section('  async function provisionAiMetadata()', '  function collectionAddonIds('), context);
   return { state, run: () => vm.runInContext('provisionAiMetadata()', context) };
 }

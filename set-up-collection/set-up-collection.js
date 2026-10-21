@@ -63,6 +63,8 @@
     aiChunks: [],
     aiExportConfigs: [],
     aiInstalls: [],
+    aiConfigPassword: '',
+    aiConfigPasswordConfirm: '',
     betterPostersEnabled: false,
     betterPostersSettings: null,
 
@@ -291,6 +293,8 @@
       }
       delete copy.aioRoutingVersion;
       delete copy.posterBridgeInstalls;
+      delete copy.aiConfigPassword;
+      delete copy.aiConfigPasswordConfirm;
       Object.assign(state, copy);
       return true;
     } catch {
@@ -525,12 +529,6 @@
   }
 
   function jsonClone(v) { return JSON.parse(JSON.stringify(v)); }
-
-  function randomPassword() {
-    const bytes = new Uint8Array(24);
-    crypto.getRandomValues(bytes);
-    return Array.from(bytes, b => b.toString(36).padStart(2, '0')).join('').slice(0, 32);
-  }
 
   function downloadJson(filename, data) {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -1335,17 +1333,23 @@
     getCatalogModeOnly: currentAiCatalogModeOnly,
     getStoredExports: getStoredAioExports,
     downloadCurrent: downloadCurrentAioExports,
+    getInstalledConfigurations: () => state.installCompleted
+      ? window.KollectionAioAccess.normalize(state.aiInstalls) : null,
   });
 
   async function saveAioConfig(host, config) {
     const base = normalizeHost(host);
+    const password = state.aiConfigPassword;
+    if (!password || password.length < 6 || password !== state.aiConfigPasswordConfirm) {
+      throw new Error('Choose and confirm an AIOMetadata password of at least 6 characters in Step 3 before installing.');
+    }
     let lastErr = null;
     for (let attempt = 0; attempt < 4; attempt += 1) {
       try {
         const res = await fetch(`${base}api/config/save`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ config, password: randomPassword() }),
+          body: JSON.stringify({ config, password }),
         });
         const body = await readResponse(res);
         if (res.ok) return body;
@@ -1429,6 +1433,9 @@
       const installUrl = normalizeUrl(saveData?.installUrl || (uuid ? `${normalizeHost(chunk.host)}stremio/${uuid}/manifest.json` : ''));
       if (!installUrl) throw new Error('AIOMetadata did not return an install URL.');
 
+      const access = window.KollectionAioAccess.normalize([{ host: chunk.host, uuid, url: installUrl, userChosenPassword: true }])[0];
+      if (!access) throw new Error('AIOMetadata did not return a valid configuration UUID. Your Nuvio collection has not been changed.');
+
       const manifest = await fetchAddonManifest(installUrl);
       if (!manifest?.id || !Array.isArray(manifest.catalogs) || !manifest.catalogs.length) {
         throw new Error('AIOMetadata was configured but its install manifest has no usable catalogs. Your Nuvio collection has not been changed. Please retry.');
@@ -1452,6 +1459,7 @@
       }).filter(catalog => catalog.id);
 
       installs.push({
+        ...access,
         url: installUrl,
         name: manifestName,
         addonId: realAddonId,
@@ -2673,6 +2681,12 @@
           <input id="aiSelfHostUrl" type="url" inputmode="url" value="${esc(state.aiSelfHostUrl || (selfHostSelected ? currentHost : ''))}" placeholder="https://your-aiometadata.example.com/" autocomplete="url">
           <small>Paste the base URL for your AIOMetadata instance. The Kollection will use this host when creating the configuration.</small>
         </div>
+        <div class="aio-password-fields">
+          <div class="field"><label for="aiConfigPassword">AIOMetadata password</label><input id="aiConfigPassword" type="password" autocomplete="new-password" minlength="6" value="${esc(state.aiConfigPassword)}" aria-describedby="aiConfigPasswordHelp" required></div>
+          <div class="field"><label for="aiConfigPasswordConfirm">Confirm AIOMetadata password</label><input id="aiConfigPasswordConfirm" type="password" autocomplete="new-password" minlength="6" value="${esc(state.aiConfigPasswordConfirm)}" required></div>
+        </div>
+        <p id="aiConfigPasswordHelp" class="aio-access-note">Choose at least 6 characters and keep this password. Use it with your UUID to edit AIOMetadata later. It is separate from your Nuvio password and is not saved by Kollection. The same password will protect each configuration created in this setup.</p>
+        <details class="aio-access-details" ${window.KollectionSavedSetup?.getId?.() ? '' : 'hidden'}><summary>Current AIOMetadata settings</summary><div id="aioCurrentAccess">${window.KollectionAioAccess.markup(window.KollectionSavedSetup?.getInstalledConfigurations?.(), { legacy: true })}</div></details>
         <div class="smart-overlay-option" style="margin-top:18px">
           <label class="toggle-row" for="aiCatalogModeOnly">
             <input id="aiCatalogModeOnly" type="checkbox" ${currentAiCatalogModeOnly() ? 'checked' : ''} aria-describedby="aiCatalogModeOnlyHelp">
@@ -2718,6 +2732,8 @@
         <div class="actions"><button class="ghost" id="backBtn">Back</button><button class="btn" id="nextBtn">Continue to Bingecat</button></div>
       </div>`);
     $('#backBtn').onclick = () => setStep(1);
+    $('#aiConfigPassword').oninput = e => { state.aiConfigPassword = e.target.value; };
+    $('#aiConfigPasswordConfirm').oninput = e => { state.aiConfigPasswordConfirm = e.target.value; };
     $('#builtInTab').onclick = () => { state.aiSetupMode = 'built-in'; state.backup = null; renderAi(); };
     $('#customTab').onclick = () => { state.aiSetupMode = 'custom'; state.backup = null; renderAi(); };
     $('#mdblist').oninput = e => { state.mdblistKey = e.target.value.trim(); state.backup = null; };
@@ -2804,6 +2820,10 @@
       };
     }
     $('#nextBtn').onclick = () => {
+      state.aiConfigPassword = $('#aiConfigPassword').value;
+      state.aiConfigPasswordConfirm = $('#aiConfigPasswordConfirm').value;
+      if (state.aiConfigPassword.length < 6) { $('#aiConfigPassword').focus(); return alert('Choose an AIOMetadata password with at least 6 characters.', 'error'); }
+      if (state.aiConfigPassword !== state.aiConfigPasswordConfirm) { $('#aiConfigPasswordConfirm').focus(); return alert('The AIOMetadata passwords do not match.', 'error'); }
       state.mdblistKey = $('#mdblist').value.trim();
       state.tmdbKey = $('#tmdb').value.trim();
       state.aiCatalogModeOnly = Boolean($('#aiCatalogModeOnly')?.checked);
@@ -3393,6 +3413,12 @@
           throw new Error('The setup save service is not ready. Refresh the page and try again.');
         }
         if (!state.installCompleted) {
+          if (!state.aiConfigPassword || state.aiConfigPassword.length < 6 || state.aiConfigPassword !== state.aiConfigPasswordConfirm) {
+            setStep(2);
+            alert('Choose and confirm your AIOMetadata password before installing. For privacy, it must be re-entered after a page reload.', 'info');
+            $('#aiConfigPassword')?.focus();
+            return;
+          }
           loading('Saving setup details…');
           await window.KollectionSavedSetup.prepareInstall({
             name: setupName,
@@ -3439,12 +3465,13 @@
           <div class="summary-item"><span class="icon">✓</span><div><b>Nuvio synced</b><span>${selectedPack.length} selected The Kollection sections were synced to profile ${state.profileId}.</span></div></div>
           <div class="summary-item"><span class="icon">✓</span><div><b>Saved automatically</b><span>${esc(savedSetupName)} is saved under Your setups and linked to ${esc(state.profileName || `profile ${state.profileId}`)}.</span></div></div>
         </div>
+        ${window.KollectionAioAccess.markup(state.aiInstalls)}
         <div class="actions"><button class="ghost" id="recordBtn">Download setup record</button><button class="ghost" id="doneNuvioExportBtn">Export Nuvio collections</button><button class="ghost" id="doneAioExportBtn">Export AIOMetadata</button><a class="btn" href="https://nuvio.tv/" target="_blank" rel="noopener">Open Nuvio</a></div>
       </div>`);
     $('#recordBtn').onclick = () => downloadJson(`the-kollection-setup-${new Date().toISOString().slice(0,10)}.json`, {
       completedAt: new Date().toISOString(),
       profile: { id: state.profileId, name: state.profileName },
-      aiometadata: { instances: state.aiInstalls.length, catalogs: state.aiNeededCatalogs.length, catalogModeOnly: currentAiCatalogModeOnly(), source: state.aiSetupMode, customFile: state.aiCustomFileName || null },
+      aiometadata: { configurations: window.KollectionAioAccess.normalize(state.aiInstalls), instances: state.aiInstalls.length, catalogs: state.aiNeededCatalogs.length, catalogModeOnly: currentAiCatalogModeOnly(), source: state.aiSetupMode, customFile: state.aiCustomFileName || null },
       bingecat: { skipped: state.bingecatSkipped, installed: bcNeeded, addonId: bcNeeded ? state.bingecatAddonId : null, nonSearchCatalogs: bcNeeded ? bingecatDisplayCatalogs().length : 0 },
       selection: selectedPack.map(group => ({ id: group.id, title: group.title, folders: (group.folders || []).length })),
       collections: { before: state.existingCollections.length, after: state.finalCollections?.length || 0 },
@@ -3515,6 +3542,8 @@
       aiNeededCatalogs: [],
       aiChunks: [],
       aiInstalls: [],
+      aiConfigPassword: '',
+      aiConfigPasswordConfirm: '',
       betterPostersEnabled: false,
       betterPostersSettings: null,
       collectionPack: null,

@@ -20,6 +20,7 @@
     aiSelfHostUrl: '',
     aiCustomFileName: '',
     aiometadataExports: [],
+    aiometadataConfigurations: [],
     betterPostersEnabled: false,
     betterPostersSettings: null,
     bingecatSkipped: false,
@@ -139,7 +140,8 @@
       ? generatedAioExports
       : (Array.isArray(snapshot.aiometadataExports) ? snapshot.aiometadataExports : []);
     return {
-      version: 6,
+      version: 7,
+      aiometadataConfigurations: getInstalledConfigurations(),
       aiSetupMode: snapshot.aiSetupMode === 'custom' ? 'custom' : 'built-in',
       aiCatalogModeOnly: snapshot.aiCatalogModeOnly == null ? null : storedBoolean(snapshot.aiCatalogModeOnly, false),
       aiHostPreference: snapshot.aiHostPreference || '',
@@ -166,6 +168,12 @@
         ? JSON.parse(JSON.stringify(snapshot.selectedCollectionFolderIds))
         : {},
     };
+  }
+
+  function getInstalledConfigurations() {
+    const installed = window.KollectionAioExport?.getInstalledConfigurations?.();
+    const entries = installed ?? snapshot.aiometadataConfigurations;
+    return window.KollectionAioAccess?.normalize(entries) || [];
   }
 
   async function prepareInstall(options = {}) {
@@ -531,6 +539,8 @@
       const savedCatalogMode = item?.config?.aiCatalogModeOnly ?? item?.config?.aiometadataExports?.[0]?.config?.catalogModeOnly;
       snapshot.aiCatalogModeOnly = savedCatalogMode == null ? null : storedBoolean(savedCatalogMode, false);
       collectionRestoreApplied = false;
+      const access = $('#aioCurrentAccess');
+      if (access && window.KollectionAioAccess) access.innerHTML = window.KollectionAioAccess.markup(getInstalledConfigurations(), { legacy: true });
 
       if (updateExistingSetup) {
         restoring = false;
@@ -611,6 +621,7 @@
   window.KollectionSavedSetup = Object.freeze({
     getId,
     getName,
+    getInstalledConfigurations,
     setName,
     rename,
     prepareInstall,
