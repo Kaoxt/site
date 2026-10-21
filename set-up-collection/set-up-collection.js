@@ -1176,6 +1176,9 @@
       const found = findConfig(ref);
       const baseId = found?.id || manifestBaseCatalogId(ref.manifestId) || ref.manifestId;
       const catalog = found ? jsonClone(found) : synthesizeCatalog(baseId, ref.type);
+      // Selected collection folders require these catalogs even when an imported
+      // configuration had them disabled. Leave unselected catalogs untouched.
+      catalog.enabled = true;
       selected.set(aioCatalogRouteKey(catalog.id, catalog.type), catalog);
     }
     return [...selected.values()];
@@ -1219,7 +1222,8 @@
 
   function prepareAiConfig(baseConfig, catalogs, index) {
     const config = jsonClone(state.aiCustomConfig || baseConfig || {});
-    config.catalogs = catalogs;
+    // Also cover required catalogs restored from a pre-fix wizard session.
+    config.catalogs = catalogs.map(catalog => ({ ...jsonClone(catalog), enabled: true }));
     if (state.betterPostersEnabled && window.KollectionBetterPostersSettings) {
       state.betterPostersSettings = window.KollectionBetterPostersSettings.normalize(
         state.betterPostersSettings || window.KollectionBetterPostersSettings.readLocal() || {}
@@ -1459,13 +1463,31 @@
     return ids;
   }
 
+  function collectionReferencesCatalog(collections, addonId, catalog, exact = false) {
+    return (collections || []).some(group => (group.folders || []).some(folder =>
+      [...(folder.sources || []), ...(folder.catalogSources || [])].some(source =>
+        source && (!source.provider || source.provider === 'addon') && source.addonId === addonId &&
+        (source.catalogId === catalog.id || !exact && !source.catalogId) &&
+        (source.type === catalog.type || !exact && !source.type)
+      )
+    ));
+  }
+
   async function prepareDirectAioInstallation(ai) {
     // Nuvio can find disjoint catalogs across add-ons sharing a manifest ID.
     // The same ID/type/catalog in two configurations cannot identify which
     // configuration's artwork/settings a folder should use.
     const required = new Map();
     const routeKey = (addonId, catalog) => JSON.stringify([addonId, catalog.type, catalog.id]);
-    const collision = catalog => new Error(`AIOMetadata catalog "${catalog.id}" (${catalog.type}) is also enabled in another configuration with the same add-on ID. Keep this catalog in only one enabled AIOMetadata configuration, or use a Nuvio profile with its own add-ons. Your collection has not been changed.`);
+    const collision = (catalog, addon, shared = []) => {
+      const location = addon
+        ? ` The conflicting add-on is "${addon.name || 'AIOMetadata'}" on ${new URL(normalizeUrl(addon.url)).host} in Nuvio add-on profile ${Number(state.addonProfileId || state.profileId)}.`
+        : ' The newly generated AIOMetadata configurations overlap.';
+      const profiles = shared.length
+        ? ` This add-on is still used by ${shared.map(profile => `Nuvio profile ${profile.id}${profile.name ? ` (${profile.name})` : ''}`).join(', ')}.`
+        : '';
+      return new Error(`AIOMetadata catalog "${catalog.id}" (${catalog.type}) is also enabled in another configuration with the same add-on ID.${location}${profiles} Keep this catalog in only one enabled AIOMetadata configuration, or use a Nuvio profile with its own add-ons. If you already disabled it, check that you edited the same AIOMetadata configuration installed on that Nuvio profile, then retry. Your collection and add-ons have not been changed.`);
+    };
     const nextUrls = new Set(ai.installs.map(item => addonUrlKey(item.url)));
     for (const install of ai.installs) {
       for (const catalog of install.catalogs || []) {
@@ -1483,21 +1505,27 @@
     );
     const sharedCollections = await Promise.all(sharedProfiles.map(profile => pullCollections(profile.id)));
     const protectedIds = collectionAddonIds(sharedCollections.flat());
-    const previous = setupUpdatesExisting
-      ? [...state.previousAiMetadataAddons, ...state.previousPosterBridgeAddons]
-      : [];
-    const previousUrls = new Set(previous.map(item => addonUrlKey(item.url)));
-    const retiredUrls = new Set();
     const current = await listAddons();
+    // Re-read candidates on every attempt: a previous attempt may have kept an
+    // installation that the user has since edited, or Nuvio may have renamed it.
+    const previousAioUrls = new Set((state.previousAiMetadataAddons || []).map(item => addonUrlKey(item.url)));
+    const previousBridgeUrls = new Set((state.previousPosterBridgeAddons || []).map(item => addonUrlKey(item.url)));
+    const nextIds = new Set(ai.installs.map(item => item.addonId));
+    const retiredAio = [];
+    const retiredBridges = [];
     for (const addon of current) {
       const key = addonUrlKey(addon.url);
       if (nextUrls.has(key)) continue;
-      const candidate = previousUrls.has(key);
+      let candidate = setupUpdatesExisting && (
+        previousAioUrls.has(key) || isKollectionAiMetadataAddon(addon) ? 'aio' :
+        previousBridgeUrls.has(key) || isKollectionPosterBridgeAddon(addon) ? 'bridge' : ''
+      );
+      const retire = () => (candidate === 'bridge' ? retiredBridges : retiredAio).push(addon);
       if (candidate && !protectedIds.size) {
-        retiredUrls.add(key);
+        retire();
         continue;
       }
-      if (!candidate && !storedBoolean(addon.enabled, true)) continue;
+      if (!storedBoolean(addon.enabled, true)) continue;
       let manifest;
       try {
         const url = new URL(normalizeUrl(addon.url));
@@ -1510,17 +1538,31 @@
         }
         continue;
       }
-      if (candidate && !protectedIds.has(manifest.id)) {
-        retiredUrls.add(key);
+      const catalogs = manifest.catalogs.filter(catalog => storedBoolean(catalog.enabled, true));
+      // Display names are editable. Recognize a renamed installation only when
+      // its identity matches and all browsable catalogs belong to the collection
+      // being replaced. Extra personal catalogs keep it out of automatic cleanup.
+      if (!candidate && setupUpdatesExisting && nextIds.has(manifest.id)) {
+        const browsable = catalogs.filter(catalog =>
+          !(catalog.extra || []).some(extra => extra.isRequired) && !(catalog.extraRequired || []).length
+        );
+        if (browsable.length && browsable.every(catalog =>
+          collectionReferencesCatalog(state.existingCollections, manifest.id, catalog, true)
+        )) candidate = 'aio';
+      }
+      const usedBy = sharedProfiles.filter((profile, index) => catalogs.some(catalog =>
+        collectionReferencesCatalog(sharedCollections[index], manifest.id, catalog)
+      ));
+      if (candidate && !usedBy.length) {
+        retire();
         continue;
       }
-      if (!storedBoolean(addon.enabled, true)) continue;
-      for (const catalog of manifest.catalogs) {
-        if (required.has(routeKey(manifest.id, catalog))) throw collision(catalog);
+      for (const catalog of catalogs) {
+        if (required.has(routeKey(manifest.id, catalog))) throw collision(catalog, addon, usedBy);
       }
     }
-    state.previousAiMetadataAddons = previous.filter(item => retiredUrls.has(addonUrlKey(item.url)) && isKollectionAiMetadataAddon(item));
-    state.previousPosterBridgeAddons = previous.filter(item => retiredUrls.has(addonUrlKey(item.url)) && isKollectionPosterBridgeAddon(item));
+    state.previousAiMetadataAddons = retiredAio;
+    state.previousPosterBridgeAddons = retiredBridges;
   }
 
   function repointAioSources(collections, routes, firstManifestId) {

@@ -11,12 +11,13 @@ const install = (id, catalogs) => ({ url: `https://aio.example/stremio/${id}/man
 const bridge = { url: 'https://kollection.tv/api/posters-addon/legacy/manifest.json', name: 'Kollection Poster Bridge', enabled: true };
 const folder = (addonId, catalogId, type = 'movie') => ({ id: 'folder', coverImageUrl: 'custom.webp', sources: [{ provider: 'addon', addonId, catalogId, type, genre: 'None' }], catalogSources: [{ addonId, catalogId, type, genre: 'None' }] });
 
-function guardHarness({ current = [], update = false, shared = [], manifests = {} } = {}) {
+function guardHarness({ current = [], update = false, shared = [], manifests = {}, existing = [] } = {}) {
   const state = {
     profileId: 3, addonProfileId: shared.length ? 1 : 3,
     profiles: [{ id: 3, usesPrimaryAddons: Boolean(shared.length) }, ...shared.map(item => ({ id: item.id, usesPrimaryAddons: true }))],
     previousAiMetadataAddons: update ? current.filter(item => item.name === 'AIOMetadata') : [],
     previousPosterBridgeAddons: update ? current.filter(item => item.name === 'Kollection Poster Bridge') : [],
+    existingCollections: existing,
   };
   const context = vm.createContext({
     state, setupUpdatesExisting: update, URL, normalizeUrl: value => value,
@@ -75,6 +76,91 @@ test('an overlapping AIOMetadata configuration used by a shared profile is kept 
     manifests: { [old.url]: { id: 'aio-metadata', catalogs: [catalog('list')] } },
   });
   await assert.rejects(h.run([install('new', [catalog('list')])]), /profile with its own add-ons/);
+});
+
+test('an update recognizes renamed metadata serving the replaced collection', async () => {
+  const old = { ...install('old', []), name: 'My Midnight metadata', enabled: true };
+  const manifests = { [old.url]: { id: 'aio-metadata', catalogs: [catalog('streaming.amp_movie'),
+    { ...catalog('search'), extra: [{ name: 'search', isRequired: true }] }] } };
+  const h = guardHarness({ current: [old], update: true, manifests,
+    existing: [{ folders: [folder('aio-metadata', 'streaming.amp_movie')] }] });
+  await h.run([install('new', [catalog('streaming.amp_movie')])]);
+  assert.deepEqual(copy(h.state.previousAiMetadataAddons), [old]);
+});
+
+test('renamed metadata with unrelated catalogs is preserved and identified in the conflict', async () => {
+  const old = { ...install('old-private-install-token', []), name: 'Personal metadata', enabled: true };
+  const h = guardHarness({ current: [old], update: true,
+    existing: [{ folders: [folder('aio-metadata', 'streaming.amp_movie')] }],
+    manifests: { [old.url]: { id: 'aio-metadata', catalogs: [catalog('streaming.amp_movie'), catalog('personal-list')] } },
+  });
+  await assert.rejects(h.run([install('new', [catalog('streaming.amp_movie')])]), error => {
+    assert.match(error.message, /Personal metadata/);
+    assert.match(error.message, /aio\.example/);
+    assert.match(error.message, /add-on profile 3/);
+    assert.doesNotMatch(error.message, /old-private-install-token/);
+    return true;
+  });
+  assert.equal(h.state.previousAiMetadataAddons.length, 0);
+});
+
+test('shared profiles using different catalogs do not falsely protect a retiring installation', async () => {
+  const old = { ...install('old', []), enabled: true };
+  const h = guardHarness({ current: [old], update: true,
+    shared: [{ id: 1, collections: [{ folders: [folder('aio-metadata', 'other-list')] }] }],
+    manifests: { [old.url]: { id: 'aio-metadata', catalogs: [catalog('streaming.amp_movie')] } },
+  });
+  await h.run([install('new', [catalog('streaming.amp_movie')])]);
+  assert.equal(h.state.previousAiMetadataAddons.length, 1);
+});
+
+test('incomplete collection sources cannot claim ownership of a renamed installation', async () => {
+  const old = { ...install('personal', []), name: 'Personal metadata', enabled: true };
+  const h = guardHarness({ current: [old], update: true,
+    existing: [{ folders: [{ sources: [{ addonId: 'aio-metadata' }] }] }],
+    manifests: { [old.url]: { id: 'aio-metadata', catalogs: [catalog('list')] } },
+  });
+  await assert.rejects(h.run([install('new', [catalog('list')])]), /Personal metadata/);
+  assert.equal(h.state.previousAiMetadataAddons.length, 0);
+});
+
+test('a shared profile still protects an installation when it uses another catalog from that installation', async () => {
+  const old = { ...install('old', []), enabled: true };
+  const h = guardHarness({ current: [old], update: true,
+    shared: [{ id: 1, collections: [{ folders: [folder('aio-metadata', 'shared-list')] }] }],
+    manifests: { [old.url]: { id: 'aio-metadata', catalogs: [catalog('list'), catalog('shared-list')] } },
+  });
+  await assert.rejects(h.run([install('new', [catalog('list')])]), /still used by Nuvio profile 1/);
+});
+
+test('disabled manifest catalogs do not collide, while hidden enabled catalogs still do', async () => {
+  const old = { ...install('personal', []), name: 'Personal', enabled: true };
+  const manifests = { [old.url]: { id: 'aio-metadata', catalogs: [{ ...catalog('list'), enabled: false }] } };
+  await guardHarness({ current: [old], manifests }).run([install('new', [catalog('list')])]);
+  manifests[old.url].catalogs[0] = { ...catalog('list'), showInHome: false };
+  await assert.rejects(guardHarness({ current: [old], manifests }).run([install('new', [catalog('list')])]), /also enabled/);
+});
+
+test('disabled previous installations do not require a live manifest or block shared-profile updates', async () => {
+  const old = { ...install('offline', []), enabled: 'false' };
+  const h = guardHarness({ current: [old], update: true,
+    shared: [{ id: 1, collections: [{ folders: [folder('aio-metadata', 'list')] }] }],
+  });
+  await h.run([install('new', [catalog('list')])]);
+  assert.equal(h.state.previousAiMetadataAddons.length, 0);
+});
+
+test('retrying a shared-profile update still retires an old installation after its catalogs change', async () => {
+  const old = { ...install('old', []), enabled: true };
+  const manifests = { [old.url]: { id: 'aio-metadata', catalogs: [catalog('old-list')] } };
+  const h = guardHarness({ current: [old], update: true, manifests,
+    shared: [{ id: 1, collections: [{ folders: [folder('aio-metadata', 'old-list')] }] }],
+  });
+  await h.run([install('new', [catalog('new-list')])]);
+  assert.equal(h.state.previousAiMetadataAddons.length, 0);
+  manifests[old.url].catalogs = [catalog('new-list')];
+  await h.run([install('new', [catalog('new-list')])]);
+  assert.equal(h.state.previousAiMetadataAddons.length, 1);
 });
 
 function flowHarness({ update = false, failConfirmation = false, posters = false } = {}) {
@@ -154,7 +240,7 @@ test('failed collection read-back retains legacy add-ons and does not report com
   assert.equal(h.state.installCompleted, false);
 });
 
-test('all 480 runtime catalogs route directly across split manifests with bare or suffixed IDs', async () => {
+test('all runtime catalogs route directly across split manifests with bare or suffixed IDs', async () => {
   const runtime = await readFile(new URL('../runtime/database.kaoxt.js', import.meta.url), 'utf8');
   const library = JSON.parse(await readFile(new URL('../runtime/kaoxt-aio-catalogs.json', import.meta.url), 'utf8'));
   for (const suffix of [false, true]) {
@@ -176,7 +262,7 @@ test('all 480 runtime catalogs route directly across split manifests with bare o
       "function isBingecatSource(s) { return String(s?.addonId || '').startsWith('com.aicat.'); }", context);
     context.library = library.catalogs || library;
     vm.runInContext('state.aiNeededCatalogs = filterAioCatalogs(library, collectAioCatalogRefs(window.NUVIO_DATABASE))', context);
-    assert.equal(state.aiNeededCatalogs.length, 480);
+    assert.equal(state.aiNeededCatalogs.length, 482);
     const ai = await vm.runInContext('provisionAiMetadata()', context);
     assert.equal(ai.installs.length, 2);
     context.ai = ai;
@@ -195,7 +281,7 @@ test('all 480 runtime catalogs route directly across split manifests with bare o
         assert.ok(owners.has(`${s.catalogId}|${s.type}`), `${s.catalogId}|${s.type}`);
       }
     }
-    assert.ok(aioRefs > 480);
+    assert.ok(aioRefs > state.aiNeededCatalogs.length);
     assert.doesNotMatch(JSON.stringify(context.window.NUVIO_DATABASE), /tv\.kollection\.posters\.|kp0_/);
   }
 });

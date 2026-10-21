@@ -68,6 +68,33 @@ test('Better Posters off clears inherited configuration without altering the sou
   assert.equal(base.posterRatingProvider, 'custom');
 });
 
+test('selected collection sources enable disabled imported catalogs without changing the import', () => {
+  const library = [
+    { id: 'streaming.nfx', type: 'movie', name: 'Netflix (Movies)', enabled: false, showInHome: false },
+    { id: 'streaming.nfx', type: 'series', enabled: false },
+    { id: 'personal-list', type: 'movie', enabled: false },
+  ];
+  const c = vm.createContext({ jsonClone: value => structuredClone(value), TextDecoder, Uint8Array, atob });
+  const start = source.indexOf('  function normalizeAioCatalogType(');
+  const end = source.indexOf('  function hostDef(', start);
+  vm.runInContext(source.slice(start, end), c);
+  c.library = library;
+  const result = vm.runInContext('filterAioCatalogs(library, [{manifestId:"streaming.nfx_movie",type:"movie"}])', c);
+  assert.deepEqual(JSON.parse(JSON.stringify(result)), [{ ...library[0], enabled: true }]);
+  assert.equal(library[0].enabled, false);
+  assert.equal(library[1].enabled, false);
+});
+
+test('provisioning also enables required catalogs restored from an older wizard session', () => {
+  const catalogs = [{ id: 'streaming.nfx', type: 'movie', enabled: false, showInHome: false }];
+  const c = vm.createContext({ state: { betterPostersEnabled: false }, jsonClone: value => structuredClone(value), window: {}, catalogs });
+  vm.runInContext(fn(source, 'prepareAiConfig', 'aioExportSlug'), c);
+  const config = vm.runInContext('prepareAiConfig({}, catalogs, 0)', c);
+  assert.equal(config.catalogs[0].enabled, true);
+  assert.equal(config.catalogs[0].showInHome, false);
+  assert.equal(catalogs[0].enabled, false);
+});
+
 test('a fresh setup replaces matching collection sources and removes deselected Kollection groups', () => {
   const c = vm.createContext({});
   vm.runInContext(fn(source, 'mergeKey', 'bingecatDisplayCatalogs'), c);
