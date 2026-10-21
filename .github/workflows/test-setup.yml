@@ -33,3 +33,5 @@ jobs:
           npx playwright install --with-deps chromium firefox webkit
       - name: Check poster selection on desktop and mobile
         run: node --test tests/browser/folder-selection.test.mjs
+      - name: Check catalog downloads on desktop and mobile
+        run: node --test tests/browser/catalog-export.test.mjs

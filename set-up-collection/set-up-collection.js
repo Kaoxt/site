@@ -1331,10 +1331,23 @@
     return true;
   }
 
+  function downloadCurrentAioCatalogs() {
+    try {
+      const catalogs = (state.aiChunks || []).flatMap(chunk => chunk.catalogs || []);
+      const payload = window.KollectionCatalogExport.buildPayload(catalogs);
+      downloadJson(`AIOMetadata-Catalogs-${aioExportSlug()}.json`, payload);
+      return true;
+    } catch (error) {
+      alert(error.message || 'Could not export AIOMetadata catalogs.', 'error');
+      return false;
+    }
+  }
+
   window.KollectionAioExport = Object.freeze({
     getCatalogModeOnly: currentAiCatalogModeOnly,
     getStoredExports: getStoredAioExports,
     downloadCurrent: downloadCurrentAioExports,
+    downloadCatalogs: downloadCurrentAioCatalogs,
   });
 
   async function saveAioConfig(host, config) {
@@ -3303,7 +3316,9 @@
           <div class="review-exports" role="group" aria-label="Download configuration">
             <button class="ghost" id="backupBtn" type="button">Download backup</button>
             <button class="ghost" id="aioExportBtn" type="button">Export AIOMetadata</button>
+            <button class="ghost" id="aioCatalogExportBtn" type="button">Export catalogs only</button>
           </div>
+          <p class="muted">To keep your existing AIOMetadata setup, choose <strong>Export catalogs only</strong>. In that configuration, open Catalogs → Import → Merge, then save. Your Posters Plus URL, search settings, and API keys stay in your existing configuration.</p>
           <div class="review-navigation">
             <button class="ghost" id="backBtn" type="button">Back</button>
             <button class="btn" id="nextBtn" type="button">Continue</button>
@@ -3313,6 +3328,7 @@
     $('#backBtn').onclick = () => setStep(4);
     $('#backupBtn').onclick = () => downloadJson(`nuvio-backup-profile-${state.profileId}-${new Date().toISOString().slice(0,10)}.json`, state.backup);
     $('#aioExportBtn').onclick = () => downloadCurrentAioExports();
+    $('#aioCatalogExportBtn').onclick = () => downloadCurrentAioCatalogs();
     if (setupQuery.get('exportAio') === '1') {
       setTimeout(() => {
         if (downloadCurrentAioExports()) {
@@ -3439,7 +3455,8 @@
           <div class="summary-item"><span class="icon">✓</span><div><b>Nuvio synced</b><span>${selectedPack.length} selected The Kollection sections were synced to profile ${state.profileId}.</span></div></div>
           <div class="summary-item"><span class="icon">✓</span><div><b>Saved automatically</b><span>${esc(savedSetupName)} is saved under Your setups and linked to ${esc(state.profileName || `profile ${state.profileId}`)}.</span></div></div>
         </div>
-        <div class="actions"><button class="ghost" id="recordBtn">Download setup record</button><button class="ghost" id="doneNuvioExportBtn">Export Nuvio collections</button><button class="ghost" id="doneAioExportBtn">Export AIOMetadata</button><a class="btn" href="https://nuvio.tv/" target="_blank" rel="noopener">Open Nuvio</a></div>
+        <div class="actions"><button class="ghost" id="recordBtn">Download setup record</button><button class="ghost" id="doneNuvioExportBtn">Export Nuvio collections</button><button class="ghost" id="doneAioExportBtn">Export AIOMetadata</button><button class="ghost" id="doneAioCatalogExportBtn">Export catalogs only</button><a class="btn" href="https://nuvio.tv/" target="_blank" rel="noopener">Open Nuvio</a></div>
+        <p class="muted">Import the catalogs-only file into your existing AIOMetadata configuration under Catalogs → Import → Merge, then save to keep using your Posters Plus URL and existing settings.</p>
       </div>`);
     $('#recordBtn').onclick = () => downloadJson(`the-kollection-setup-${new Date().toISOString().slice(0,10)}.json`, {
       completedAt: new Date().toISOString(),
@@ -3451,6 +3468,7 @@
     });
     $('#doneNuvioExportBtn').onclick = () => downloadCurrentNuvioCollections();
     $('#doneAioExportBtn').onclick = () => downloadCurrentAioExports();
+    $('#doneAioCatalogExportBtn').onclick = () => downloadCurrentAioCatalogs();
   }
 
   function syncSetupToolbarActions() {

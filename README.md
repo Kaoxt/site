@@ -96,3 +96,13 @@ node --test tests/bingecat*.test.mjs tests/saved-setup-capture.test.mjs tests/sa
 ```
 
 An actual Bingecat login/consent still requires a user account on a registered origin.
+
+## Export catalogs into an existing AIOMetadata configuration
+
+Choose **Export catalogs only** from **Account → Your setups**, or from the setup wizard's Review or Done step. This downloads one `AIOMetadata-Catalogs-<setup>.json` file containing the selected catalogs across all setup instances in AIOMetadata's version 1 catalog-share format.
+
+In the existing AIOMetadata configuration, use **Catalogs → Import → Merge**, select the file, and save. The file excludes global configuration settings such as the Posters Plus/custom poster URL, API keys, and search settings. It also omits the setup's per-catalog rating-poster flag, so matching catalogs keep their existing preference and new catalogs use the target configuration's poster provider. The full **Export AIOMetadata** option remains available separately.
+
+Exporting does not install an add-on, change Nuvio, or redirect existing collection sources to another AIOMetadata instance. Older built-in saved setups can reconstruct selected catalogs; older custom setups without an export snapshot require re-uploading the original custom file in Edit first.
+
+Run the export regression checks with `node --test tests/setup-catalog-export.test.mjs`.
