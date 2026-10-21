@@ -828,34 +828,73 @@
       profile_id: `eq.${state.addonProfileId || state.profileId}`,
       order: 'sort_order.asc,created_at.asc',
     });
-    const res = await fetch(`${CFG.nuvioApiBase}/rest/v1/addons?${params}`, { headers: authHeaders() });
+    const res = await fetch(`${CFG.nuvioApiBase}/rest/v1/addons?${params}`, { headers: authHeaders(), cache: 'no-store' });
     const data = await readResponse(res);
     if (!res.ok) throw new Error(`Could not read Nuvio addons (HTTP ${res.status}).`);
-    return Array.isArray(data) ? data : [];
+    if (!Array.isArray(data)) throw new Error('Nuvio returned an invalid add-on list. Please retry syncing.');
+    return data;
   }
 
-  async function addAddon(url, name) {
-    const normalized = normalizeUrl(url);
-    const current = await listAddons();
-    const same = current.find(a => normalizeUrl(a.url).replace(/\/+$/, '') === normalized.replace(/\/+$/, ''));
-    if (same) return same;
-    const owner = await getSyncOwner();
-    const nextSort = current.reduce((m, a) => Math.max(m, Number(a.sort_order) || 0), -1) + 1;
-    const res = await fetch(`${CFG.nuvioApiBase}/rest/v1/addons`, {
-      method: 'POST',
-      headers: { ...authHeaders(), Prefer: 'return=representation' },
-      body: JSON.stringify([{
-        user_id: owner,
-        profile_id: state.addonProfileId || state.profileId,
-        url: normalized,
-        name: name || '',
-        enabled: true,
-        sort_order: nextSort,
-      }]),
+  function addonUrlKey(url) {
+    const parsed = new URL(normalizeUrl(url));
+    parsed.pathname = parsed.pathname.replace(/\/+$/, '').replace(/\/manifest\.json$/i, '').replace(/\/+$/, '');
+    parsed.hash = '';
+    return parsed.href;
+  }
+
+  async function refreshAddonProfile() {
+    const profiles = await getProfiles();
+    const selected = profiles.find(profile => profile.id === Number(state.profileId));
+    if (!selected) throw new Error('The selected Nuvio profile is no longer available. Choose a profile again.');
+    const targetId = selected.usesPrimaryAddons ? 1 : selected.id;
+    if (targetId !== state.addonProfileId) state.backup = null;
+    state.profiles = profiles;
+    state.profileName = selected.name;
+    state.addonProfileId = targetId;
+  }
+
+  async function pushAddons(addons) {
+    // Use the same sync operation as Nuvio's apps, including linked-account
+    // ownership and sync notifications. Always include the current add-ons.
+    await rpc('sync_push_addons', {
+      p_profile_id: state.addonProfileId || state.profileId,
+      p_origin_client_id: getProfileSyncClientId(),
+      p_addons: addons.map(addon => ({
+        url: normalizeUrl(addon.url),
+        name: addon.name ?? null,
+        enabled: storedBoolean(addon.enabled, true),
+        sort_order: Number(addon.sort_order) || 0,
+      })),
     });
-    const data = await readResponse(res);
-    if (!res.ok) throw new Error(`Could not install ${name || 'addon'} in Nuvio (HTTP ${res.status}).`);
-    return Array.isArray(data) ? data[0] : data;
+  }
+
+  async function verifyInstalledAddons(required) {
+    const current = await listAddons();
+    const unavailable = required.filter(item => !current.some(addon =>
+      addonUrlKey(addon.url) === addonUrlKey(item.url) && storedBoolean(addon.enabled, true)
+    ));
+    if (unavailable.length) {
+      throw new Error(`Nuvio has not confirmed ${unavailable.map(item => item.name || 'a required add-on').join(', ')} as installed and enabled on add-on profile ${state.addonProfileId || state.profileId}. Setup is not complete. Please retry the installation.`);
+    }
+    state.addons = current;
+    return current;
+  }
+
+  async function installAddons(required) {
+    const current = await listAddons();
+    const merged = current.map(addon => ({ ...addon }));
+    let nextSort = current.reduce((m, addon) => Math.max(m, Number(addon.sort_order) || 0), -1) + 1;
+    for (const item of required) {
+      const same = merged.find(addon => addonUrlKey(addon.url) === addonUrlKey(item.url));
+      if (same) {
+        same.enabled = true;
+        if (!same.name) same.name = item.name || '';
+      } else {
+        merged.push({ url: normalizeUrl(item.url), name: item.name || '', enabled: true, sort_order: nextSort++ });
+      }
+    }
+    await pushAddons(merged);
+    await verifyInstalledAddons(required);
   }
 
   function isKollectionAiMetadataAddon(addon) {
@@ -869,30 +908,17 @@
   async function removeStaleAddons(previous, nextInstalls, label) {
     if (!setupUpdatesExisting || !previous.length) return 0;
     const nextUrls = new Set((nextInstalls || [])
-      .map(item => normalizeUrl(item?.url).replace(/\/+$/, ''))
+      .map(item => item?.url ? addonUrlKey(item.url) : '')
       .filter(Boolean));
     const stale = previous.filter(addon => {
-      const url = normalizeUrl(addon?.url).replace(/\/+$/, '');
+      const url = addon?.url ? addonUrlKey(addon.url) : '';
       return url && !nextUrls.has(url);
     });
     if (!stale.length) return 0;
 
-    const owner = await getSyncOwner();
-    const targetProfileId = state.addonProfileId || state.profileId;
-    for (const addon of stale) {
-      const params = new URLSearchParams({
-        user_id: `eq.${owner}`,
-        profile_id: `eq.${targetProfileId}`,
-      });
-      if (addon?.id != null && String(addon.id).trim()) params.set('id', `eq.${addon.id}`);
-      else params.set('url', `eq.${normalizeUrl(addon?.url)}`);
-
-      const response = await fetch(`${CFG.nuvioApiBase}/rest/v1/addons?${params}`, {
-        method: 'DELETE',
-        headers: { ...authHeaders(), Prefer: 'return=minimal' },
-      });
-      if (!response.ok) throw new Error(`Could not remove the previous ${label} add-on (HTTP ${response.status}).`);
-    }
+    const staleUrls = new Set(stale.map(addon => addonUrlKey(addon.url)));
+    const current = await listAddons();
+    await pushAddons(current.filter(addon => !staleUrls.has(addonUrlKey(addon.url))));
     return stale.length;
   }
 
@@ -1365,19 +1391,18 @@
       const installUrl = normalizeUrl(saveData?.installUrl || (uuid ? `${normalizeHost(chunk.host)}stremio/${uuid}/manifest.json` : ''));
       if (!installUrl) throw new Error('AIOMetadata did not return an install URL.');
 
-      let realAddonId = 'aio-metadata';
-      let manifestName = state.aiChunks.length > 1 ? `AIOMetadata (${i + 1})` : 'AIOMetadata';
-      let manifestCatalogs = [];
-      try {
-        const manifest = await fetchAddonManifest(installUrl);
-        if (manifest?.id) realAddonId = manifest.id;
-        if (manifest?.name) manifestName = manifest.name;
-        if (Array.isArray(manifest?.catalogs)) manifestCatalogs = manifest.catalogs;
-      } catch { /* shared aio-metadata id is the normal fallback */ }
+      const manifest = await fetchAddonManifest(installUrl);
+      if (!manifest?.id || !Array.isArray(manifest.catalogs) || !manifest.catalogs.length) {
+        throw new Error('AIOMetadata was configured but its install manifest has no usable catalogs. Your Nuvio collection has not been changed. Please retry.');
+      }
+      const realAddonId = manifest.id;
+      const manifestName = manifest.name || (state.aiChunks.length > 1 ? `AIOMetadata (${i + 1})` : 'AIOMetadata');
+      const manifestCatalogs = manifest.catalogs;
 
       if (i === 0) firstManifestId = realAddonId;
       const installedCatalogs = chunk.catalogs.map(catalog => {
         const matched = routeMatch(catalog, manifestCatalogs);
+        if (!matched) throw new Error(`AIOMetadata did not expose the required catalog "${catalog.name || catalog.id}". Your Nuvio collection has not been changed.`);
         const route = registerRoute(catalog, realAddonId, matched);
         return {
           id: route.catalogId,
@@ -1726,6 +1751,8 @@
     if (!await ensureSelectedProfileEligible()) {
       throw new Error('Clear the old collection from this Nuvio profile before installing The Kollection.');
     }
+    state.installCompleted = false;
+    await refreshAddonProfile();
     if (!state.backup || !state.collectionPack) await prepareReview();
     state.installStarted = true;
 
@@ -1739,17 +1766,15 @@
 
     const bcNeeded = shouldInstallBingecat(selectedCollectionPack());
     loading(bcNeeded ? 'Installing AIOMetadata and Bingecat in Nuvio…' : 'Installing AIOMetadata in Nuvio…');
-    for (let i = 0; i < ai.installs.length; i++) {
-      const item = ai.installs[i];
-      await addAddon(item.url, ai.installs.length > 1 ? `AIOMetadata (${i + 1})` : 'AIOMetadata');
-    }
-    for (const item of posterBridge.installs) {
-      await addAddon(item.url, item.name);
-    }
+    const requiredAddons = [
+      ...ai.installs.map((item, i) => ({ ...item, name: ai.installs.length > 1 ? `AIOMetadata (${i + 1})` : 'AIOMetadata' })),
+      ...posterBridge.installs,
+    ];
     const selectedPack = selectedCollectionPack();
     if (shouldInstallBingecat(selectedPack)) {
-      await addAddon(state.bingecatManifestUrl, state.bingecatManifest?.name || 'Bingecat');
+      requiredAddons.push({ url: state.bingecatManifestUrl, name: state.bingecatManifest?.name || 'Bingecat' });
     }
+    await installAddons(requiredAddons);
 
     const finalPack = jsonClone(selectedPack);
     repointAioSources(finalPack, posterBridge.routes, ai.firstManifestId);
@@ -1769,6 +1794,7 @@
       await removePreviousAiMetadataAddons(ai.installs);
       await removePreviousPosterBridgeAddons(posterBridge.installs);
     }
+    await verifyInstalledAddons(requiredAddons);
     state.installCompleted = true;
     window.KollectionCollectionEligibility?.invalidate?.(state.profileId);
   }

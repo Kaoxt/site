@@ -42,6 +42,7 @@ test('zero-install updates stop before any collection or add-on mutations', asyn
   const c = vm.createContext({
     state: { backup: {}, collectionPack: [], aiNeededCatalogs: [], previousAiMetadataAddons: [{ id: 'old' }] },
     ensureSelectedProfileEligible: async () => true,
+    refreshAddonProfile: async () => {},
     provisionAiMetadata: async () => ({ installs: [] }),
     provisionPosterBridges: async () => { mutations++; },
   });
