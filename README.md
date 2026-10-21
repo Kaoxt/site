@@ -87,7 +87,7 @@ Changes to the collection database itself should be made in this repository so K
 
 Step 4 supports the registered Bingecat public OAuth client using authorization code + PKCE. The builder stays open during popup sign-in, with a full-page redirect fallback for blocked popups and account creation. The root `bingecat-callback.html` must remain deployed; both the popup and setup callback URLs must be registered with Bingecat for the site origin.
 
-The connection reads profiles, catalog IDs, and recommendation status. OAuth tokens stay in browser storage and are excluded from saved setups; saved setups retain the selected manifest and catalog kind metadata. Manual manifest entry and skipping Bingecat remain available. Disconnect revokes the Bingecat app grant (across devices).
+The connection reads profiles, catalog IDs, and recommendation status. OAuth tokens stay in browser storage and are excluded from saved setups; saved setups retain the selected manifest and catalog kind metadata. Step 4 also offers per-kind movie/series switches and Select All/Clear All for the For You collection. Choices are scoped to the personal manifest and saved with the setup; they never change BingeCat account settings. Unavailable recommendations cannot be selected. Clearing every choice removes BingeCat collection sources and skips installing its add-on. Older setups retain their existing default recommendations until edited. Manual manifest entry and skipping Bingecat remain available. Disconnect revokes the Bingecat app grant (across devices).
 
 Run the focused connection and setup checks with:
 

@@ -24,6 +24,7 @@
     bingecatSkipped: false,
     bingecatManifestUrl: '',
     bingecatCatalogs: [],
+    bingecatSelection: null,
     selectedCollectionGroupIds: [],
     knownCollectionGroupIds: [],
     selectedCollectionFolderIds: {},
@@ -144,6 +145,8 @@
       bingecatSkipped: Boolean(snapshot.bingecatSkipped),
       bingecatManifestUrl: snapshot.bingecatManifestUrl || '',
       bingecatCatalogs: JSON.parse(JSON.stringify(snapshot.bingecatCatalogs || [])),
+      bingecatSelection: snapshot.bingecatSelection && Array.isArray(snapshot.bingecatSelection.keys)
+        ? JSON.parse(JSON.stringify(snapshot.bingecatSelection)) : null,
       selectedCollectionGroupIds: Array.isArray(snapshot.selectedCollectionGroupIds)
         ? snapshot.selectedCollectionGroupIds.slice()
         : [],

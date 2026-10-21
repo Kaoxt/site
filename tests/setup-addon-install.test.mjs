@@ -125,7 +125,7 @@ function installationHarness(failAt = '') {
     ensureSelectedProfileEligible: async () => true, refreshAddonProfile: async () => {},
     provisionAiMetadata: async () => ({ installs: [required[0]], firstManifestId: 'aio-metadata' }),
     provisionPosterBridges: async () => ({ installs: [required[1]], routes: {} }),
-    selectedCollectionPack: () => [{ id: 'collection' }], shouldInstallBingecat: () => false,
+    selectedCollectionPack: () => [{ id: 'collection' }], shouldInstallBingecat: () => false, activeBingecatSelection: () => null,
     installAddons: async () => { events.push('addons'); if (failAt === 'install') throw new Error('unconfirmed'); },
     repointAioSources: () => {}, rewriteBingecatInCollections: () => {}, stableCollectionJson: JSON.stringify,
     pushCollections: async () => events.push('collections'), pullCollections: async () => [{ id: 'collection' }],

@@ -90,3 +90,15 @@ test('saves Bingecat catalog kinds with the selected manifest and clears them wh
   assert.equal(h.requests[1].config.bingecatSkipped, true);
   assert.deepEqual(h.requests[1].config.bingecatCatalogs, []);
 });
+
+test('saved setup retains both a selected subset and an explicit empty Bingecat selection', async () => {
+  const url = 'https://bingecat.com/stremio/personal/manifest.json';
+  const bingecat = { bingecatManifestUrl: url, bingecatSkipped: false,
+    bingecatSelection: { manifestUrl: url, keys: ['ai:movie', 'latest:series'] } };
+  const h = harness(() => bingecat);
+  await h.api.prepareInstall(options);
+  bingecat.bingecatSelection.keys = [];
+  await h.api.saveApplied(options);
+  assert.deepEqual(h.requests[0].config.bingecatSelection, { manifestUrl: url, keys: ['ai:movie', 'latest:series'] });
+  assert.deepEqual(h.requests[1].config.bingecatSelection, { manifestUrl: url, keys: [] });
+});

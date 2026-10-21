@@ -3,6 +3,9 @@ import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import vm from 'node:vm';
 const source = await readFile(new URL('../set-up-collection/set-up-collection.js', import.meta.url), 'utf8');
+const selectionSource = await readFile(new URL('../set-up-collection/bingecat-selection.js', import.meta.url), 'utf8');
+const selectionWindow = {};
+vm.runInNewContext(selectionSource, { window: selectionWindow });
 const section = (start, end) => source.slice(source.indexOf(start), source.indexOf(end));
 const code = section('  function bingecatCatalogRank(', '  function mergeKey(');
 const isSource = section('  function isBingecatSource(', '  function collectionGroupKey(');
@@ -57,10 +60,10 @@ test('skip removes every Bingecat placeholder', () => {
 test('refreshing a saved manifest preserves kind metadata only for that same URL and known catalog IDs', async () => {
   const url = 'https://bingecat.com/stremio/personal/manifest.json';
   const state = { bingecatManifestUrl: url, bingecatCatalogs: structuredClone(catalogs) };
-  const context = vm.createContext({ state, normalizeUrl: x => x, persistWizardSession() {},
+  const context = vm.createContext({ state, window: selectionWindow, normalizeUrl: x => x, persistWizardSession() {},
     fetchAddonManifest: async () => ({ id: 'com.aicat.personal.nuvio', catalogs: catalogs.map(({ kind, ...rest }) => rest) }),
   });
-  vm.runInContext(section('  async function verifyBingecatManifest(', '  async function prepareReview('), context);
+  vm.runInContext(section('  function bingecatDisplayCatalogs()', '  async function prepareReview('), context);
   await vm.runInContext(`verifyBingecatManifest(${JSON.stringify(url)})`, context);
   assert.ok(state.bingecatCatalogs.every(c => c.kind));
   await vm.runInContext(`verifyBingecatManifest('https://bingecat.com/stremio/other/manifest.json')`, context);
@@ -98,7 +101,10 @@ function uiHarness({ saved = false, connected = false, pending = null } = {}) {
     set innerHTML(value) {
       for (const node of nodes.values()) node.isConnected = false;
       this.html = value;
-      nodes = new Map([...value.matchAll(/id="([^"]+)"/g)].map(([, id]) => [id, { isConnected: true, value: '', innerHTML: '' }]));
+      nodes = new Map([...value.matchAll(/<[^>]+id="([^"]+)"[^>]*>/g)].map(([tag, id]) => [id, {
+        isConnected: true, value: tag.match(/value="([^"]*)"/)?.[1] || '', innerHTML: '',
+        checked: /\bchecked\b/.test(tag), disabled: /\bdisabled\b/.test(tag),
+      }]));
     },
     get innerHTML() { return this.html; },
   };
@@ -110,7 +116,7 @@ function uiHarness({ saved = false, connected = false, pending = null } = {}) {
     profiles: async () => [{ id: 1, name: 'Main', nuvio: { state: 'not_linked' } }, { id: 2, name: 'Family', nuvio: { state: 'ready' } }],
     overview: async id => ({ catalogs: structuredClone(catalogs), manifest: { id: `com.aicat.profile${id}.nuvio`, url: `https://bingecat.com/stremio/profile${id}/manifest.json` }, recommendations: [{ kind: 'ai', content_type: 'movie', state: 'needs_history', history: { count: 4, required: 10 } }] }),
   };
-  const context = vm.createContext({ state, window: { BingecatConnect: bc }, host, setupHasSavedId: saved,
+  const context = vm.createContext({ state, window: { ...selectionWindow, BingecatConnect: bc }, host, setupHasSavedId: saved,
     $: selector => nodes.get(selector.slice(1)) || null,
     esc: v => String(v ?? '').replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;'),
     loading: text => { host.innerHTML = text; }, panel: (k, t, d, body) => t + body,
@@ -119,7 +125,7 @@ function uiHarness({ saved = false, connected = false, pending = null } = {}) {
     navigator: {},
   });
   vm.runInContext(section('  function adoptBingecatManifest(', '  async function prepareReview(') + section('  function bingecatDisplayCatalogs()', '  async function verifyBingecatManifest(') + section('  // Saved setups only receive', '  function renderCustomize()'), context);
-  return { state, host, context, bc, errors, node: id => nodes.get(id), render: () => vm.runInContext('renderBingecat()', context) };
+  return { state, host, context, bc, errors, node: id => nodes.get(id), choice: key => [...nodes.values()].find(n => n.value === key), render: () => vm.runInContext('renderBingecat()', context) };
 }
 const flush = async () => { for (let i = 0; i < 6; i++) await new Promise(r => setImmediate(r)); };
 
@@ -163,4 +169,91 @@ test('Bingecat snapshot contains only manifest and catalog settings', () => {
   const snapshot = vm.runInContext('window.KollectionBingecatSetup.snapshot()', h.context);
   assert.equal(snapshot.bingecatCatalogs[0].kind, 'ai');
   assert.equal(JSON.stringify(snapshot).includes('must-not-save'), false);
+});
+
+test('switches and bulk actions change the adopted selection, survive rerender, and invalidate previews', async () => {
+  const h = uiHarness({ connected: true });
+  h.render();
+  await flush();
+  assert.equal(h.choice('ai:movie').checked, true);
+  assert.equal(h.choice('latest:movie').checked, false);
+  h.node('bcClearAll').onclick();
+  assert.equal(h.node('bcSelectionCount').textContent, 'No BingeCat catalogs selected');
+  h.choice('latest:series').checked = true;
+  h.choice('latest:series').onchange();
+  h.node('bcUseBtn').onclick();
+  assert.deepEqual(Array.from(h.state.bingecatSelection.keys), ['latest:series']);
+  h.state.backup = {};
+  h.state.previewCollections = [];
+  h.state.finalCollections = [];
+  h.state.installCompleted = true;
+  h.node('bcSelectAll').onclick();
+  assert.equal(h.state.bingecatSelection.keys.length, 8);
+  assert.equal(h.state.backup, null);
+  assert.equal(h.state.previewCollections, null);
+  assert.equal(h.state.finalCollections, null);
+  assert.equal(h.state.installCompleted, false, 'changed choices must be synced again before setup is complete');
+  h.node('bcClearAll').onclick();
+  h.render();
+  assert.equal(h.state.bingecatSelection.keys.length, 0);
+  assert.equal(h.choice('ai:movie').checked, false);
+  assert.equal(h.node('bcClearAll').disabled, true);
+  await h.node('nextBtn').onclick();
+  assert.equal(h.state.step, 4);
+  assert.ok(!h.errors.some(e => e.kind === 'error'));
+});
+
+test('unavailable recommendations stay disabled and Select All selects only available catalogs', async () => {
+  const h = uiHarness({ connected: true });
+  const overview = h.bc.overview;
+  h.bc.overview = async id => ({ ...await overview(id), recommendations: [
+    { kind: 'ai', content_type: 'movie', state: 'disabled', enabled: false, action_url: 'https://bingecat.com/settings' },
+    { kind: 'list_for_you', content_type: 'series', state: 'ready', enabled: true },
+  ] });
+  h.render();
+  await flush();
+  assert.equal(h.choice('ai:movie').disabled, true);
+  assert.equal(h.choice('list_for_you:series').disabled, true);
+  h.node('bcSelectAll').onclick();
+  assert.equal(h.choice('ai:movie').checked, false);
+  assert.equal(h.choice('list_for_you:series').checked, false);
+  assert.match(h.host.innerHTML, /Turned off in BingeCat/);
+  assert.match(h.host.innerHTML, /Not available for this collection yet/);
+  h.node('bcUseBtn').onclick();
+  assert.equal(h.state.bingecatSelection.keys.length, 7);
+  assert.equal(h.choice('ai:movie'), undefined);
+  h.node('bcSelectAll').onclick();
+  assert.ok(!h.state.bingecatSelection.keys.includes('ai:movie'));
+});
+
+test('saved selection is reused only for the matching manifest and profile drafts do not overwrite it', async () => {
+  const h = uiHarness({ connected: true });
+  h.state.bingecatSelection = { manifestUrl: 'https://bingecat.com/stremio/profile1/manifest.json', keys: ['latest:movie'] };
+  h.render();
+  await flush();
+  assert.equal(h.choice('latest:movie').checked, true);
+  assert.equal(h.choice('ai:movie').checked, false);
+  h.node('bcProfile').value = '2';
+  h.node('bcProfile').onchange();
+  await flush();
+  assert.equal(h.choice('latest:movie').checked, false);
+  assert.equal(h.choice('ai:movie').checked, true);
+  assert.deepEqual(h.state.bingecatSelection.keys, ['latest:movie']);
+  h.node('bcUseBtn').onclick();
+  assert.match(h.state.bingecatSelection.manifestUrl, /profile2/);
+  assert.equal(h.state.bingecatSelection.keys.length, 6);
+});
+
+test('a manifest with only movies can be used and its selection is exposed to saved setups', () => {
+  const h = uiHarness();
+  vm.runInContext(`adoptBingecatManifest('https://bingecat.com/stremio/movies/manifest.json', {
+    id: 'com.aicat.movies.nuvio', catalogs: [{ id: 'only-movie', type: 'movie', kind: 'ai' }]
+  })`, h.context);
+  h.render();
+  assert.equal(h.choice('ai:movie').checked, true);
+  const snapshot = vm.runInContext('window.KollectionBingecatSetup.snapshot()', h.context);
+  assert.deepEqual(Array.from(snapshot.bingecatSelection.keys), ['ai:movie']);
+  h.node('bcClearAll').onclick();
+  assert.deepEqual(Array.from(snapshot.bingecatSelection.keys), ['ai:movie']);
+  assert.equal(h.state.bingecatSelection.keys.length, 0);
 });

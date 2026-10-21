@@ -259,6 +259,35 @@ body.light .mobile-progress > div { background:rgba(0,0,0,.08); }
 .status-row{padding:15px 0}
 .status-row b{font-size:15px}.status-row span{font-size:13.5px;line-height:1.5}
 .catalog-row{padding:14px}.catalog-row b{font-size:14.5px}.catalog-row small{font-size:12.5px}
+
+/* BingeCat choices use native inputs for touch, keyboard and screen-reader access. */
+.bc-picker{min-width:0;margin:24px 0 0;padding:0;border:0}
+.bc-picker legend{padding:0;font-size:18px;font-weight:700}
+.bc-picker-help{color:var(--muted);font-size:13.5px;line-height:1.55;margin:8px 0 16px}
+.bc-picker-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.bc-picker-toolbar>span{color:var(--muted);font-size:13px}
+.bc-picker-toolbar .ghost{min-height:44px;padding:10px 14px}
+.bc-picker-options{display:grid;gap:8px}
+.bc-choice{border:1px solid var(--line-soft);border-radius:14px;background:rgba(255,255,255,.02)}
+.bc-choice:has(input:checked){border-color:var(--muted)}
+.bc-choice label{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:68px;padding:14px;cursor:pointer}
+.bc-choice-copy{display:grid;gap:4px;min-width:0}
+.bc-choice-copy b{font-size:14.5px;line-height:1.4;overflow-wrap:anywhere}
+.bc-choice-copy small{color:var(--muted);font-size:12.5px;line-height:1.5}
+.bc-choice input{appearance:none;-webkit-appearance:none;position:relative;flex:0 0 42px;width:42px;height:26px;padding:0;margin:0;border:1px solid var(--muted);border-radius:20px;background:transparent;cursor:pointer;transition:background .15s}
+.bc-choice input::before{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:transform .15s}
+.bc-choice input:checked{background:#f5f5f7;border-color:#f5f5f7}
+.bc-choice input:checked::before{background:#24252b;transform:translateX(16px)}
+.bc-choice input:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+.bc-choice.unavailable label,.bc-choice input:disabled{cursor:not-allowed}
+.bc-choice.unavailable .bc-choice-copy,.bc-choice input:disabled{opacity:.65}
+.bc-choice-link{padding:0 14px 12px;font-size:12.5px}
+.bc-choice-link:empty{display:none}
+body.light .bc-choice{background:rgba(0,0,0,.015)}
+body.light .bc-choice input:checked{background:#30323a;border-color:#30323a}
+body.light .bc-choice input:checked::before{background:#fff}
+@media(prefers-reduced-motion:reduce){.bc-choice input,.bc-choice input::before{transition:none}}
+@media(forced-colors:active){.bc-choice input{appearance:auto;-webkit-appearance:auto}.bc-choice input::before{display:none}}
 .callout{padding:16px 17px;border-radius:17px;font-size:14.5px;line-height:1.62}
 .alert{padding:14px 16px;font-size:14.5px;line-height:1.55}
 .hero-checks{gap:12px;margin-top:20px}

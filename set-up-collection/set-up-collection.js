@@ -76,6 +76,7 @@
     bingecatAddonId: '',
     bingecatCatalogs: [],
     bingecatSkipped: false,
+    bingecatSelection: null,
 
     backup: null,
     previewCollections: null,
@@ -234,6 +235,7 @@
         bingecatAddonId: state.bingecatAddonId,
         bingecatCatalogs: state.bingecatCatalogs,
         bingecatSkipped: state.bingecatSkipped,
+        bingecatSelection: state.bingecatSelection,
         backup: state.backup,
         previewCollections: state.previewCollections,
         finalCollections: state.finalCollections,
@@ -389,6 +391,8 @@
     state.bingecatManifest = null;
     state.bingecatAddonId = '';
     state.bingecatCatalogs = Array.isArray(config.bingecatCatalogs) ? jsonClone(config.bingecatCatalogs) : [];
+    state.bingecatSelection = config.bingecatSelection && Array.isArray(config.bingecatSelection.keys)
+      ? jsonClone(config.bingecatSelection) : null;
     state.backup = null;
     state.previewCollections = null;
     state.finalCollections = null;
@@ -1045,7 +1049,7 @@
   }
 
   function shouldInstallBingecat(pack = selectedCollectionPack()) {
-    return !state.bingecatSkipped && Boolean(state.bingecatManifestUrl) && packUsesBingecat(pack);
+    return !state.bingecatSkipped && Boolean(state.bingecatManifestUrl) && bingecatDisplayCatalogs().length > 0 && packUsesBingecat(pack);
   }
 
   function groupStats(group) {
@@ -1598,7 +1602,10 @@
     });
   }
 
-  function rewriteBingecatInCollections(collections, addonId, manifestCatalogs) {
+  function rewriteBingecatInCollections(collections, addonId, manifestCatalogs, selection = null) {
+    if (selection) {
+      return window.KollectionBingecatSelection.rewrite(collections, addonId, manifestCatalogs, selection, BINGECAT_PLACEHOLDER_KINDS);
+    }
     // Connected through BingeCat login: the catalogs carry a kind, so match on kind + type, not on name order.
     if (addonId && (manifestCatalogs || []).length && manifestCatalogs.some(c => c && c.kind)) {
       return rewriteBingecatByKind(collections, addonId, manifestCatalogs);
@@ -1670,7 +1677,18 @@
   }
 
   function bingecatDisplayCatalogs() {
-    return (state.bingecatCatalogs || []).filter(c => c && !c.isSearch);
+    const catalogs = (state.bingecatCatalogs || []).filter(c => c && !c.isSearch);
+    const selection = activeBingecatSelection();
+    return selection ? window.KollectionBingecatSelection.selected(catalogs, selection) : catalogs;
+  }
+
+  function activeBingecatSelection() {
+    return state.bingecatSelection?.manifestUrl === state.bingecatManifestUrl
+      && Array.isArray(state.bingecatSelection?.keys) ? state.bingecatSelection : null;
+  }
+
+  function bingecatSelectionFor(url, catalogs, recommendations = []) {
+    return window.KollectionBingecatSelection.selection(url, catalogs, state.bingecatSelection, recommendations);
   }
 
   async function verifyBingecatManifest(url) {
@@ -1694,12 +1712,13 @@
     const nonSearch = manifest.catalogs.filter(c => c && !c.isSearch);
     const movies = nonSearch.filter(c => String(c.type).toLowerCase() === 'movie');
     const series = nonSearch.filter(c => String(c.type).toLowerCase() === 'series');
-    if (!movies.length || !series.length) throw new Error('That manifest did not expose both movie and series recommendation catalogs.');
+    if (!movies.length && !series.length) throw new Error('That manifest did not expose any movie or series recommendation catalogs.');
     state.bingecatSkipped = false;
     state.bingecatManifestUrl = url;
     state.bingecatManifest = manifest;
     state.bingecatAddonId = manifest.id;
     state.bingecatCatalogs = manifest.catalogs;
+    state.bingecatSelection = bingecatSelectionFor(url, manifest.catalogs);
     persistWizardSession();
     return manifest;
   }
@@ -1733,7 +1752,7 @@
     state.aiChunks = chunkAioCatalogs(state.aiNeededCatalogs, preferred);
 
     const previewPack = jsonClone(selectedPack);
-    rewriteBingecatInCollections(previewPack, state.bingecatAddonId, state.bingecatCatalogs);
+    rewriteBingecatInCollections(previewPack, state.bingecatAddonId, state.bingecatCatalogs, activeBingecatSelection());
     state.previewCollections = setupUpdatesExisting
       ? previewPack
       : mergeCollections(state.existingCollections, previewPack, state.collectionPack);
@@ -1778,7 +1797,7 @@
 
     const finalPack = jsonClone(selectedPack);
     repointAioSources(finalPack, posterBridge.routes, ai.firstManifestId);
-    rewriteBingecatInCollections(finalPack, state.bingecatAddonId, state.bingecatCatalogs);
+    rewriteBingecatInCollections(finalPack, state.bingecatAddonId, state.bingecatCatalogs, activeBingecatSelection());
     state.finalCollections = setupUpdatesExisting
       ? finalPack
       : mergeCollections(state.existingCollections, finalPack, state.collectionPack);
@@ -2744,6 +2763,7 @@
     snapshot: () => ({
       bingecatSkipped: state.bingecatSkipped,
       bingecatManifestUrl: state.bingecatManifestUrl,
+      bingecatSelection: activeBingecatSelection() ? JSON.parse(JSON.stringify(state.bingecatSelection)) : null,
       bingecatCatalogs: (state.bingecatCatalogs || []).map(c => ({
         id: c.id, type: c.type, name: c.name, kind: c.kind, position: c.position, isSearch: Boolean(c.isSearch),
       })),
@@ -2778,6 +2798,60 @@
     return `<div class="status-row"><div><b>Nuvio link in BingeCat</b><span>${esc(BINGECAT_NUVIO_LABELS[nuvio.state] || nuvio.state || 'Unknown')}${nuvioOk ? '' : bingecatLink(nuvio.action_url, 'Open BingeCat')}</span></div><span class="badge ${nuvioOk ? 'good' : 'warn'}">${nuvioOk ? 'Linked' : 'Action needed'}</span></div>${rows}`;
   }
 
+  function bingecatPickerHtml(catalogs, selection, recommendations = []) {
+    const rows = window.KollectionBingecatSelection.options(catalogs, recommendations);
+    const keys = new Set(selection.keys);
+    return `<fieldset class="bc-picker">
+      <legend>Include in your collection</legend>
+      <p class="bc-picker-help">Choose the recommendations shown in For You. Changes apply when you install or update this collection.</p>
+      <div class="bc-picker-toolbar"><span id="bcSelectionCount" role="status" aria-live="polite"></span><div class="action-group"><button type="button" class="ghost" id="bcSelectAll">Select All</button><button type="button" class="ghost" id="bcClearAll">Clear All</button></div></div>
+      <div class="bc-picker-options">${rows.map((row, index) => {
+        const r = row.status;
+        const available = Boolean(row.catalog);
+        const label = `${BINGECAT_KIND_LABELS[row.kind] || row.catalog?.name || 'Recommendations'} · ${row.type === 'series' ? 'Series' : 'Movies'}`;
+        const history = r?.state === 'needs_history' && r.history ? ` (${r.history.count}/${r.history.required})` : '';
+        const detail = !available
+          ? (r?.state === 'disabled' || r?.enabled === false ? 'Turned off in BingeCat.' : 'Not available for this collection yet.')
+          : r && r.state !== 'ready' ? `${r.message || BINGECAT_STATE_LABELS[r.state] || 'Preparing recommendations'}${history}` : '';
+        return `<div class="bc-choice${available ? '' : ' unavailable'}">
+          <label for="bcChoice${index}"><span class="bc-choice-copy"><b>${esc(label)}</b>${detail ? `<small>${esc(detail)}</small>` : ''}</span><input id="bcChoice${index}" class="bc-choice-input" type="checkbox" role="switch" value="${esc(row.key)}" ${available && keys.has(row.key) ? 'checked' : ''} ${available ? '' : 'disabled'}></label>
+          ${!available || ['needs_history', 'error'].includes(r?.state) ? `<div class="bc-choice-link">${bingecatLink(r?.action_url, 'Open BingeCat')}</div>` : ''}
+        </div>`;
+      }).join('')}</div>
+      <p class="bc-picker-help">These choices only affect this collection. Your BingeCat settings stay the same.</p>
+    </fieldset>`;
+  }
+
+  function bindBingecatPicker(catalogs, selection, recommendations = []) {
+    const rows = window.KollectionBingecatSelection.options(catalogs, recommendations);
+    const available = rows.filter(row => row.catalog);
+    const inputs = rows.map((row, index) => ({ row, input: $(`#bcChoice${index}`) }));
+    const sync = () => {
+      selection.keys = inputs.filter(({ row, input }) => row.catalog && input?.checked).map(({ row }) => row.key);
+      const count = selection.keys.length;
+      $('#bcSelectionCount').textContent = count ? `${count} of ${available.length} catalogs selected` : 'No BingeCat catalogs selected';
+      $('#bcSelectAll').disabled = count === available.length;
+      $('#bcClearAll').disabled = count === 0;
+      // Account/profile choices remain a draft until Use this profile is clicked.
+      if (state.bingecatManifest?.id && selection.manifestUrl === state.bingecatManifestUrl) {
+        const changed = !activeBingecatSelection() || JSON.stringify([...state.bingecatSelection.keys].sort()) !== JSON.stringify([...selection.keys].sort());
+        state.bingecatSelection = { manifestUrl: selection.manifestUrl, keys: [...selection.keys] };
+        if (changed) {
+          state.backup = null;
+          state.previewCollections = null;
+          state.finalCollections = null;
+          state.installCompleted = false;
+          state.installStarted = false;
+        }
+        persistWizardSession();
+      }
+    };
+    for (const { input } of inputs) if (input) input.onchange = sync;
+    $('#bcSelectAll').onclick = () => { for (const { row, input } of inputs) if (input) input.checked = Boolean(row.catalog); sync(); };
+    $('#bcClearAll').onclick = () => { for (const { input } of inputs) if (input) input.checked = false; sync(); };
+    sync();
+  }
+
   async function disconnectBingecat() {
     bingecatViewVersion++;
     await window.BingecatConnect.logout();
@@ -2785,6 +2859,7 @@
     state.bingecatManifest = null;
     state.bingecatAddonId = '';
     state.bingecatCatalogs = [];
+    state.bingecatSelection = null;
     state.backup = null;
     persistWizardSession();
     if (state.step === 3) renderBingecat();
@@ -2803,15 +2878,17 @@
       const live = await bc.overview(profile.id);
       if (state.step !== 3 || viewVersion !== bingecatViewVersion) return;
       const catalogs = live.catalogs;
-      host.innerHTML = panel('STEP 4 · BINGECAT', 'Your BingeCat account is connected', 'Choose the BingeCat profile to use. Recommendation catalogs that are not ready yet are shown with what is missing.',
+      const selection = bingecatSelectionFor(live.manifest?.url, catalogs, live.recommendations);
+      host.innerHTML = panel('STEP 4 · BINGECAT', 'Your BingeCat account is connected', 'Choose the BingeCat profile and recommendations for your collection.',
         `<div class="card">
           ${profiles.length > 1
             ? `<div class="field"><label for="bcProfile">BingeCat profile</label><select id="bcProfile">${profiles.map(p => `<option value="${esc(p.id)}" ${p.id === profile.id ? 'selected' : ''}>${esc(p.name || `Profile ${p.id}`)}${p.is_main ? ' (main)' : ''}</option>`).join('')}</select></div>`
             : `<div class="status-row"><div><b>${esc(profile.name || 'BingeCat profile')}</b><span>BingeCat profile</span></div><span class="badge good">Connected</span></div>`}
-          ${bingecatStatusHtml(profile, live.recommendations)}
-          <div class="catalog-list" style="margin-top:16px">${catalogs.slice(0, 8).map(c => `<div class="catalog-row"><div><b>${esc(c.name || c.id)}</b><small>${esc(c.id)}</small></div><span class="badge">${esc(c.type || '')}</span></div>`).join('')}</div>
+          ${bingecatStatusHtml(profile, [])}
+          ${bingecatPickerHtml(catalogs, selection, live.recommendations)}
           <div class="actions"><button class="ghost" id="backBtn">Back</button><div class="action-group"><button class="ghost" id="skipBtn">Skip Bingecat</button><button class="ghost" id="bcDisconnectBtn">Disconnect BingeCat</button><button class="btn" id="bcUseBtn">Use this profile</button></div></div>
         </div>`);
+      bindBingecatPicker(catalogs, selection, live.recommendations);
       $('#backBtn').onclick = () => setStep(2);
       $('#bcDisconnectBtn').onclick = disconnectBingecat;
       $('#skipBtn').onclick = () => {
@@ -2831,9 +2908,13 @@
           adoptBingecatManifest(live.manifest.url, {
             id: live.manifest.id,
             name: 'Bingecat',
-            catalogs: catalogs.map(c => ({ id: c.id, type: c.type, name: c.name, kind: c.kind || 'unknown', position: c.position, isSearch: false })),
+            catalogs: catalogs.filter(c => !(live.recommendations || []).some(r =>
+              (r.state === 'disabled' || r.enabled === false) && r.kind === c.kind && r.content_type === c.type
+            )).map(c => ({ id: c.id, type: c.type, name: c.name, kind: c.kind || 'unknown', position: c.position, isSearch: false })),
           });
+          state.bingecatSelection = { manifestUrl: live.manifest.url, keys: [...selection.keys] };
           state.backup = null;
+          state.installCompleted = false;
           renderBingecat();
           alert('Bingecat connected.', 'success');
         } catch (e) { alert(e.message, 'error'); }
@@ -2877,18 +2958,16 @@
     }
     const skipped = state.bingecatSkipped;
     const ready = Boolean(state.bingecatManifest?.id) && !skipped;
-    const catalogs = bingecatDisplayCatalogs();
-    const movieCount = catalogs.filter(c => String(c.type).toLowerCase() === 'movie').length;
-    const seriesCount = catalogs.filter(c => String(c.type).toLowerCase() === 'series').length;
+    const selection = ready ? bingecatSelectionFor(state.bingecatManifestUrl, state.bingecatCatalogs) : null;
     const bingecatConfigureUrl = 'https://bingecat.com/stremio/configure';
     host.innerHTML = panel('STEP 4 · BINGECAT', skipped ? 'Bingecat is skipped' : (ready ? 'Your personal Bingecat manifest is ready' : 'Connect Bingecat recommendations'),
-      skipped ? 'The For You Bingecat placeholders will be removed and the rest of The Kollection will still be set up normally.' : (ready ? 'Set Up Collection will install this personal manifest and rewrite the For You sources to its add-on ID and catalog IDs.' : (connectable ? 'Bingecat is optional. Sign in to Bingecat to connect your recommendations, or paste your install URL instead.' : 'Bingecat is optional. Open its setup page, configure your recommendations, then paste the install URL back here.')),
+      skipped ? 'Your collection will be set up without Bingecat recommendations.' : (ready ? 'Turn recommendations on or off for this collection, then continue with your setup.' : (connectable ? 'Bingecat is optional. Sign in to Bingecat to connect your recommendations, or paste your install URL instead.' : 'Bingecat is optional. Open its setup page, configure your recommendations, then paste the install URL back here.')),
       `<div class="card">
         ${skipped ? `
           <div class="callout">Bingecat is optional. Your setup will continue without personalized For You recommendation catalogs.</div>
           <div class="actions"><button class="ghost" id="backBtn">Back</button><div class="action-group"><button class="ghost" id="useBtn">Use Bingecat</button><button class="btn" id="nextBtn">Customize collection</button></div></div>` : ready ? `
-          <div class="status-row"><div><b>${esc(state.bingecatManifest.name || 'Bingecat')}</b><span>${esc(state.bingecatAddonId)} · ${movieCount} movie + ${seriesCount} series recommendation catalogs</span></div><span class="badge good">Verified</span></div>
-          <div class="catalog-list" style="margin-top:16px">${catalogs.slice(0, 8).map(c => `<div class="catalog-row"><div><b>${esc(c.name || c.id)}</b><small>${esc(c.id)}</small></div><span class="badge">${esc(c.type || '')}</span></div>`).join('')}</div>
+          <div class="status-row"><div><b>${esc(state.bingecatManifest.name || 'Bingecat')}</b><span>Your recommendations are connected.</span></div><span class="badge good">Verified</span></div>
+          ${bingecatPickerHtml(state.bingecatCatalogs, selection)}
           <input type="hidden" id="bcUrl" value="${esc(state.bingecatManifestUrl)}">
           ${connected ? '<div id="bcLive" style="margin-top:16px"></div>' : ''}
           <div class="actions"><button class="ghost" id="backBtn">Back</button><div class="action-group"><button class="ghost" id="skipBtn">Skip Bingecat</button>${connected ? '<button class="ghost" id="bcDisconnectBtn">Disconnect BingeCat</button>' : ''}<button class="ghost" id="changeBtn">${connected ? 'Change profile' : 'Use a different manifest'}</button><button class="btn" id="nextBtn">Customize collection</button></div></div>` : `
@@ -2929,12 +3008,13 @@
     }
     $('#skipBtn').onclick = skip;
     if (ready) {
+      bindBingecatPicker(state.bingecatCatalogs, selection);
       if (connected) {
         $('#bcDisconnectBtn').onclick = disconnectBingecat;
         const liveTarget = $('#bcLive');
         Promise.all([bc.profiles(), bc.overview(bc.getProfileId())]).then(([profiles, live]) => {
           const target = liveTarget?.isConnected ? liveTarget : null;
-          if (target) target.innerHTML = bingecatStatusHtml(profiles.find(p => p.id === bc.getProfileId()), live.recommendations);
+          if (target) target.innerHTML = bingecatStatusHtml(profiles.find(p => p.id === bc.getProfileId()), []);
         }).catch(error => {
           const target = liveTarget?.isConnected ? liveTarget : null;
           if (target) target.innerHTML = `<div class="callout warn">${esc(error.reconnect ? error.message : 'Could not load the current BingeCat status.')}</div>`;
@@ -3137,7 +3217,7 @@
           <div class="summary-item"><span class="icon">N</span><div><b>${esc(state.profileName)}</b><span>Nuvio profile ${state.profileId}; add-ons target profile ${state.addonProfileId || state.profileId}.</span></div></div>
           <div class="summary-item"><span class="icon">A</span><div><b>${state.aiNeededCatalogs.length} AIOMetadata catalogs</b><span>${state.aiSetupMode === 'custom' ? `Using ${esc(state.aiCustomFileName)} as the configuration base. ` : ''}Planned across ${state.aiChunks.length} configuration${state.aiChunks.length === 1 ? '' : 's'} using your selected AIOMetadata host.</span></div></div>
           <div class="summary-item"><span class="icon">P</span><div><b>Better Posters · ${state.betterPostersEnabled ? 'Enabled' : 'Off'}</b><span>${state.betterPostersEnabled ? `Your collection will use Better Posters across Home rows, folders, and AIOMetadata library/meta posters. ${esc(window.KollectionBetterPostersSettings?.label(state.betterPostersSettings || window.KollectionBetterPostersSettings?.readLocal?.() || {}) || 'Poster settings selected.')}` : 'Standard AIOMetadata poster behavior will be used. You can enable Better Posters during setup later.'}</span></div></div>
-          <div class="summary-item"><span class="icon">B</span><div><b>${state.bingecatSkipped ? 'Bingecat skipped' : (bcNeeded ? `Bingecat · ${bc.length} recommendation catalogs` : 'Bingecat not needed')}</b><span>${state.bingecatSkipped ? 'For You Bingecat placeholders will be removed.' : (bcNeeded ? `Your personal add-on ID ${esc(state.bingecatAddonId)} will replace the creator-specific For You references.` : 'None of the selected sections use Bingecat, so its add-on will not be installed.')}</span></div></div>
+          <div class="summary-item"><span class="icon">B</span><div><b>${state.bingecatSkipped ? 'Bingecat skipped' : (bcNeeded ? `Bingecat · ${bc.length} recommendation catalogs` : 'Bingecat not needed')}</b><span>${state.bingecatSkipped ? 'For You Bingecat placeholders will be removed.' : (bcNeeded ? `Only your selected recommendation catalogs will appear in For You.` : 'No Bingecat catalogs are included in your selected collection, so its add-on will not be installed.')}</span></div></div>
           <div class="summary-item"><span class="icon">K</span><div><b>The Kollection</b><span>${selectedPack.length} of ${state.collectionPack?.length || 0} sections selected · ${selectedFolders} folders included. ${setupUpdatesExisting ? `The previous setup will be replaced with ${previewCount} updated groups.` : `This profile goes from ${existingCount} to ${previewCount} groups after the ID-aware merge.`}</span></div></div>
         </div>
         <hr class="sep">
@@ -3271,7 +3351,7 @@
     const bcStatus = state.bingecatSkipped ? 'Bingecat skipped' : (bcNeeded ? 'Bingecat personalized' : 'Bingecat not needed');
     const bcDescription = state.bingecatSkipped
       ? 'The setup completed without Bingecat recommendation catalogs.'
-      : (bcNeeded ? 'The creator-specific Bingecat IDs were replaced with your manifest ID and recommendation catalogs.' : 'None of the selected sections required Bingecat, so its add-on was not installed.');
+      : (bcNeeded ? 'Your selected Bingecat recommendation catalogs are included in For You.' : 'No Bingecat catalogs were included in your selected collection, so its add-on was not installed.');
     const savedSetupName = window.KollectionSavedSetup?.getName?.() || 'My Kollection';
     host.innerHTML = panel('COMPLETE', 'The Kollection is set up',
       `The selected Nuvio profile now has ${selectedPack.length} selected The Kollection section${selectedPack.length === 1 ? '' : 's'} and the required AIOMetadata catalog configuration${state.aiInstalls.length === 1 ? '' : 's'}${bcNeeded ? ', with your personal Bingecat recommendations wired into For You.' : ''}`,
@@ -3367,6 +3447,7 @@
       bingecatAddonId: '',
       bingecatCatalogs: [],
       bingecatSkipped: false,
+      bingecatSelection: null,
       backup: null,
       previewCollections: null,
       finalCollections: null,
