@@ -69,3 +69,15 @@ test('AI restore applies once and later mutations preserve manual host and catal
   assert.equal(fields['#aiHost'].value, '__self_host__');
   assert.equal(fields['#aiCatalogModeOnly'].checked, false);
 });
+
+
+test('completed saved Edit opens Customize while explicit routes and Update remain authoritative', () => {
+  const start = saved.indexOf('      targetStep = updateExistingSetup');
+  const code = saved.slice(start, saved.indexOf('      snapshot = {', start));
+  for (const [updateExistingSetup, routedStep, expected] of [[false, 0, 4], [false, 2, 2], [true, 0, 2]]) {
+    const c = vm.createContext({ targetStep: 0, updateExistingSetup, routedStep, editExistingSetup: true,
+      cloneSavedSetup: false, item: { draftStep: 7 } });
+    vm.runInContext(code, c);
+    assert.equal(c.targetStep, expected);
+  }
+});

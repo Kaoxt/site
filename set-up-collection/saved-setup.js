@@ -5,6 +5,7 @@
   const sourceSavedId = params.get('saved') || '';
   const cloneSavedSetup = params.get('clone') === '1';
   const updateExistingSetup = params.get('update') === '1';
+  const editExistingSetup = Boolean(sourceSavedId) && params.get('edit') === '1';
   let savedId = cloneSavedSetup ? '' : sourceSavedId;
   const targetProfileId = Number(params.get('targetProfile')) || null;
   let savedName = '';
@@ -531,9 +532,11 @@
         ? 2
         : routedStep > 0
           ? Math.max(0, Math.min(7, routedStep))
-          : cloneSavedSetup
-            ? Math.max(0, Math.min(6, Number(item?.draftStep) || 0))
-            : Math.max(0, Math.min(7, Number(item?.draftStep) || 0));
+          : editExistingSetup
+            ? 4
+            : cloneSavedSetup
+              ? Math.max(0, Math.min(6, Number(item?.draftStep) || 0))
+              : Math.max(0, Math.min(7, Number(item?.draftStep) || 0));
       snapshot = {
         ...snapshot,
         ...(item?.config && typeof item.config === 'object' ? item.config : {}),

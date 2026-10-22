@@ -44,9 +44,9 @@ for (const [name, engine, width] of [['Chromium desktop', chromium, 1440], ['Chr
       });
       await page.addInitScript(() => {
         window.continueClicks = 0;
-        document.addEventListener('click', e => { if (e.target.id === 'nextBtn') window.continueClicks++; }, true);
+        document.addEventListener('click', e => { if (e.target.id === 'nextBtn' && document.querySelector('#aiConfigPassword')) window.continueClicks++; }, true);
       });
-      await page.goto(`${origin}/set-up-collection?saved=saved-fixture&edit=1&step=aiometadata`);
+      await page.goto(`${origin}/set-up-collection?saved=saved-fixture&edit=1`);
       await page.waitForFunction(() => document.querySelector('#mdblist')?.value === 'fixture-mdblist-key');
       // Span multiple restore polling ticks: no automatic submissions or warnings.
       await page.waitForTimeout(1000);
@@ -67,7 +67,9 @@ for (const [name, engine, width] of [['Chromium desktop', chromium, 1440], ['Chr
       assert.equal(await page.locator('#aiConfigPasswordConfirm').inputValue(), 'abcdef');
       assert.match(await page.locator('#mobileStepText').textContent(), /Step 3 of/);
       await page.locator('#nextBtn').click();
-      await page.waitForFunction(() => !/Step 3 of/.test(document.querySelector('#mobileStepText')?.textContent || ''));
+      await page.waitForFunction(() => /Step 5 of/.test(document.querySelector('#mobileStepText')?.textContent || ''));
+      await page.waitForTimeout(1000);
+      assert.match(await page.locator('#mobileStepText').textContent(), /Step 5 of/, 'Edit must stop on Customize');
       assert.doesNotMatch(await page.evaluate(() => sessionStorage.getItem('kollection-setup-wizard:v1') || ''), /abcdef|aiConfigPassword/);
       assert.deepEqual(writes, []);
       assert.deepEqual(errors, []);
