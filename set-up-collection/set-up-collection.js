@@ -62,6 +62,7 @@
     aiCustomCatalogLibrary: [],
     aiBaseConfig: null,
     aiCatalogLibrary: [],
+    aiCatalogShuffleOverrides: {},
     aiNeededCatalogs: [],
     aiChunks: [],
     aiExportConfigs: [],
@@ -220,6 +221,7 @@
         aiCustomCatalogLibrary: state.aiCustomCatalogLibrary,
         aiBaseConfig: state.aiBaseConfig,
         aiCatalogLibrary: state.aiCatalogLibrary,
+        aiCatalogShuffleOverrides: state.aiCatalogShuffleOverrides,
         aiNeededCatalogs: state.aiNeededCatalogs,
         aiChunks: state.aiChunks,
         aiInstalls: state.aiInstalls,
@@ -1244,7 +1246,9 @@
     const config = jsonClone(state.aiCustomConfig || baseConfig || {});
     config.catalogModeOnly = storedBoolean(state.aiCatalogModeOnly ?? config.catalogModeOnly, false);
     // Also cover required catalogs restored from a pre-fix wizard session.
-    config.catalogs = catalogs.map(catalog => ({ ...jsonClone(catalog), enabled: true }));
+    config.catalogs = catalogs.map(catalog => ({
+      ...jsonClone(window.KollectionCatalogShuffle?.apply(catalog) || catalog), enabled: true,
+    }));
     if (state.betterPostersEnabled && window.KollectionBetterPostersSettings) {
       state.betterPostersSettings = window.KollectionBetterPostersSettings.normalize(
         state.betterPostersSettings || window.KollectionBetterPostersSettings.readLocal() || {}
@@ -1918,6 +1922,57 @@
     return manifest;
   }
 
+  function aioCatalogLibraryForSetup() {
+    const custom = state.aiCustomCatalogLibrary || [];
+    return [...custom, ...(state.aiCatalogLibrary || []).filter(catalog => !custom.some(item =>
+      item?.id === catalog?.id && normalizeAioCatalogType(item?.type) === normalizeAioCatalogType(catalog?.type)
+    ))];
+  }
+
+  function applyCatalogShuffle(catalog) {
+    const key = aioCatalogRouteKey(catalog.id, catalog.type);
+    const value = state.aiCatalogShuffleOverrides?.[key];
+    return typeof value === 'boolean' ? { ...catalog, randomizePerPage: value } : catalog;
+  }
+
+  function invalidateCatalogShuffle() {
+    state.backup = null;
+    state.previewCollections = null;
+    state.finalCollections = null;
+    state.aiExportConfigs = [];
+    state.installCompleted = false;
+    persistWizardSession();
+  }
+
+  window.KollectionCatalogShuffle = Object.freeze({
+    apply: applyCatalogShuffle,
+    entries(folder) {
+      const catalogs = filterAioCatalogs(aioCatalogLibraryForSetup(), collectAioCatalogRefs([{ folders: [folder] }]));
+      return catalogs.map(catalog => ({
+        key: aioCatalogRouteKey(catalog.id, catalog.type),
+        name: catalog.name || catalog.id,
+        type: normalizeAioCatalogType(catalog.type),
+        enabled: storedBoolean(applyCatalogShuffle(catalog).randomizePerPage, false),
+        defaultEnabled: storedBoolean(catalog.randomizePerPage, false),
+      }));
+    },
+    getOverrides: () => jsonClone(state.aiCatalogShuffleOverrides || {}),
+    set(changes) {
+      state.aiCatalogShuffleOverrides ||= {};
+      for (const [key, value] of Object.entries(changes || {})) {
+        if (typeof value === 'boolean') state.aiCatalogShuffleOverrides[key] = value;
+        else if (value === null) delete state.aiCatalogShuffleOverrides[key];
+      }
+      invalidateCatalogShuffle();
+    },
+    restore(config) {
+      // Missing overrides in older setups inherit the supplied AIOMetadata defaults.
+      state.aiCatalogShuffleOverrides = Object.fromEntries(Object.entries(config?.aiCatalogShuffleOverrides || {})
+        .filter(([key, value]) => key.includes('|') && typeof value === 'boolean'));
+      invalidateCatalogShuffle();
+    },
+  });
+
   async function prepareReview() {
     if (!await ensureSelectedProfileEligible()) {
       throw new Error('Clear the old collection from this Nuvio profile before continuing.');
@@ -1939,9 +1994,7 @@
     state.existingCollections = existingCollections;
 
     const catalogRefs = collectAioCatalogRefs(selectedPack);
-    const catalogLibrary = state.aiCustomCatalogLibrary.length
-      ? [...state.aiCustomCatalogLibrary, ...state.aiCatalogLibrary.filter(c => !state.aiCustomCatalogLibrary.some(u => u?.id && u.id === c?.id && normalizeAioCatalogType(u?.type) === normalizeAioCatalogType(c?.type)))]
-      : state.aiCatalogLibrary;
+    const catalogLibrary = aioCatalogLibraryForSetup();
     state.aiNeededCatalogs = filterAioCatalogs(catalogLibrary, catalogRefs);
     const preferred = normalizeHost(state.aiHostPreference || CFG.aiometadataHosts[0].url);
     state.aiExportConfigs = [];
@@ -3734,6 +3787,7 @@
       aiCustomCatalogLibrary: [],
       aiBaseConfig: null,
       aiCatalogLibrary: [],
+      aiCatalogShuffleOverrides: {},
       aiNeededCatalogs: [],
       aiChunks: [],
       aiInstalls: [],

@@ -188,6 +188,11 @@
               <div class="field" id="folderSourceTypeRow"><label for="folderSourceType">Media type</label><select id="folderSourceType"><option value="all">Movies + Series</option><option value="movie">Movies</option><option value="series">Series</option></select></div>
               <div class="field" id="folderSourceNameRow"><label for="folderSourceName">Catalog name <span class="optional">(optional)</span></label><input id="folderSourceName" type="text" autocomplete="off" placeholder="Uses the cover folder name by default"></div>
             </section>
+            <section class="folder-edit-section" id="folderShuffleSection">
+              <div class="folder-edit-section-head"><b>Shuffle catalog titles</b><span>Randomize titles on each page of results. Starts with your AIOMetadata defaults and applies wherever the same catalog is used.</span></div>
+              <div id="folderShuffleOptions"></div>
+              <small id="folderShuffleUnavailable" hidden>Shuffle is available for AIOMetadata catalog sources.</small>
+            </section>
             <section class="folder-edit-section artwork-section">
               <div class="folder-edit-section-head"><b>Artwork and folder behavior</b><span>Edit the artwork fields Nuvio uses for collection folders.</span></div>
               <div class="field"><label for="folderCoverImage">Cover image URL</label><input id="folderCoverImage" type="url" inputmode="url" autocomplete="off" placeholder="https://…/cover.webp"><small>Poster or landscape image shown for the folder.</small></div>
@@ -258,6 +263,39 @@
     root.querySelector('#folderHeroBackdrop').value = artwork.heroBackdropUrl || '';
     root.querySelector('#folderSourceError').textContent = '';
 
+    const shuffleDraft = {};
+    let shuffleEntries = [];
+    const syncShuffle = () => {
+      const provider = root.querySelector('#folderSourceProvider').value;
+      const id = extractNumericId(root.querySelector('#folderSourceValue').value, provider);
+      const selectedFolder = provider ? { sources: id ? [{
+        addonId: 'aio-metadata', catalogId: catalogIdFor(provider, id),
+        type: provider === 'tmdb' ? 'movie' : root.querySelector('#folderSourceType').value,
+      }] : [] } : { sources: defaults.sources, catalogSources: defaults.catalogSources };
+      shuffleEntries = window.KollectionCatalogShuffle?.entries(selectedFolder) || [];
+      const options = root.querySelector('#folderShuffleOptions');
+      options.replaceChildren();
+      root.querySelector('#folderShuffleUnavailable').hidden = Boolean(shuffleEntries.length);
+      for (const entry of shuffleEntries) {
+        const label = document.createElement('label');
+        label.className = 'folder-shuffle-row';
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.dataset.shuffleKey = entry.key;
+        input.checked = shuffleDraft[entry.key] ?? entry.enabled;
+        input.onchange = () => { shuffleDraft[entry.key] = input.checked; };
+        const copy = document.createElement('span');
+        const title = document.createElement('b');
+        title.textContent = entry.name;
+        const info = document.createElement('small');
+        const type = { movie: 'Movies', series: 'Series', all: 'Movies + Series', anime: 'Anime' }[entry.type];
+        info.textContent = `${type} · Default: ${entry.defaultEnabled ? 'On' : 'Off'}`;
+        copy.append(title, info);
+        label.append(input, copy);
+        options.appendChild(label);
+      }
+    };
+
     const syncProvider = () => {
       const provider = root.querySelector('#folderSourceProvider').value;
       root.querySelector('#folderSourceValueRow').hidden = !provider;
@@ -265,12 +303,15 @@
       root.querySelector('#folderSourceNameRow').hidden = !provider;
       const input = root.querySelector('#folderSourceValue');
       const hint = root.querySelector('#folderSourceHint');
+      syncShuffle();
       if (!provider) { hint.textContent = ''; return; }
       if (provider === 'tmdb') { input.placeholder = 'TMDB collection ID or URL'; hint.textContent = 'TMDB collections contain movies only.'; }
       else if (provider === 'trakt') { input.placeholder = 'Trakt numeric list ID or URL'; hint.textContent = 'Public Trakt list IDs work directly.'; }
       else { input.placeholder = 'MDBList numeric list ID'; hint.textContent = 'Your saved MDBList API key is used by AIOMetadata.'; }
     };
     root.querySelector('#folderSourceProvider').onchange = syncProvider;
+    root.querySelector('#folderSourceValue').oninput = syncShuffle;
+    root.querySelector('#folderSourceType').onchange = syncShuffle;
     syncProvider();
     bindPreview(root, '#folderCoverImage', '#folderCoverPreview');
     bindPreview(root, '#folderTitleLogo', '#folderLogoPreview');
@@ -300,6 +341,9 @@
       };
       savedOverrides = clone(state.collectionFolderSourceOverrides);
       applyOverrides(activeOptions);
+      window.KollectionCatalogShuffle?.set(Object.fromEntries(shuffleEntries
+        .filter(entry => typeof shuffleDraft[entry.key] === 'boolean')
+        .map(entry => [entry.key, shuffleDraft[entry.key]])));
       state.backup = null; state.previewCollections = null; state.finalCollections = null;
       window.dispatchEvent(new CustomEvent('kollection:folder-source-overrides-changed', { detail: clone(savedOverrides) }));
       closeModal();
@@ -307,11 +351,14 @@
     };
 
     root.querySelector('#folderSourceReset').onclick = () => {
+      const resetShuffle = window.KollectionCatalogShuffle?.entries(folder) || [];
       if (state.collectionFolderSourceOverrides?.[mapKey]) delete state.collectionFolderSourceOverrides[mapKey];
       savedOverrides = clone(state.collectionFolderSourceOverrides || {});
       folder.sources = clone(defaults.sources || []);
       folder.catalogSources = clone(defaults.catalogSources || []);
       Object.assign(folder, clone(defaults.artwork || {}));
+      resetShuffle.push(...(window.KollectionCatalogShuffle?.entries(folder) || []));
+      window.KollectionCatalogShuffle?.set(Object.fromEntries(resetShuffle.map(entry => [entry.key, null])));
       state.backup = null; state.previewCollections = null; state.finalCollections = null;
       window.dispatchEvent(new CustomEvent('kollection:folder-source-overrides-changed', { detail: clone(savedOverrides) }));
       closeModal();
@@ -353,6 +400,29 @@
         wrap.appendChild(actions);
       }
       actions.appendChild(edit);
+      const shuffleEntries = window.KollectionCatalogShuffle?.entries(folder) || [];
+      if (shuffleEntries.length) {
+        const onCount = shuffleEntries.filter(entry => entry.enabled).length;
+        const allOn = onCount === shuffleEntries.length;
+        const mixed = onCount > 0 && !allOn;
+        const shuffle = document.createElement('button');
+        shuffle.type = 'button';
+        shuffle.className = 'folder-shuffle-toggle';
+        shuffle.textContent = `Shuffle: ${mixed ? 'Mixed' : allOn ? 'On' : 'Off'}`;
+        shuffle.setAttribute('aria-pressed', mixed ? 'mixed' : String(allOn));
+        shuffle.setAttribute('aria-label', `Shuffle titles in ${folder.title || 'folder'}`);
+        shuffle.title = 'Shuffle titles on each page of results. Use Edit for individual catalog sources.';
+        shuffle.onclick = event => {
+          event.preventDefault();
+          event.stopPropagation();
+          window.KollectionCatalogShuffle.set(Object.fromEntries(shuffleEntries.map(entry => [entry.key, !allOn])));
+          // Refresh shared catalogs too, then return focus to this control.
+          host.querySelectorAll('.folder-shuffle-toggle, .folder-source-edit:not(.folder-shuffle-toggle)').forEach(button => button.remove());
+          addEditButtons(options);
+          wrap.querySelector('.folder-shuffle-toggle')?.focus({ preventScroll: true });
+        };
+        actions.appendChild(shuffle);
+      }
       if (state.collectionFolderSourceOverrides?.[keyFor(gk, actualKey)]) wrap.classList.add('has-custom-source');
     });
   }

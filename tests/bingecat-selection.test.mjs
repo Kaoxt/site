@@ -74,6 +74,7 @@ function installHarness(keys) {
     section('  function packUsesBingecat(', '  function groupStats(') +
     section('  function bingecatCatalogRank(', '  function mergeKey(') +
     section('  function bingecatDisplayCatalogs()', '  async function verifyBingecatManifest(') +
+    section('  function aioCatalogLibraryForSetup(', '  function applyCatalogShuffle(') +
     section('  async function prepareReview()', '  function formatSetupDate('), context);
   return { context, state, pack, installs, synced: () => synced };
 }
