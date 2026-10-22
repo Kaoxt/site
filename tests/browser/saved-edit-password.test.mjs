@@ -6,9 +6,11 @@ import { chromium, webkit } from 'playwright';
 const root = new URL('../../', import.meta.url);
 const origin = 'https://kollection.test';
 const host = 'https://aiometadatafortheweebs.midnightignite.me/';
+const database = await readFile(new URL('runtime/database.kaoxt.js', root), 'utf8');
+const group = JSON.parse(database.split('window.NUVIO_DATABASE =')[1].trim().replace(/;\s*$/, ''))[0];
 const saved = { id: 'saved-fixture', name: 'Saved fixture', draftStep: 7, nuvioProfileId: 1,
-  config: { aiSetupMode: 'built-in', aiHostPreference: host, selectedCollectionGroupIds: ['genres'],
-    selectedCollectionFolderIds: { genres: ['action'] }, bingecatSkipped: true, aiCatalogModeOnly: false },
+  config: { aiSetupMode: 'built-in', aiHostPreference: host, selectedCollectionGroupIds: [group.id],
+    selectedCollectionFolderIds: { [group.id]: [group.folders[0].id] }, bingecatSkipped: true, aiCatalogModeOnly: false },
   secrets: { mdblistKey: 'fixture-mdblist-key' } };
 
 for (const [name, engine, width] of [['Chromium desktop', chromium, 1440], ['Chromium mobile', chromium, 390], ['WebKit mobile', webkit, 390]]) {
@@ -30,7 +32,7 @@ for (const [name, engine, width] of [['Chromium desktop', chromium, 1440], ['Chr
         if (url.pathname.startsWith('/api/account/collections/')) return json({ collection: saved });
         if (url.pathname === '/api/account/collections') return json({ collections: [saved] });
         if (url.pathname.endsWith('/rpc/sync_pull_profiles')) return json([{ profile_index: 1, name: 'Test profile' }]);
-        if (url.pathname.endsWith('/rpc/sync_pull_collections')) return json([{ collections_json: [{ id: 'genres', folders: [] }] }]);
+        if (url.pathname.endsWith('/rpc/sync_pull_collections')) return json([{ collections_json: [{ id: group.id, folders: [] }] }]);
         if (url.origin !== origin || url.pathname.startsWith('/api/')) return json({});
         if (route.request().resourceType() === 'image') return route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg"/>' });
         let path = url.pathname.slice(1);
