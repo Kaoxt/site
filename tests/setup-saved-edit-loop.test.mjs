@@ -94,6 +94,32 @@ test('AI restore applies once and later mutations preserve manual host and catal
   assert.equal(fields['#aiCatalogModeOnly'].checked, false);
 });
 
+test('restore keeps saved choices until each panel has applied them', () => {
+  let step = 2;
+  const snapshot = { profileId: 2, aiSetupMode: 'custom', aiHostPreference: 'https://saved.example/',
+    aiCatalogModeOnly: true, betterPostersEnabled: true, bingecatSkipped: true,
+    selectedCollectionGroupIds: ['saved-group'] };
+  const fields = { '#profile': { value: '1' }, '#builtInTab': { classList: { contains: () => true } },
+    '#aiHost': { value: 'https://default.example/' }, '#aiCatalogModeOnly': { checked: false },
+    '#betterPostersEnabled': { checked: false } };
+  const c = vm.createContext({ restoring: true, aiRestoreApplied: false, collectionRestoreApplied: false,
+    currentStep: () => step, snapshot, $: selector => fields[selector],
+    $$: () => [{ value: 'default-group', checked: true }],
+    window: { KollectionBingecatSetup: { snapshot: () => ({ bingecatSkipped: false }) } } });
+  vm.runInContext(section(saved, '  function captureVisible(', '  function serializableConfig('), c);
+  vm.runInContext('captureVisible()', c);
+  assert.equal(snapshot.profileId, 2);
+  assert.equal(snapshot.aiSetupMode, 'custom');
+  assert.equal(snapshot.aiHostPreference, 'https://saved.example/');
+  assert.equal(snapshot.bingecatSkipped, true);
+  assert.equal(snapshot.betterPostersEnabled, true);
+  assert.deepEqual(snapshot.selectedCollectionGroupIds, ['saved-group']);
+  c.aiRestoreApplied = true;
+  vm.runInContext('captureVisible()', c);
+  assert.equal(snapshot.aiCatalogModeOnly, false, 'user edits are captured after AI restore');
+  assert.equal(snapshot.bingecatSkipped, true, 'later panels remain saved until restored');
+});
+
 
 test('completed saved Edit opens Customize while explicit routes and Update remain authoritative', () => {
   const start = saved.indexOf('      targetStep = updateExistingSetup');

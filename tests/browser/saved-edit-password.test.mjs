@@ -67,7 +67,14 @@ for (const [name, engine, width] of [['Chromium desktop', chromium, 1440], ['Chr
       assert.equal(await page.locator('#aiConfigPasswordConfirm').inputValue(), 'abcdef');
       assert.match(await page.locator('#mobileStepText').textContent(), /Step 3 of/);
       await page.locator('#nextBtn').click();
-      await page.waitForFunction(() => /Step 5 of/.test(document.querySelector('#mobileStepText')?.textContent || ''));
+      try {
+        await page.waitForFunction(() => /Step 5 of/.test(document.querySelector('#mobileStepText')?.textContent || ''), null, { timeout: 15000 });
+      } catch (error) {
+        const state = await page.evaluate(() => ({ step: document.querySelector('#mobileStepText')?.textContent,
+          alert: document.querySelector('#alertHost')?.textContent, title: document.querySelector('#panelHost h2')?.textContent,
+          buttons: [...document.querySelectorAll('#panelHost button')].map(button => button.textContent.trim()) }));
+        throw new Error(`Saved Edit did not reach Customize: ${JSON.stringify({ ...state, errors })}`, { cause: error });
+      }
       await page.waitForTimeout(1000);
       assert.match(await page.locator('#mobileStepText').textContent(), /Step 5 of/, 'Edit must stop on Customize');
       assert.doesNotMatch(await page.evaluate(() => sessionStorage.getItem('kollection-setup-wizard:v1') || ''), /abcdef|aiConfigPassword/);
