@@ -10,7 +10,7 @@ const database = await readFile(new URL('runtime/database.kaoxt.js', root), 'utf
 const group = JSON.parse(database.split('window.NUVIO_DATABASE =')[1].trim().replace(/;\s*$/, ''))[0];
 const saved = { id: 'saved-fixture', name: 'Saved fixture', draftStep: 7, nuvioProfileId: 1,
   config: { aiSetupMode: 'built-in', aiHostPreference: host, selectedCollectionGroupIds: [group.id],
-    selectedCollectionFolderIds: { [group.id]: [group.folders[0].id] }, bingecatSkipped: true, aiCatalogModeOnly: false },
+    selectedCollectionFolderIds: { [group.id.replace(/-community$/i, '')]: [group.folders[0].id] }, bingecatSkipped: true, aiCatalogModeOnly: false },
   secrets: { mdblistKey: 'fixture-mdblist-key' } };
 
 for (const [name, engine, width] of [['Chromium desktop', chromium, 1440], ['Chromium mobile', chromium, 390], ['WebKit mobile', webkit, 390]]) {
@@ -77,9 +77,12 @@ for (const [name, engine, width] of [['Chromium desktop', chromium, 1440], ['Chr
       }
       await page.waitForTimeout(1000);
       assert.match(await page.locator('#mobileStepText').textContent(), /Step 5 of/, 'Edit must stop on Customize');
+      assert.match(await page.locator('#sectionSelectionCount').textContent(), /^1 of /, 'restore keeps the saved section selection');
+      assert.match(await page.locator('#folderSelectionCount').textContent(), /^1 folder/, 'restore keeps the saved folder selection');
       assert.doesNotMatch(await page.evaluate(() => sessionStorage.getItem('kollection-setup-wizard:v1') || ''), /abcdef|aiConfigPassword/);
       assert.deepEqual(writes, []);
       assert.deepEqual(errors, []);
     } finally { await browser.close(); }
   });
 }
+

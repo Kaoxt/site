@@ -121,6 +121,22 @@ test('restore keeps saved choices until each panel has applied them', () => {
 });
 
 
+test('initial editor selection events cannot replace saved selections before restoration', () => {
+  const listeners = {};
+  const snapshot = { selectedCollectionGroupIds: ['saved-group'], selectedCollectionFolderIds: { 'saved-group': ['saved-folder'] } };
+  const c = vm.createContext({ restoring: true, collectionRestoreApplied: false, snapshot,
+    window: { addEventListener: (name, handler) => { listeners[name] = handler; } } });
+  vm.runInContext(section(saved, "    window.addEventListener('kollection:collection-selection-changed'", '\n\n    loadSaved();'), c);
+  const emit = detail => listeners['kollection:collection-selection-changed']({ detail });
+  emit({ selectedCollectionGroupIds: ['default-group'], selectedCollectionFolderIds: { 'default-group': ['all-folders'] } });
+  assert.deepEqual(snapshot.selectedCollectionGroupIds, ['saved-group']);
+  assert.deepEqual(snapshot.selectedCollectionFolderIds, { 'saved-group': ['saved-folder'] });
+  c.collectionRestoreApplied = true;
+  emit({ selectedCollectionGroupIds: ['edited-group'], selectedCollectionFolderIds: { 'edited-group': ['chosen-folder'] } });
+  assert.deepEqual(Array.from(snapshot.selectedCollectionGroupIds), ['edited-group']);
+  assert.deepEqual(JSON.parse(JSON.stringify(snapshot.selectedCollectionFolderIds)), { 'edited-group': ['chosen-folder'] });
+});
+
 test('completed saved Edit opens Customize while explicit routes and Update remain authoritative', () => {
   const start = saved.indexOf('      targetStep = updateExistingSetup');
   const code = saved.slice(start, saved.indexOf('      snapshot = {', start));
@@ -131,3 +147,4 @@ test('completed saved Edit opens Customize while explicit routes and Update rema
     assert.equal(c.targetStep, expected);
   }
 });
+

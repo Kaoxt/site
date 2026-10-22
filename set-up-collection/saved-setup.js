@@ -621,6 +621,9 @@
       if (name) snapshot.profileName = name;
     });
     window.addEventListener('kollection:collection-selection-changed', event => {
+      // The editor emits its defaults during its first render. Keep saved
+      // choices until the restore event has applied them to that editor.
+      if (restoring && !collectionRestoreApplied) return;
       const detail = event?.detail || {};
       if (Array.isArray(detail.selectedCollectionGroupIds)) {
         snapshot.selectedCollectionGroupIds = detail.selectedCollectionGroupIds.slice();
@@ -646,3 +649,4 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();
 })();
+
