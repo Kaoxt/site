@@ -148,6 +148,7 @@ test('catalogs-only replacement requires a remaining enabled metadata provider',
   await assert.rejects(h.run('installEverything()'), /only verified metadata provider/);
   assert.deepEqual(h.events, []);
   h.manifests[other.url].resources.push('meta');
+  delete h.manifests[other.url].catalogs;
   await h.review(); h.approve();
   await h.run('installEverything()');
   assert.ok(h.rows().some(item => item.url === other.url));
@@ -177,4 +178,13 @@ test('an approved renamed installation becoming unavailable cannot bypass the fi
   delete h.manifests[old.url]; h.context.ai = { installs: [next] };
   await assert.rejects(h.run('prepareDirectAioInstallation(ai)'), /Could not verify the existing/);
   assert.deepEqual(h.events, []);
+});
+
+test('setup cannot report completion if Nuvio has not removed the old add-on', async () => {
+  const h = harness(); await h.clear(); await h.review(); h.approve();
+  const push = h.context.pushAddons;
+  h.context.pushAddons = async rows => { if (rows.some(item => item.url === old.url)) await push(rows); };
+  await assert.rejects(h.run('installEverything()'), /not confirmed removal/);
+  assert.equal(h.state.installCompleted, false);
+  assert.ok(h.rows().some(item => item.url === old.url));
 });

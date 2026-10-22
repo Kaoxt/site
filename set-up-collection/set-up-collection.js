@@ -946,6 +946,10 @@
     const staleUrls = new Set(stale.map(addon => addonUrlKey(addon.url)));
     const current = await listAddons();
     await pushAddons(current.filter(addon => !staleUrls.has(addonUrlKey(addon.url))));
+    const remaining = await listAddons();
+    if (remaining.some(addon => staleUrls.has(addonUrlKey(addon.url)))) {
+      throw new Error(`Nuvio has not confirmed removal of the previous ${label} add-on. The new collection was saved, but setup is not complete. Retry after syncing.`);
+    }
     return stale.length;
   }
 
@@ -1549,7 +1553,7 @@
         const url = new URL(normalizeUrl(addon.url));
         if (!/\/manifest\.json$/i.test(url.pathname)) url.pathname = url.pathname.replace(/\/+$/, '') + '/manifest.json';
         const manifest = await fetchAddonManifest(url.href);
-        if (!manifest?.id || !Array.isArray(manifest.catalogs)) throw new Error('Invalid manifest');
+        if (!manifest?.id || (manifest.catalogs != null && !Array.isArray(manifest.catalogs))) throw new Error('Invalid manifest');
         return { addon, manifest, key: addonUrlKey(addon.url) };
       } catch {
         if (isKollectionAiMetadataAddon(addon) || /aiometadata|aio-metadata/i.test(addon.url || '')) {
@@ -1568,7 +1572,7 @@
       // Use manifest identity and catalog routes, never an editable display name,
       // to offer replacement of an installation made outside this site.
       if (manifest.id !== 'aio-metadata') continue;
-      const catalogs = manifest.catalogs.filter(catalog => storedBoolean(catalog.enabled, true));
+      const catalogs = (manifest.catalogs || []).filter(catalog => storedBoolean(catalog.enabled, true));
       const overlaps = catalogs.filter(catalog => (state.aiNeededCatalogs || []).some(required =>
         normalizeAioCatalogType(catalog.type) === normalizeAioCatalogType(required.displayType || required.type) &&
         [required.id, `${required.id}_${normalizeAioCatalogType(required.type)}`].includes(catalog.id)
