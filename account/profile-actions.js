@@ -454,6 +454,7 @@
           ? 'This profile is currently using a collection created through The Kollection. You can clear it from Nuvio without deleting the saved setup from your Kollection account.'
           : 'This profile currently has collection data that was not created through The Kollection Set Up Collection wizard. Clear that collection before using this profile for a Kollection setup.'}</p>
         <div class="account-copy-note"><strong>What this clears:</strong> the current Nuvio collection layout on this profile. It does not delete the Nuvio profile, its add-ons or plugins, or your saved Kollection setups.</div>
+        <p class="account-modal-copy">When you start the replacement setup, Review will check existing AIOMetadata catalogs and let you choose which installation to replace.</p>
         <p class="account-modal-status" id="accountClearCollectionStatus" role="status"></p>
       </div>
       <footer class="account-modal-footer">

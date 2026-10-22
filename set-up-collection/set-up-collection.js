@@ -45,6 +45,9 @@
     addons: [],
     previousAiMetadataAddons: [],
     previousPosterBridgeAddons: [],
+    // Replacement consent is scoped to this signed-in profile and stays in
+    // memory. A reload or account change requires reviewing it again.
+    aioMigrationReview: null,
     existingCollections: [],
 
     mdblistKey: '',
@@ -295,6 +298,7 @@
       delete copy.posterBridgeInstalls;
       delete copy.aiConfigPassword;
       delete copy.aiConfigPasswordConfirm;
+      delete copy.aioMigrationReview;
       Object.assign(state, copy);
       return true;
     } catch {
@@ -919,7 +923,17 @@
   }
 
   async function removeStaleAddons(previous, nextInstalls, label) {
-    if (!setupUpdatesExisting || !previous.length) return 0;
+    if (!previous.length) return 0;
+    if (!setupUpdatesExisting) {
+      previous = previous.filter(addon => approvedAioMigration(addon));
+      if (!previous.length) return 0;
+      const scope = aioMigrationScope();
+      await refreshAddonProfile();
+      const target = Number(state.addonProfileId || state.profileId);
+      if (scope !== aioMigrationScope() || (state.profiles || []).some(profile =>
+        Number(profile.id) !== Number(state.profileId) && (profile.usesPrimaryAddons ? 1 : Number(profile.id)) === target
+      )) throw new Error('The profile add-on sharing changed during setup. The previous AIOMetadata was kept; check the selected profile before retrying.');
+    }
     const nextUrls = new Set((nextInstalls || [])
       .map(item => item?.url ? addonUrlKey(item.url) : '')
       .filter(Boolean));
@@ -1495,6 +1509,104 @@
     ));
   }
 
+  function aioMigrationScope() {
+    return JSON.stringify([state.userId, Number(state.profileId), Number(state.addonProfileId || state.profileId)]);
+  }
+
+  function aioMigrationSignature(manifest) {
+    return JSON.stringify([manifest.id,
+      (manifest.catalogs || []).map(catalog => JSON.stringify([
+        catalog.id, catalog.type, storedBoolean(catalog.enabled, true),
+      ])).sort(),
+      (manifest.resources || []).map(resource => JSON.stringify(resource)).sort(),
+    ]);
+  }
+
+  function approvedAioMigration(addon) {
+    const review = state.aioMigrationReview;
+    if (!review || review.scope !== aioMigrationScope()) return null;
+    return review.candidates.find(item => item.key === addonUrlKey(addon.url) && item.approved && !item.shared.length && !item.protectedCount) || null;
+  }
+
+  function aioMigrationError(message) {
+    const error = new Error(message);
+    error.reviewRequired = true;
+    return error;
+  }
+
+  async function prepareAioMigrationReview(addons) {
+    if (setupUpdatesExisting) return;
+    const scope = aioMigrationScope();
+    const previous = state.aioMigrationReview?.scope === scope ? state.aioMigrationReview : null;
+    const target = Number(state.addonProfileId || state.profileId);
+    // Sharing an add-on list also shares search and metadata, even when another
+    // profile has no collection folders. Do not retire its provider.
+    const shared = (state.profiles || []).filter(profile =>
+      Number(profile.id) !== Number(state.profileId) && (profile.usesPrimaryAddons ? 1 : Number(profile.id)) === target
+    ).map(profile => ({ id: profile.id, name: profile.name }));
+    const inspected = await Promise.all(addons.filter(addon => storedBoolean(addon.enabled, true)).map(async addon => {
+      try {
+        const url = new URL(normalizeUrl(addon.url));
+        if (!/\/manifest\.json$/i.test(url.pathname)) url.pathname = url.pathname.replace(/\/+$/, '') + '/manifest.json';
+        const manifest = await fetchAddonManifest(url.href);
+        if (!manifest?.id || !Array.isArray(manifest.catalogs)) throw new Error('Invalid manifest');
+        return { addon, manifest, key: addonUrlKey(addon.url) };
+      } catch {
+        if (isKollectionAiMetadataAddon(addon) || /aiometadata|aio-metadata/i.test(addon.url || '')) {
+          throw new Error('Could not check the existing AIOMetadata configuration. Retry Review when it is available; no add-ons have been changed.');
+        }
+        return null;
+      }
+    }));
+    const candidates = [];
+    const metadataProviders = [];
+    for (const entry of inspected.filter(Boolean)) {
+      const { addon, manifest, key } = entry;
+      if ((manifest.resources || []).some(resource => (typeof resource === 'string' ? resource : resource?.name) === 'meta')) {
+        metadataProviders.push(key);
+      }
+      // Use manifest identity and catalog routes, never an editable display name,
+      // to offer replacement of an installation made outside this site.
+      if (manifest.id !== 'aio-metadata') continue;
+      const catalogs = manifest.catalogs.filter(catalog => storedBoolean(catalog.enabled, true));
+      const overlaps = catalogs.filter(catalog => (state.aiNeededCatalogs || []).some(required =>
+        normalizeAioCatalogType(catalog.type) === normalizeAioCatalogType(required.displayType || required.type) &&
+        [required.id, `${required.id}_${normalizeAioCatalogType(required.type)}`].includes(catalog.id)
+      ));
+      if (!overlaps.length) continue;
+      const signature = aioMigrationSignature(manifest);
+      const kollectionKeys = new Set((state.collectionPack || []).map(group => mergeKey(group.id)));
+      const protectedCount = (state.existingCollections || []).filter(group => !kollectionKeys.has(mergeKey(group.id)) &&
+        catalogs.some(catalog => collectionReferencesCatalog([group], manifest.id, catalog))
+      ).length;
+      candidates.push({ key, url: addon.url, name: addon.name || manifest.name || 'AIOMetadata',
+        host: new URL(normalizeUrl(addon.url)).host, signature,
+        overlapCount: overlaps.length, catalogCount: catalogs.length, shared, protectedCount,
+        approved: !shared.length && !protectedCount && Boolean(previous?.candidates.some(item => item.key === key && item.signature === signature && item.approved)),
+      });
+    }
+    state.aioMigrationReview = { scope, candidates, metadataProviders };
+  }
+
+  function aioMigrationProblem() {
+    const review = state.aioMigrationReview;
+    if (!review || review.scope !== aioMigrationScope() || !review.candidates.length) return '';
+    if (review.candidates.some(item => item.shared.length)) {
+      return 'An overlapping AIOMetadata add-on is shared with another profile. Choose a profile with its own add-ons, or disable the overlapping catalogs in the existing configuration and recheck.';
+    }
+    if (review.candidates.some(item => item.protectedCount)) {
+      return 'An overlapping AIOMetadata add-on is still used by other collection groups on this profile. Keep that configuration and disable only its overlapping catalogs, or choose another profile.';
+    }
+    if (review.candidates.some(item => !item.approved)) {
+      return 'Select the existing AIOMetadata to replace before continuing. To keep it, disable its overlapping catalogs, save in AIOMetadata, then recheck.';
+    }
+    const replaced = new Set(review.candidates.map(item => item.key));
+    if (currentAiCatalogModeOnly() && !review.metadataProviders.some(key => !replaced.has(key))) {
+      return 'This would replace your only verified metadata provider. Turn off Catalogs only in Step 3, or keep another metadata add-on enabled and recheck.';
+    }
+    return '';
+  }
+
   async function prepareDirectAioInstallation(ai) {
     // Nuvio can find disjoint catalogs across add-ons sharing a manifest ID.
     // The same ID/type/catalog in two configurations cannot identify which
@@ -1538,6 +1650,7 @@
     for (const addon of current) {
       const key = addonUrlKey(addon.url);
       if (nextUrls.has(key)) continue;
+      const migration = !setupUpdatesExisting && approvedAioMigration(addon);
       let candidate = setupUpdatesExisting && (
         previousAioUrls.has(key) || isKollectionAiMetadataAddon(addon) ? 'aio' :
         previousBridgeUrls.has(key) || isKollectionPosterBridgeAddon(addon) ? 'bridge' : ''
@@ -1555,12 +1668,20 @@
         manifest = await fetchAddonManifest(url.href);
         if (!manifest?.id || !Array.isArray(manifest.catalogs)) throw new Error('Invalid manifest');
       } catch {
-        if (candidate || isKollectionAiMetadataAddon(addon)) {
+        if (migration || candidate || isKollectionAiMetadataAddon(addon)) {
           throw new Error(`Could not verify the existing ${addon.name || 'AIOMetadata'} configuration. Retry when its manifest is available. Your collection and add-ons have not been changed.`);
         }
         continue;
       }
       const catalogs = manifest.catalogs.filter(catalog => storedBoolean(catalog.enabled, true));
+      if (migration && catalogs.some(catalog => required.has(routeKey(manifest.id, catalog)))) {
+        if (sharedProfiles.length || migration.signature !== aioMigrationSignature(manifest)) {
+          migration.approved = false;
+          throw aioMigrationError('The existing AIOMetadata or its shared profiles changed. Review its replacement again before installing. Your collection and add-ons have not been changed.');
+        }
+        retiredAio.push(addon);
+        continue;
+      }
       // Display names are editable. Recognize a renamed installation only when
       // its identity matches and all browsable catalogs belong to the collection
       // being replaced. Extra personal catalogs keep it out of automatic cleanup.
@@ -1798,6 +1919,7 @@
       throw new Error('Clear the old collection from this Nuvio profile before continuing.');
     }
     await loadKaoxtAssets();
+    await refreshAddonProfile();
     ensureCollectionSelection();
     const selectedPack = selectedCollectionPack();
     if (!selectedPack.length) throw new Error('Choose at least one collection section before continuing.');
@@ -1820,6 +1942,7 @@
     const preferred = normalizeHost(state.aiHostPreference || CFG.aiometadataHosts[0].url);
     state.aiExportConfigs = [];
     state.aiChunks = chunkAioCatalogs(state.aiNeededCatalogs, preferred);
+    await prepareAioMigrationReview(addons);
 
     const previewPack = jsonClone(selectedPack);
     rewriteBingecatInCollections(previewPack, state.bingecatAddonId, state.bingecatCatalogs, activeBingecatSelection());
@@ -1844,6 +1967,15 @@
     await refreshAddonProfile();
     if (!state.backup || !state.collectionPack) await prepareReview();
     state.installStarted = true;
+
+    // Review current installations before creating configurations or writing to
+    // Nuvio. Saved drafts and page reloads must not bypass replacement consent.
+    if (!setupUpdatesExisting) {
+      state.existingCollections = await pullCollections();
+      await prepareAioMigrationReview(await listAddons());
+      const problem = aioMigrationProblem();
+      if (problem) throw aioMigrationError(problem);
+    }
 
     // Provision everything first. No collection is pushed until every generated
     // manifest is ready, matching the proven friend-pack provisioning flow.
@@ -1877,10 +2009,10 @@
     if (stableCollectionJson(confirmedCollections) !== stableCollectionJson(window.KollectionArtworkUrls?.normalizeDeep ? window.KollectionArtworkUrls.normalizeDeep(state.finalCollections) : state.finalCollections)) {
       throw new Error('Nuvio has not confirmed the replacement collection. Previous add-ons were kept. Please retry after Nuvio finishes syncing.');
     }
-    if (setupUpdatesExisting) {
+    if (setupUpdatesExisting || state.previousAiMetadataAddons.length) {
       loading('Removing previous Kollection metadata routes…');
       await removePreviousAiMetadataAddons(ai.installs);
-      await removePreviousPosterBridgeAddons([]);
+      if (setupUpdatesExisting) await removePreviousPosterBridgeAddons([]);
     }
     await verifyInstalledAddons(requiredAddons);
     state.installCompleted = true;
@@ -2099,7 +2231,7 @@
       <div class="profile-eligibility-actions">
         ${canClear ? '<button class="ghost profile-clear-collection-btn" id="clearOldCollectionBtn" type="button">Clear Current Collection</button>' : '<button class="ghost" id="retryProfileEligibilityBtn" type="button">Try again</button>'}
       </div>
-      <small class="profile-eligibility-note">${canClear ? 'Clearing removes the current Nuvio collection layout from this profile. It does not delete the profile, add-ons, plugins, or saved Kollection setups.' : 'Setup stays blocked until this profile can be verified.'}</small>`;
+      <small class="profile-eligibility-note">${canClear ? 'Clearing removes the current Nuvio collection layout from this profile. It does not delete the profile, add-ons, plugins, or saved Kollection setups. Review will check any existing AIOMetadata and let you choose its replacement before installation.' : 'Setup stays blocked until this profile can be verified.'}</small>`;
     if (next) next.disabled = true;
 
     $('#clearOldCollectionBtn')?.addEventListener('click', async () => {
@@ -2116,7 +2248,9 @@
         }
         state.profileEligibility = cleared;
         renderProfileEligibility(cleared);
-        alert('Current collection cleared. This profile is now available for Set Up Collection.', 'success');
+        state.backup = null;
+        state.aioMigrationReview = null;
+        alert('Current collection cleared. Continue setup; Review will check the existing AIOMetadata before installation.', 'success');
       } catch (error) {
         state.profileEligibility = result;
         renderProfileEligibility(result);
@@ -3307,6 +3441,8 @@
     const bcNeeded = shouldInstallBingecat(selectedPack);
     const existingCount = state.existingCollections?.length || 0;
     const previewCount = state.previewCollections?.length || 0;
+    const migrations = !setupUpdatesExisting && state.aioMigrationReview?.scope === aioMigrationScope()
+      ? state.aioMigrationReview.candidates : [];
     host.innerHTML = panel('STEP 6 · REVIEW', 'Your collection is ready to add to Nuvio',
       'Nothing has been added to Nuvio yet. The backup below contains the profile’s current collections and add-on list before setup.',
       `<div class="card">
@@ -3322,6 +3458,21 @@
           <div class="summary-item"><span class="icon">B</span><div><b>${state.bingecatSkipped ? 'Bingecat skipped' : (bcNeeded ? `Bingecat · ${bc.length} recommendation catalogs` : 'Bingecat not needed')}</b><span>${state.bingecatSkipped ? 'For You Bingecat placeholders will be removed.' : (bcNeeded ? `Only your selected recommendation catalogs will appear in For You.` : 'No Bingecat catalogs are included in your selected collection, so its add-on will not be installed.')}</span></div></div>
           <div class="summary-item"><span class="icon">K</span><div><b>The Kollection</b><span>${selectedPack.length} of ${state.collectionPack?.length || 0} sections selected · ${selectedFolders} folders included. ${setupUpdatesExisting ? `The previous setup will be replaced with ${previewCount} updated groups.` : `This profile goes from ${existingCount} to ${previewCount} groups after the ID-aware merge.`}</span></div></div>
         </div>
+        ${migrations.length ? `<section class="aio-migration-review" aria-labelledby="aioMigrationTitle">
+          <h3 id="aioMigrationTitle">Existing AIOMetadata found</h3>
+          <p>Clearing a collection keeps its add-ons installed. These installations already provide catalogs selected for your new collection. Choose their replacement here so setup can finish.</p>
+          ${migrations.map((item, index) => `<label class="toggle-row aio-migration-choice" for="aioReplace${index}">
+            <input id="aioReplace${index}" type="checkbox" data-aio-replacement="${index}" ${item.approved ? 'checked' : ''} ${item.shared.length || item.protectedCount ? 'disabled' : ''}>
+            <span><b>Replace ${esc(item.name)}</b><small>${esc(item.host)} · ${item.overlapCount} overlapping catalog${item.overlapCount === 1 ? '' : 's'} · add-on profile ${state.addonProfileId || state.profileId}</small>
+            ${item.shared.length ? `<small>Shared with ${esc(item.shared.map(profile => `${profile.name || 'Profile'} (${profile.id})`).join(', '))}. This installation will be kept.</small>` : ''}
+            ${item.protectedCount ? '<small>Used by other collection groups that will stay on this profile. This installation will be kept.</small>' : ''}
+            ${item.catalogCount > item.overlapCount ? `<small>The whole add-on will be replaced, including ${item.catalogCount - item.overlapCount} other catalog${item.catalogCount - item.overlapCount === 1 ? '' : 's'}. Its original configuration stays on its AIOMetadata host.</small>` : ''}</span>
+          </label>`).join('')}
+          <p>The replacement uses your settings from Step 3. To carry over existing search preferences, export that AIOMetadata configuration and choose <strong>Use my JSON file</strong>; review poster settings separately. Your original configuration is not deleted.</p>
+          <p>The old add-on stays installed until Nuvio confirms the new collection. <strong>Download backup</strong> saves its original install link.</p>
+          <p id="aioMigrationStatus" class="muted" role="status"></p>
+          <div class="actions"><button class="ghost" type="button" id="aioMigrationSettings">Review AIOMetadata settings</button><button class="ghost" type="button" id="aioMigrationRecheck">Recheck existing add-ons</button></div>
+        </section>` : ''}
         <hr class="sep">
         <div class="callout warn"><strong>${setupUpdatesExisting ? 'This update replaces the previous Kollection setup and its AIOMetadata installation.' : `The final setup adds AIOMetadata${bcNeeded ? ' and Bingecat' : ''} before pushing your selected sections.`}</strong> ${setupUpdatesExisting ? 'The new AIOMetadata configuration is created first, the updated collection is synced, and then the previous AIOMetadata add-on is removed. Unrelated add-ons and plugins are preserved.' : 'Unselected matching The Kollection sections are omitted; unrelated add-ons and collection groups are preserved.'}</div>
         <div class="review-actions">
@@ -3338,6 +3489,30 @@
     $('#backBtn').onclick = () => setStep(4);
     $('#backupBtn').onclick = () => downloadJson(`nuvio-backup-profile-${state.profileId}-${new Date().toISOString().slice(0,10)}.json`, state.backup);
     $('#aioExportBtn').onclick = () => downloadCurrentAioExports();
+    const syncMigrationChoice = () => {
+      const problem = aioMigrationProblem();
+      const status = $('#aioMigrationStatus');
+      if (status) status.textContent = problem || 'Replacement selected. Continue to install the new collection.';
+      $('#nextBtn').disabled = Boolean(problem);
+    };
+    $$('[data-aio-replacement]').forEach(input => {
+      input.onchange = () => {
+        migrations[Number(input.dataset.aioReplacement)].approved = input.checked;
+        syncMigrationChoice();
+      };
+    });
+    $('#aioMigrationSettings')?.addEventListener('click', () => setStep(2));
+    $('#aioMigrationRecheck')?.addEventListener('click', async event => {
+      event.currentTarget.disabled = true;
+      try {
+        await prepareReview();
+        renderReview();
+      } catch (error) {
+        renderReview();
+        alert(error.message, 'error');
+      }
+    });
+    syncMigrationChoice();
     if (setupQuery.get('exportAio') === '1') {
       setTimeout(() => {
         if (downloadCurrentAioExports()) {
@@ -3367,7 +3542,11 @@
         alert(e.message || 'Could not rename this setup.', 'error');
       }
     });
-    $('#nextBtn').onclick = () => setStep(6);
+    $('#nextBtn').onclick = () => {
+      const problem = aioMigrationProblem();
+      if (problem) return alert(problem, 'error');
+      setStep(6);
+    };
   }
 
   function renderInstall() {
@@ -3378,6 +3557,7 @@
     host.innerHTML = panel('STEP 7 · SET UP', 'Ready to set up The Kollection',
       `${setupUpdatesExisting ? 'Update Existing will replace the previous Kollection collection and AIOMetadata installation.' : 'Set Up Collection will add the selected collection to Nuvio.'} It will generate the required AIOMetadata configuration${state.aiChunks.length === 1 ? '' : 's'}, install ${bcNeeded ? 'AIOMetadata and your personal Bingecat manifest' : 'AIOMetadata'}, ${state.betterPostersEnabled ? 'apply Better Posters to the collection, ' : ''}rewrite the collection sources, and sync ${selectedPack.length} selected section${selectedPack.length === 1 ? '' : 's'}.`,
       `<div class="card">
+        ${!setupUpdatesExisting && state.aioMigrationReview?.candidates.some(item => approvedAioMigration(item)) ? '<div class="callout warn">The existing AIOMetadata you selected on Review will be replaced after the new collection is confirmed in Nuvio. The replacement uses your Step 3 settings.</div>' : ''}
         <div class="field setup-name-field">
           <label for="setupName">Setup name</label>
           <input id="setupName" type="text" maxlength="120" autocomplete="off" value="${esc(existingName)}" placeholder="Give this setup a name">
@@ -3440,6 +3620,11 @@
         });
         setStep(7);
       } catch (e) {
+        if (e.reviewRequired) {
+          setStep(5);
+          alert(e.message, 'error');
+          return;
+        }
         if (state.step === 1 && !state.profileEligibility?.eligible) {
           alert(e.message, 'error');
           return;
@@ -3533,6 +3718,7 @@
       addons: [],
       previousAiMetadataAddons: [],
       previousPosterBridgeAddons: [],
+      aioMigrationReview: null,
       existingCollections: [],
       mdblistKey: '',
       tmdbKey: '',
@@ -3571,6 +3757,7 @@
   };
 
   window.addEventListener('kollection:nuvio-signed-out', () => {
+    state.aioMigrationReview = null;
     state.token = null;
     state.userId = null;
     state.profiles = [];
