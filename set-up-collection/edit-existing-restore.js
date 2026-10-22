@@ -9,6 +9,7 @@
   let busy = false;
   let reachedCustomize = false;
   let originVerified = false;
+  const attemptedButtons = new WeakSet();
   const $ = (selector, root = document) => root.querySelector(selector);
 
   function currentStep() {
@@ -18,10 +19,15 @@
   }
 
   function clickOnce(button, delay = 50) {
-    if (!button || busy || button.disabled || !originVerified) return false;
+    if (!button || busy || button.disabled || !originVerified || attemptedButtons.has(button)) return false;
+    const step = currentStep();
     busy = true;
     setTimeout(() => {
-      try { button.click(); }
+      try {
+        if (!active || !originVerified || reachedCustomize || !button.isConnected || button.disabled || currentStep() !== step) return;
+        attemptedButtons.add(button);
+        button.click();
+      }
       finally { setTimeout(() => { busy = false; }, 250); }
     }, delay);
     return true;
@@ -123,15 +129,9 @@
       return;
     }
     if (step === 2) {
-      const builtIn = $('#builtInTab')?.classList.contains('active');
-      const custom = $('#customTab')?.classList.contains('active');
-      const next = $('#nextBtn');
-      if (builtIn) {
-        const mdblist = $('#mdblist')?.value?.trim(); const host = $('#aiHost')?.value;
-        if (mdblist && host && next && !next.disabled) clickOnce(next, 80);
-        return;
-      }
-      if (custom) return;
+      // Passwords are deliberately not restored. Let the user review the
+      // settings and press Continue; polling must never submit this form.
+      return;
     }
     if (step === 3) {
       const customize = findButtonByText(/Customize collection/i);

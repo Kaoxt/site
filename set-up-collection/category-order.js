@@ -1,13 +1,9 @@
 (() => {
   'use strict';
 
-  const params = new URLSearchParams(window.location.search);
-  const editMode = params.get('edit') === '1' && Boolean(params.get('saved'));
   const originalFetch = window.fetch.bind(window);
   let restoredPreference = null;
   let currentPreference = { categoryOrder: [], folderSortModes: {}, folderOrders: {} };
-  let editAdvanceBusy = false;
-  let editRestoreAdvanceEnabled = editMode;
 
   const clone = value => JSON.parse(JSON.stringify(value));
 
@@ -46,11 +42,6 @@
           folderOrders: item.config.folderOrders && typeof item.config.folderOrders === 'object' ? clone(item.config.folderOrders) : {},
         };
         currentPreference = clone({ categoryOrder: restoredPreference.categoryOrder, folderSortModes: restoredPreference.folderSortModes, folderOrders: restoredPreference.folderOrders });
-      }
-      if (editMode && item) {
-        const adjusted = clone(data);
-        adjusted.collection.draftStep = 4;
-        return new Response(JSON.stringify(adjusted), { status: response.status, statusText: response.statusText, headers: response.headers });
       }
     } catch {}
     return response;
@@ -135,13 +126,12 @@
     window.KollectionFolderEditor = Object.freeze(wrapped); return true;
   }
 
-  function currentStepIndex() { const text=document.getElementById('mobileStepText')?.textContent||'', match=text.match(/Step\s+(\d+)\s+of/i); return match?Number(match[1])-1:-1; }
-  function advanceEditRestore() {
-    const step=currentStepIndex(); if(step>=4){editRestoreAdvanceEnabled=false;return;} if(!editRestoreAdvanceEnabled||!editMode||editAdvanceBusy||step!==2)return;
-    const builtIn=document.getElementById('builtInTab')?.classList.contains('active'), key=document.getElementById('mdblist')?.value?.trim(), host=document.getElementById('aiHost')?.value, next=document.getElementById('nextBtn');
-    if(!builtIn||!key||!host||!next||next.disabled)return; editAdvanceBusy=true;
-    setTimeout(()=>{try{if(editRestoreAdvanceEnabled&&currentStepIndex()===2&&document.getElementById('mdblist')?.value?.trim())next.click();}finally{setTimeout(()=>{editAdvanceBusy=false;},400);}},120);
+  function init() {
+    installEditorWrapper();
+    const panel = document.getElementById('panelHost');
+    // Navigation belongs to the saved-setup restore flow. Category ordering
+    // must never submit password fields or rewrite a saved setup's progress.
+    if (panel) new MutationObserver(installEditorWrapper).observe(panel, { childList: true, subtree: true });
   }
-  function init(){installEditorWrapper();const panel=document.getElementById('panelHost');if(panel)new MutationObserver(()=>{installEditorWrapper();advanceEditRestore();}).observe(panel,{childList:true,subtree:true});document.addEventListener('input',advanceEditRestore,true);document.addEventListener('change',advanceEditRestore,true);setTimeout(advanceEditRestore,250);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

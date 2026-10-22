@@ -5,6 +5,8 @@
   const sourceSavedId = params.get('saved') || '';
   const cloneSavedSetup = params.get('clone') === '1';
   const updateExistingSetup = params.get('update') === '1';
+  const editExistingSetup = Boolean(sourceSavedId) && params.get('edit') === '1';
+  const requestedStep = Number(window.KollectionSetupRoute?.getStep?.() ?? 0);
   let savedId = cloneSavedSetup ? '' : sourceSavedId;
   const targetProfileId = Number(params.get('targetProfile')) || null;
   let savedName = '';
@@ -35,6 +37,7 @@
   let collectionRestoreApplied = false;
   let restoreNoticeShown = false;
   let verifiedBingecatOnce = false;
+  let aiRestoreApplied = false;
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -73,18 +76,19 @@
 
   function captureVisible() {
     const profile = $('#profile');
-    if (profile) {
+    if (profile && !restoring) {
       const id = Number(profile.value);
       if (Number.isFinite(id)) snapshot.profileId = id;
       snapshot.profileName = profile.selectedOptions?.[0]?.textContent?.trim() || snapshot.profileName || '';
     }
 
-    if ($('#customTab')?.classList.contains('active')) snapshot.aiSetupMode = 'custom';
-    else if ($('#builtInTab')?.classList.contains('active')) snapshot.aiSetupMode = 'built-in';
+    const canCaptureAi = !restoring || aiRestoreApplied;
+    if (canCaptureAi && $('#customTab')?.classList.contains('active')) snapshot.aiSetupMode = 'custom';
+    else if (canCaptureAi && $('#builtInTab')?.classList.contains('active')) snapshot.aiSetupMode = 'built-in';
 
     const host = $('#aiHost');
     const selfHost = $('#aiSelfHostUrl');
-    if (host) {
+    if (host && canCaptureAi) {
       if (host.value === '__self_host__') {
         snapshot.aiHostMode = 'self';
         if (selfHost?.value?.trim()) {
@@ -98,9 +102,9 @@
     }
 
     const customFile = $('.file-status b');
-    if (customFile) snapshot.aiCustomFileName = customFile.textContent.trim();
+    if (customFile && canCaptureAi) snapshot.aiCustomFileName = customFile.textContent.trim();
 
-    if (!restoring) {
+    if (canCaptureAi) {
       const catalogToggle = $('#aiCatalogModeOnly');
       const catalogMode = window.KollectionAioExport?.getCatalogModeOnly?.();
       if (catalogToggle) snapshot.aiCatalogModeOnly = Boolean(catalogToggle.checked);
@@ -108,14 +112,16 @@
     }
 
     const posterToggle = $('#betterPostersEnabled');
-    if (posterToggle) snapshot.betterPostersEnabled = Boolean(posterToggle.checked);
+    if (posterToggle && canCaptureAi) snapshot.betterPostersEnabled = Boolean(posterToggle.checked);
     const betterPostersSettingsJson = $('#betterPostersSettingsJson');
-    if (betterPostersSettingsJson?.value) {
+    if (betterPostersSettingsJson?.value && canCaptureAi) {
       try { snapshot.betterPostersSettings = JSON.parse(betterPostersSettingsJson.value); } catch {}
     }
 
     const bingecat = window.KollectionBingecatSetup?.snapshot?.();
-    if (bingecat) Object.assign(snapshot, bingecat);
+    // The runtime still has defaults before the saved Bingecat choice is
+    // restored. Do not replace the saved manifest or Skip choice with them.
+    if (bingecat && (!restoring || currentStep() > 3)) Object.assign(snapshot, bingecat);
     const bcUrl = $('#bcUrl');
     if (bcUrl?.value?.trim()) {
       if (bcUrl.value.trim() !== snapshot.bingecatManifestUrl) snapshot.bingecatCatalogs = [];
@@ -127,7 +133,7 @@
     if (/personal Bingecat manifest is ready/i.test(panelText)) snapshot.bingecatSkipped = false;
 
     const checks = $$('.section-checkbox');
-    if (checks.length) {
+    if (checks.length && (!restoring || collectionRestoreApplied)) {
       snapshot.knownCollectionGroupIds = checks.map((input) => input.value);
       snapshot.selectedCollectionGroupIds = checks.filter((input) => input.checked).map((input) => input.value);
     }
@@ -389,6 +395,9 @@
     }
 
     if (step === 2) {
+      // Restore this step once. Later mutations and edits must not replay
+      // saved values or dispatch host changes that move keyboard focus.
+      if (aiRestoreApplied) return;
       const catalogToggle = $('#aiCatalogModeOnly');
       if (catalogToggle && snapshot.aiCatalogModeOnly != null) {
         const desiredMode = storedBoolean(snapshot.aiCatalogModeOnly, false);
@@ -439,10 +448,11 @@
           dispatchChange(host);
         }
       }
+      aiRestoreApplied = true;
       if (targetStep > 2) {
         showResumeNotice(desiredCustom
-          ? 'Saved setup restored. Re-upload your AIOMetadata JSON and re-enter any required API keys, then continue; your later choices will restore automatically.'
-          : 'Saved setup restored. Re-enter your MDBList/API keys, then continue; your later choices will restore automatically.');
+          ? 'Saved setup restored. Re-upload your AIOMetadata JSON, review your API keys, and choose and confirm your AIOMetadata password. Select Continue when ready.'
+          : 'Saved setup restored. Re-enter your MDBList/API keys and choose and confirm your AIOMetadata password. Select Continue when ready.');
       } else {
         restoring = false;
         setStatus('Saved setup restored.', 'success');
@@ -521,14 +531,16 @@
       }));
       const item = data.collection;
       savedName = item?.name || 'My Kollection';
-      const routedStep = Number(window.KollectionSetupRoute?.getStep?.() ?? 0);
+      const routedStep = requestedStep;
       targetStep = updateExistingSetup
         ? 2
         : routedStep > 0
           ? Math.max(0, Math.min(7, routedStep))
-          : cloneSavedSetup
-            ? Math.max(0, Math.min(6, Number(item?.draftStep) || 0))
-            : Math.max(0, Math.min(7, Number(item?.draftStep) || 0));
+          : editExistingSetup
+            ? 4
+            : cloneSavedSetup
+              ? Math.max(0, Math.min(6, Number(item?.draftStep) || 0))
+              : Math.max(0, Math.min(7, Number(item?.draftStep) || 0));
       snapshot = {
         ...snapshot,
         ...(item?.config && typeof item.config === 'object' ? item.config : {}),
@@ -541,6 +553,7 @@
       snapshot.aiCatalogModeOnly = savedCatalogMode == null ? null : storedBoolean(savedCatalogMode, false);
       window.KollectionCatalogShuffle?.restore?.(item?.config || {});
       collectionRestoreApplied = false;
+      aiRestoreApplied = false;
       const access = $('#aioCurrentAccess');
       if (access && window.KollectionAioAccess) access.innerHTML = window.KollectionAioAccess.markup(getInstalledConfigurations(), { legacy: true });
 
