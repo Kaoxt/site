@@ -144,6 +144,7 @@
       aiometadataConfigurations: getInstalledConfigurations(),
       aiSetupMode: snapshot.aiSetupMode === 'custom' ? 'custom' : 'built-in',
       aiCatalogModeOnly: snapshot.aiCatalogModeOnly == null ? null : storedBoolean(snapshot.aiCatalogModeOnly, false),
+      aiCatalogShuffleOverrides: window.KollectionCatalogShuffle?.getOverrides?.() || snapshot.aiCatalogShuffleOverrides || {},
       aiHostPreference: snapshot.aiHostPreference || '',
       aiHostMode: snapshot.aiHostMode || '',
       aiSelfHostUrl: snapshot.aiSelfHostUrl || '',
@@ -538,6 +539,7 @@
       snapshot.betterPostersEnabled = storedBoolean(snapshot.betterPostersEnabled, false);
       const savedCatalogMode = item?.config?.aiCatalogModeOnly ?? item?.config?.aiometadataExports?.[0]?.config?.catalogModeOnly;
       snapshot.aiCatalogModeOnly = savedCatalogMode == null ? null : storedBoolean(savedCatalogMode, false);
+      window.KollectionCatalogShuffle?.restore?.(item?.config || {});
       collectionRestoreApplied = false;
       const access = $('#aioCurrentAccess');
       if (access && window.KollectionAioAccess) access.innerHTML = window.KollectionAioAccess.markup(getInstalledConfigurations(), { legacy: true });
