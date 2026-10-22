@@ -18,8 +18,8 @@
     if (!hasMdblist) return;
 
     el.textContent = hasTmdb
-      ? 'Saved setup restored. Your saved MDBList and TMDB keys were restored automatically.'
-      : 'Saved setup restored. Your saved MDBList key was restored automatically; TMDB is optional.';
+      ? 'Saved setup restored. Your saved MDBList and TMDB keys were restored automatically. Choose and confirm your AIOMetadata password, then select Continue.'
+      : 'Saved setup restored. Your saved MDBList key was restored automatically; TMDB is optional. Choose and confirm your AIOMetadata password, then select Continue.';
     el.dataset.kind = 'success';
   }
 

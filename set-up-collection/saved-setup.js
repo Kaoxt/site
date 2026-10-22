@@ -35,6 +35,7 @@
   let collectionRestoreApplied = false;
   let restoreNoticeShown = false;
   let verifiedBingecatOnce = false;
+  let aiRestoreApplied = false;
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
@@ -389,6 +390,9 @@
     }
 
     if (step === 2) {
+      // Restore this step once. Later mutations and edits must not replay
+      // saved values or dispatch host changes that move keyboard focus.
+      if (aiRestoreApplied) return;
       const catalogToggle = $('#aiCatalogModeOnly');
       if (catalogToggle && snapshot.aiCatalogModeOnly != null) {
         const desiredMode = storedBoolean(snapshot.aiCatalogModeOnly, false);
@@ -439,10 +443,11 @@
           dispatchChange(host);
         }
       }
+      aiRestoreApplied = true;
       if (targetStep > 2) {
         showResumeNotice(desiredCustom
-          ? 'Saved setup restored. Re-upload your AIOMetadata JSON and re-enter any required API keys, then continue; your later choices will restore automatically.'
-          : 'Saved setup restored. Re-enter your MDBList/API keys, then continue; your later choices will restore automatically.');
+          ? 'Saved setup restored. Re-upload your AIOMetadata JSON, review your API keys, and choose and confirm your AIOMetadata password. Select Continue when ready.'
+          : 'Saved setup restored. Re-enter your MDBList/API keys and choose and confirm your AIOMetadata password. Select Continue when ready.');
       } else {
         restoring = false;
         setStatus('Saved setup restored.', 'success');
@@ -541,6 +546,7 @@
       snapshot.aiCatalogModeOnly = savedCatalogMode == null ? null : storedBoolean(savedCatalogMode, false);
       window.KollectionCatalogShuffle?.restore?.(item?.config || {});
       collectionRestoreApplied = false;
+      aiRestoreApplied = false;
       const access = $('#aioCurrentAccess');
       if (access && window.KollectionAioAccess) access.innerHTML = window.KollectionAioAccess.markup(getInstalledConfigurations(), { legacy: true });
 
