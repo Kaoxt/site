@@ -5,6 +5,7 @@ import vm from 'node:vm';
 
 const edit = await readFile(new URL('../set-up-collection/edit-existing-restore.js', import.meta.url), 'utf8');
 const saved = await readFile(new URL('../set-up-collection/saved-setup.js', import.meta.url), 'utf8');
+const categoryOrder = await readFile(new URL('../set-up-collection/category-order.js', import.meta.url), 'utf8');
 const section = (source, start, end) => source.slice(source.indexOf(start), source.indexOf(end));
 function driver(step = 2) {
   let clicks = 0;
@@ -33,6 +34,29 @@ test('saved API keys never automatically submit the AIOMetadata password step', 
   assert.equal(h.clicks(), 0, 'completed typing still waits for an intentional Continue');
   h.fields['#nextBtn'].click();
   assert.equal(h.clicks(), 1);
+});
+
+test('category ordering never submits passwords or changes saved progress', async () => {
+  let clicks = 0;
+  const callbacks = [];
+  const fields = {
+    panelHost: {}, mobileStepText: { textContent: 'Step 3 of 8' },
+    builtInTab: { classList: { contains: () => true } },
+    mdblist: { value: 'saved-test-key' }, aiHost: { value: 'https://aio.example/' },
+    nextBtn: { disabled: false, click() { clicks++; } },
+  };
+  const body = { collection: { draftStep: 7, config: { categoryOrder: ['genres'] } } };
+  const window = { location: { href: 'https://kollection.test/set-up-collection?saved=test&edit=1', search: '?saved=test&edit=1' },
+    fetch: async () => new Response(JSON.stringify(body), { headers: { 'Content-Type': 'application/json' } }) };
+  const c = vm.createContext({ window, URL, URLSearchParams, Response,
+    document: { readyState: 'complete', getElementById: id => fields[id], addEventListener: (_event, fn) => callbacks.push(fn) },
+    MutationObserver: class { constructor(fn) { callbacks.push(fn); } observe() {} },
+    setTimeout: fn => callbacks.push(fn) });
+  vm.runInContext(categoryOrder, c);
+  for (let i = 0; i < 5; i++) for (const fn of callbacks.slice()) fn();
+  assert.equal(clicks, 0);
+  const restored = await (await window.fetch('/api/account/collections/test')).json();
+  assert.deepEqual(restored, body, 'saved progress must reach the origin verifier unchanged');
 });
 
 test('failed automatic navigation is attempted once, not retried on every mutation', () => {
