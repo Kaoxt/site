@@ -102,3 +102,11 @@ An actual Bingecat login/consent still requires a user account on a registered o
 Step 3 requires a separate AIOMetadata password and confirmation (at least six characters). The same chosen password is sent to each configuration created for that setup. It stays in memory only: Kollection does not put it in browser storage, saved account data, or exports. After a reload, unfinished installations ask for the password again before provisioning.
 
 The completion screen, downloaded setup record, and Account → Your setups retain each installed configuration’s UUID, host, and direct configure link. Account controls are read-only until the user opens AIOMetadata and signs in there. Older installations without retained credentials display a replacement notice; they are never silently reset. Update Existing still creates a replacement configuration, so users who edit settings directly in AIOMetadata should export that configuration and use **Use my JSON file** before updating through Kollection.
+
+## Initial setup after clearing an outside collection
+
+Clearing a collection keeps its installed add-ons. Fresh setups now check enabled AIOMetadata manifests in Review before creating new configurations. If catalogs overlap, Review lists the original installation and requires an explicit replacement choice. Its install link is retained in **Download backup**. The replacement uses Step 3 settings; existing search preferences can be carried over with **Use my JSON file**, while poster settings should be reviewed separately.
+
+Only approved installation URLs are removed, after Nuvio confirms the new collection. The original hosted AIOMetadata configuration is not deleted. Unrelated add-ons are preserved. Replacement is blocked when another profile shares the add-on list, when unrelated collection groups still use it, or when Catalogs only would remove the only verified metadata provider. Users can also disable overlapping catalogs in their original AIOMetadata and use **Recheck existing add-ons**. Consent is checked again before provisioning and is not retained across page reloads, accounts, or profiles.
+
+Run migration coverage with `node --test tests/setup-aio-migration.test.mjs`.
