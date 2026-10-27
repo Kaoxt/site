@@ -26,10 +26,20 @@ export async function onRequestGet(context) {
     return json({ authenticated: false, isAdmin: false, user: null });
   }
 
-  const [displayName, avatarUrl] = await Promise.all([
+  // These are optional presentation details. A storage outage must not turn a
+  // valid encrypted session into an account-loading failure or sign the user out.
+  const details = await Promise.allSettled([
     getDisplayName(env, session.id),
     getAccountAvatar(env, session.id),
   ]);
+  const [displayName, avatarUrl] = details.map((result, index) => {
+    if (result.status === 'fulfilled') return result.value;
+    console.warn('Kollection session profile lookup unavailable', {
+      field: index === 0 ? 'displayName' : 'avatarUrl',
+      ray: context.request.headers.get('cf-ray') || '',
+    });
+    return '';
+  });
   const user = { id: session.id, email: session.email, displayName, avatarUrl };
   return json({
     authenticated: true,

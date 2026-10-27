@@ -66,7 +66,7 @@ test('failed auth reads can retry, and logout invalidates old session and token 
   });
   const auth = window.KollectionNuvioAuth;
   const failed = auth.getSession();
-  const failure = assert.rejects(failed, /Unavailable/);
+  const failure = assert.rejects(failed, /unavailable/i);
   requests[0].resolve(Response.json({ error: 'Unavailable' }, { status: 503 }));
   await failure;
   const oldSession = assert.rejects(auth.getSession(), { code: 'SESSION_CHANGED' });

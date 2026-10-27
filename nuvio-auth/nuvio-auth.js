@@ -15,21 +15,32 @@
   async function readBody(res) {
     const text = await res.text();
     if (!text) return null;
-    try { return JSON.parse(text); } catch { return text; }
+    try { return JSON.parse(text); } catch { return null; }
   }
 
   async function request(url, options = {}) {
-    const res = await fetch(url, {
-      credentials: 'same-origin',
-      cache: 'no-store',
-      ...options,
-    });
-    const body = await readBody(res);
-    if (!res.ok) {
-      const message = body?.error || body?.message || (typeof body === 'string' ? body : '') || `HTTP ${res.status}`;
+    let res, body;
+    try {
+      res = await fetch(url, {
+        credentials: 'same-origin',
+        cache: 'no-store',
+        ...options,
+      });
+      body = await readBody(res);
+    } catch {
+      throw new Error('Could not reach your account. Please check your connection and try again.');
+    }
+    const validBody = body && typeof body === 'object' && !Array.isArray(body);
+    if (!res.ok || !validBody) {
+      const serverMessage = validBody && (body.error || body.message);
+      // Cloudflare/proxy responses can contain HTML, including inside JSON.
+      // Only short, plain JSON messages from expected client errors are shown.
+      const safeMessage = res.status < 500 && typeof serverMessage === 'string'
+        && serverMessage.length <= 240 && !/[<>]/.test(serverMessage);
+      const message = safeMessage ? serverMessage
+        : 'Your account is temporarily unavailable. Please try again in a moment.';
       const error = new Error(message);
-      error.status = res.status;
-      error.body = body;
+      error.status = res.ok ? 502 : res.status;
       throw error;
     }
     return body;

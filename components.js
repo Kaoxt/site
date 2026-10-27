@@ -4,7 +4,7 @@
   const THEME_KEY = 'kollection-theme';
   const DARK_COLOR = '#050608';
   const LIGHT_COLOR = '#f4f5f7';
-  const NAV_VERSION = '20261008-mentions1';
+  const NAV_VERSION = '20261027-account-recovery1';
   const FRAGMENT_TTL = 5 * 60 * 1000;
 
   const currentScript = document.currentScript || [...document.scripts].find((script) => /(?:^|\/)components\.js(?:\?|$)/.test(script.src));
