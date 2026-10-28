@@ -989,18 +989,78 @@
     });
   }
 
+  function manifestReadError(kind, status = 0) {
+    // Do not expose personal manifest paths, tokens, or upstream HTML in errors.
+    const error = new Error('Could not read the add-on manifest.');
+    error.manifestFailure = kind;
+    error.status = status;
+    return error;
+  }
+
+  async function readManifest(url, options = {}, proxy = false) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), proxy ? 12000 : 8000);
+    try {
+      const response = await fetch(url, { ...options, cache: 'no-store', signal: controller.signal });
+      if (!response.ok) {
+        let detail;
+        if (proxy) { try { detail = await response.json(); } catch {} }
+        const error = manifestReadError(detail?.error || 'http', detail?.upstreamStatus || response.status);
+        error.upstream = Boolean(detail?.upstreamStatus);
+        throw error;
+      }
+      let manifest;
+      try { manifest = await response.json(); }
+      catch { throw manifestReadError('invalid'); }
+      if (!manifest || typeof manifest.id !== 'string' || !manifest.id ||
+        (manifest.catalogs != null && !Array.isArray(manifest.catalogs)) ||
+        (manifest.resources != null && !Array.isArray(manifest.resources))) throw manifestReadError('invalid');
+      return manifest;
+    } catch (error) {
+      if (controller.signal.aborted) throw manifestReadError('timeout');
+      if (error.manifestFailure) throw error;
+      throw manifestReadError('network');
+    } finally { clearTimeout(timer); }
+  }
+
   async function fetchAddonManifest(url, bingecatOnly = false) {
     const normalized = normalizeUrl(url);
+    let failure;
+    try { return await readManifest(normalized); }
+    catch (error) { failure = error; }
+
+    if (bingecatOnly) {
+      try { return await readManifest(`/api/manifest?url=${encodeURIComponent(normalized)}`, {}, true); }
+      catch { throw new Error('Could not read the Bingecat manifest. Make sure you pasted the personal manifest.json link, not the configure page.'); }
+    }
+
+    let midnight = false;
     try {
-      return await fetchJson(normalized, { cache: 'no-store' });
-    } catch (directErr) {
-      if (!bingecatOnly) throw directErr;
+      const parsed = new URL(normalized);
+      midnight = parsed.protocol === 'https:' && parsed.hostname === 'aiometadatafortheweebs.midnightignite.me' && !parsed.port && !parsed.username && !parsed.password;
+    } catch {}
+    if (midnight) {
       try {
-        return await fetchJson(`/api/manifest?url=${encodeURIComponent(normalized)}`, { cache: 'no-store' });
-      } catch {
-        throw new Error('Could not read the Bingecat manifest. Make sure you pasted the personal manifest.json link, not the configure page.');
+        // POST keeps the personal configuration URL out of the proxy query string.
+        return await readManifest('/api/aio-manifest', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: normalized }),
+        }, true);
+      } catch (error) {
+        // An unavailable/old proxy must not mask a useful direct 404/401 result.
+        if (!error.upstream && (error.status === 404 || error.status === 405 || error.manifestFailure === 'unsupported')) {
+          if (failure.manifestFailure !== 'http') failure = manifestReadError('network');
+        } else failure = error;
       }
     }
+    if (['network', 'timeout'].includes(failure.manifestFailure) ||
+      failure.manifestFailure === 'http' && (failure.status === 408 || failure.status >= 500)) {
+      await new Promise(resolve => setTimeout(resolve, 350));
+      try { return await readManifest(normalized); }
+      catch (error) {
+        if (error.manifestFailure === 'http' || failure.manifestFailure !== 'http') failure = error;
+      }
+    }
+    throw failure;
   }
 
   function parseKaoxtDatabase(jsText) {
@@ -1532,7 +1592,7 @@
 
   function approvedAioMigration(addon) {
     const review = state.aioMigrationReview;
-    if (!review || review.scope !== aioMigrationScope()) return null;
+    if (!review || review.error || review.scope !== aioMigrationScope()) return null;
     return review.candidates.find(item => item.key === addonUrlKey(addon.url) && item.approved && !item.shared.length && !item.protectedCount) || null;
   }
 
@@ -1540,6 +1600,30 @@
     const error = new Error(message);
     error.reviewRequired = true;
     return error;
+  }
+
+  function addonManifestUrl(value) {
+    const url = new URL(normalizeUrl(value));
+    url.hash = '';
+    url.pathname = url.pathname.replace(/\/+$/, '');
+    if (!/\/manifest\.json$/i.test(url.pathname)) url.pathname += '/manifest.json';
+    return url.href;
+  }
+
+  function existingAioReadError(addon, error, verify = false) {
+    let host = 'its saved host';
+    try { host = new URL(normalizeUrl(addon.url)).host; } catch {}
+    const status = Number(error?.status) || 0;
+    let reason = 'The host could not be reached from this browser. Check your connection and whether the installed add-on opens in Nuvio, then retry Review.';
+    if (error?.manifestFailure === 'timeout') reason = 'The host took too long to respond. Retry Review shortly.';
+    else if (error?.manifestFailure === 'invalid') reason = 'The host returned an invalid manifest. Check the installed add-on in Nuvio, then retry Review.';
+    else if (error?.manifestFailure === 'http') {
+      if (status === 404 || status === 410) reason = `The installed configuration was not found (HTTP ${status}). Check or repair its install link in Nuvio, then retry Review.`;
+      else if (status === 401 || status === 403) reason = `The host denied access (HTTP ${status}). Check the existing configuration's access settings, then retry Review.`;
+      else if (status === 429) reason = 'The host is limiting requests (HTTP 429). Wait a few minutes, then retry Review.';
+      else reason = `The host returned HTTP ${status}. Retry Review when it is available.`;
+    }
+    return aioMigrationError(`Could not ${verify ? 'verify' : 'check'} the existing AIOMetadata configuration on ${host} (Nuvio add-on profile ${Number(state.addonProfileId || state.profileId)}). ${reason} Choosing a new host does not change this installed add-on. Your collection and add-ons have not been changed.`);
   }
 
   async function prepareAioMigrationReview(addons) {
@@ -1554,18 +1638,21 @@
     ).map(profile => ({ id: profile.id, name: profile.name }));
     const inspected = await Promise.all(addons.filter(addon => storedBoolean(addon.enabled, true)).map(async addon => {
       try {
-        const url = new URL(normalizeUrl(addon.url));
-        if (!/\/manifest\.json$/i.test(url.pathname)) url.pathname = url.pathname.replace(/\/+$/, '') + '/manifest.json';
-        const manifest = await fetchAddonManifest(url.href);
+        const manifest = await fetchAddonManifest(addonManifestUrl(addon.url));
         if (!manifest?.id || (manifest.catalogs != null && !Array.isArray(manifest.catalogs))) throw new Error('Invalid manifest');
         return { addon, manifest, key: addonUrlKey(addon.url) };
-      } catch {
-        if (isKollectionAiMetadataAddon(addon) || /aiometadata|aio-metadata/i.test(addon.url || '')) {
-          throw new Error('Could not check the existing AIOMetadata configuration. Retry Review when it is available; no add-ons have been changed.');
+      } catch (error) {
+        if (previous?.candidates.some(item => item.key === addonUrlKey(addon.url)) || isKollectionAiMetadataAddon(addon) || /aiometadata|aio-metadata/i.test(addon.url || '')) {
+          throw existingAioReadError(addon, error);
         }
         return null;
       }
-    }));
+    })).catch(error => {
+      state.aioMigrationReview = { scope, error: error.message, metadataProviders: [],
+        candidates: (previous?.candidates || []).map(item => ({ ...item, approved: false })),
+      };
+      throw error;
+    });
     const candidates = [];
     const metadataProviders = [];
     for (const entry of inspected.filter(Boolean)) {
@@ -1598,7 +1685,9 @@
 
   function aioMigrationProblem() {
     const review = state.aioMigrationReview;
-    if (!review || review.scope !== aioMigrationScope() || !review.candidates.length) return '';
+    if (!review || review.scope !== aioMigrationScope()) return '';
+    if (review.error) return review.error;
+    if (!review.candidates.length) return '';
     if (review.candidates.some(item => item.shared.length)) {
       return 'An overlapping AIOMetadata add-on is shared with another profile. Choose a profile with its own add-ons, or disable the overlapping catalogs in the existing configuration and recheck.';
     }
@@ -1671,13 +1760,11 @@
       if (!storedBoolean(addon.enabled, true)) continue;
       let manifest;
       try {
-        const url = new URL(normalizeUrl(addon.url));
-        if (!/\/manifest\.json$/i.test(url.pathname)) url.pathname = url.pathname.replace(/\/+$/, '') + '/manifest.json';
-        manifest = await fetchAddonManifest(url.href);
+        manifest = await fetchAddonManifest(addonManifestUrl(addon.url));
         if (!manifest?.id || !Array.isArray(manifest.catalogs)) throw new Error('Invalid manifest');
-      } catch {
-        if (migration || candidate || isKollectionAiMetadataAddon(addon)) {
-          throw new Error(`Could not verify the existing ${addon.name || 'AIOMetadata'} configuration. Retry when its manifest is available. Your collection and add-ons have not been changed.`);
+      } catch (error) {
+        if (migration || candidate || isKollectionAiMetadataAddon(addon) || /aiometadata|aio-metadata/i.test(addon.url || '')) {
+          throw existingAioReadError(addon, error, true);
         }
         continue;
       }

@@ -188,3 +188,78 @@ test('setup cannot report completion if Nuvio has not removed the old add-on', a
   assert.equal(h.state.installCompleted, false);
   assert.ok(h.rows().some(item => item.url === old.url));
 });
+
+test('failed repeated reviews revoke consent and keep a renamed installation protected', async () => {
+  const h = harness(); await h.review(); h.approve();
+  const saved = h.manifests[old.url]; delete h.manifests[old.url];
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await assert.rejects(h.review(), /Could not check the existing/);
+    assert.equal(h.state.aioMigrationReview.candidates[0].approved, false);
+    assert.match(h.run('aioMigrationProblem()'), /Could not check/);
+    assert.equal(h.run('approvedAioMigration(state.backup.addons[0])'), null);
+    await assert.rejects(h.run('installEverything()'), /Could not check/);
+    assert.deepEqual(h.events, []);
+  }
+  h.manifests[old.url] = saved;
+  await h.review();
+  assert.equal(h.state.aioMigrationReview.error, undefined);
+  assert.equal(h.state.aioMigrationReview.candidates[0].approved, false);
+  h.approve(); await h.run('installEverything()');
+  assert.deepEqual(h.events, ['provision', 'install', 'collections', 'retire']);
+});
+
+test('manifest URLs preserve query credentials and do not duplicate a trailing manifest path', () => {
+  const h = harness();
+  for (const [input, expected] of [
+    ['https://aio.example/stremio/id/manifest.json/?tag=movie', 'https://aio.example/stremio/id/manifest.json?tag=movie'],
+    ['stremio://aio.example/stremio/id?token=private', 'https://aio.example/stremio/id/manifest.json?token=private'],
+  ]) {
+    h.context.input = input;
+    assert.equal(h.run('addonManifestUrl(input)'), expected);
+  }
+});
+
+test('review failures name the host/profile and safe reason without leaking URLs or upstream messages', async () => {
+  for (const [kind, status, expected] of [
+    ['http', 404, /not found \(HTTP 404\)/], ['http', 403, /denied access \(HTTP 403\)/],
+    ['http', 429, /limiting requests/], ['http', 503, /HTTP 503/],
+    ['timeout', 0, /took too long/], ['invalid', 0, /invalid manifest/], ['network', 0, /could not be reached/],
+  ]) {
+    const h = harness(); h.state.backup.addons[0].name = 'AIOMetadata';
+    h.context.fetchAddonManifest = async () => { throw Object.assign(new Error('private-token <html>'), { manifestFailure: kind, status }); };
+    await assert.rejects(h.review(), error => {
+      assert.match(error.message, /aio.example \(Nuvio add-on profile 1\)/);
+      assert.match(error.message, expected);
+      assert.doesNotMatch(error.message, /private-token|<html>|stremio\/original/);
+      assert.match(error.message, /have not been changed/);
+      return error.reviewRequired;
+    });
+    assert.deepEqual(h.events, []);
+  }
+});
+
+test('the real browser fallback unblocks Review and retains the explicit replacement choice', async () => {
+  const h = harness();
+  const oldUrl = h.state.backup.addons[0].url;
+  const url = 'https://aiometadatafortheweebs.midnightignite.me/stremio/private/manifest.json';
+  h.state.backup.addons[0].url = url;
+  const requests = [];
+  Object.assign(h.context, { AbortController, clearTimeout,
+    fetch: async (target, options) => {
+      requests.push(target);
+      if (target === url) throw new TypeError('Failed to fetch');
+      if (target === '/api/aio-manifest') {
+        assert.equal(JSON.parse(options.body).url, url);
+        return Response.json(h.manifests[oldUrl]);
+      }
+      return Response.json(h.manifests[target]);
+    },
+  });
+  vm.runInContext(section('  function manifestReadError(', '  function parseKaoxtDatabase('), h.context);
+  await h.review();
+  assert.ok(requests.includes('/api/aio-manifest'));
+  assert.equal(h.state.aioMigrationReview.candidates.length, 1);
+  assert.equal(h.state.aioMigrationReview.candidates[0].approved, false);
+  assert.match(h.run('aioMigrationProblem()'), /Select the existing/);
+  assert.deepEqual(h.events, []);
+});
